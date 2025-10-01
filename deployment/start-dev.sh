@@ -21,10 +21,10 @@ pkill -f "nest start" 2>/dev/null || true
 pkill -f "cloudflared tunnel" 2>/dev/null || true
 
 # Start Frontend
-run_in_background "Frontend" "cd frontend && npm run dev"
+run_in_background "Frontend" "cd ../frontend && npm run dev"
 
 # Start Backend  
-run_in_background "Backend" "cd backend && npm run start:dev"
+run_in_background "Backend" "cd ../backend && npm run start:dev"
 
 # Wait a bit for servers to start
 echo "⏳ Waiting for servers to start..."

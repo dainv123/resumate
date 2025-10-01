@@ -20,11 +20,11 @@ pkill -f "nest start" 2>/dev/null || true
 
 # Start Frontend (Development mode - bypass build errors)
 echo "📱 Starting Frontend on port 5000..."
-run_in_background "Frontend" "cd frontend && PORT=5000 npm run dev"
+run_in_background "Frontend" "cd ../frontend && PORT=5000 npm run dev"
 
 # Start Backend (Production)
 echo "🔧 Starting Backend on port 5001..."
-run_in_background "Backend" "cd backend && PORT=5001 npm run start:prod"
+run_in_background "Backend" "cd ../backend && PORT=5001 npm run start:prod"
 
 # Wait a bit for servers to start
 echo "⏳ Waiting for servers to start..."
