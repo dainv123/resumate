@@ -49,7 +49,7 @@ export class AuthController {
     const result = await this.authService.googleAuthCallback(req.user);
     
     // Redirect to frontend with user data
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
     const redirectUrl = new URL('/auth/callback', frontendUrl);
     
     redirectUrl.searchParams.set('token', result.token);

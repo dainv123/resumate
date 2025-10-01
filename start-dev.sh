@@ -32,20 +32,20 @@ sleep 5
 
 # Start Frontend Tunnel (Cloudflare Tunnel - stable & free)
 echo "🌐 Creating Frontend Tunnel..."
-cloudflared tunnel --url http://localhost:3000 &
+cloudflared tunnel --url http://localhost:5000 &
 FRONTEND_TUNNEL_PID=$!
 echo "Frontend Tunnel PID: $FRONTEND_TUNNEL_PID"
 
 # Start Backend Tunnel (Cloudflare Tunnel - stable & free)
 echo "🌐 Creating Backend Tunnel..."
-cloudflared tunnel --url http://localhost:3002 &
+cloudflared tunnel --url http://localhost:5001 &
 BACKEND_TUNNEL_PID=$!
 echo "Backend Tunnel PID: $BACKEND_TUNNEL_PID"
 
 echo ""
 echo "✅ All services started!"
-echo "📱 Frontend: http://localhost:3000"
-echo "🔧 Backend: http://localhost:3002"
+echo "📱 Frontend: http://localhost:5000"
+echo "🔧 Backend: http://localhost:5001"
 echo "🌐 Frontend Tunnel: Look for 'https://...trycloudflare.com' above"
 echo "🌐 Backend Tunnel: Look for 'https://...trycloudflare.com' above"
 echo ""
