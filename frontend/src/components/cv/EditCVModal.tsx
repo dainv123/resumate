@@ -935,7 +935,7 @@ export default function EditCVModal({
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">Chỉnh sửa CV</h3>
-              <p className="text-sm text-gray-600">{cv.name}</p>
+              <p className="text-sm text-gray-600">{(cv as any)?.name || cv.originalFileName}</p>
             </div>
           </div>
           <button

@@ -100,7 +100,7 @@ export default function OriginalCVModal({
             {fieldLabel}
           </label>
           <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 whitespace-pre-wrap">
-            {value ?? ""}
+            {String(value ?? "")}
           </div>
         </div>
       );
@@ -112,7 +112,7 @@ export default function OriginalCVModal({
           {fieldLabel}
         </label>
         <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
-          {value ?? ""}
+          {String(value ?? "")}
         </div>
       </div>
     );
