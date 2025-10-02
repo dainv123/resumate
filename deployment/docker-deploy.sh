@@ -13,10 +13,19 @@ cd "$ROOT_DIR" || exit 1
 VPS_IP=$(hostname -I | awk '{print $1}')
 echo "🌐 VPS IP: $VPS_IP"
 
-# Set environment variables for API URLs
-export NEXT_PUBLIC_API_URL="http://$VPS_IP:5001"
-export NEXT_PUBLIC_APP_URL="http://$VPS_IP:5000"
-export FRONTEND_URL="http://$VPS_IP:5000"
+# Use domain name if available, otherwise use IP
+DOMAIN_NAME="daidev.click"
+if [ -n "$DOMAIN_NAME" ]; then
+    echo "🌐 Using domain: $DOMAIN_NAME"
+    export NEXT_PUBLIC_API_URL="http://$DOMAIN_NAME:5001"
+    export NEXT_PUBLIC_APP_URL="http://$DOMAIN_NAME:5000"
+    export FRONTEND_URL="http://$DOMAIN_NAME:5000"
+else
+    echo "🌐 Using IP: $VPS_IP"
+    export NEXT_PUBLIC_API_URL="http://$VPS_IP:5001"
+    export NEXT_PUBLIC_APP_URL="http://$VPS_IP:5000"
+    export FRONTEND_URL="http://$VPS_IP:5000"
+fi
 
 # Check if .env file exists
 if [ ! -f "$ROOT_DIR/.env" ]; then
