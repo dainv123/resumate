@@ -30,6 +30,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Skip Chromium download for Puppeteer in production
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
