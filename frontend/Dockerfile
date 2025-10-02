@@ -28,10 +28,18 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Build the application
 RUN npm run build
 
-# Ensure public directory exists and copy from source if needed
-RUN if [ ! -d "/app/public" ] || [ ! "$(ls -A /app/public)" ]; then \
-    echo "Public directory missing or empty, copying from source..."; \
-    cp -r ./public/* /app/public/ 2>/dev/null || echo "No public files to copy"; \
+# Debug: Check what's in the app directory
+RUN echo "=== Contents of /app ===" && ls -la /app
+RUN echo "=== Contents of /app/public ===" && ls -la /app/public || echo "Public directory does not exist"
+
+# Ensure public directory exists
+RUN mkdir -p /app/public
+RUN if [ -d "./public" ] && [ "$(ls -A ./public)" ]; then \
+    echo "Copying public files from source..."; \
+    cp -r ./public/* /app/public/; \
+  else \
+    echo "No public files to copy, creating empty directory"; \
+    touch /app/public/.gitkeep; \
   fi
 
 # Stage 3: Production
