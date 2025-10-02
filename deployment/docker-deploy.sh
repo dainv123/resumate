@@ -4,12 +4,22 @@
 
 echo "🚀 Starting Resumate Docker Deployment..."
 
+# Always run from project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$ROOT_DIR" || exit 1
+
 # Check if .env file exists
-if [ ! -f .env ]; then
-    echo "⚠️  Warning: .env file not found!"
-    echo "Creating .env from env.example..."
-    cp .env.example .env || true
-    echo "Please update .env file with your configuration"
+if [ ! -f "$ROOT_DIR/.env" ]; then
+    echo "⚠️  Warning: .env file not found at $ROOT_DIR!"
+    if [ -f "$ROOT_DIR/.env.example" ]; then
+        echo "Creating .env from .env.example..."
+        cp "$ROOT_DIR/.env.example" "$ROOT_DIR/.env" || true
+        echo "Please update .env file with your configuration"
+    else
+        echo "No .env.example found at $ROOT_DIR"
+        echo "Please create $ROOT_DIR/.env with your configuration"
+    fi
     exit 1
 fi
 
