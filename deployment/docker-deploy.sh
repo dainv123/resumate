@@ -14,17 +14,19 @@ VPS_IP=$(hostname -I | awk '{print $1}')
 echo "🌐 VPS IP: $VPS_IP"
 
 # Use domain name if available, otherwise use IP
-DOMAIN_NAME="daidev.click"
-if [ -n "$DOMAIN_NAME" ]; then
+DOMAIN_NAME="${DOMAIN_NAME:-daidev.click}"
+if [ -n "$DOMAIN_NAME" ] && [ "$DOMAIN_NAME" != "localhost" ]; then
     echo "🌐 Using domain: $DOMAIN_NAME"
     export NEXT_PUBLIC_API_URL="http://$DOMAIN_NAME:5001"
     export NEXT_PUBLIC_APP_URL="http://$DOMAIN_NAME:5000"
     export FRONTEND_URL="http://$DOMAIN_NAME:5000"
+    export DOMAIN_NAME="$DOMAIN_NAME"
 else
     echo "🌐 Using IP: $VPS_IP"
     export NEXT_PUBLIC_API_URL="http://$VPS_IP:5001"
     export NEXT_PUBLIC_APP_URL="http://$VPS_IP:5000"
     export FRONTEND_URL="http://$VPS_IP:5000"
+    export DOMAIN_NAME=""
 fi
 
 # Check if .env file exists

@@ -17,14 +17,21 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   
   // Enable CORS
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:5000',
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000',
+    'http://localhost:5000',
+    'https://appearance-lectures-achieve-recommended.trycloudflare.com'
+  ];
+  
+  // Add domain from environment if available
+  if (process.env.DOMAIN_NAME) {
+    allowedOrigins.push(`http://${process.env.DOMAIN_NAME}:5000`);
+    allowedOrigins.push(`https://${process.env.DOMAIN_NAME}:5000`);
+  }
+  
   app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL || 'http://localhost:5000',
-      'http://daidev.click:5000',
-      'https://daidev.click:5000',
-      'https://appearance-lectures-achieve-recommended.trycloudflare.com',
-      'http://localhost:5000'
-    ],
+    origin: allowedOrigins,
     credentials: true,
   });
   
