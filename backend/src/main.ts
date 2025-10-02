@@ -20,8 +20,9 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:5000',
+      'http://daidev.click:5000',
+      'https://daidev.click:5000',
       'https://appearance-lectures-achieve-recommended.trycloudflare.com',
-      'http://localhost:5000',
       'http://localhost:5000'
     ],
     credentials: true,

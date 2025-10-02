@@ -34,10 +34,11 @@ services:
     volumes:
       - ./backend/uploads:/app/uploads
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5001/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5001/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # Frontend Service
   frontend:
@@ -59,7 +60,8 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5000 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5000 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
