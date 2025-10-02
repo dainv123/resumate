@@ -26,9 +26,11 @@ export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
       onSuccess?.(data);
     },
     onError: (error: unknown) => {
-      const errorMessage = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Upload failed"
-        : "Upload failed";
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Upload failed"
+          : "Upload failed";
       onError?.(errorMessage);
     },
   });
@@ -139,7 +141,8 @@ export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
       {uploadMutation.isError && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">
-            {uploadMutation.error?.response?.data?.message || "Upload failed"}
+            {(uploadMutation.error as any)?.response?.data?.message ||
+              "Upload failed"}
           </p>
         </div>
       )}

@@ -183,20 +183,23 @@ export default function CVPreview({
       )}
 
       {/* Skills */}
-      {parsedData.skills.length > 0 && (
+      {parsedData.skills && Object.keys(parsedData.skills).length > 0 && (
         <div className="mb-6">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Skills</h4>
           <div className="flex flex-wrap gap-2">
-            {parsedData.skills.slice(0, 8).map((skill, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
-                {skill}
-              </span>
-            ))}
-            {parsedData.skills.length > 8 && (
+            {Object.values(parsedData.skills)
+              .flat()
+              .slice(0, 8)
+              .map((skill, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+                  {skill}
+                </span>
+              ))}
+            {Object.values(parsedData.skills).flat().length > 8 && (
               <span className="text-xs text-gray-500">
-                +{parsedData.skills.length - 8} more
+                +{Object.values(parsedData.skills).flat().length - 8} more
               </span>
             )}
           </div>
@@ -211,11 +214,14 @@ export default function CVPreview({
             {parsedData.experience.slice(0, 2).map((exp, index) => (
               <div key={index} className="border-l-2 border-gray-200 pl-3">
                 <p className="text-sm font-medium text-gray-900">
-                  {exp.role} at {exp.company}
+                  {(exp as any)?.role || (exp as any)?.title} at{" "}
+                  {(exp as any)?.company}
                 </p>
-                <p className="text-xs text-gray-500">{exp.duration}</p>
+                <p className="text-xs text-gray-500">
+                  {(exp as any)?.duration}
+                </p>
                 <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                  {exp.description}
+                  {(exp as any)?.description}
                 </p>
               </div>
             ))}

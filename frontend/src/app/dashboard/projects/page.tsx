@@ -85,6 +85,14 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleSubmit = (data: CreateProjectData | UpdateProjectData) => {
+    if (editingProject) {
+      handleUpdateProject(data as UpdateProjectData);
+    } else {
+      handleCreateProject(data as CreateProjectData);
+    }
+  };
+
   const handleEdit = (project: Project) => {
     setEditingProject(project);
     setShowForm(true);
@@ -181,9 +189,7 @@ export default function ProjectsPage() {
             </div>
             <ProjectForm
               project={editingProject || undefined}
-              onSubmit={
-                editingProject ? handleUpdateProject : handleCreateProject
-              }
+              onSubmit={handleSubmit}
               onCancel={handleCancel}
               isLoading={createMutation.isPending || updateMutation.isPending}
             />

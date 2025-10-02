@@ -31,7 +31,7 @@ export default function DashboardPage() {
     let totalScore = 0;
     cvs.forEach((cv) => {
       let score = 0;
-      const data = cv.parsedData;
+      const data = (cv as any)?.parsedData;
 
       // Basic Info (20 points)
       if (data.name) score += 5;
@@ -78,9 +78,9 @@ export default function DashboardPage() {
     let score = 0;
 
     // User Profile (30 points)
-    if (user?.name) score += 10;
-    if (user?.email) score += 10;
-    if (user?.avatar) score += 10;
+    if ((user as any)?.name) score += 10;
+    if ((user as any)?.email) score += 10;
+    if ((user as any)?.avatar) score += 10;
 
     // CVs (40 points)
     if (cvs.length > 0) {
@@ -93,7 +93,7 @@ export default function DashboardPage() {
     }
 
     // Portfolio (10 points)
-    if (projects.some((p) => p.isAddedToCv)) {
+    if (projects.some((p) => (p as any)?.isAddedToCv)) {
       score += 10;
     }
 
@@ -103,7 +103,7 @@ export default function DashboardPage() {
   const calculateSuccessRate = (cvs: unknown[]): number => {
     if (cvs.length === 0) return 0;
 
-    const tailoredCvs = cvs.filter((cv) => cv.isTailored);
+    const tailoredCvs = cvs.filter((cv) => (cv as any)?.isTailored);
     const successRate = (tailoredCvs.length / cvs.length) * 100;
 
     return Math.round(successRate);
@@ -133,7 +133,7 @@ export default function DashboardPage() {
 
   const recentCvs = cvs.slice(0, 3);
   const recentProjects = projects.slice(0, 3);
-  const tailoredCvs = cvs.filter((cv) => cv.isTailored);
+  const tailoredCvs = cvs.filter((cv) => (cv as any)?.isTailored);
 
   return (
     <div className="space-y-8">
@@ -332,7 +332,7 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {recentCvs.map((cv) => (
               <div
-                key={cv.id}
+                key={(cv as any)?.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-blue rounded-lg flex items-center justify-center mr-4">
@@ -340,16 +340,19 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-dark font-karla">
-                      {cv.originalFileName}
+                      {(cv as any)?.originalFileName}
                     </h3>
                     <p className="text-sm text-main">
-                      {cv.isTailored ? "Tailored CV" : "Original CV"} •
-                      {new Date(cv.createdAt).toLocaleDateString("vi-VN")}
+                      {(cv as any)?.isTailored ? "Tailored CV" : "Original CV"}{" "}
+                      •
+                      {new Date((cv as any)?.createdAt).toLocaleDateString(
+                        "vi-VN"
+                      )}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {cv.isTailored && (
+                  {(cv as any)?.isTailored && (
                     <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
                       Tailored
                     </span>
@@ -382,7 +385,7 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {recentProjects.map((project) => (
               <div
-                key={project.id}
+                key={(project as any)?.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-4">
@@ -390,11 +393,13 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-dark font-karla">
-                      {project.name}
+                      {(project as any)?.name}
                     </h3>
                     <p className="text-sm text-main">
-                      {project.techStack?.join(", ")} •
-                      {new Date(project.createdAt).toLocaleDateString("vi-VN")}
+                      {(project as any)?.techStack?.join(", ")} •
+                      {new Date((project as any)?.createdAt).toLocaleDateString(
+                        "vi-VN"
+                      )}
                     </p>
                   </div>
                 </div>

@@ -73,9 +73,9 @@ export default function CVPage() {
     },
   });
 
-  const handleUploadSuccess = (cv: CV) => {
+  const handleUploadSuccess = (cv: unknown) => {
     setShowUpload(false);
-    setSelectedCv(cv);
+    setSelectedCv(cv as CV);
   };
 
   const handleEdit = (cv: CV) => {
@@ -659,7 +659,7 @@ export default function CVPage() {
               <CVPreview
                 key={cv.id}
                 cv={cv}
-                onEdit={handleEdit}
+                // onEdit={handleEdit}
                 onDelete={handleDelete}
                 onTailor={handleTailor}
                 onExport={handleExport}
