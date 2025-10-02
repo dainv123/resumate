@@ -31,13 +31,19 @@ docker-compose down
 # echo "🧹 Removing old images..."
 # docker-compose down --rmi all
 
-# Build images
+# Build images and fail fast on errors
 echo "🔨 Building Docker images..."
-docker-compose build --no-cache
+if ! docker-compose build --no-cache; then
+    echo "❌ Build failed. Aborting deployment."
+    exit 1
+fi
 
 # Start containers
 echo "▶️  Starting containers..."
-docker-compose up -d
+if ! docker-compose up -d; then
+    echo "❌ Failed to start containers. Aborting."
+    exit 1
+fi
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to be healthy..."
