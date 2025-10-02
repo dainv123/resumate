@@ -52,7 +52,7 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-  }, [searchParams, router, login]);
+  }, [searchParams, router, login, updateUser]);
 
   if (loading) {
     return (

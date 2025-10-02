@@ -50,7 +50,7 @@ export default function RegisterPage() {
       router.push("/dashboard");
     } catch (err: unknown) {
       const errorMessage = err && typeof err === 'object' && 'response' in err 
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message 
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || "Đăng ký thất bại"
         : "Đăng ký thất bại";
       setError(errorMessage);
     } finally {

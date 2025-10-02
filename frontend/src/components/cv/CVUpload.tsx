@@ -27,7 +27,7 @@ export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
     },
     onError: (error: unknown) => {
       const errorMessage = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Upload failed"
         : "Upload failed";
       onError?.(errorMessage);
     },

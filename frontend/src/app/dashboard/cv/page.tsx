@@ -103,29 +103,29 @@ export default function CVPage() {
   //   setShowView(true);
   // };
 
-  const duplicateMutation = useMutation({
-    mutationFn: async (cvId: string) => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/cv/${cvId}/duplicate`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to duplicate CV");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cvs"] });
-      alert("CV duplicated successfully!");
-    },
-    onError: () => {
-      alert("Failed to duplicate CV");
-    },
-  });
+  // const duplicateMutation = useMutation({
+  //   mutationFn: async (cvId: string) => {
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_URL}/cv/${cvId}/duplicate`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     if (!response.ok) throw new Error("Failed to duplicate CV");
+  //     return response.json();
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["cvs"] });
+  //     alert("CV duplicated successfully!");
+  //   },
+  //   onError: () => {
+  //     alert("Failed to duplicate CV");
+  //   },
+  // });
 
   // const handleDuplicate = (cv: CV) => {
   //   if (confirm("Are you sure you want to duplicate this CV?")) {
