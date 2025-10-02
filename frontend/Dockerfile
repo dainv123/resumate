@@ -28,6 +28,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Build the application
 RUN npm run build
 
+# Ensure public directory exists and copy from source if needed
+RUN if [ ! -d "/app/public" ] || [ ! "$(ls -A /app/public)" ]; then \
+    echo "Public directory missing or empty, copying from source..."; \
+    cp -r ./public/* /app/public/ 2>/dev/null || echo "No public files to copy"; \
+  fi
+
 # Stage 3: Production
 FROM node:20-alpine AS runner
 
