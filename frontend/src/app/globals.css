@@ -1,0 +1,286 @@
+@import "tailwindcss";
+
+/* Portfolio Theme Variables */
+:root {
+  --main-color: #55527c;
+  --dark-color: #130f49;
+  --yellow-color: #ff972d;
+  --blue-color: #a5a6ff;
+  --white-color: #fff;
+  --font-inter: "Inter", sans-serif;
+  --font-karla: "Karla", sans-serif;
+  --font-kristi: "Kristi", cursive;
+}
+
+/* Base Styles */
+html {
+  overflow-x: hidden;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-karla);
+}
+
+body {
+  font-family: var(--font-karla);
+  font-size: 18px;
+  line-height: 32px;
+  letter-spacing: 0;
+  word-wrap: break-word;
+  font-weight: 400;
+  background-color: #fff;
+  color: var(--main-color);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Typography Reset */
+* {
+  box-sizing: border-box;
+}
+
+/* Consistent Font Family for all elements */
+input,
+textarea,
+select,
+button {
+  font-family: var(--font-karla);
+}
+
+/* Button Styles */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Link Styles */
+a {
+  color: var(--blue-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--dark-color);
+  /* text-decoration: underline; */
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  font-family: var(--font-inter);
+  color: var(--dark-color);
+}
+
+h1 {
+  font-size: 45px;
+}
+h2 {
+  font-size: 36px;
+}
+h3 {
+  font-size: 30px;
+}
+h4 {
+  font-size: 24px;
+}
+h5 {
+  font-size: 20px;
+}
+h6 {
+  font-size: 16px;
+}
+
+/* Color Classes */
+.blueColor {
+  color: var(--blue-color);
+}
+.yellowColor {
+  color: var(--yellow-color);
+}
+
+/* Text Color Utilities */
+.text-main {
+  color: var(--main-color);
+}
+
+.text-dark {
+  color: var(--dark-color);
+}
+
+.text-blue {
+  color: var(--blue-color);
+}
+
+.text-yellow {
+  color: var(--yellow-color);
+}
+
+/* Background Color Utilities */
+.bg-main {
+  background-color: var(--main-color);
+}
+
+.bg-dark {
+  background-color: var(--dark-color);
+}
+
+.bg-blue {
+  background-color: var(--blue-color);
+  /* todo: remove this */
+  color: var(--white-color);
+}
+
+.bg-yellow {
+  background-color: var(--yellow-color);
+}
+
+/* Font Family Utilities */
+.font-inter {
+  font-family: var(--font-inter);
+}
+
+.font-karla {
+  font-family: var(--font-karla);
+}
+
+.font-kristi {
+  font-family: var(--font-kristi);
+}
+
+/* Border Color Utilities */
+.border-main {
+  border-color: var(--main-color);
+}
+
+.border-dark {
+  border-color: var(--dark-color);
+}
+
+.border-blue {
+  border-color: var(--blue-color);
+}
+
+.border-yellow {
+  border-color: var(--yellow-color);
+}
+
+/* Button Styles */
+.elisc_tm_button {
+  width: 100%;
+  float: left;
+}
+
+.elisc_tm_button a {
+  color: #fff;
+  background-color: #130f49;
+  display: inline-block;
+  border: 1.5px solid #130f49;
+  border-radius: 4px;
+  padding: 9px 40px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.elisc_tm_button a:hover {
+  background-color: transparent;
+  color: #55527c;
+}
+
+.elisc_tm_button[data-style="border"] a {
+  background-color: transparent;
+  color: #55527c;
+}
+
+.elisc_tm_button[data-style="border"] a:hover {
+  background-color: #130f49;
+  color: #fff;
+}
+
+/* Card Styles */
+.portfolio-card {
+  background-color: #fff;
+  border: 1px solid #f9fafc;
+  border-radius: 4px;
+  box-shadow: 30px 40px 80px #e4edf5;
+  padding: 45px 70px;
+  transition: all 0.3s ease;
+  display: inline-block;
+  width: 100%;
+}
+
+.portfolio-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Section Backgrounds */
+.section-bg-light {
+  background-color: #effbf8;
+}
+
+.section-bg-blue {
+  background-color: #f3f9ff;
+}
+
+.section-bg-pink {
+  background-color: #fff5f6;
+}
+
+.section-bg-green {
+  background-color: #e9f9ff;
+}
+
+/* Responsive Design */
+@media (max-width: 1600px) {
+  body {
+    font-size: 16px;
+    line-height: 30px;
+  }
+
+  h1 {
+    font-size: 40px;
+  }
+  h2 {
+    font-size: 32px;
+  }
+  h3 {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 1040px) {
+  .portfolio-card {
+    padding: 40px 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  h1 {
+    font-size: 35px;
+  }
+  h2 {
+    font-size: 28px;
+  }
+  h3 {
+    font-size: 24px;
+  }
+
+  .portfolio-card {
+    padding: 30px 20px;
+  }
+}
