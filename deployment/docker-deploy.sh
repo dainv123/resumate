@@ -25,7 +25,7 @@ fi
 
 # Stop existing containers
 echo "🛑 Stopping existing containers..."
-docker-compose down
+docker-compose -f docker-compose.prod.yml down
 
 # Remove old images (optional, uncomment if needed)
 # echo "🧹 Removing old images..."
@@ -33,14 +33,14 @@ docker-compose down
 
 # Build images and fail fast on errors
 echo "🔨 Building Docker images..."
-if ! docker-compose build --no-cache; then
+if ! docker-compose -f docker-compose.prod.yml build --no-cache; then
     echo "❌ Build failed. Aborting deployment."
     exit 1
 fi
 
 # Start containers
 echo "▶️  Starting containers..."
-if ! docker-compose up -d; then
+if ! docker-compose -f docker-compose.prod.yml up -d; then
     echo "❌ Failed to start containers. Aborting."
     exit 1
 fi

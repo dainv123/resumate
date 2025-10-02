@@ -35,11 +35,11 @@ RUN echo "=== Contents of /app/public ===" && ls -la /app/public || echo "Public
 # Ensure public directory exists
 RUN mkdir -p /app/public
 RUN if [ -d "./public" ] && [ "$(ls -A ./public)" ]; then \
-    echo "Copying public files from source..."; \
-    cp -r ./public/* /app/public/; \
+  echo "Copying public files from source..."; \
+  cp -r ./public/* /app/public/; \
   else \
-    echo "No public files to copy, creating empty directory"; \
-    touch /app/public/.gitkeep; \
+  echo "No public files to copy, creating empty directory"; \
+  touch /app/public/.gitkeep; \
   fi
 
 # Stage 3: Production
