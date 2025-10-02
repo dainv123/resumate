@@ -65,12 +65,12 @@ export const projectsApi = {
     await api.delete(`/projects/${id}`);
   },
 
-  addProjectToCv: async (projectId: string, cvId: string): Promise<any> => {
+  addProjectToCv: async (projectId: string, cvId: string): Promise<unknown> => {
     const response = await api.post(`/projects/${projectId}/add-to-cv`, { cvId });
     return response.data;
   },
 
-  removeProjectFromCv: async (projectId: string, cvId: string): Promise<any> => {
+  removeProjectFromCv: async (projectId: string, cvId: string): Promise<unknown> => {
     const response = await api.post(`/projects/${projectId}/remove-from-cv`, { cvId });
     return response.data;
   },

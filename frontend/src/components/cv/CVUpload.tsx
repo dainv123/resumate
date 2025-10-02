@@ -9,7 +9,7 @@ import { Upload, FileText, X, CheckCircle } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 
 interface CVUploadProps {
-  onSuccess?: (cv: any) => void;
+  onSuccess?: (cv: unknown) => void;
   onError?: (error: string) => void;
 }
 
@@ -25,8 +25,11 @@ export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
       setUploadedFile(null);
       onSuccess?.(data);
     },
-    onError: (error: any) => {
-      onError?.(error.response?.data?.message || "Upload failed");
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : "Upload failed";
+      onError?.(errorMessage);
     },
   });
 

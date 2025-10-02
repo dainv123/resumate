@@ -98,10 +98,10 @@ export default function CVPage() {
     exportMutation.mutate({ cv, format });
   };
 
-  const handleView = (cv: CV) => {
-    setSelectedCv(cv);
-    setShowView(true);
-  };
+  // const handleView = (cv: CV) => {
+  //   setSelectedCv(cv);
+  //   setShowView(true);
+  // };
 
   const duplicateMutation = useMutation({
     mutationFn: async (cvId: string) => {
@@ -127,29 +127,29 @@ export default function CVPage() {
     },
   });
 
-  const handleDuplicate = (cv: CV) => {
-    if (confirm("Are you sure you want to duplicate this CV?")) {
-      duplicateMutation.mutate(cv.id);
-    }
-  };
+  // const handleDuplicate = (cv: CV) => {
+  //   if (confirm("Are you sure you want to duplicate this CV?")) {
+  //     duplicateMutation.mutate(cv.id);
+  //   }
+  // };
 
-  const handleShare = (cv: CV) => {
-    // Generate shareable link
-    const shareUrl = `${window.location.origin}/cv/${cv.id}`;
-    navigator.clipboard.writeText(shareUrl);
-    alert("CV link copied to clipboard!");
-  };
+  // const handleShare = (cv: CV) => {
+  //   // Generate shareable link
+  //   const shareUrl = `${window.location.origin}/cv/${cv.id}`;
+  //   navigator.clipboard.writeText(shareUrl);
+  //   alert("CV link copied to clipboard!");
+  // };
 
   const handleRefresh = () => {
     // Refresh CV list
     queryClient.invalidateQueries({ queryKey: ["cvs"] });
   };
 
-  const handleBulkDelete = (cvIds: string[]) => {
-    if (confirm(`Are you sure you want to delete ${cvIds.length} CVs?`)) {
-      cvIds.forEach((id) => deleteMutation.mutate(id));
-    }
-  };
+  // const handleBulkDelete = (cvIds: string[]) => {
+  //   if (confirm(`Are you sure you want to delete ${cvIds.length} CVs?`)) {
+  //     cvIds.forEach((id) => deleteMutation.mutate(id));
+  //   }
+  // };
 
   // Filter and search CVs
   const filteredCvs = cvs.filter((cv) => {

@@ -4,7 +4,7 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import Button from "@/components/ui/Button";
+// import Button from "@/components/ui/Button";
 import { FileText, Users, Briefcase, Sparkles } from "lucide-react";
 
 export default function HomePage() {

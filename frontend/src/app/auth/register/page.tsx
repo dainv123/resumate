@@ -48,8 +48,11 @@ export default function RegisterPage() {
     try {
       await registerUser(data.email, data.name, data.password);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Đăng ký thất bại");
+    } catch (err: unknown) {
+      const errorMessage = err && typeof err === 'object' && 'response' in err 
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : "Đăng ký thất bại";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

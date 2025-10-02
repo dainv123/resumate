@@ -9,7 +9,7 @@ import {
   CreatePortfolioData,
 } from "@/lib/portfolio";
 import Button from "@/components/ui/Button";
-import { Users, Eye, Share2, Download, Sparkles } from "lucide-react";
+import { Eye, Share2, Download, Sparkles } from "lucide-react";
 
 export default function PortfolioPage() {
   const { user } = useAuth();

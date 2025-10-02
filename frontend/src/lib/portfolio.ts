@@ -29,10 +29,10 @@ export interface PortfolioData {
   cv: {
     summary?: string;
     skills: string[];
-    experience: any[];
-    education: any[];
+    experience: unknown[];
+    education: unknown[];
   };
-  projects: any[];
+  projects: unknown[];
   template: PortfolioTemplate;
   customDomain?: string;
 }

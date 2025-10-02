@@ -12,7 +12,7 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
   className = "",
   children,
 }) => {
-  const { login } = useAuth();
+  // const { login } = useAuth();
 
   const handleGoogleLogin = async () => {
     try {

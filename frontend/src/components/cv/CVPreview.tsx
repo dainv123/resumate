@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CV, CVData, cvApi } from "@/lib/cv";
+import { CV, cvApi } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
 import {
   Download,
@@ -18,7 +18,7 @@ import JobDescriptionModal from "./JobDescriptionModal";
 
 interface CVPreviewProps {
   cv: CV;
-  onEdit?: (cv: CV) => void;
+  // onEdit?: (cv: CV) => void;
   onDelete?: (cv: CV) => void;
   onTailor?: (cv: CV) => void;
   onExport?: (cv: CV, format: "pdf" | "word" | "ats") => void;
@@ -27,7 +27,7 @@ interface CVPreviewProps {
 
 export default function CVPreview({
   cv,
-  onEdit,
+  // onEdit,
   onDelete,
   onTailor,
   onExport,

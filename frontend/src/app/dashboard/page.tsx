@@ -21,11 +21,11 @@ import { projectsApi } from "@/lib/projects";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [cvs, setCvs] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [cvs, setCvs] = useState<unknown[]>([]);
+  const [projects, setProjects] = useState<unknown[]>([]);
 
   // Calculate real metrics
-  const calculateCVQualityScore = (cvs: any[]): number => {
+  const calculateCVQualityScore = (cvs: unknown[]): number => {
     if (cvs.length === 0) return 0;
 
     let totalScore = 0;
@@ -71,9 +71,9 @@ export default function DashboardPage() {
   };
 
   const calculateProfileCompleteness = (
-    user: any,
-    cvs: any[],
-    projects: any[]
+    user: unknown,
+    cvs: unknown[],
+    projects: unknown[]
   ): number => {
     let score = 0;
 
@@ -100,7 +100,7 @@ export default function DashboardPage() {
     return Math.min(100, score);
   };
 
-  const calculateSuccessRate = (cvs: any[]): number => {
+  const calculateSuccessRate = (cvs: unknown[]): number => {
     if (cvs.length === 0) return 0;
 
     const tailoredCvs = cvs.filter((cv) => cv.isTailored);
@@ -330,7 +330,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-4">
-            {recentCvs.map((cv, index) => (
+            {recentCvs.map((cv) => (
               <div
                 key={cv.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
@@ -380,7 +380,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-4">
-            {recentProjects.map((project, index) => (
+            {recentProjects.map((project) => (
               <div
                 key={project.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
