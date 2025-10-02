@@ -9,6 +9,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR" || exit 1
 
+# Get VPS IP address
+VPS_IP=$(hostname -I | awk '{print $1}')
+echo "🌐 VPS IP: $VPS_IP"
+
+# Set environment variables for API URLs
+export NEXT_PUBLIC_API_URL="http://$VPS_IP:5001"
+export NEXT_PUBLIC_APP_URL="http://$VPS_IP:5000"
+export FRONTEND_URL="http://$VPS_IP:5000"
+
 # Check if .env file exists
 if [ ! -f "$ROOT_DIR/.env" ]; then
     echo "⚠️  Warning: .env file not found at $ROOT_DIR!"
