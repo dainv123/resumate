@@ -22,6 +22,16 @@ export class ExportService {
         },
         printBackground: true,
         displayHeaderFooter: false,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
       };
 
       const file = { content: html };
