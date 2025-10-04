@@ -4,7 +4,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as pdf from 'html-pdf-node';
+import { pdf } from '@react-pdf/renderer';
 
 @Injectable()
 export class ExportService {
@@ -12,26 +12,11 @@ export class ExportService {
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
     try {
-      this.logger.log('Starting PDF generation with html-pdf-node...');
+      this.logger.log('Starting PDF generation with @react-pdf/renderer...');
       
-      const html = this.generateHTML(cvData, template);
+      const ReactPDFDocument = this.generateReactPDFDocument(cvData, template);
       
-      const options = {
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
-        },
-        printBackground: true,
-        displayHeaderFooter: false,
-        timeout: 30000,
-      };
-
-      const file = { content: html };
-      
-      const pdfBuffer = await pdf.generatePdf(file, options) as unknown as Buffer;
+      const pdfBuffer = await pdf(ReactPDFDocument).toBuffer() as unknown as Buffer;
       
       if (!pdfBuffer || pdfBuffer.length === 0) {
         throw new Error('Generated PDF is empty');
@@ -903,6 +888,209 @@ export class ExportService {
     `;
   }
 
+
+  private generateReactPDFDocument(cvData: CVData, template: string): any {
+    const { Document, Page, Text, View, StyleSheet } = require('@react-pdf/renderer');
+    
+    const styles = StyleSheet.create({
+      page: {
+        flexDirection: 'column',
+        backgroundColor: '#FFFFFF',
+        padding: 30,
+        fontSize: 12,
+        lineHeight: 1.4,
+      },
+      header: {
+        textAlign: 'center',
+        marginBottom: 20,
+      },
+      name: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#2c3e50',
+      },
+      title: {
+        fontSize: 14,
+        color: '#6c757d',
+        marginBottom: 10,
+      },
+      contact: {
+        fontSize: 11,
+        color: '#495057',
+        marginBottom: 15,
+      },
+      section: {
+        marginBottom: 15,
+      },
+      sectionTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        color: '#2c3e50',
+        borderBottom: '1px solid #dee2e6',
+        paddingBottom: 3,
+      },
+      experienceItem: {
+        marginBottom: 12,
+      },
+      jobTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+      },
+      company: {
+        fontSize: 11,
+        color: '#6c757d',
+        marginBottom: 3,
+      },
+      duration: {
+        fontSize: 10,
+        color: '#007bff',
+        fontStyle: 'italic',
+        marginBottom: 5,
+      },
+      description: {
+        fontSize: 10,
+        color: '#495057',
+        marginBottom: 3,
+      },
+      skillsList: {
+        fontSize: 10,
+        color: '#495057',
+        marginBottom: 2,
+      },
+      educationItem: {
+        marginBottom: 8,
+      },
+      degree: {
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+      },
+      school: {
+        fontSize: 10,
+        color: '#6c757d',
+      },
+      projectItem: {
+        marginBottom: 10,
+      },
+      projectName: {
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+      },
+      projectDescription: {
+        fontSize: 10,
+        color: '#495057',
+        marginBottom: 3,
+      },
+    });
+
+    return (
+      Document({},
+        Page({ style: styles.page },
+          // Header
+          View({ style: styles.header },
+            Text({ style: styles.name }, cvData.name.toUpperCase()),
+            cvData.experience.length > 0 && Text({ style: styles.title }, cvData.experience[0].title),
+            Text({ style: styles.contact }, `${cvData.email} | ${cvData.phone}`),
+            cvData.address && Text({ style: styles.contact }, cvData.address)
+          ),
+
+          // Summary
+          cvData.summary && View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'PROFILE SUMMARY'),
+            Text({ style: styles.description }, cvData.summary)
+          ),
+
+          // Experience
+          View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'WORK EXPERIENCE'),
+            ...cvData.experience.map(exp => 
+              View({ style: styles.experienceItem, key: `${exp.company}-${exp.title}` },
+                Text({ style: styles.jobTitle }, `${exp.title} at ${exp.company}`),
+                Text({ style: styles.duration }, exp.duration),
+                exp.teamSize && Text({ style: styles.description }, `Team Size: ${exp.teamSize}`),
+                exp.companyDescription && Text({ style: styles.description }, exp.companyDescription),
+                exp.responsibilities && exp.responsibilities.length > 0 && 
+                  Text({ style: styles.description }, `Responsibilities: ${exp.responsibilities.join(', ')}`),
+                exp.achievements && exp.achievements.length > 0 && 
+                  Text({ style: styles.description }, `Achievements: ${exp.achievements.join(', ')}`),
+                exp.technologies && exp.technologies.length > 0 && 
+                  Text({ style: styles.description }, `Technologies: ${exp.technologies.join(', ')}`)
+              )
+            )
+          ),
+
+          // Skills
+          View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'SKILLS'),
+            cvData.skills.technical && cvData.skills.technical.length > 0 && 
+              Text({ style: styles.skillsList }, `Technical: ${cvData.skills.technical.join(', ')}`),
+            cvData.skills.soft && cvData.skills.soft.length > 0 && 
+              Text({ style: styles.skillsList }, `Soft Skills: ${cvData.skills.soft.join(', ')}`),
+            cvData.skills.tools && cvData.skills.tools.length > 0 && 
+              Text({ style: styles.skillsList }, `Tools: ${cvData.skills.tools.join(', ')}`),
+            cvData.skills.languages && cvData.skills.languages.length > 0 && 
+              Text({ style: styles.skillsList }, `Languages: ${cvData.skills.languages.join(', ')}`)
+          ),
+
+          // Education
+          View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'EDUCATION'),
+            ...cvData.education.map(edu => 
+              View({ style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
+                Text({ style: styles.degree }, `${edu.degree} - ${edu.school}`),
+                Text({ style: styles.school }, `Year: ${edu.year}`),
+                edu.gpa && Text({ style: styles.school }, `GPA: ${edu.gpa}`),
+                edu.honors && Text({ style: styles.school }, `Honors: ${edu.honors}`)
+              )
+            )
+          ),
+
+          // Projects
+          cvData.projects && cvData.projects.length > 0 && View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'PROJECTS'),
+            ...cvData.projects.map(project => 
+              View({ style: styles.projectItem, key: project.name },
+                Text({ style: styles.projectName }, project.name),
+                project.duration && Text({ style: styles.duration }, project.duration),
+                Text({ style: styles.projectDescription }, project.description),
+                project.techStack && project.techStack.length > 0 && 
+                  Text({ style: styles.description }, `Tech Stack: ${project.techStack.join(', ')}`),
+                project.results && Text({ style: styles.description }, `Results: ${project.results}`),
+                project.link && Text({ style: styles.description }, `Link: ${project.link}`)
+              )
+            )
+          ),
+
+          // Certifications
+          cvData.certifications && cvData.certifications.length > 0 && View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'CERTIFICATIONS'),
+            ...cvData.certifications.map(cert => 
+              View({ style: styles.educationItem, key: cert.name },
+                Text({ style: styles.degree }, cert.name),
+                Text({ style: styles.school }, `${cert.issuer} - ${cert.date}`),
+                cert.link && Text({ style: styles.school }, `Link: ${cert.link}`)
+              )
+            )
+          ),
+
+          // Awards
+          cvData.awards && cvData.awards.length > 0 && View({ style: styles.section },
+            Text({ style: styles.sectionTitle }, 'AWARDS'),
+            ...cvData.awards.map(award => 
+              View({ style: styles.educationItem, key: award.name },
+                Text({ style: styles.degree }, award.name),
+                Text({ style: styles.school }, `${award.issuer} - ${award.date}`)
+              )
+            )
+          )
+        )
+      )
+    );
+  }
 
   private formatForATS(cvData: CVData): string {
     return `
