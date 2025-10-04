@@ -1,50 +1,91 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CVData } from '../../modules/cv/entities/cv.entity';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import puppeteer from 'puppeteer';
 
 @Injectable()
 export class ExportService {
   private readonly logger = new Logger(ExportService.name);
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
-    const execAsync = promisify(exec);
-    let tempHtmlFile: string;
-    let tempPdfFile: string;
-
+    let browser: puppeteer.Browser | null = null;
+    
     try {
       const html = this.generateHTML(cvData, template);
       
-      // Create temporary files
-      tempHtmlFile = path.join(os.tmpdir(), `cv-${Date.now()}.html`);
-      tempPdfFile = path.join(os.tmpdir(), `cv-${Date.now()}.pdf`);
+      this.logger.log('Starting PDF generation with Puppeteer...');
       
-      // Write HTML to temporary file
-      await fs.promises.writeFile(tempHtmlFile, html, 'utf8');
+      // Launch browser with proper configuration for Docker
+      browser = await puppeteer.launch({
+        headless: 'new',
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+        ],
+        timeout: 30000,
+      });
+
+      const page = await browser.newPage();
       
-      // Generate PDF using wkhtmltopdf
-      const command = `xvfb-run -a wkhtmltopdf --page-size A4 --margin-top 20mm --margin-right 20mm --margin-bottom 20mm --margin-left 20mm --print-media-type --disable-smart-shrinking "${tempHtmlFile}" "${tempPdfFile}"`;
-      
-      await execAsync(command);
-      
-      // Read the generated PDF
-      const pdfBuffer = await fs.promises.readFile(tempPdfFile);
-      
+      // Set viewport for consistent rendering
+      await page.setViewport({
+        width: 794, // A4 width in pixels at 96 DPI
+        height: 1123, // A4 height in pixels at 96 DPI
+        deviceScaleFactor: 1,
+      });
+
+      // Set content and wait for it to load
+      await page.setContent(html, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
+      });
+
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm',
+        },
+        printBackground: true,
+        preferCSSPageSize: true,
+        timeout: 30000,
+      });
+
+      if (pdfBuffer.length === 0) {
+        throw new Error('Generated PDF is empty');
+      }
+
+      this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
       return pdfBuffer;
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
-      throw new Error('Failed to generate PDF');
+      throw new Error(`Failed to generate PDF: ${error.message}`);
     } finally {
-      // Clean up temporary files
-      try {
-        if (tempHtmlFile) await fs.promises.unlink(tempHtmlFile);
-        if (tempPdfFile) await fs.promises.unlink(tempPdfFile);
-      } catch (cleanupError) {
-        this.logger.warn('Failed to clean up temporary files:', cleanupError);
+      // Clean up browser
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (closeError) {
+          this.logger.warn('Failed to close browser:', closeError);
+        }
       }
     }
   }

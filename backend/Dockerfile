@@ -27,18 +27,31 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install wkhtmltopdf for PDF generation
+# Install dependencies for PDF generation
 RUN apk add --no-cache \
-  wkhtmltopdf \
-  xvfb \
-  ttf-dejavu \
-  ttf-droid \
+  chromium \
+  nss \
+  freetype \
+  freetype-dev \
+  harfbuzz \
+  ca-certificates \
   ttf-freefont \
+  ttf-dejavu \
   ttf-liberation \
+  fontconfig \
+  curl \
+  xvfb \
   && rm -rf /var/cache/apk/*
 
 # Set display for headless operation
 ENV DISPLAY=:99
+
+# Create temp directory with proper permissions
+RUN mkdir -p /tmp/pdf && chmod 777 /tmp/pdf
+
+# Tell Puppeteer to skip installing Chromium. We'll be using the installed package.
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+  PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy package files
 COPY package*.json ./
