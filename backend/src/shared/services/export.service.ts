@@ -17,7 +17,19 @@ export class ExportService {
       
       const ReactPDFDocument = this.generateReactPDFDocument(cvData, template);
       
-      const pdfBuffer = await pdf(ReactPDFDocument).toBuffer() as unknown as Buffer;
+      const pdfStream = await pdf(ReactPDFDocument).toBuffer();
+      
+      // Convert ReadableStream to Buffer
+      const chunks: Uint8Array[] = [];
+      const reader = (pdfStream as any).getReader();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      
+      const pdfBuffer = Buffer.concat(chunks);
       
       if (!pdfBuffer || pdfBuffer.length === 0) {
         throw new Error('Generated PDF is empty');
