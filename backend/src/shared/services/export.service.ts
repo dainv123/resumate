@@ -1,60 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CVData } from '../../modules/cv/entities/cv.entity';
-import * as puppeteer from 'puppeteer';
-import * as htmlPdf from 'html-pdf-node';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 @Injectable()
 export class ExportService {
   private readonly logger = new Logger(ExportService.name);
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
+    const execAsync = promisify(exec);
+    let tempHtmlFile: string;
+    let tempPdfFile: string;
+
     try {
       const html = this.generateHTML(cvData, template);
       
-      const options = {
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
-        },
-        printBackground: true,
-        displayHeaderFooter: false,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--no-first-run',
-          '--single-process',
-          '--disable-extensions',
-          '--disable-plugins',
-          '--disable-images',
-          '--disable-javascript',
-          '--disable-default-apps',
-          '--disable-sync',
-          '--disable-translate',
-          '--hide-scrollbars',
-          '--mute-audio',
-          '--no-first-run',
-          '--safebrowsing-disable-auto-update',
-          '--disable-ipc-flooding-protection'
-        ],
-        headless: true,
-        timeout: 60000,
-      };
-
-      const file = { content: html };
-      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      // Create temporary files
+      tempHtmlFile = path.join(os.tmpdir(), `cv-${Date.now()}.html`);
+      tempPdfFile = path.join(os.tmpdir(), `cv-${Date.now()}.pdf`);
       
-      return pdfBuffer as unknown as Buffer;
+      // Write HTML to temporary file
+      await fs.promises.writeFile(tempHtmlFile, html, 'utf8');
+      
+      // Generate PDF using wkhtmltopdf
+      const command = `xvfb-run -a wkhtmltopdf --page-size A4 --margin-top 20mm --margin-right 20mm --margin-bottom 20mm --margin-left 20mm --print-media-type --disable-smart-shrinking "${tempHtmlFile}" "${tempPdfFile}"`;
+      
+      await execAsync(command);
+      
+      // Read the generated PDF
+      const pdfBuffer = await fs.promises.readFile(tempPdfFile);
+      
+      return pdfBuffer;
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
       throw new Error('Failed to generate PDF');
+    } finally {
+      // Clean up temporary files
+      try {
+        if (tempHtmlFile) await fs.promises.unlink(tempHtmlFile);
+        if (tempPdfFile) await fs.promises.unlink(tempPdfFile);
+      } catch (cleanupError) {
+        this.logger.warn('Failed to clean up temporary files:', cleanupError);
+      }
     }
   }
 
