@@ -4,7 +4,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 
 @Injectable()
 export class ExportService {
@@ -20,7 +20,7 @@ export class ExportService {
       
       // Launch browser with proper configuration for Docker
       browser = await puppeteer.launch({
-        headless: 'new',
+        headless: true,
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
         args: [
           '--no-sandbox',
@@ -56,7 +56,7 @@ export class ExportService {
       });
 
       // Generate PDF
-      const pdfBuffer = await page.pdf({
+      const pdfUint8Array = await page.pdf({
         format: 'A4',
         margin: {
           top: '20mm',
@@ -69,9 +69,12 @@ export class ExportService {
         timeout: 30000,
       });
 
-      if (pdfBuffer.length === 0) {
+      if (pdfUint8Array.length === 0) {
         throw new Error('Generated PDF is empty');
       }
+
+      // Convert Uint8Array to Buffer
+      const pdfBuffer = Buffer.from(pdfUint8Array);
 
       this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
       return pdfBuffer;
