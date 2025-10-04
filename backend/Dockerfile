@@ -35,11 +35,14 @@ RUN apk add --no-cache \
   freetype-dev \
   harfbuzz \
   ca-certificates \
-  ttf-freefont
+  ttf-freefont \
+  && rm -rf /var/cache/apk/*
 
 # Tell Puppeteer to use the installed Chromium
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV CHROME_PATH=/usr/bin/chromium-browser
 
 # Copy package files
 COPY package*.json ./
