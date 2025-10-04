@@ -4,7 +4,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import PDFDocument from 'pdfkit';
+import * as pdf from 'html-pdf-node';
 
 @Injectable()
 export class ExportService {
@@ -12,41 +12,33 @@ export class ExportService {
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
     try {
-      this.logger.log('Starting PDF generation with PDFKit...');
+      this.logger.log('Starting PDF generation with html-pdf-node...');
       
-      const doc = new PDFDocument({
-        size: 'A4',
-        margins: {
-          top: 50,
-          bottom: 50,
-          left: 50,
-          right: 50
-        }
-      });
-
-      const chunks: Buffer[] = [];
-      doc.on('data', (chunk) => chunks.push(chunk));
+      const html = this.generateHTML(cvData, template);
       
-      return new Promise((resolve, reject) => {
-        doc.on('end', () => {
-          const pdfBuffer = Buffer.concat(chunks);
-          this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
-          resolve(pdfBuffer);
-        });
+      const options = {
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm',
+        },
+        printBackground: true,
+        displayHeaderFooter: false,
+        timeout: 30000,
+      };
 
-        doc.on('error', (error) => {
-          this.logger.error('Error generating PDF:', error);
-          reject(new Error(`Failed to generate PDF: ${error.message}`));
-        });
+      const file = { content: html };
+      
+      const pdfBuffer = await pdf.generatePdf(file, options) as unknown as Buffer;
+      
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new Error('Generated PDF is empty');
+      }
 
-        try {
-          this.generatePDFContent(doc, cvData, template);
-          doc.end();
-        } catch (error) {
-          this.logger.error('Error generating PDF content:', error);
-          reject(new Error(`Failed to generate PDF content: ${error.message}`));
-        }
-      });
+      this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+      return pdfBuffer;
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
       throw new Error(`Failed to generate PDF: ${error.message}`);
@@ -911,163 +903,6 @@ export class ExportService {
     `;
   }
 
-  private generatePDFContent(doc: PDFDocument, cvData: CVData, template: string): void {
-    // Header
-    doc.fontSize(24).font('Helvetica-Bold').text(cvData.name.toUpperCase(), { align: 'center' });
-    doc.moveDown(0.5);
-    
-    if (cvData.experience.length > 0) {
-      doc.fontSize(14).font('Helvetica').text(cvData.experience[0].title, { align: 'center' });
-    }
-    doc.moveDown(1);
-
-    // Contact Information
-    doc.fontSize(12).font('Helvetica').text(`${cvData.email} | ${cvData.phone}`, { align: 'center' });
-    if (cvData.address) {
-      doc.text(cvData.address, { align: 'center' });
-    }
-    doc.moveDown(1);
-
-    // Summary
-    if (cvData.summary) {
-      doc.fontSize(14).font('Helvetica-Bold').text('PROFILE SUMMARY');
-      doc.moveDown(0.3);
-      doc.fontSize(11).font('Helvetica').text(cvData.summary, { align: 'justify' });
-      doc.moveDown(1);
-    }
-
-    // Experience
-    doc.fontSize(14).font('Helvetica-Bold').text('WORK EXPERIENCE');
-    doc.moveDown(0.3);
-    
-    cvData.experience.forEach(exp => {
-      doc.fontSize(12).font('Helvetica-Bold').text(`${exp.title} at ${exp.company}`);
-      doc.fontSize(10).font('Helvetica-Oblique').text(exp.duration);
-      
-      if (exp.teamSize) {
-        doc.fontSize(10).font('Helvetica').text(`Team Size: ${exp.teamSize}`);
-      }
-      
-      if (exp.companyDescription) {
-        doc.fontSize(10).font('Helvetica-Oblique').text(exp.companyDescription);
-      }
-      
-      if (exp.responsibilities && exp.responsibilities.length > 0) {
-        doc.fontSize(10).font('Helvetica-Bold').text('Responsibilities:');
-        exp.responsibilities.forEach(resp => {
-          doc.fontSize(10).font('Helvetica').text(`• ${resp}`, { indent: 20 });
-        });
-      }
-      
-      if (exp.achievements && exp.achievements.length > 0) {
-        doc.fontSize(10).font('Helvetica-Bold').text('Achievements:');
-        exp.achievements.forEach(achievement => {
-          doc.fontSize(10).font('Helvetica').text(`• ${achievement}`, { indent: 20 });
-        });
-      }
-      
-      if (exp.technologies && exp.technologies.length > 0) {
-        doc.fontSize(10).font('Helvetica').text(`Technologies: ${exp.technologies.join(', ')}`);
-      }
-      
-      doc.moveDown(0.5);
-    });
-
-    // Skills
-    doc.fontSize(14).font('Helvetica-Bold').text('SKILLS');
-    doc.moveDown(0.3);
-    
-    if (cvData.skills.technical && cvData.skills.technical.length > 0) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Technical Skills:');
-      doc.fontSize(10).font('Helvetica').text(cvData.skills.technical.join(', '));
-      doc.moveDown(0.3);
-    }
-    
-    if (cvData.skills.soft && cvData.skills.soft.length > 0) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Soft Skills:');
-      doc.fontSize(10).font('Helvetica').text(cvData.skills.soft.join(', '));
-      doc.moveDown(0.3);
-    }
-    
-    if (cvData.skills.tools && cvData.skills.tools.length > 0) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Tools:');
-      doc.fontSize(10).font('Helvetica').text(cvData.skills.tools.join(', '));
-      doc.moveDown(0.3);
-    }
-    
-    if (cvData.skills.languages && cvData.skills.languages.length > 0) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Languages:');
-      doc.fontSize(10).font('Helvetica').text(cvData.skills.languages.join(', '));
-      doc.moveDown(0.3);
-    }
-
-    // Education
-    doc.fontSize(14).font('Helvetica-Bold').text('EDUCATION');
-    doc.moveDown(0.3);
-    
-    cvData.education.forEach(edu => {
-      doc.fontSize(11).font('Helvetica-Bold').text(`${edu.degree} - ${edu.school}`);
-      doc.fontSize(10).font('Helvetica').text(`Year: ${edu.year}`);
-      if (edu.gpa) {
-        doc.fontSize(10).font('Helvetica').text(`GPA: ${edu.gpa}`);
-      }
-      if (edu.honors) {
-        doc.fontSize(10).font('Helvetica').text(`Honors: ${edu.honors}`);
-      }
-      doc.moveDown(0.3);
-    });
-
-    // Projects
-    if (cvData.projects && cvData.projects.length > 0) {
-      doc.fontSize(14).font('Helvetica-Bold').text('PROJECTS');
-      doc.moveDown(0.3);
-      
-      cvData.projects.forEach(project => {
-        doc.fontSize(11).font('Helvetica-Bold').text(project.name);
-        if (project.duration) {
-          doc.fontSize(10).font('Helvetica-Oblique').text(project.duration);
-        }
-        doc.fontSize(10).font('Helvetica').text(project.description, { align: 'justify' });
-        if (project.techStack && project.techStack.length > 0) {
-          doc.fontSize(10).font('Helvetica').text(`Tech Stack: ${project.techStack.join(', ')}`);
-        }
-        if (project.results) {
-          doc.fontSize(10).font('Helvetica').text(`Results: ${project.results}`);
-        }
-        if (project.link) {
-          doc.fontSize(10).font('Helvetica').text(`Link: ${project.link}`);
-        }
-        doc.moveDown(0.3);
-      });
-    }
-
-    // Certifications
-    if (cvData.certifications && cvData.certifications.length > 0) {
-      doc.fontSize(14).font('Helvetica-Bold').text('CERTIFICATIONS');
-      doc.moveDown(0.3);
-      
-      cvData.certifications.forEach(cert => {
-        doc.fontSize(11).font('Helvetica-Bold').text(cert.name);
-        doc.fontSize(10).font('Helvetica').text(`${cert.issuer} - ${cert.date}`);
-        if (cert.link) {
-          doc.fontSize(10).font('Helvetica').text(`Link: ${cert.link}`);
-        }
-        doc.moveDown(0.3);
-      });
-    }
-
-    // Awards
-    if (cvData.awards && cvData.awards.length > 0) {
-      doc.fontSize(14).font('Helvetica-Bold').text('AWARDS');
-      doc.moveDown(0.3);
-      
-      cvData.awards.forEach(award => {
-        doc.fontSize(11).font('Helvetica-Bold').text(award.name);
-        doc.fontSize(10).font('Helvetica').text(`${award.issuer} - ${award.date}`);
-        doc.moveDown(0.3);
-      });
-    }
-  }
 
   private formatForATS(cvData: CVData): string {
     return `
