@@ -8,6 +8,12 @@ services:
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-5001}:5001"
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${BACKEND_PORT:-5001}

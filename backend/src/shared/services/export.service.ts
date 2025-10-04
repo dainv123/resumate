@@ -19,9 +19,8 @@ export class ExportService {
       this.logger.log('Starting PDF generation with Puppeteer...');
       
       // Launch browser with proper configuration for Docker
-      browser = await puppeteer.launch({
+      const launchOptions: any = {
         headless: true,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -36,9 +35,110 @@ export class ExportService {
           '--disable-renderer-backgrounding',
           '--disable-features=TranslateUI',
           '--disable-ipc-flooding-protection',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-images',
+          '--disable-javascript',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-translate',
+          '--hide-scrollbars',
+          '--mute-audio',
+          '--no-default-browser-check',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--run-all-compositor-stages-before-draw',
+          '--disable-threaded-animation',
+          '--disable-threaded-scrolling',
+          '--disable-checker-imaging',
+          '--disable-new-content-rendering-timeout',
+          '--disable-background-networking',
+          '--disable-component-extensions-with-background-pages',
+          '--disable-client-side-phishing-detection',
+          '--disable-hang-monitor',
+          '--disable-prompt-on-repost',
+          '--disable-domain-reliability',
+          '--disable-features=AudioServiceOutOfProcess',
+          '--disable-print-preview',
+          '--disable-speech-api',
+          '--disable-file-system',
+          '--disable-permissions-api',
+          '--disable-presentation-api',
+          '--disable-remote-fonts',
+          '--disable-speech-synthesis-api',
+          '--disable-webgl',
+          '--disable-webgl2',
+          '--disable-3d-apis',
+          '--disable-accelerated-video-decode',
+          '--disable-accelerated-mjpeg-decode',
+          '--disable-gpu-compositing',
+          '--disable-gpu-rasterization',
+          '--disable-gpu-sandbox',
+          '--disable-software-rasterizer',
+          '--disable-background-mode',
+          '--disable-background-timer-throttling',
+          '--disable-renderer-backgrounding',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-field-trial-config',
+          '--disable-back-forward-cache',
+          '--disable-ipc-flooding-protection',
+          '--force-color-profile=srgb',
+          '--metrics-recording-only',
+          '--use-mock-keychain',
+          '--disable-component-update',
+          '--disable-default-apps',
+          '--disable-extensions',
+          '--disable-sync',
+          '--disable-translate',
+          '--hide-scrollbars',
+          '--mute-audio',
+          '--no-default-browser-check',
+          '--no-first-run',
+          '--no-pings',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--disable-setuid-sandbox',
+          '--no-sandbox',
+          '--memory-pressure-off',
+          '--max_old_space_size=512',
         ],
         timeout: 30000,
-      });
+        protocolTimeout: 30000,
+        ignoreDefaultArgs: ['--disable-extensions'],
+        dumpio: false,
+      };
+
+      // Try different executable paths
+      const possiblePaths = [
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+        '/usr/bin/chromium-wrapper',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/usr/bin/google-chrome',
+        '/usr/bin/google-chrome-stable',
+        '/opt/google/chrome/chrome',
+      ];
+
+      for (const path of possiblePaths) {
+        if (path) {
+          try {
+            launchOptions.executablePath = path;
+            this.logger.log(`Trying to launch browser with: ${path}`);
+            browser = await puppeteer.launch(launchOptions);
+            this.logger.log(`Successfully launched browser with: ${path}`);
+            break;
+          } catch (error) {
+            this.logger.warn(`Failed to launch browser with ${path}: ${error.message}`);
+            continue;
+          }
+        }
+      }
+
+      if (!browser) {
+        throw new Error('Failed to launch browser with any executable path');
+      }
 
       const page = await browser.newPage();
       
