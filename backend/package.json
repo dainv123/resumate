@@ -46,6 +46,7 @@
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
     "puppeteer": "^24.22.3",
+    "react": "^19.2.0",
     "redis": "^5.8.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

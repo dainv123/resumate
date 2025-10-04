@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { pdf } from '@react-pdf/renderer';
+import React from 'react';
 
 @Injectable()
 export class ExportService {
@@ -987,104 +988,102 @@ export class ExportService {
       },
     });
 
-    return (
-      Document({},
-        Page({ style: styles.page },
-          // Header
-          View({ style: styles.header },
-            Text({ style: styles.name }, cvData.name.toUpperCase()),
-            cvData.experience.length > 0 && Text({ style: styles.title }, cvData.experience[0].title),
-            Text({ style: styles.contact }, `${cvData.email} | ${cvData.phone}`),
-            cvData.address && Text({ style: styles.contact }, cvData.address)
-          ),
+    return React.createElement(Document, {},
+      React.createElement(Page, { style: styles.page },
+        // Header
+        React.createElement(View, { style: styles.header },
+          React.createElement(Text, { style: styles.name }, cvData.name.toUpperCase()),
+          cvData.experience.length > 0 && React.createElement(Text, { style: styles.title }, cvData.experience[0].title),
+          React.createElement(Text, { style: styles.contact }, `${cvData.email} | ${cvData.phone}`),
+          cvData.address && React.createElement(Text, { style: styles.contact }, cvData.address)
+        ),
 
-          // Summary
-          cvData.summary && View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'PROFILE SUMMARY'),
-            Text({ style: styles.description }, cvData.summary)
-          ),
+        // Summary
+        cvData.summary && React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'PROFILE SUMMARY'),
+          React.createElement(Text, { style: styles.description }, cvData.summary)
+        ),
 
-          // Experience
-          View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'WORK EXPERIENCE'),
-            ...cvData.experience.map(exp => 
-              View({ style: styles.experienceItem, key: `${exp.company}-${exp.title}` },
-                Text({ style: styles.jobTitle }, `${exp.title} at ${exp.company}`),
-                Text({ style: styles.duration }, exp.duration),
-                exp.teamSize && Text({ style: styles.description }, `Team Size: ${exp.teamSize}`),
-                exp.companyDescription && Text({ style: styles.description }, exp.companyDescription),
-                exp.responsibilities && exp.responsibilities.length > 0 && 
-                  Text({ style: styles.description }, `Responsibilities: ${exp.responsibilities.join(', ')}`),
-                exp.achievements && exp.achievements.length > 0 && 
-                  Text({ style: styles.description }, `Achievements: ${exp.achievements.join(', ')}`),
-                exp.technologies && exp.technologies.length > 0 && 
-                  Text({ style: styles.description }, `Technologies: ${exp.technologies.join(', ')}`)
-              )
+        // Experience
+        React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'WORK EXPERIENCE'),
+          ...cvData.experience.map(exp => 
+            React.createElement(View, { style: styles.experienceItem, key: `${exp.company}-${exp.title}` },
+              React.createElement(Text, { style: styles.jobTitle }, `${exp.title} at ${exp.company}`),
+              React.createElement(Text, { style: styles.duration }, exp.duration),
+              exp.teamSize && React.createElement(Text, { style: styles.description }, `Team Size: ${exp.teamSize}`),
+              exp.companyDescription && React.createElement(Text, { style: styles.description }, exp.companyDescription),
+              exp.responsibilities && exp.responsibilities.length > 0 && 
+                React.createElement(Text, { style: styles.description }, `Responsibilities: ${exp.responsibilities.join(', ')}`),
+              exp.achievements && exp.achievements.length > 0 && 
+                React.createElement(Text, { style: styles.description }, `Achievements: ${exp.achievements.join(', ')}`),
+              exp.technologies && exp.technologies.length > 0 && 
+                React.createElement(Text, { style: styles.description }, `Technologies: ${exp.technologies.join(', ')}`)
             )
-          ),
+          )
+        ),
 
-          // Skills
-          View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'SKILLS'),
-            cvData.skills.technical && cvData.skills.technical.length > 0 && 
-              Text({ style: styles.skillsList }, `Technical: ${cvData.skills.technical.join(', ')}`),
-            cvData.skills.soft && cvData.skills.soft.length > 0 && 
-              Text({ style: styles.skillsList }, `Soft Skills: ${cvData.skills.soft.join(', ')}`),
-            cvData.skills.tools && cvData.skills.tools.length > 0 && 
-              Text({ style: styles.skillsList }, `Tools: ${cvData.skills.tools.join(', ')}`),
-            cvData.skills.languages && cvData.skills.languages.length > 0 && 
-              Text({ style: styles.skillsList }, `Languages: ${cvData.skills.languages.join(', ')}`)
-          ),
+        // Skills
+        React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'SKILLS'),
+          cvData.skills.technical && cvData.skills.technical.length > 0 && 
+            React.createElement(Text, { style: styles.skillsList }, `Technical: ${cvData.skills.technical.join(', ')}`),
+          cvData.skills.soft && cvData.skills.soft.length > 0 && 
+            React.createElement(Text, { style: styles.skillsList }, `Soft Skills: ${cvData.skills.soft.join(', ')}`),
+          cvData.skills.tools && cvData.skills.tools.length > 0 && 
+            React.createElement(Text, { style: styles.skillsList }, `Tools: ${cvData.skills.tools.join(', ')}`),
+          cvData.skills.languages && cvData.skills.languages.length > 0 && 
+            React.createElement(Text, { style: styles.skillsList }, `Languages: ${cvData.skills.languages.join(', ')}`)
+        ),
 
-          // Education
-          View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'EDUCATION'),
-            ...cvData.education.map(edu => 
-              View({ style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
-                Text({ style: styles.degree }, `${edu.degree} - ${edu.school}`),
-                Text({ style: styles.school }, `Year: ${edu.year}`),
-                edu.gpa && Text({ style: styles.school }, `GPA: ${edu.gpa}`),
-                edu.honors && Text({ style: styles.school }, `Honors: ${edu.honors}`)
-              )
+        // Education
+        React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'EDUCATION'),
+          ...cvData.education.map(edu => 
+            React.createElement(View, { style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
+              React.createElement(Text, { style: styles.degree }, `${edu.degree} - ${edu.school}`),
+              React.createElement(Text, { style: styles.school }, `Year: ${edu.year}`),
+              edu.gpa && React.createElement(Text, { style: styles.school }, `GPA: ${edu.gpa}`),
+              edu.honors && React.createElement(Text, { style: styles.school }, `Honors: ${edu.honors}`)
             )
-          ),
+          )
+        ),
 
-          // Projects
-          cvData.projects && cvData.projects.length > 0 && View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'PROJECTS'),
-            ...cvData.projects.map(project => 
-              View({ style: styles.projectItem, key: project.name },
-                Text({ style: styles.projectName }, project.name),
-                project.duration && Text({ style: styles.duration }, project.duration),
-                Text({ style: styles.projectDescription }, project.description),
-                project.techStack && project.techStack.length > 0 && 
-                  Text({ style: styles.description }, `Tech Stack: ${project.techStack.join(', ')}`),
-                project.results && Text({ style: styles.description }, `Results: ${project.results}`),
-                project.link && Text({ style: styles.description }, `Link: ${project.link}`)
-              )
+        // Projects
+        cvData.projects && cvData.projects.length > 0 && React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'PROJECTS'),
+          ...cvData.projects.map(project => 
+            React.createElement(View, { style: styles.projectItem, key: project.name },
+              React.createElement(Text, { style: styles.projectName }, project.name),
+              project.duration && React.createElement(Text, { style: styles.duration }, project.duration),
+              React.createElement(Text, { style: styles.projectDescription }, project.description),
+              project.techStack && project.techStack.length > 0 && 
+                React.createElement(Text, { style: styles.description }, `Tech Stack: ${project.techStack.join(', ')}`),
+              project.results && React.createElement(Text, { style: styles.description }, `Results: ${project.results}`),
+              project.link && React.createElement(Text, { style: styles.description }, `Link: ${project.link}`)
             )
-          ),
+          )
+        ),
 
-          // Certifications
-          cvData.certifications && cvData.certifications.length > 0 && View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'CERTIFICATIONS'),
-            ...cvData.certifications.map(cert => 
-              View({ style: styles.educationItem, key: cert.name },
-                Text({ style: styles.degree }, cert.name),
-                Text({ style: styles.school }, `${cert.issuer} - ${cert.date}`),
-                cert.link && Text({ style: styles.school }, `Link: ${cert.link}`)
-              )
+        // Certifications
+        cvData.certifications && cvData.certifications.length > 0 && React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'CERTIFICATIONS'),
+          ...cvData.certifications.map(cert => 
+            React.createElement(View, { style: styles.educationItem, key: cert.name },
+              React.createElement(Text, { style: styles.degree }, cert.name),
+              React.createElement(Text, { style: styles.school }, `${cert.issuer} - ${cert.date}`),
+              cert.link && React.createElement(Text, { style: styles.school }, `Link: ${cert.link}`)
             )
-          ),
+          )
+        ),
 
-          // Awards
-          cvData.awards && cvData.awards.length > 0 && View({ style: styles.section },
-            Text({ style: styles.sectionTitle }, 'AWARDS'),
-            ...cvData.awards.map(award => 
-              View({ style: styles.educationItem, key: award.name },
-                Text({ style: styles.degree }, award.name),
-                Text({ style: styles.school }, `${award.issuer} - ${award.date}`)
-              )
+        // Awards
+        cvData.awards && cvData.awards.length > 0 && React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'AWARDS'),
+          ...cvData.awards.map(award => 
+            React.createElement(View, { style: styles.educationItem, key: award.name },
+              React.createElement(Text, { style: styles.degree }, award.name),
+              React.createElement(Text, { style: styles.school }, `${award.issuer} - ${award.date}`)
             )
           )
         )
