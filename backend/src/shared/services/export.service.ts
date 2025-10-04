@@ -9,19 +9,13 @@ export class ExportService {
   private readonly logger = new Logger(ExportService.name);
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
+    let browser;
     try {
       const html = this.generateHTML(cvData, template);
       
-      const options = {
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
-        },
-        printBackground: true,
-        displayHeaderFooter: false,
+      // Launch browser with proper configuration
+      browser = await puppeteer.launch({
+        headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -36,19 +30,43 @@ export class ExportService {
           '--run-all-compositor-stages-before-draw',
           '--disable-background-timer-throttling',
           '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding'
+          '--disable-renderer-backgrounding',
+          '--memory-pressure-off',
+          '--max_old_space_size=4096'
         ],
-        headless: true,
         timeout: 30000,
-      };
+      });
 
-      const file = { content: html };
-      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      const page = await browser.newPage();
       
-      return pdfBuffer as unknown as Buffer;
+      // Set content and wait for it to load
+      await page.setContent(html, { 
+        waitUntil: 'networkidle0',
+        timeout: 30000 
+      });
+
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm',
+        },
+        printBackground: true,
+        displayHeaderFooter: false,
+        timeout: 30000,
+      });
+      
+      return pdfBuffer;
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
       throw new Error('Failed to generate PDF');
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 
