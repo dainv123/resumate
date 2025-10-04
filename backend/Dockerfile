@@ -27,98 +27,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies for PDF generation
+# Install basic dependencies
 RUN apk add --no-cache \
-  chromium \
-  nss \
-  freetype \
-  freetype-dev \
-  harfbuzz \
-  ca-certificates \
-  ttf-freefont \
-  ttf-dejavu \
-  ttf-liberation \
-  fontconfig \
   curl \
-  xvfb \
-  dbus \
   && rm -rf /var/cache/apk/*
-
-# Create a wrapper script for chromium optimized for low memory
-RUN cat > /usr/bin/chromium-wrapper << 'EOF'
-#!/bin/sh
-exec /usr/bin/chromium-browser \
-  --no-sandbox \
-  --disable-setuid-sandbox \
-  --disable-dev-shm-usage \
-  --disable-gpu \
-  --no-first-run \
-  --no-zygote \
-  --single-process \
-  --disable-extensions \
-  --disable-plugins \
-  --disable-images \
-  --disable-javascript \
-  --disable-default-apps \
-  --disable-sync \
-  --disable-translate \
-  --hide-scrollbars \
-  --mute-audio \
-  --no-default-browser-check \
-  --disable-web-security \
-  --disable-features=VizDisplayCompositor \
-  --disable-background-timer-throttling \
-  --disable-backgrounding-occluded-windows \
-  --disable-renderer-backgrounding \
-  --disable-features=TranslateUI \
-  --disable-ipc-flooding-protection \
-  --disable-background-networking \
-  --disable-component-extensions-with-background-pages \
-  --disable-client-side-phishing-detection \
-  --disable-hang-monitor \
-  --disable-prompt-on-repost \
-  --disable-domain-reliability \
-  --disable-features=AudioServiceOutOfProcess \
-  --disable-print-preview \
-  --disable-speech-api \
-  --disable-file-system \
-  --disable-permissions-api \
-  --disable-presentation-api \
-  --disable-remote-fonts \
-  --disable-speech-synthesis-api \
-  --disable-webgl \
-  --disable-webgl2 \
-  --disable-3d-apis \
-  --disable-accelerated-video-decode \
-  --disable-accelerated-mjpeg-decode \
-  --disable-gpu-compositing \
-  --disable-gpu-rasterization \
-  --disable-gpu-sandbox \
-  --disable-software-rasterizer \
-  --disable-background-mode \
-  --disable-field-trial-config \
-  --disable-back-forward-cache \
-  --force-color-profile=srgb \
-  --metrics-recording-only \
-  --use-mock-keychain \
-  --disable-component-update \
-  --no-pings \
-  --memory-pressure-off \
-  --max_old_space_size=512 \
-  "$@"
-EOF
-
-RUN chmod +x /usr/bin/chromium-wrapper
-
-# Set display for headless operation
-ENV DISPLAY=:99
-
-# Create temp directory with proper permissions
-RUN mkdir -p /tmp/pdf && chmod 777 /tmp/pdf
-
-# Tell Puppeteer to skip installing Chromium. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-  PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-wrapper
 
 # Copy package files
 COPY package*.json ./

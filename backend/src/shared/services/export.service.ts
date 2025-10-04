@@ -4,192 +4,52 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as puppeteer from 'puppeteer';
+import PDFDocument from 'pdfkit';
 
 @Injectable()
 export class ExportService {
   private readonly logger = new Logger(ExportService.name);
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
-    let browser: puppeteer.Browser | null = null;
-    
     try {
-      const html = this.generateHTML(cvData, template);
+      this.logger.log('Starting PDF generation with PDFKit...');
       
-      this.logger.log('Starting PDF generation with Puppeteer...');
-      
-      // Launch browser with proper configuration for Docker
-      const launchOptions: any = {
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-features=TranslateUI',
-          '--disable-ipc-flooding-protection',
-          '--disable-extensions',
-          '--disable-plugins',
-          '--disable-images',
-          '--disable-javascript',
-          '--disable-default-apps',
-          '--disable-sync',
-          '--disable-translate',
-          '--hide-scrollbars',
-          '--mute-audio',
-          '--no-default-browser-check',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--run-all-compositor-stages-before-draw',
-          '--disable-threaded-animation',
-          '--disable-threaded-scrolling',
-          '--disable-checker-imaging',
-          '--disable-new-content-rendering-timeout',
-          '--disable-background-networking',
-          '--disable-component-extensions-with-background-pages',
-          '--disable-client-side-phishing-detection',
-          '--disable-hang-monitor',
-          '--disable-prompt-on-repost',
-          '--disable-domain-reliability',
-          '--disable-features=AudioServiceOutOfProcess',
-          '--disable-print-preview',
-          '--disable-speech-api',
-          '--disable-file-system',
-          '--disable-permissions-api',
-          '--disable-presentation-api',
-          '--disable-remote-fonts',
-          '--disable-speech-synthesis-api',
-          '--disable-webgl',
-          '--disable-webgl2',
-          '--disable-3d-apis',
-          '--disable-accelerated-video-decode',
-          '--disable-accelerated-mjpeg-decode',
-          '--disable-gpu-compositing',
-          '--disable-gpu-rasterization',
-          '--disable-gpu-sandbox',
-          '--disable-software-rasterizer',
-          '--disable-background-mode',
-          '--disable-background-timer-throttling',
-          '--disable-renderer-backgrounding',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-field-trial-config',
-          '--disable-back-forward-cache',
-          '--disable-ipc-flooding-protection',
-          '--force-color-profile=srgb',
-          '--metrics-recording-only',
-          '--use-mock-keychain',
-          '--disable-component-update',
-          '--disable-default-apps',
-          '--disable-extensions',
-          '--disable-sync',
-          '--disable-translate',
-          '--hide-scrollbars',
-          '--mute-audio',
-          '--no-default-browser-check',
-          '--no-first-run',
-          '--no-pings',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-          '--disable-dev-shm-usage',
-          '--disable-setuid-sandbox',
-          '--no-sandbox',
-          '--memory-pressure-off',
-          '--max_old_space_size=512',
-        ],
-        timeout: 30000,
-        protocolTimeout: 30000,
-        ignoreDefaultArgs: ['--disable-extensions'],
-        dumpio: false,
-      };
-
-      // Try different executable paths
-      const possiblePaths = [
-        process.env.PUPPETEER_EXECUTABLE_PATH,
-        '/usr/bin/chromium-wrapper',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-        '/usr/bin/google-chrome',
-        '/usr/bin/google-chrome-stable',
-        '/opt/google/chrome/chrome',
-      ];
-
-      for (const path of possiblePaths) {
-        if (path) {
-          try {
-            launchOptions.executablePath = path;
-            this.logger.log(`Trying to launch browser with: ${path}`);
-            browser = await puppeteer.launch(launchOptions);
-            this.logger.log(`Successfully launched browser with: ${path}`);
-            break;
-          } catch (error) {
-            this.logger.warn(`Failed to launch browser with ${path}: ${error.message}`);
-            continue;
-          }
+      const doc = new PDFDocument({
+        size: 'A4',
+        margins: {
+          top: 50,
+          bottom: 50,
+          left: 50,
+          right: 50
         }
-      }
+      });
 
-      if (!browser) {
-        throw new Error('Failed to launch browser with any executable path');
-      }
-
-      const page = await browser.newPage();
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk) => chunks.push(chunk));
       
-      // Set viewport for consistent rendering
-      await page.setViewport({
-        width: 794, // A4 width in pixels at 96 DPI
-        height: 1123, // A4 height in pixels at 96 DPI
-        deviceScaleFactor: 1,
+      return new Promise((resolve, reject) => {
+        doc.on('end', () => {
+          const pdfBuffer = Buffer.concat(chunks);
+          this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+          resolve(pdfBuffer);
+        });
+
+        doc.on('error', (error) => {
+          this.logger.error('Error generating PDF:', error);
+          reject(new Error(`Failed to generate PDF: ${error.message}`));
+        });
+
+        try {
+          this.generatePDFContent(doc, cvData, template);
+          doc.end();
+        } catch (error) {
+          this.logger.error('Error generating PDF content:', error);
+          reject(new Error(`Failed to generate PDF content: ${error.message}`));
+        }
       });
-
-      // Set content and wait for it to load
-      await page.setContent(html, {
-        waitUntil: 'networkidle0',
-        timeout: 30000,
-      });
-
-      // Generate PDF
-      const pdfUint8Array = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
-        },
-        printBackground: true,
-        preferCSSPageSize: true,
-        timeout: 30000,
-      });
-
-      if (pdfUint8Array.length === 0) {
-        throw new Error('Generated PDF is empty');
-      }
-
-      // Convert Uint8Array to Buffer
-      const pdfBuffer = Buffer.from(pdfUint8Array);
-
-      this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
-      return pdfBuffer;
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
       throw new Error(`Failed to generate PDF: ${error.message}`);
-    } finally {
-      // Clean up browser
-      if (browser) {
-        try {
-          await browser.close();
-        } catch (closeError) {
-          this.logger.warn('Failed to close browser:', closeError);
-        }
-      }
     }
   }
 
@@ -1049,6 +909,164 @@ export class ExportService {
       </body>
       </html>
     `;
+  }
+
+  private generatePDFContent(doc: PDFDocument, cvData: CVData, template: string): void {
+    // Header
+    doc.fontSize(24).font('Helvetica-Bold').text(cvData.name.toUpperCase(), { align: 'center' });
+    doc.moveDown(0.5);
+    
+    if (cvData.experience.length > 0) {
+      doc.fontSize(14).font('Helvetica').text(cvData.experience[0].title, { align: 'center' });
+    }
+    doc.moveDown(1);
+
+    // Contact Information
+    doc.fontSize(12).font('Helvetica').text(`${cvData.email} | ${cvData.phone}`, { align: 'center' });
+    if (cvData.address) {
+      doc.text(cvData.address, { align: 'center' });
+    }
+    doc.moveDown(1);
+
+    // Summary
+    if (cvData.summary) {
+      doc.fontSize(14).font('Helvetica-Bold').text('PROFILE SUMMARY');
+      doc.moveDown(0.3);
+      doc.fontSize(11).font('Helvetica').text(cvData.summary, { align: 'justify' });
+      doc.moveDown(1);
+    }
+
+    // Experience
+    doc.fontSize(14).font('Helvetica-Bold').text('WORK EXPERIENCE');
+    doc.moveDown(0.3);
+    
+    cvData.experience.forEach(exp => {
+      doc.fontSize(12).font('Helvetica-Bold').text(`${exp.title} at ${exp.company}`);
+      doc.fontSize(10).font('Helvetica-Oblique').text(exp.duration);
+      
+      if (exp.teamSize) {
+        doc.fontSize(10).font('Helvetica').text(`Team Size: ${exp.teamSize}`);
+      }
+      
+      if (exp.companyDescription) {
+        doc.fontSize(10).font('Helvetica-Oblique').text(exp.companyDescription);
+      }
+      
+      if (exp.responsibilities && exp.responsibilities.length > 0) {
+        doc.fontSize(10).font('Helvetica-Bold').text('Responsibilities:');
+        exp.responsibilities.forEach(resp => {
+          doc.fontSize(10).font('Helvetica').text(`• ${resp}`, { indent: 20 });
+        });
+      }
+      
+      if (exp.achievements && exp.achievements.length > 0) {
+        doc.fontSize(10).font('Helvetica-Bold').text('Achievements:');
+        exp.achievements.forEach(achievement => {
+          doc.fontSize(10).font('Helvetica').text(`• ${achievement}`, { indent: 20 });
+        });
+      }
+      
+      if (exp.technologies && exp.technologies.length > 0) {
+        doc.fontSize(10).font('Helvetica').text(`Technologies: ${exp.technologies.join(', ')}`);
+      }
+      
+      doc.moveDown(0.5);
+    });
+
+    // Skills
+    doc.fontSize(14).font('Helvetica-Bold').text('SKILLS');
+    doc.moveDown(0.3);
+    
+    if (cvData.skills.technical && cvData.skills.technical.length > 0) {
+      doc.fontSize(11).font('Helvetica-Bold').text('Technical Skills:');
+      doc.fontSize(10).font('Helvetica').text(cvData.skills.technical.join(', '));
+      doc.moveDown(0.3);
+    }
+    
+    if (cvData.skills.soft && cvData.skills.soft.length > 0) {
+      doc.fontSize(11).font('Helvetica-Bold').text('Soft Skills:');
+      doc.fontSize(10).font('Helvetica').text(cvData.skills.soft.join(', '));
+      doc.moveDown(0.3);
+    }
+    
+    if (cvData.skills.tools && cvData.skills.tools.length > 0) {
+      doc.fontSize(11).font('Helvetica-Bold').text('Tools:');
+      doc.fontSize(10).font('Helvetica').text(cvData.skills.tools.join(', '));
+      doc.moveDown(0.3);
+    }
+    
+    if (cvData.skills.languages && cvData.skills.languages.length > 0) {
+      doc.fontSize(11).font('Helvetica-Bold').text('Languages:');
+      doc.fontSize(10).font('Helvetica').text(cvData.skills.languages.join(', '));
+      doc.moveDown(0.3);
+    }
+
+    // Education
+    doc.fontSize(14).font('Helvetica-Bold').text('EDUCATION');
+    doc.moveDown(0.3);
+    
+    cvData.education.forEach(edu => {
+      doc.fontSize(11).font('Helvetica-Bold').text(`${edu.degree} - ${edu.school}`);
+      doc.fontSize(10).font('Helvetica').text(`Year: ${edu.year}`);
+      if (edu.gpa) {
+        doc.fontSize(10).font('Helvetica').text(`GPA: ${edu.gpa}`);
+      }
+      if (edu.honors) {
+        doc.fontSize(10).font('Helvetica').text(`Honors: ${edu.honors}`);
+      }
+      doc.moveDown(0.3);
+    });
+
+    // Projects
+    if (cvData.projects && cvData.projects.length > 0) {
+      doc.fontSize(14).font('Helvetica-Bold').text('PROJECTS');
+      doc.moveDown(0.3);
+      
+      cvData.projects.forEach(project => {
+        doc.fontSize(11).font('Helvetica-Bold').text(project.name);
+        if (project.duration) {
+          doc.fontSize(10).font('Helvetica-Oblique').text(project.duration);
+        }
+        doc.fontSize(10).font('Helvetica').text(project.description, { align: 'justify' });
+        if (project.techStack && project.techStack.length > 0) {
+          doc.fontSize(10).font('Helvetica').text(`Tech Stack: ${project.techStack.join(', ')}`);
+        }
+        if (project.results) {
+          doc.fontSize(10).font('Helvetica').text(`Results: ${project.results}`);
+        }
+        if (project.link) {
+          doc.fontSize(10).font('Helvetica').text(`Link: ${project.link}`);
+        }
+        doc.moveDown(0.3);
+      });
+    }
+
+    // Certifications
+    if (cvData.certifications && cvData.certifications.length > 0) {
+      doc.fontSize(14).font('Helvetica-Bold').text('CERTIFICATIONS');
+      doc.moveDown(0.3);
+      
+      cvData.certifications.forEach(cert => {
+        doc.fontSize(11).font('Helvetica-Bold').text(cert.name);
+        doc.fontSize(10).font('Helvetica').text(`${cert.issuer} - ${cert.date}`);
+        if (cert.link) {
+          doc.fontSize(10).font('Helvetica').text(`Link: ${cert.link}`);
+        }
+        doc.moveDown(0.3);
+      });
+    }
+
+    // Awards
+    if (cvData.awards && cvData.awards.length > 0) {
+      doc.fontSize(14).font('Helvetica-Bold').text('AWARDS');
+      doc.moveDown(0.3);
+      
+      cvData.awards.forEach(award => {
+        doc.fontSize(11).font('Helvetica-Bold').text(award.name);
+        doc.fontSize(10).font('Helvetica').text(`${award.issuer} - ${award.date}`);
+        doc.moveDown(0.3);
+      });
+    }
   }
 
   private formatForATS(cvData: CVData): string {
