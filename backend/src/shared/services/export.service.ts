@@ -9,44 +9,10 @@ export class ExportService {
   private readonly logger = new Logger(ExportService.name);
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
-    let browser;
     try {
       const html = this.generateHTML(cvData, template);
       
-      // Launch browser with proper configuration
-      browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--run-all-compositor-stages-before-draw',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--memory-pressure-off',
-          '--max_old_space_size=4096'
-        ],
-        timeout: 30000,
-      });
-
-      const page = await browser.newPage();
-      
-      // Set content and wait for it to load
-      await page.setContent(html, { 
-        waitUntil: 'networkidle0',
-        timeout: 30000 
-      });
-
-      // Generate PDF
-      const pdfBuffer = await page.pdf({
+      const options = {
         format: 'A4',
         margin: {
           top: '20mm',
@@ -56,17 +22,39 @@ export class ExportService {
         },
         printBackground: true,
         displayHeaderFooter: false,
-        timeout: 30000,
-      });
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--no-first-run',
+          '--single-process',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-images',
+          '--disable-javascript',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-translate',
+          '--hide-scrollbars',
+          '--mute-audio',
+          '--no-first-run',
+          '--safebrowsing-disable-auto-update',
+          '--disable-ipc-flooding-protection'
+        ],
+        headless: true,
+        timeout: 60000,
+      };
+
+      const file = { content: html };
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
       
-      return pdfBuffer;
+      return pdfBuffer as unknown as Buffer;
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
       throw new Error('Failed to generate PDF');
-    } finally {
-      if (browser) {
-        await browser.close();
-      }
     }
   }
 
