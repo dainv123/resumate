@@ -4,6 +4,7 @@ export enum PortfolioTemplate {
   BASIC = 'basic',
   MODERN = 'modern',
   CREATIVE = 'creative',
+  MUHAMMAD_ISMAIL = 'muhammad_ismail',
 }
 
 export interface CreatePortfolioData {
@@ -38,6 +39,16 @@ export interface PortfolioData {
 }
 
 export const portfolioApi = {
+  checkPortfolio: async (): Promise<{ exists: boolean; portfolio: any }> => {
+    const response = await api.get('/portfolio/check');
+    return response.data;
+  },
+
+  savePortfolio: async (data: CreatePortfolioData): Promise<any> => {
+    const response = await api.post('/portfolio/save', data);
+    return response.data;
+  },
+
   generatePortfolio: async (data: CreatePortfolioData): Promise<PortfolioData> => {
     const response = await api.post('/portfolio/generate', data);
     return response.data;

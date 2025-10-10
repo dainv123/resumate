@@ -29,7 +29,6 @@
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/typeorm": "^11.0.0",
     "@react-pdf/renderer": "^4.3.1",
-    "@types/uuid": "^10.0.0",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
@@ -45,13 +44,12 @@
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
-    "puppeteer": "^24.22.3",
+    "puppeteer": "^24.24.0",
     "react": "^19.2.0",
     "redis": "^5.8.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.27",
-    "uuid": "^13.0.0"
+    "typeorm": "^0.3.27"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

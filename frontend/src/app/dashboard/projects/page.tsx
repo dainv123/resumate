@@ -12,6 +12,7 @@ import { cvApi } from "@/lib/cv";
 import ProjectForm from "@/components/projects/ProjectForm";
 import ProjectCard from "@/components/projects/ProjectCard";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import { Plus, Briefcase, AlertCircle } from "lucide-react";
 
 export default function ProjectsPage() {
@@ -47,6 +48,7 @@ export default function ProjectsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       setEditingProject(null);
+      setShowForm(false);
     },
   });
 
@@ -54,6 +56,7 @@ export default function ProjectsPage() {
     mutationFn: projectsApi.deleteProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setShowForm(false);
     },
   });
 
@@ -72,6 +75,7 @@ export default function ProjectsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
+      setShowForm(false);
     },
   });
 
@@ -174,28 +178,32 @@ export default function ProjectsPage() {
       </div>
 
       {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                {editingProject ? "Edit Project" : "Add New Project"}
-              </h3>
-              <button
-                onClick={handleCancel}
-                className="text-gray-400 hover:text-gray-600">
-                ×
-              </button>
-            </div>
-            <ProjectForm
-              project={editingProject || undefined}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isLoading={createMutation.isPending || updateMutation.isPending}
-            />
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showForm}
+        onClose={handleCancel}
+        title={editingProject ? "Edit Project" : "Add New Project"}
+        size="lg"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="project-form"
+              loading={createMutation.isPending || updateMutation.isPending}>
+              {editingProject ? "Update Project" : "Create Project"}
+            </Button>
+          </>
+        }>
+        <ProjectForm
+          project={editingProject || undefined}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isLoading={createMutation.isPending || updateMutation.isPending}
+          showActions={false}
+        />
+      </Modal>
 
       {/* Projects List */}
       {projects.length === 0 ? (

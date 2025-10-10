@@ -94,6 +94,55 @@ export class AiService {
     }
   }
 
+  async analyzeCompatibility(cvData: CVData, jobDescription: string): Promise<{
+    score: number;
+    matchedSkills: string[];
+    missingSkills: string[];
+    matchedExperience: string[];
+    missingRequirements: string[];
+    suggestions: string[];
+    strengths: string[];
+  }> {
+    try {
+      return await this.googleAIService.analyzeCompatibility(cvData, jobDescription);
+    } catch (error) {
+      this.logger.error('Error analyzing compatibility:', error);
+      // Return fallback analysis
+      return {
+        score: 5,
+        matchedSkills: [],
+        missingSkills: [],
+        matchedExperience: [],
+        missingRequirements: ['Unable to analyze - please try again'],
+        suggestions: ['Resubmit for analysis'],
+        strengths: [],
+      };
+    }
+  }
+
+  async generateCoverLetter(cvData: CVData, jobDescription: string): Promise<string> {
+    try {
+      return await this.googleAIService.generateCoverLetter(cvData, jobDescription);
+    } catch (error) {
+      this.logger.error('Error generating cover letter:', error);
+      // Return fallback cover letter
+      return this.fallbackCoverLetter(cvData);
+    }
+  }
+
+  private fallbackCoverLetter(cvData: CVData): string {
+    return `Dear Hiring Manager,
+
+I am writing to express my interest in the position at your company. With my background in ${cvData.skills?.technical?.[0] || 'technology'} and experience in ${(cvData.experience?.[0] as any)?.title || (cvData.experience?.[0] as any)?.role || 'software development'}, I believe I would be a valuable addition to your team.
+
+${cvData.summary || 'I am a dedicated professional with a strong track record of delivering high-quality results.'} I am excited about the opportunity to contribute to your organization and look forward to discussing how my skills and experience align with your needs.
+
+Thank you for considering my application.
+
+Sincerely,
+${cvData.name || 'Candidate'}`;
+  }
+
   private async fallbackParsing(fileBuffer: Buffer, mimeType: string): Promise<CVData> {
     try {
       // Try to extract text without AI

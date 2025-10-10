@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        :root {
+            --primaryColor: #fff;
+            --secondaryColor: #333;
+            --chineseBlue55: #4253D7;
+            --chineseBlue25: #162069;
+            --chineseBlue15: #0D133F;
+            --gray: #808080;
+        }
+
+        body {
+            background: #F2F2F2;
+        }
+
+        * {
+            font-family: Geist;
+            font-size: 1rem;
+            color: var(--chineseBlue25);
+        }
+
+        hr {
+            width: 100%;
+            height: 1px;
+            background: transparent;
+            border: none;
+            border-bottom: dashed 1px var(--gray);
+
+            /* border-bottom: dashed 1px var(--gray); */
+
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 1.4em;
+            margin: .2rem 0;
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 1.45rem;
+            margin: 0 0 .5rem 0;
+            padding-bottom: .1rem;
+            border: solid 0 var(--chineseBlue55);
+            border-bottom-width: 2px;
+            ;
+        }
+
+        h3 {
+            margin: 0 0 .3rem 0;
+            border: solid 0 var(--chineseBlue55);
+            border-left-width: 3px;
+            padding-left: .5rem;
+        }
+
+        h4 {
+            margin: 0;
+        }
+
+        span {
+            margin: .1rem 0;
+        }
+
+        i {
+            font-size: 1.2rem !important;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: var(--chineseBlue55);
+        }
+
+        nav {
+            --icon-size: 1rem;
+            position: relative;
+            padding-left: var(--icon-size);
+            margin-top: .3rem;
+            font-weight: 500;
+            font-size: .9rem;
+            color: var(--chineseBlue55);
+        }
+
+        nav> :nth-child(1) {
+            /* padding-top: .25rem; */
+        }
+
+        nav::before {
+            /* content: 'Liens : '; */
+            display: block;
+            font-family: inherit;
+            margin-left: .2rem;
+            font-size: 0.8rem;
+        }
+
+        nav::after {
+            /* content: '\f0c1'; */
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+            font-family: 'Font Awesome 5 Free';
+            font-size: calc(var(--icon-size) * 0.8);
+            font-weight: 600;
+        }
+
+        a {
+            display: flex;
+            width: fit-content;
+            align-items: center;
+            font-size: .8rem;
+            text-decoration: none;
+        }
+
+        .custom-link::before {
+            content: '\f35d';
+            display: block;
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: var(--chineseBlue55);
+            margin-right: .2rem;
+            font-size: inherit;
+        }
+
+        .custom-link::after {
+            content: "(" attr(href) ")";
+            display: block;
+            margin-left: .4rem;
+            color: var(--gray);
+            font-weight: 300;
+            font-size: 95%;
+            text-decoration: none;
+            border-bottom: solid 1px var(--gray);
+        }
+
+        b {
+            font-weight: 600;
+        }
+
+        small {
+            display: flex;
+            font-size: .8rem;
+            color: var(--chineseBlue55);
+            margin: .1rem 0 0 0;
+        }
+
+        small::before {
+            display: block;
+            content: 'Stack technique :';
+            margin-right: .2rem;
+        }
+
+        [skillId]::before {
+            content: attr(skillId);
+            display: flex;
+            width: .4rem;
+            height: .4rem;
+            align-items: center;
+            justify-content: center;
+            align-self: flex-start;
+            font-size: .65rem;
+            font-weight: bold;
+            margin: 0 .1rem;
+            border: dotted 2px var(--chineseBlue55);
+            color: var(--chineseBlue55);
+            border-radius: 100%;
+            padding: .3rem;
+        }
+
+        main {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+            align-self: center;
+            align-items: center;
+        }
+
+        #resume-wrapper {
+            display: flex;
+            flex-direction: row;
+            width: 205mm;
+            height: 296mm;
+            background: var(--primaryColor);
+            overflow: hidden;
+        }
+
+        #resume-wrapper>.main-part,
+        #resume-wrapper>.side-part {
+            margin-top: 5mm;
+            margin-bottom: 5mm;
+        }
+
+        .main-part,
+        .side-part {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-part {
+            flex: 1.9;
+            justify-content: space-between;
+            margin-right: .3rem;
+            margin-left: 5mm;
+            padding-bottom: 3rem;
+            overflow: hidden;
+        }
+
+        .main-part>section {
+            display: flex;
+            width: 95%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: .6rem 0;
+        }
+
+        .main-part>section>h4 {
+            color: var(--chineseBlue55);
+        }
+
+        .main-part>section:nth-of-type(1) {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .main-part>section:nth-of-type(1)>span,
+        i {
+            font-size: .85rem !important;
+        }
+
+        .main-part>section:nth-of-type(1)>span:nth-of-type(2) {
+            margin-top: 5px;
+        }
+
+        #xp>div {
+            padding: .1rem 0;
+        }
+
+        .main-part>section>div {
+            row-gap: .2rem;
+        }
+
+        .main-part>section>div b {
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .main-part>section>div,
+        .main-part>section>section {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: .4rem;
+        }
+
+        #formation>div:first-of-type {
+            margin-top: .7rem;
+        }
+
+        #formation>div {
+            margin-left: 1rem;
+        }
+
+        .main-part>section>div:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .main-part>section>section {
+            padding: .2rem 0;
+            margin-bottom: 0;
+        }
+
+        .main-part>section>*:not(h3, h2) {
+            margin-left: .6rem;
+        }
+
+        .main-part>section span,
+        i {
+            font-size: .85rem;
+            color: var(--gray);
+        }
+
+        .main-part>section:first-of-type i {
+            color: var(--chineseBlue15);
+        }
+
+        .main-part>section h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .main-part>section h4 {
+            display: flex;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .main-part>section h4 [skillId]:first-of-type {
+            margin-left: .2rem;
+        }
+
+        .main-part>section p {
+            font-size: 0.8rem;
+            font-weight: 300;
+            margin: .1rem .2rem 0 0;
+        }
+
+        .main-part>section ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .main-part>section ul li {
+            font-weight: 300;
+            padding: .1rem 0;
+            font-size: .9rem;
+        }
+
+        .side-part {
+            flex: 1;
+            justify-content: flex-start;
+            border-right: solid 2px var(--secondaryColor);
+            padding: 0 0 0 .5rem;
+            margin-right: 2mm;
+            row-gap: 2.5rem;
+            overflow: hidden;
+        }
+
+        .side-part>section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-part>section:nth-of-type(1) {
+            margin-top: 0.5rem;
+            justify-content: flex-start;
+        }
+
+        .side-part>section:nth-of-type(1) span {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            font-size: .95rem;
+            column-gap: .3rem;
+        }
+
+        .side-part>section:nth-of-type(1) span>i {
+            width: 9%;
+        }
+
+        .side-part>section:nth-of-type(2) {
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .side-part>section:nth-of-type(2)>div h3 {
+            margin-bottom: .5rem;
+            font-weight: bold;
+        }
+
+        .side-part>section:nth-of-type(2)>div ul {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0;
+            padding: 0;
+        }
+
+        .side-part>section:nth-of-type(2)>div ul li {
+            display: flex;
+            margin: .20rem 0rem;
+            font-weight: 500;
+            font-size: .78rem;
+        }
+
+        #languages>ul {
+            display: block;
+        }
+
+        .side-part>section:nth-of-type(2)>div:not(#languages) ul li:not(:last-child)::after {
+            content: "•";
+            margin-left: 0.3rem;
+            margin-right: 0.3rem;
+        }
+
+        .side-part>section:nth-of-type(3) {
+            row-gap: .5rem;
+        }
+
+        .side-part>section:nth-of-type(3) img {
+            width: auto;
+            height: 6rem;
+            object-fit: contain;
+        }
+
+        .side-part>section:nth-of-type(3) a {
+            font-size: .8rem;
+            margin-top: .3rem;
+        }
+
+        .side-part>section:nth-of-type(3) a::before {
+            display: none;
+        }
+
+        .side-part>section:nth-of-type(3) a::after {
+            margin-left: 0;
+        }
+
+        .side-part>section:nth-of-type(3) img {
+            width: 95px;
+            height: 95px;
+            max-width: 95px;
+            max-height: 95px;
+            object-fit: contain;
+            margin: auto;
+        }
+
+        .side-part>section h3 {
+            font-weight: 400;
+            border-color: var(--chineseBlue55);
+            font-size: .95rem;
+            margin: .3rem 0
+        }
+
+
+
+
+        .solar--user-circle-bold {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/user-circle-bold.png");
+        }
+
+        .solar--letter-bold {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/letter-bold.png");
+        }
+
+        .solar--phone-bold {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/phone-bold.png");
+        }
+
+        .solar--map-point-bold {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/map-point-bold.png");
+        }
+
+        .solar--map-point-rotate-bold {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/map-point-rotate-bold.png");
+        }
+
+        .mdi--github {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/github.png");
+        }
+
+        .mdi--linkedin {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-image: url("../assets/linkedin.png");
+        }
+    </style>
+
+</head>
+
+<body id="body">
+
+    <main>
+        <div id="resume-wrapper">
+            <div class="side-part">
+                <section>
+                    <span><i class="solar--user-circle-bold"></i> DIALLO Ousmane</span>
+                    <span><i class="solar--letter-bold"></i> ousmane.diallo1.sio@gmail.com</span>
+                    <span><i class="solar--phone-bold"></i> 07 82 57 16 09</span>
+                    <span><i class="solar--map-point-bold"></i> Lognes (77185)</span>
+                    <span><i class="solar--map-point-rotate-bold"></i> Mobilité : IDF (à 1h de Paris)</span>
+                    <span><i class="mdi--github"></i> github.com/ousmane-diallo-sio</span>
+                    <span><i class="mdi--linkedin"></i>
+                        <a target="_blank" rel="noopener noreferrer" href="https://linkedin.com/in/ousmane-diallo-od/">
+                            linkedin.com/in/od-dev
+                        </a>
+                    </span>
+                </section>
+                <section>
+                    <div>
+                        <h3>Compétences</h3>
+                        <ul>
+                            <li>Kotlin</li>
+                            <li>Jetpack Compose</li>
+                            <li>Java</li>
+                            <li>Android Views (XML)</li>
+                            <li>React.js</li>
+                            <li>Node.js</li>
+                            <li>TypeScript</li>
+                            <li>C / C++</li>
+                            <li>iOS</li>
+                            <li>Swift</li>
+                            <li>SQL</li>
+                            <li>NoSQL</li>
+                            <li>HTML</li>
+                            <li>CSS</li>
+                            <li>Flutter</li>
+                            <li>Dart</li>
+                            <li>FreeRTOS</li>
+                            <li>IoT</li>
+                            <li>Microcontrôleurs</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Design Patterns</h3>
+                        <ul>
+                            <li>Listener</li>
+                            <li>Observer</li>
+                            <li>MVVM</li>
+                            <li>Singleton</li>
+                            <li>Factory</li>
+                            <li>Builder</li>
+                            <li>Adapter</li>
+                            <li>MVC</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Outils</h3>
+                        <ul>
+                            <li>Docker</li>
+                            <li>Kubernetes</li>
+                            <li>Firebase</li>
+                            <li>Git / GitHub</li>
+                            <li>VSCode</li>
+                            <li>IntelliJ</li>
+                            <li>VMware</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Soft Skills</h3>
+                        <ul>
+                            <li>Autonome</li>
+                            <li>Responsable</li>
+                            <li>Patient</li>
+                            <li>Curieux</li>
+                            <li>Flexible</li>
+                        </ul>
+                    </div>
+                    <div id="languages">
+                        <h3>Langues</h3>
+                        <ul>
+                            <li>Anglais : Courant</li>
+                            <li>Peul : Langue maternelle</li>
+                            <li>Japonais : Notions</li>
+                            <li>Espagnol : Notions</li>
+                            <li>Arabe littéraire : Notions</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Centres d'intérêt</h3>
+                        <ul>
+                            <li>Callisthénie</li>
+                            <li>Football</li>
+                        </ul>
+                    </div>
+                </section>
+
+            </div>
+            <div class="main-part">
+                <section>
+                    <h2>Développeur Android</h2>
+                    <p>
+                        Passionné par le développement Android natif, je me spécialise dans la création d'applications
+                        mobiles performantes en utilisant Jetpack Compose et Android Views.
+                        <br><br>
+                        Fort de deux années d’expérience en alternance, je maîtrise les technologies <i>Kotlin/Java</i>, et je
+                        suis à l’aise avec des stacks modernes comme <i>React.js</i>, <i>Node.js</i> ou <i>Flutter</i>.
+                        Je cherche un environnement technique stimulant où je pourrai continuer à progresser, apprendre et
+                        contribuer à des projets concrets.
+
+                        N'hésitez pas à me contacter si vous avez une offre à me proposer. <br><br>
+                    </p>
+                </section>
+                <section id="xp">
+                    <h3>Expériences professionnelles</h3>
+                    <h4>
+                        Développeur Full Stack (alternance) - ControlResell
+                    </h4>
+                    <div>
+                        <p>oct. 2023 - nov. 2024</p>
+                        <ul>
+                            <li>Développement mobile - React Native <span>(TypeScript)</span></li>
+                            <li>Développement back-end - Express.js <span>(TypeScript)</span></li>
+                        </ul>
+                        <small>React Native, Expo, Express.js, SQL, Docker, Kubernetes</small>
+                        <span>Sucy-en-Brie, 94370 (Full Remote)</span>
+                         <nav>
+                            <ul>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer" href="https://controlresell.com/">Site
+                                        web</a>
+                                </li>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer"
+                                        href="https://controlresell.onelink.me/gxV7/82zpt3xe">App mobile</a>
+                                </li>
+                            </ul>
+                        </nav> 
+                    </div>
+                    <hr style="opacity: 30%;">
+                    <h4>
+                        Développeur Full Stack (alternance) - VOGZ
+                    </h4>
+                    <div>
+                        <p>oct. 2022 - août 2023</p>
+                        <ul>
+                            <li>Développement front-end - Next.js <span>(TypeScript)</span></li>
+                            <li>Développement back-end - Express.js <span>(JavaScript)</span></li>
+                            <li>Développement mobile - React Native <span>(TypeScript)</span></li>
+                        </ul>
+                        <small>React.js, Next.js, Express.js, MongoDB, Algolia</small>
+                        <span>Paris, 75003</span>
+                         <nav>
+                            <ul>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer" href="https://vogz.io">Site web</a>
+                                </li>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer" href="https://app.vogz.io">Portail
+                                        marque</a>
+                                </li>
+                            </ul>
+                        </nav> 
+                    </div>
+                </section>
+                <hr>
+                <section id="formation">
+                    <h3>Formation</h3>
+                    <h4>ESGI - École Supérieure de Génie Informatique</h4>
+                    <div>
+                        <p>sept. 2023 - juil. 2025</p>
+                        <h4>
+                            Mastère Mobilité et Objets Connectés
+                        </h4>
+                        <div>
+                            <span>(Paris, 75012)</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p>sept. 2022 - juil. 2023</p>
+                        <h4>
+                            Bachelor Mobilité et Objets Connectés
+                        </h4>
+                        <div>
+                            <span>(Paris, 75012)</span>
+                        </div>
+                    </div>
+                     <div>
+                        <h4>
+                            BTS SIO - Lycée Louis Armand
+                        </h4>
+                        <div>
+                            <b>sept. 2020 - juil. 2022</b>
+                            <span>(Nogent-sur-Marne, 94130)</span>
+                        </div>
+                    </div> 
+                </section>
+                <hr>
+                <section>
+                    <h3>Projet pertinent</h3>
+                    <section>
+                        <h4>
+                            TheAudioDBApp (Projet académique)
+                        </h4>
+                        <p>
+                            Recherche d'artistes et d'albums via l'API theaudiodb.
+                            Ce projet utilise une architecture MVVM et m'a permis de maitriser l'utilisation des
+                            Fragments,
+                            des RecyclerViews (avec ViewHolder), des Coroutines et des Flows sur Android.
+                        </p>
+                        <small>Android (Architecture mvvm, Retrofit, Coroutines, Flow)</small>
+                        <nav>
+                            <ul>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer" class="custom-link" href="//github.com/ousmane-diallo-sio/TheAudioDBApp">GitHub</a>
+                                </li>
+                                 <li>
+                                    <a class="custom-link" target="_blank" rel="noopener noreferrer"
+                                        href="https://theaudiodb.com">API</a>
+                                </li> 
+                            </ul>
+                        </nav>
+                    </section>
+                     <section>
+                        <h4>
+                            Instameme Editor (Projet personnel)
+                        </h4>
+                        <p>
+                            Instameme Editor est une application qui permet d'effectuer des montages photos à partir de
+                            templates préremplis.
+                            Vous en trouverez quelques exemples d'utilisation sur Instagram.
+                        </p>
+                        <small>Android (Java), HTML, CSS, JavaScript</small>
+                        <nav>
+                            <ul>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer" href="https://instamemeeditor.fr/">
+                                        Site web
+                                    </a>
+                                </li>
+                                <li>
+                                    <a target="_blank" rel="noopener noreferrer"
+                                        href="https://instagram.com/explore/tags/instamemeeditor/">
+                                        Exemples
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </section> 
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+
+</html>

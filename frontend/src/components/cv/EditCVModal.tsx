@@ -2,9 +2,21 @@
 
 // @ts-nocheck - TypeScript strict mode disabled for this file due to complex dynamic form handling
 import React, { useState, useEffect, useCallback } from "react";
-import { X, Save, User, Trash2, Plus } from "lucide-react";
+import {
+  X,
+  Save,
+  User,
+  Trash2,
+  Plus,
+  Briefcase,
+  GraduationCap,
+  Award,
+  Mail,
+  Phone,
+} from "lucide-react";
 import { CV, CVData } from "@/lib/cv";
 import Button from "@/components/ui/Button";
+import { Collapse } from "@/components/ui/Collapse";
 
 interface EditCVModalProps {
   cv: CV;
@@ -22,6 +34,20 @@ export default function EditCVModal({
   const [formData, setFormData] = useState<CVData>(cv.parsedData);
   const [isSaving, setIsSaving] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Helper to get icon for each section
+  const getSectionIcon = (key: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      experience: <Briefcase className="h-4 w-4 text-blue-600" />,
+      education: <GraduationCap className="h-4 w-4 text-green-600" />,
+      skills: <Award className="h-4 w-4 text-purple-600" />,
+      email: <Mail className="h-4 w-4 text-gray-600" />,
+      phone: <Phone className="h-4 w-4 text-gray-600" />,
+    };
+    return (
+      iconMap[key.toLowerCase()] || <User className="h-4 w-4 text-gray-600" />
+    );
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -330,7 +356,7 @@ export default function EditCVModal({
                             newArray[index] = e.target.value;
                             updateField(path, newArray);
                           }}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                          className="flex-1 input-base"
                         />
                       ) : (
                         <div className="flex-1">
@@ -487,7 +513,7 @@ export default function EditCVModal({
               value={String(value ?? "")}
               onChange={(e) => updateField(path, e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 resize-none"
+              className="textarea-base"
               placeholder={`Nhập ${fieldLabel.toLowerCase()}...`}
             />
           </div>
@@ -585,7 +611,7 @@ export default function EditCVModal({
             type={fieldType}
             value={String(value ?? "")}
             onChange={(e) => updateField(path, e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+            className="input-base"
             placeholder={`Nhập ${fieldLabel.toLowerCase()}...`}
           />
         </div>
@@ -604,18 +630,10 @@ export default function EditCVModal({
       const isObject = typeof value === "object" && value !== null && !isArray;
 
       return (
-        <div key={key} className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-base font-medium text-gray-900 mb-4 flex items-center">
-            <User className="h-4 w-4 mr-2" />
-            {sectionTitle}
-          </h4>
-
+        <div key={key}>
           {isArray ? (
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {sectionTitle} ({value?.length || 0} items)
-                </span>
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -747,7 +765,7 @@ export default function EditCVModal({
                             <input
                               type="text"
                               placeholder="Tên trường (ví dụ: name, description, techStack)"
-                              className="flex-1 px-3 py-2 border border-blue-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="flex-1 px-3 py-2.5 border border-blue-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
                                   const fieldName = (
@@ -853,7 +871,7 @@ export default function EditCVModal({
                     <input
                       type="text"
                       placeholder="Tên trường (ví dụ: website, github)"
-                      className="flex-1 px-3 py-2 border border-blue-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-3 py-2.5 border border-blue-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           const fieldName = (
@@ -949,13 +967,34 @@ export default function EditCVModal({
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(95vh-200px)] bg-gray-50/30">
-          <div className="space-y-8">
+          <div className="space-y-4">
             {Object.entries(formData)
               .filter(
                 ([, value]) =>
                   value !== undefined && value !== null && value !== ""
               )
-              .map(([key, value]) => renderSection(key, value, key))}
+              .map(([key, value]) => {
+                const sectionTitle =
+                  key.charAt(0).toUpperCase() +
+                  key.slice(1).replace(/([A-Z])/g, " $1");
+                const itemCount = Array.isArray(value)
+                  ? value.length
+                  : undefined;
+
+                return (
+                  <Collapse
+                    key={key}
+                    title={sectionTitle}
+                    icon={getSectionIcon(key)}
+                    badge={itemCount}
+                    defaultOpen={
+                      key === "name" || key === "email" || key === "phone"
+                    }
+                    contentClassName="p-0 bg-gray-50">
+                    <div className="p-4">{renderSection(key, value, key)}</div>
+                  </Collapse>
+                );
+              })}
           </div>
         </div>
 
