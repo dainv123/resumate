@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // output: 'standalone', // Temporarily disabled for development
+  output: 'standalone', // Required for Docker production build
   outputFileTracingRoot: __dirname, // Fix for multiple lockfiles warning
   serverExternalPackages: [], // Fix for routesManifest.dataRoutes error
   env: {
