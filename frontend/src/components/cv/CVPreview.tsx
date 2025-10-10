@@ -10,18 +10,25 @@ import {
   Sparkles,
   FileText,
   Briefcase,
+  Copy,
+  Check,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import EditCVModal from "./EditCVModal";
 import OriginalCVModal from "./OriginalCVModal";
 import JobDescriptionModal from "./JobDescriptionModal";
+import TemplateSelectionModal from "./TemplateSelectionModal";
 
 interface CVPreviewProps {
   cv: CV;
   // onEdit?: (cv: CV) => void;
   onDelete?: (cv: CV) => void;
   onTailor?: (cv: CV) => void;
-  onExport?: (cv: CV, format: "pdf" | "word" | "ats") => void;
+  onExport?: (
+    cv: CV,
+    format: "pdf" | "word" | "ats",
+    template?: string
+  ) => void;
   onUpdate?: (cv: CV) => void;
 }
 
@@ -37,21 +44,51 @@ export default function CVPreview({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showOriginalCVModal, setShowOriginalCVModal] = useState(false);
   const [showJobDescriptionModal, setShowJobDescriptionModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(cv.id);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy ID:", error);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
+        <div className="flex-1">
           <h4 className="text-lg font-semibold text-gray-900">
             {parsedData.name}
           </h4>
           <p className="text-sm text-gray-500">
             {parsedData.email} • {parsedData.phone}
           </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Version {cv.version} • Updated {formatDate(cv.updatedAt)}
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-xs text-gray-400">
+              Version {cv.version} • Updated {formatDate(cv.updatedAt)}
+            </p>
+            <button
+              onClick={handleCopyId}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-blue-600 bg-blue-50 rounded transition-colors"
+              title="Copy CV ID">
+              {copiedId ? (
+                <>
+                  <Check className="h-3 w-3 text-green-600" />
+                  <span className="text-green-600">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3" />
+                  <span>ID</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           {cv.isTailored && (
@@ -251,31 +288,13 @@ export default function CVPreview({
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="relative group">
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-1" />
-              Export
-            </Button>
-            <div className="absolute right-0 bottom-0 mt-2 w-32 bg-white rounded-md shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-              <div className="py-1">
-                <button
-                  onClick={() => onExport?.(cv, "pdf")}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  PDF
-                </button>
-                <button
-                  onClick={() => onExport?.(cv, "word")}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Word
-                </button>
-                <button
-                  onClick={() => onExport?.(cv, "ats")}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  ATS
-                </button>
-              </div>
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowTemplateModal(true)}>
+            <Download className="h-4 w-4 mr-1" />
+            Export
+          </Button>
 
           <Button
             variant="outline"
@@ -323,6 +342,15 @@ export default function CVPreview({
           onClose={() => setShowJobDescriptionModal(false)}
         />
       )}
+
+      <TemplateSelectionModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        cv={cv}
+        onExport={(cv, format, template) =>
+          onExport?.(cv, format as any, template)
+        }
+      />
     </div>
   );
 }

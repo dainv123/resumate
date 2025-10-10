@@ -2,8 +2,11 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { cvApi, CV } from "@/lib/cv";
+import { cvApi, CV, CompatibilityAnalysis } from "@/lib/cv";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import { Collapse } from "@/components/ui/Collapse";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sparkles,
   FileText,
@@ -17,9 +20,16 @@ import {
   Zap,
   Target,
   TrendingUp,
+  BarChart3,
+  Mail,
+  CheckSquare,
+  XCircle,
+  Lightbulb,
+  Award,
 } from "lucide-react";
 
 export default function JobTailorPage() {
+  const { t } = useLanguage();
   const [selectedCv, setSelectedCv] = useState<CV | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [isTailoring, setIsTailoring] = useState(false);
@@ -27,6 +37,11 @@ export default function JobTailorPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name">("newest");
   const [showOnlyTailored, setShowOnlyTailored] = useState(false);
+  const [compatibilityAnalysis, setCompatibilityAnalysis] =
+    useState<CompatibilityAnalysis | null>(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [coverLetter, setCoverLetter] = useState<string>("");
+  const [showCoverLetterModal, setShowCoverLetterModal] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: cvs = [], isLoading } = useQuery({
@@ -82,6 +97,34 @@ export default function JobTailorPage() {
     },
   });
 
+  const analyzeMutation = useMutation({
+    mutationFn: ({
+      cvId,
+      jobDescription,
+    }: {
+      cvId: string;
+      jobDescription: string;
+    }) => cvApi.analyzeCompatibility(cvId, jobDescription),
+    onSuccess: (data) => {
+      setCompatibilityAnalysis(data);
+      setShowAnalysisModal(true);
+    },
+  });
+
+  const coverLetterMutation = useMutation({
+    mutationFn: ({
+      cvId,
+      jobDescription,
+    }: {
+      cvId: string;
+      jobDescription: string;
+    }) => cvApi.generateCoverLetter(cvId, jobDescription),
+    onSuccess: (data) => {
+      setCoverLetter(data.coverLetter);
+      setShowCoverLetterModal(true);
+    },
+  });
+
   const handleTailor = async () => {
     if (!selectedCv || !jobDescription.trim()) {
       alert("Please select a CV and enter a job description");
@@ -97,6 +140,34 @@ export default function JobTailorPage() {
     } finally {
       setIsTailoring(false);
     }
+  };
+
+  const handleAnalyzeCompatibility = async () => {
+    if (!selectedCv || !jobDescription.trim()) {
+      alert("Please select a CV and enter a job description");
+      return;
+    }
+
+    await analyzeMutation.mutateAsync({
+      cvId: selectedCv.id,
+      jobDescription: jobDescription.trim(),
+    });
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!selectedCv || !jobDescription.trim()) {
+      alert("Please select a CV and enter a job description");
+      return;
+    }
+
+    await coverLetterMutation.mutateAsync({
+      cvId: selectedCv.id,
+      jobDescription: jobDescription.trim(),
+    });
+  };
+
+  const handleCopyCoverLetter = () => {
+    navigator.clipboard.writeText(coverLetter);
   };
 
   const handleExport = async (format: "pdf" | "word" | "ats") => {
@@ -156,10 +227,10 @@ export default function JobTailorPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h3 className="text-2xl font-bold text-gray-900">Job Tailor</h3>
-        <p className="text-gray-600">
-          Tailor your CV to match specific job descriptions using AI
-        </p>
+        <h3 className="text-2xl font-bold text-gray-900">
+          {t("jobTailor.title")}
+        </h3>
+        <p className="text-gray-600">{t("jobTailor.description")}</p>
       </div>
 
       {cvs.length === 0 ? (
@@ -462,30 +533,167 @@ Example:
               </div>
             </div>
 
-            {/* Tailor Button */}
-            <div className="space-y-3">
-              <Button
-                onClick={handleTailor}
-                loading={isTailoring}
-                disabled={!selectedCv || !jobDescription.trim()}
-                className="w-full h-12 text-base font-semibold">
-                <Sparkles className="h-5 w-5 mr-2" />
-                {isTailoring
-                  ? "AI is tailoring your CV..."
-                  : "Tailor CV with AI"}
-              </Button>
+            {/* AI Actions */}
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  AI-Powered Tools
+                </h4>
 
-              {/* Progress indicator */}
-              {isTailoring && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-                    <div>
-                      <p className="text-sm font-medium text-blue-900">
-                        Analyzing job requirements...
+                <div className="space-y-2">
+                  {/* Analyze Compatibility */}
+                  <button
+                    onClick={handleAnalyzeCompatibility}
+                    disabled={
+                      !selectedCv ||
+                      !jobDescription.trim() ||
+                      analyzeMutation.isPending
+                    }
+                    className="group w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-gray-900">
+                          Analyze Compatibility
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Get detailed score & gap analysis
+                        </p>
+                      </div>
+                    </div>
+                    {analyzeMutation.isPending ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
+                    ) : (
+                      <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        →
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Generate Cover Letter */}
+                  <button
+                    onClick={handleGenerateCoverLetter}
+                    disabled={
+                      !selectedCv ||
+                      !jobDescription.trim() ||
+                      coverLetterMutation.isPending
+                    }
+                    className="group w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-green-400 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Mail className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-gray-900">
+                          Generate Cover Letter
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          AI writes personalized letter
+                        </p>
+                      </div>
+                    </div>
+                    {coverLetterMutation.isPending ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 border-t-transparent" />
+                    ) : (
+                      <div className="text-green-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        →
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Tailor CV - Primary Action */}
+                  <button
+                    onClick={handleTailor}
+                    disabled={
+                      !selectedCv || !jobDescription.trim() || isTailoring
+                    }
+                    className="group w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-bold">
+                          {isTailoring
+                            ? "Tailoring CV..."
+                            : "Tailor CV with AI"}
+                        </p>
+                        <p className="text-xs text-white/80">
+                          Create optimized version for this job
+                        </p>
+                      </div>
+                    </div>
+                    {isTailoring ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    ) : (
+                      <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xl">
+                        →
+                      </div>
+                    )}
+                  </button>
+                </div>
+
+                {/* Helper text */}
+                {(!selectedCv || !jobDescription.trim()) && (
+                  <div className="mt-3 text-xs text-gray-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>
+                      {!selectedCv &&
+                        !jobDescription.trim() &&
+                        "Select a CV and enter job description to continue"}
+                      {!selectedCv &&
+                        jobDescription.trim() &&
+                        "Select a CV to continue"}
+                      {selectedCv &&
+                        !jobDescription.trim() &&
+                        "Enter job description to continue"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress indicator with steps */}
+              {(isTailoring ||
+                analyzeMutation.isPending ||
+                coverLetterMutation.isPending) && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl p-5 shadow-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-10 w-10 border-3 border-blue-600 border-t-transparent"></div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full"></div>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-base font-bold text-blue-900 mb-1">
+                        {isTailoring && "✨ Tailoring Your CV"}
+                        {analyzeMutation.isPending &&
+                          "📊 Analyzing Compatibility"}
+                        {coverLetterMutation.isPending &&
+                          "✉️ Generating Cover Letter"}
                       </p>
-                      <p className="text-xs text-blue-700">
-                        This may take 30-60 seconds
+                      <p className="text-sm text-blue-700 mb-2">
+                        Our AI is processing your request...
+                      </p>
+                      <div className="text-xs text-blue-600 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+                          <span>Reading job requirements</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+                          <span>Analyzing your CV</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+                          <span>Generating results</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-500 mt-3 italic">
+                        ⏱️ This typically takes 30-60 seconds
                       </p>
                     </div>
                   </div>
@@ -770,6 +978,219 @@ Example:
           </div>
         </div>
       )}
+
+      {/* Compatibility Analysis Modal */}
+      <Modal
+        isOpen={showAnalysisModal}
+        onClose={() => setShowAnalysisModal(false)}
+        title="CV-Job Compatibility Analysis"
+        size="xl"
+        footer={
+          <Button onClick={() => setShowAnalysisModal(false)}>Close</Button>
+        }>
+        {compatibilityAnalysis && (
+          <div className="space-y-6">
+            {/* Score */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full shadow-lg mb-4">
+                <div className="text-4xl font-bold text-blue-600">
+                  {compatibilityAnalysis.score}
+                  <span className="text-lg text-gray-400">/10</span>
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Compatibility Score
+              </h3>
+              <p className="text-sm text-gray-600">
+                {compatibilityAnalysis.score >= 8 &&
+                  "Excellent match! Your CV aligns well with this job."}
+                {compatibilityAnalysis.score >= 6 &&
+                  compatibilityAnalysis.score < 8 &&
+                  "Good match! Some improvements recommended."}
+                {compatibilityAnalysis.score >= 4 &&
+                  compatibilityAnalysis.score < 6 &&
+                  "Fair match. Consider tailoring your CV."}
+                {compatibilityAnalysis.score < 4 &&
+                  "Low match. Significant tailoring recommended."}
+              </p>
+            </div>
+
+            {/* Strengths */}
+            {compatibilityAnalysis.strengths.length > 0 && (
+              <Collapse
+                title="Strengths"
+                icon={<Award className="h-4 w-4 text-green-600" />}
+                badge={compatibilityAnalysis.strengths.length}
+                defaultOpen={true}>
+                <ul className="space-y-2">
+                  {compatibilityAnalysis.strengths.map((strength, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <CheckSquare className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Collapse>
+            )}
+
+            {/* Matched Skills */}
+            {compatibilityAnalysis.matchedSkills.length > 0 && (
+              <Collapse
+                title="Matched Skills"
+                icon={<CheckSquare className="h-4 w-4 text-green-600" />}
+                badge={compatibilityAnalysis.matchedSkills.length}
+                defaultOpen={true}>
+                <div className="flex flex-wrap gap-2">
+                  {compatibilityAnalysis.matchedSkills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </Collapse>
+            )}
+
+            {/* Missing Skills */}
+            {compatibilityAnalysis.missingSkills.length > 0 && (
+              <Collapse
+                title="Missing Skills"
+                icon={<XCircle className="h-4 w-4 text-red-600" />}
+                badge={compatibilityAnalysis.missingSkills.length}
+                defaultOpen={true}>
+                <div className="flex flex-wrap gap-2">
+                  {compatibilityAnalysis.missingSkills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </Collapse>
+            )}
+
+            {/* Matched Experience */}
+            {compatibilityAnalysis.matchedExperience.length > 0 && (
+              <Collapse
+                title="Relevant Experience"
+                icon={<CheckSquare className="h-4 w-4 text-blue-600" />}
+                badge={compatibilityAnalysis.matchedExperience.length}
+                defaultOpen={false}>
+                <ul className="space-y-2">
+                  {compatibilityAnalysis.matchedExperience.map((exp, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <CheckSquare className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{exp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Collapse>
+            )}
+
+            {/* Missing Requirements */}
+            {compatibilityAnalysis.missingRequirements.length > 0 && (
+              <Collapse
+                title="Missing Requirements"
+                icon={<XCircle className="h-4 w-4 text-orange-600" />}
+                badge={compatibilityAnalysis.missingRequirements.length}
+                defaultOpen={false}>
+                <ul className="space-y-2">
+                  {compatibilityAnalysis.missingRequirements.map(
+                    (req, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm">
+                        <XCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{req}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </Collapse>
+            )}
+
+            {/* Suggestions */}
+            {compatibilityAnalysis.suggestions.length > 0 && (
+              <Collapse
+                title="Suggestions for Improvement"
+                icon={<Lightbulb className="h-4 w-4 text-yellow-600" />}
+                badge={compatibilityAnalysis.suggestions.length}
+                defaultOpen={true}>
+                <ul className="space-y-2">
+                  {compatibilityAnalysis.suggestions.map(
+                    (suggestion, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm">
+                        <Lightbulb className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{suggestion}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </Collapse>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Cover Letter Modal */}
+      <Modal
+        isOpen={showCoverLetterModal}
+        onClose={() => setShowCoverLetterModal(false)}
+        title="Generated Cover Letter"
+        size="xl"
+        footer={
+          <>
+            <Button variant="outline" onClick={handleCopyCoverLetter}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copy to Clipboard
+            </Button>
+            <Button onClick={() => setShowCoverLetterModal(false)}>
+              Close
+            </Button>
+          </>
+        }>
+        {coverLetter && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm text-green-800">
+                <Mail className="h-4 w-4" />
+                <span className="font-medium">
+                  Professional cover letter generated based on your CV and the
+                  job description
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">
+                {coverLetter}
+              </pre>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <Lightbulb className="h-4 w-4 text-yellow-600 mt-0.5" />
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium mb-1">💡 Tips:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>
+                      Personalize the greeting with the hiring manager&apos;s
+                      name if known
+                    </li>
+                    <li>Adjust the tone to match the company culture</li>
+                    <li>Add specific examples from your experience</li>
+                    <li>Proofread carefully before sending</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

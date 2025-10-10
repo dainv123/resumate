@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleApiResponse, handleApiError } from './apiMessageHandler';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -23,16 +24,10 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// Response interceptor to handle success messages and errors
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/auth/login';
-    }
-    return Promise.reject(error);
-  }
+  (response) => handleApiResponse(response),
+  (error) => handleApiError(error)
 );
 
 export default api;

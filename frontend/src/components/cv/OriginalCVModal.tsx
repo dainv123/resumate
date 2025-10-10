@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { X, FileText, User } from "lucide-react";
+import { FileText, User } from "lucide-react";
 import { CV } from "@/lib/cv";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
 interface OriginalCVModalProps {
   originalCv: CV;
@@ -219,49 +221,36 @@ export default function OriginalCVModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden border border-gray-200">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Original CV</h3>
-              <p className="text-sm text-gray-600">
-                {originalCv.originalFileName}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
-            <X className="h-5 w-5" />
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      headerClassName="bg-gradient-to-r from-blue-50 to-indigo-50"
+      bodyClassName="bg-gray-50/30"
+      footer={
+        <Button onClick={onClose} variant="outline">
+          Close
+        </Button>
+      }>
+      {/* Custom Header Content */}
+      <div className="flex items-center gap-3 -mt-6 mb-6">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <FileText className="h-6 w-6 text-blue-600" />
         </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(95vh-200px)] bg-gray-50/30">
-          <div className="space-y-8">
-            {Object.entries(parsedData)
-              .filter(
-                ([, value]) =>
-                  value !== undefined && value !== null && value !== ""
-              )
-              .map(([key, value]) => renderSection(key, value))}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end p-6 bg-white border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-            Close
-          </button>
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">Original CV</h3>
+          <p className="text-sm text-gray-600">{originalCv.originalFileName}</p>
         </div>
       </div>
-    </div>
+
+      {/* Content */}
+      <div className="space-y-8">
+        {Object.entries(parsedData)
+          .filter(
+            ([, value]) => value !== undefined && value !== null && value !== ""
+          )
+          .map(([key, value]) => renderSection(key, value))}
+      </div>
+    </Modal>
   );
 }

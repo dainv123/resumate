@@ -1,21 +1,32 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CVData } from '../../modules/cv/entities/cv.entity';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import { Document as WordDocument, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { pdf } from '@react-pdf/renderer';
+// Dynamic import for ESM module
 import React from 'react';
+import { HtmlTemplateService } from './html-template.service';
 
 @Injectable()
 export class ExportService {
   private readonly logger = new Logger(ExportService.name);
+  
+  constructor(private readonly htmlTemplateService: HtmlTemplateService) {}
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
     try {
-      this.logger.log('Starting PDF generation with @react-pdf/renderer...');
+      this.logger.log(`Starting PDF generation with template: ${template}...`);
       
-      const ReactPDFDocument = this.generateReactPDFDocument(cvData, template);
+      if (template === 'two-column') {
+        return this.exportHtmlToPDF(cvData);
+      }
+      
+      // Default React PDF for professional template
+      // Dynamic import for ESM module
+      const { pdf } = await import('@react-pdf/renderer');
+      
+      const ReactPDFDocument = await this.generateReactPDFDocument(cvData, template);
       
       const pdfBlob = await pdf(ReactPDFDocument).toBlob();
       
@@ -37,7 +48,7 @@ export class ExportService {
 
   async exportToWord(cvData: CVData): Promise<Buffer> {
     try {
-      const doc = new Document({
+      const doc = new WordDocument({
         sections: [{
           properties: {},
           children: [
@@ -894,8 +905,16 @@ export class ExportService {
   }
 
 
-  private generateReactPDFDocument(cvData: CVData, template: string): any {
-    const { Document, Page, Text, View, StyleSheet } = require('@react-pdf/renderer');
+  private async generateReactPDFDocument(cvData: CVData, template: string): Promise<any> {
+    // Dynamic import for ESM module
+    const { Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
+    
+    // Choose template
+    if (template === 'two-column') {
+      return this.generateTwoColumnTemplate(cvData);
+    }
+    
+    // Default professional template
     
     const styles = StyleSheet.create({
       page: {
@@ -999,7 +1018,9 @@ export class ExportService {
           React.createElement(Text, { style: styles.name }, cvData.name.toUpperCase()),
           cvData.experience.length > 0 && React.createElement(Text, { style: styles.title }, cvData.experience[0].title),
           React.createElement(Text, { style: styles.contact }, `${cvData.email} | ${cvData.phone}`),
-          cvData.address && React.createElement(Text, { style: styles.contact }, cvData.address)
+          cvData.address && React.createElement(Text, { style: styles.contact }, cvData.address),
+          cvData.linkedin && React.createElement(Text, { style: styles.contact }, `LinkedIn: ${cvData.linkedin}`),
+          cvData.dateOfBirth && React.createElement(Text, { style: styles.contact }, `Date of Birth: ${cvData.dateOfBirth}`)
         ),
 
         // Summary
@@ -1022,7 +1043,20 @@ export class ExportService {
               exp.achievements && exp.achievements.length > 0 && 
                 React.createElement(Text, { style: styles.description }, `Achievements: ${exp.achievements.join(', ')}`),
               exp.technologies && exp.technologies.length > 0 && 
-                React.createElement(Text, { style: styles.description }, `Technologies: ${exp.technologies.join(', ')}`)
+                React.createElement(Text, { style: styles.description }, `Technologies: ${exp.technologies.join(', ')}`),
+              exp.subProjects && exp.subProjects.length > 0 && 
+                React.createElement(View, { style: { marginTop: 8 } },
+                  React.createElement(Text, { style: { ...styles.description, fontWeight: 'bold' } }, 'Sub-Projects:'),
+                  ...exp.subProjects.map(sub => 
+                    React.createElement(View, { style: { marginLeft: 10, marginTop: 4 }, key: sub.name },
+                      sub.name && React.createElement(Text, { style: styles.description }, `• ${sub.name}${sub.role ? ` (${sub.role})` : ''}`),
+                      sub.responsibilities && sub.responsibilities.length > 0 && 
+                        React.createElement(Text, { style: styles.description }, `  Responsibilities: ${sub.responsibilities.join(', ')}`),
+                      sub.techStack && sub.techStack.length > 0 && 
+                        React.createElement(Text, { style: styles.description }, `  Tech Stack: ${sub.techStack.join(', ')}`)
+                    )
+                  )
+                )
             )
           )
         ),
@@ -1047,6 +1081,7 @@ export class ExportService {
             React.createElement(View, { style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
               React.createElement(Text, { style: styles.degree }, `${edu.degree} - ${edu.school}`),
               React.createElement(Text, { style: styles.school }, `Year: ${edu.year}`),
+              edu.location && React.createElement(Text, { style: styles.school }, `Location: ${edu.location}`),
               edu.gpa && React.createElement(Text, { style: styles.school }, `GPA: ${edu.gpa}`),
               edu.honors && React.createElement(Text, { style: styles.school }, `Honors: ${edu.honors}`)
             )
@@ -1090,6 +1125,30 @@ export class ExportService {
               React.createElement(Text, { style: styles.school }, `${award.issuer} - ${award.date}`)
             )
           )
+        ),
+
+        // Publications
+        cvData.publications && cvData.publications.length > 0 && React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'PUBLICATIONS'),
+          ...cvData.publications.map(pub => 
+            React.createElement(View, { style: styles.educationItem, key: pub.title },
+              React.createElement(Text, { style: styles.degree }, pub.title),
+              React.createElement(Text, { style: styles.school }, `${pub.journal} - ${pub.date}`),
+              React.createElement(Text, { style: styles.school }, `Authors: ${pub.authors}`)
+            )
+          )
+        ),
+
+        // Volunteer Experience
+        cvData.volunteer && cvData.volunteer.length > 0 && React.createElement(View, { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'VOLUNTEER EXPERIENCE'),
+          ...cvData.volunteer.map(vol => 
+            React.createElement(View, { style: styles.experienceItem, key: `${vol.organization}-${vol.role}` },
+              React.createElement(Text, { style: styles.jobTitle }, `${vol.role} at ${vol.organization}`),
+              React.createElement(Text, { style: styles.duration }, vol.duration),
+              React.createElement(Text, { style: styles.description }, vol.description)
+            )
+          )
         )
       )
     );
@@ -1100,6 +1159,8 @@ export class ExportService {
 ${cvData.name}
 ${cvData.email} | ${cvData.phone}
 ${cvData.address || ''}
+${cvData.linkedin ? `LinkedIn: ${cvData.linkedin}` : ''}
+${cvData.dateOfBirth ? `Date of Birth: ${cvData.dateOfBirth}` : ''}
 
 ${cvData.summary ? `SUMMARY
 ${cvData.summary}
@@ -1140,9 +1201,13 @@ ${cvData.skills.languages && cvData.skills.languages.length > 0 ? `Languages: ${
 ${cvData.skills.tools && cvData.skills.tools.length > 0 ? `Tools: ${cvData.skills.tools.join(', ')}` : ''}
 
 EDUCATION
-${cvData.education.map(edu => 
-  `${edu.degree} - ${edu.school} (${edu.year})`
-).join('\n')}
+${cvData.education.map(edu => {
+  let result = `${edu.degree} - ${edu.school} (${edu.year})`;
+  if (edu.location) result += ` - ${edu.location}`;
+  if (edu.gpa) result += ` - GPA: ${edu.gpa}`;
+  if (edu.honors) result += ` - Honors: ${edu.honors}`;
+  return result;
+}).join('\n')}
 
 ${cvData.projects.length > 0 ? `PROJECTS
 ${cvData.projects.map(project => {
@@ -1172,6 +1237,380 @@ ${cvData.awards.length > 0 ? `AWARDS
 ${cvData.awards.map(award => 
   `${award.name} - ${award.issuer} (${award.date})`
 ).join('\n')}` : ''}
+
+${cvData.publications.length > 0 ? `PUBLICATIONS
+${cvData.publications.map(pub => 
+  `${pub.title} - ${pub.journal} (${pub.date})
+Authors: ${pub.authors}`
+).join('\n\n')}` : ''}
+
+${cvData.volunteer.length > 0 ? `VOLUNTEER EXPERIENCE
+${cvData.volunteer.map(vol => 
+  `${vol.role} at ${vol.organization} (${vol.duration})
+${vol.description}`
+).join('\n\n')}` : ''}
     `.trim();
+  }
+
+  private async generateTwoColumnTemplate(cvData: CVData): Promise<any> {
+    const { Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
+    
+    const styles = StyleSheet.create({
+      page: {
+        backgroundColor: '#FFFFFF',
+        fontSize: 10,
+        lineHeight: 1.4,
+        padding: 0,
+        margin: 0,
+        flexDirection: 'row',
+      },
+      
+      // Left Column (Dark Teal Background)
+      leftColumn: {
+        width: 240, // Fixed width in points
+        backgroundColor: '#2c5f5f', // Dark teal
+        padding: 30,
+        color: '#FFFFFF',
+        minHeight: 792, // A4 height
+      },
+      
+      // Right Column (White Background)
+      rightColumn: {
+        width: 315, // Remaining width
+        backgroundColor: '#FFFFFF',
+        padding: 30,
+        color: '#333333',
+        minHeight: 792, // A4 height
+      },
+      
+      // Profile Section
+      profileSection: {
+        marginBottom: 25,
+        textAlign: 'center',
+      },
+      profileImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#FFFFFF',
+        marginBottom: 15,
+        alignSelf: 'center',
+      },
+      name: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#FFFFFF',
+        textAlign: 'center',
+      },
+      title: {
+        fontSize: 14,
+        color: '#FFFFFF',
+        textAlign: 'center',
+        opacity: 0.9,
+      },
+      
+      // Left Column Sections
+      leftSection: {
+        marginBottom: 25,
+      },
+      leftSectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        color: '#FFFFFF',
+      },
+      leftSectionText: {
+        fontSize: 11,
+        color: '#FFFFFF',
+        marginBottom: 8,
+        lineHeight: 1.4,
+      },
+      leftSectionLabel: {
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        marginBottom: 3,
+      },
+      
+      // Skills with Progress Bars
+      skillItem: {
+        marginBottom: 12,
+      },
+      skillName: {
+        fontSize: 11,
+        color: '#FFFFFF',
+        marginBottom: 3,
+      },
+      progressBar: {
+        height: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        borderRadius: 2,
+        overflow: 'hidden',
+      },
+      progressFill: {
+        height: '100%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 2,
+      },
+      
+      // Right Column Sections
+      rightSection: {
+        marginBottom: 25,
+      },
+      rightSectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        color: '#333333',
+        borderBottom: '2px solid #2c5f5f',
+        paddingBottom: 5,
+      },
+      rightSectionText: {
+        fontSize: 11,
+        color: '#333333',
+        marginBottom: 8,
+        lineHeight: 1.5,
+      },
+      
+      // Experience Items
+      experienceItem: {
+        marginBottom: 15,
+      },
+      jobTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#333333',
+        marginBottom: 2,
+      },
+      company: {
+        fontSize: 11,
+        color: '#2c5f5f',
+        fontWeight: 'bold',
+        marginBottom: 2,
+      },
+      duration: {
+        fontSize: 10,
+        color: '#666666',
+        fontStyle: 'italic',
+        marginBottom: 5,
+      },
+      responsibility: {
+        fontSize: 10,
+        color: '#333333',
+        marginBottom: 2,
+        marginLeft: 10,
+      },
+      
+      // Education
+      educationItem: {
+        marginBottom: 10,
+      },
+      degree: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#333333',
+        marginBottom: 2,
+      },
+      school: {
+        fontSize: 11,
+        color: '#2c5f5f',
+        fontWeight: 'bold',
+        marginBottom: 2,
+      },
+      educationDuration: {
+        fontSize: 10,
+        color: '#666666',
+        fontStyle: 'italic',
+      },
+    });
+
+    // Helper function to get skill level (0-1)
+    const getSkillLevel = (skill: string): number => {
+      // Simple mapping - in real app, this could be stored in CV data
+      const skillLevels: { [key: string]: number } = {
+        'JavaScript': 0.9,
+        'TypeScript': 0.85,
+        'React': 0.9,
+        'Node.js': 0.8,
+        'Python': 0.7,
+        'Java': 0.6,
+        'SQL': 0.75,
+        'AWS': 0.6,
+        'Docker': 0.5,
+        'Git': 0.8,
+      };
+      return skillLevels[skill] || 0.5;
+    };
+
+    // Get primary skill categories
+    const technicalSkills = cvData.skills?.technical || [];
+    const softSkills = cvData.skills?.soft || [];
+    const languages = cvData.skills?.languages || [];
+
+    return React.createElement(Document, {},
+      React.createElement(Page, { style: styles.page },
+        
+        // LEFT COLUMN
+        React.createElement(View, { style: styles.leftColumn },
+          
+          // Profile Section
+          React.createElement(View, { style: styles.profileSection },
+            React.createElement(View, { style: styles.profileImage }),
+            React.createElement(Text, { style: styles.name }, cvData.name.toUpperCase()),
+            cvData.experience.length > 0 && 
+              React.createElement(Text, { style: styles.title }, cvData.experience[0].title)
+          ),
+          
+          // Contact Details
+          React.createElement(View, { style: styles.leftSection },
+            React.createElement(Text, { style: styles.leftSectionTitle }, 'DETAILS'),
+            React.createElement(Text, { style: styles.leftSectionLabel }, 'Address'),
+            React.createElement(Text, { style: styles.leftSectionText }, cvData.address || 'Not provided'),
+            React.createElement(Text, { style: styles.leftSectionLabel }, 'Phone'),
+            React.createElement(Text, { style: styles.leftSectionText }, cvData.phone),
+            React.createElement(Text, { style: styles.leftSectionLabel }, 'Email'),
+            React.createElement(Text, { style: styles.leftSectionText }, cvData.email),
+          ),
+          
+          // Links
+          cvData.linkedin && 
+            React.createElement(View, { style: styles.leftSection },
+              React.createElement(Text, { style: styles.leftSectionTitle }, 'LINKS'),
+              React.createElement(Text, { style: styles.leftSectionText }, 'LinkedIn'),
+            ),
+          
+          // Skills
+          technicalSkills.length > 0 && 
+            React.createElement(View, { style: styles.leftSection },
+              React.createElement(Text, { style: styles.leftSectionTitle }, 'SKILLS'),
+              ...technicalSkills.slice(0, 6).map(skill => 
+                React.createElement(View, { style: styles.skillItem, key: skill },
+                  React.createElement(Text, { style: styles.skillName }, skill),
+                  React.createElement(View, { style: styles.progressBar },
+                    React.createElement(View, { 
+                      style: { 
+                        ...styles.progressFill, 
+                        width: `${getSkillLevel(skill) * 100}%` 
+                      } 
+                    })
+                  )
+                )
+              )
+            ),
+        ),
+        
+        // RIGHT COLUMN
+        React.createElement(View, { style: styles.rightColumn },
+          
+          // Profile Summary
+          cvData.summary && 
+            React.createElement(View, { style: styles.rightSection },
+              React.createElement(Text, { style: styles.rightSectionTitle }, 'PROFILE'),
+              React.createElement(Text, { style: styles.rightSectionText }, cvData.summary)
+            ),
+          
+          // Experience
+          React.createElement(View, { style: styles.rightSection },
+            React.createElement(Text, { style: styles.rightSectionTitle }, 'EXPERIENCE'),
+            ...cvData.experience.map(exp => 
+              React.createElement(View, { style: styles.experienceItem, key: `${exp.company}-${exp.title}` },
+                React.createElement(Text, { style: styles.jobTitle }, exp.title),
+                React.createElement(Text, { style: styles.company }, exp.company),
+                React.createElement(Text, { style: styles.duration }, exp.duration),
+                ...(exp.responsibilities && exp.responsibilities.length > 0 ? 
+                  exp.responsibilities.map(resp => 
+                    React.createElement(Text, { style: styles.responsibility, key: resp }, `• ${resp}`)
+                  ) : []),
+                ...(exp.achievements && exp.achievements.length > 0 ? 
+                  exp.achievements.map(ach => 
+                    React.createElement(Text, { style: styles.responsibility, key: ach }, `• ${ach}`)
+                  ) : []),
+              )
+            )
+          ),
+          
+          // Education
+          cvData.education.length > 0 && 
+            React.createElement(View, { style: styles.rightSection },
+              React.createElement(Text, { style: styles.rightSectionTitle }, 'EDUCATION'),
+              ...cvData.education.map(edu => 
+                React.createElement(View, { style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
+                  React.createElement(Text, { style: styles.degree }, edu.degree),
+                  React.createElement(Text, { style: styles.school }, edu.school),
+                  React.createElement(Text, { style: styles.educationDuration }, 
+                    `${edu.year}${edu.gpa ? ` | GPA: ${edu.gpa}` : ''}`
+                  ),
+                )
+              )
+            ),
+          
+          // Languages
+          languages.length > 0 && 
+            React.createElement(View, { style: styles.rightSection },
+              React.createElement(Text, { style: styles.rightSectionTitle }, 'LANGUAGES'),
+              ...languages.map(lang => 
+                React.createElement(Text, { style: styles.rightSectionText, key: lang }, lang)
+              )
+            ),
+        )
+      )
+    );
+  }
+
+  private async exportHtmlToPDF(cvData: CVData): Promise<Buffer> {
+    try {
+      this.logger.log('Generating HTML template for two-column layout...');
+      
+      // Generate HTML template
+      const htmlContent = await this.htmlTemplateService.generateTwoColumnHtml(cvData);
+      
+      // Write HTML to temporary file
+      const tempDir = os.tmpdir();
+      const tempHtmlFile = path.join(tempDir, `cv-${Date.now()}.html`);
+      const tempPdfFile = path.join(tempDir, `cv-${Date.now()}.pdf`);
+      
+      await fs.promises.writeFile(tempHtmlFile, htmlContent, 'utf8');
+      
+      // Convert HTML to PDF using puppeteer
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.goto(`file://${tempHtmlFile}`, { waitUntil: 'networkidle0' });
+      
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '0.5in',
+          right: '0.5in',
+          bottom: '0.5in',
+          left: '0.5in'
+        }
+      });
+      
+      await browser.close();
+      
+      // Clean up temporary files
+      try {
+        await fs.promises.unlink(tempHtmlFile);
+      } catch (error) {
+        this.logger.warn('Failed to delete temporary HTML file:', error);
+      }
+      
+      // Convert Uint8Array to Buffer
+      const buffer = Buffer.from(pdfBuffer);
+      
+      this.logger.log(`HTML to PDF conversion successful, size: ${buffer.length} bytes`);
+      return buffer;
+      
+    } catch (error) {
+      this.logger.error('Error converting HTML to PDF:', error);
+      throw new Error(`Failed to convert HTML to PDF: ${error.message}`);
+    }
   }
 }

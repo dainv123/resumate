@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 import { GoogleOAuthButton } from "@/components/auth/GoogleOAuthButton";
 import { FileText, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -55,6 +56,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Language Switcher - Top Right */}
+      <div className="fixed top-6 right-6 z-50">
+        <LanguageSwitcher />
+      </div>
+
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
@@ -96,7 +102,7 @@ export default function LoginPage() {
                 {...register("email")}
                 type="email"
                 autoComplete="email"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="input-base mt-1"
                 placeholder="Nhập email của bạn"
               />
               {errors.email && (
@@ -117,7 +123,7 @@ export default function LoginPage() {
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="input-base pr-10"
                   placeholder="Nhập mật khẩu"
                 />
                 <button

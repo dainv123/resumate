@@ -102,6 +102,12 @@ export default function PortfolioPage() {
       description: "Bold and artistic design",
       preview: "bg-gradient-to-br from-pink-100 to-orange-100",
     },
+    {
+      id: PortfolioTemplate.MUHAMMAD_ISMAIL,
+      name: "Muhammad Ismail",
+      description: "Professional with timeline design",
+      preview: "bg-gradient-to-br from-indigo-100 to-purple-100",
+    },
   ];
 
   return (
@@ -161,7 +167,7 @@ export default function PortfolioPage() {
               id="customDomain"
               value={customDomain}
               onChange={(e) => setCustomDomain(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input-base mt-1"
               placeholder="yourname.com"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -182,7 +188,7 @@ export default function PortfolioPage() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="textarea-base mt-1"
               placeholder="Tell us about yourself..."
             />
           </div>
@@ -200,7 +206,7 @@ export default function PortfolioPage() {
                 id="linkedinUrl"
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="input-base mt-1"
                 placeholder="https://linkedin.com/in/yourname"
               />
             </div>
@@ -216,7 +222,7 @@ export default function PortfolioPage() {
                 id="githubUrl"
                 value={githubUrl}
                 onChange={(e) => setGithubUrl(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="input-base mt-1"
                 placeholder="https://github.com/yourname"
               />
             </div>
@@ -232,7 +238,7 @@ export default function PortfolioPage() {
                 id="websiteUrl"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="input-base mt-1"
                 placeholder="https://yourwebsite.com"
               />
             </div>
@@ -261,7 +267,7 @@ export default function PortfolioPage() {
                   type="text"
                   value={portfolioUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                  className="flex-1 input-base bg-gray-50"
                 />
                 <Button variant="outline" size="sm" onClick={handleShare}>
                   <Share2 className="h-4 w-4" />

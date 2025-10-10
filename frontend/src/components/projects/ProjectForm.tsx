@@ -6,7 +6,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CreateProjectData, UpdateProjectData, Project } from "@/lib/projects";
 import Button from "@/components/ui/Button";
-import { X } from "lucide-react";
+import { Collapse } from "@/components/ui/Collapse";
+import Input, { Textarea } from "@/components/ui/Input";
+import {
+  X,
+  FileText,
+  User,
+  Code2,
+  FileType,
+  Trophy,
+  Link2,
+  Image as ImageIcon,
+} from "lucide-react";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -26,6 +37,7 @@ interface ProjectFormProps {
   onSubmit: (data: CreateProjectData | UpdateProjectData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  showActions?: boolean; // Control whether to show built-in actions
 }
 
 export default function ProjectForm({
@@ -33,6 +45,7 @@ export default function ProjectForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  showActions = true,
 }: ProjectFormProps) {
   const [techStack, setTechStack] = React.useState<string[]>(
     project?.techStack || []
@@ -85,191 +98,150 @@ export default function ProjectForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      {/* Project Name */}
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-gray-700">
-          Project Name *
-        </label>
-        <input
-          {...register("name")}
-          type="text"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter project name"
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-        )}
-      </div>
-
-      {/* Role */}
-      <div>
-        <label
-          htmlFor="role"
-          className="block text-sm font-medium text-gray-700">
-          Your Role *
-        </label>
-        <input
-          {...register("role")}
-          type="text"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="e.g., Frontend Developer, Full Stack Developer"
-        />
-        {errors.role && (
-          <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-        )}
-      </div>
-
-      {/* Tech Stack */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Tech Stack *
-        </label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {techStack.map((tech, index) => (
-            <span
-              key={index}
-              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-              {tech}
-              <button
-                type="button"
-                onClick={() => removeTech(tech)}
-                className="ml-2 text-blue-600 hover:text-blue-800">
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            value={newTech}
-            onChange={(e) => setNewTech(e.target.value)}
-            onKeyPress={(e) =>
-              e.key === "Enter" && (e.preventDefault(), addTech())
-            }
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Add technology"
+    <form
+      id="project-form"
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="space-y-4">
+      {/* Section 1: Basic Information */}
+      <Collapse
+        title="Basic Information"
+        icon={<FileText className="h-4 w-4 text-blue-600" />}
+        defaultOpen={true}>
+        <div className="space-y-4">
+          <Input
+            {...register("name")}
+            label="Project Name"
+            className="input-base mt-1"
+            placeholder="Enter project name"
+            error={errors.name?.message}
+            required
           />
-          <Button type="button" onClick={addTech} variant="outline">
-            Add
+
+          <Input
+            {...register("role")}
+            label="Your Role"
+            placeholder="e.g., Frontend Developer, Full Stack Developer"
+            error={errors.role?.message}
+            required
+          />
+        </div>
+      </Collapse>
+
+      {/* Section 2: Tech Stack */}
+      <Collapse
+        title="Tech Stack"
+        icon={<Code2 className="h-4 w-4 text-purple-600" />}
+        badge={techStack.length}
+        defaultOpen={true}>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {techStack.map((tech, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                {tech}
+                <button
+                  type="button"
+                  onClick={() => removeTech(tech)}
+                  className="ml-2 text-blue-600 hover:text-blue-800">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex space-x-2">
+            <Input
+              type="text"
+              value={newTech}
+              onChange={(e) => setNewTech(e.target.value)}
+              onKeyPress={(e) =>
+                e.key === "Enter" && (e.preventDefault(), addTech())
+              }
+              placeholder="Add technology (Press Enter)"
+              className="flex-1"
+            />
+            <Button type="button" onClick={addTech} variant="outline" size="sm">
+              Add
+            </Button>
+          </div>
+          {errors.techStack && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.techStack.message}
+            </p>
+          )}
+        </div>
+      </Collapse>
+
+      {/* Section 3: Description & Results */}
+      <Collapse
+        title="Description & Results"
+        icon={<FileType className="h-4 w-4 text-green-600" />}
+        defaultOpen={true}>
+        <div className="space-y-4">
+          <Textarea
+            {...register("description")}
+            label="Description"
+            rows={4}
+            placeholder="Describe what you built and your contributions"
+            error={errors.description?.message}
+            required
+          />
+
+          <Textarea
+            {...register("results")}
+            label="Results/Achievements"
+            rows={3}
+            placeholder="e.g., Improved performance by 50%, Increased user engagement by 30%"
+            error={errors.results?.message}
+          />
+        </div>
+      </Collapse>
+
+      {/* Section 4: Links & Media */}
+      <Collapse
+        title="Links & Media"
+        icon={<Link2 className="h-4 w-4 text-orange-600" />}
+        defaultOpen={false}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              {...register("demoLink")}
+              type="url"
+              label="Demo Link"
+              placeholder="https://demo.example.com"
+              error={errors.demoLink?.message}
+            />
+
+            <Input
+              {...register("githubLink")}
+              type="url"
+              label="GitHub Link"
+              placeholder="https://github.com/username/repo"
+              error={errors.githubLink?.message}
+            />
+          </div>
+
+          <Input
+            {...register("imageUrl")}
+            type="url"
+            label="Project Image URL"
+            placeholder="https://example.com/project-image.jpg"
+            error={errors.imageUrl?.message}
+          />
+        </div>
+      </Collapse>
+
+      {/* Actions - Only show if showActions is true */}
+      {showActions && (
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={isLoading}>
+            {project ? "Update Project" : "Create Project"}
           </Button>
         </div>
-        {errors.techStack && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.techStack.message}
-          </p>
-        )}
-      </div>
-
-      {/* Description */}
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-gray-700">
-          Description *
-        </label>
-        <textarea
-          {...register("description")}
-          rows={4}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Describe what you built and your contributions"
-        />
-        {errors.description && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.description.message}
-          </p>
-        )}
-      </div>
-
-      {/* Results */}
-      <div>
-        <label
-          htmlFor="results"
-          className="block text-sm font-medium text-gray-700">
-          Results/Achievements
-        </label>
-        <textarea
-          {...register("results")}
-          rows={3}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="e.g., Improved performance by 50%, Increased user engagement by 30%"
-        />
-        {errors.results && (
-          <p className="mt-1 text-sm text-red-600">{errors.results.message}</p>
-        )}
-      </div>
-
-      {/* Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="demoLink"
-            className="block text-sm font-medium text-gray-700">
-            Demo Link
-          </label>
-          <input
-            {...register("demoLink")}
-            type="url"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="https://demo.example.com"
-          />
-          {errors.demoLink && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.demoLink.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="githubLink"
-            className="block text-sm font-medium text-gray-700">
-            GitHub Link
-          </label>
-          <input
-            {...register("githubLink")}
-            type="url"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="https://github.com/username/repo"
-          />
-          {errors.githubLink && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.githubLink.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Image URL */}
-      <div>
-        <label
-          htmlFor="imageUrl"
-          className="block text-sm font-medium text-gray-700">
-          Project Image URL
-        </label>
-        <input
-          {...register("imageUrl")}
-          type="url"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="https://example.com/project-image.jpg"
-        />
-        {errors.imageUrl && (
-          <p className="mt-1 text-sm text-red-600">{errors.imageUrl.message}</p>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isLoading}>
-          {project ? "Update Project" : "Create Project"}
-        </Button>
-      </div>
+      )}
     </form>
   );
 }

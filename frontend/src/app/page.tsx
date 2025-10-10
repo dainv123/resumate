@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 // import Button from "@/components/ui/Button";
 import { FileText, Users, Briefcase, Sparkles } from "lucide-react";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -37,7 +38,8 @@ export default function HomePage() {
                 Resumate
               </span>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
               <div className="elisc_tm_button" data-style="border">
                 <a
                   href="#"

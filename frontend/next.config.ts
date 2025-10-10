@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: 'standalone', // Enable standalone output for Docker
+  // output: 'standalone', // Temporarily disabled for development
+  outputFileTracingRoot: __dirname, // Fix for multiple lockfiles warning
+  serverExternalPackages: [], // Fix for routesManifest.dataRoutes error
   env: {
     PORT: process.env.PORT || '3000',
   },

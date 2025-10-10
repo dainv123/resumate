@@ -1,15 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { CvService } from '../cv/cv.service';
 import { ProjectsService } from '../projects/projects.service';
 import { CreatePortfolioDto, UpdatePortfolioDto, PortfolioData, PortfolioTemplate } from './dto/portfolio.dto';
+import { TemplateLoaderService } from './templates/template-loader.service';
+import { Portfolio as PortfolioEntity } from './entities/portfolio.entity';
 
 @Injectable()
 export class PortfolioService {
   constructor(
+    @InjectRepository(PortfolioEntity)
+    private portfolioRepository: Repository<PortfolioEntity>,
     private usersService: UsersService,
     private cvService: CvService,
     private projectsService: ProjectsService,
+    private templateLoaderService: TemplateLoaderService,
   ) {}
 
   async generatePortfolio(userId: string, createPortfolioDto: CreatePortfolioDto): Promise<PortfolioData> {
@@ -50,14 +58,130 @@ export class PortfolioService {
     };
   }
 
+  async savePortfolio(userId: string, createPortfolioDto: CreatePortfolioDto): Promise<PortfolioEntity> {
+    const user = await this.usersService.findById(userId);
+    const username = user.email.split('@')[0].toLowerCase();
+    
+    // Check if user already has a portfolio
+    let portfolio = await this.portfolioRepository.findOne({
+      where: { userId, isActive: true }
+    });
+    
+    // Generate portfolio data
+    const portfolioData = await this.generatePortfolio(userId, createPortfolioDto);
+    
+    // Generate HTML
+    const html = await this.generatePortfolioHTML(portfolioData);
+    
+    // Generate URL
+    const url = await this.generatePortfolioUrl(userId, createPortfolioDto.customDomain);
+    
+    if (portfolio) {
+      // Update existing portfolio (override)
+      portfolio.template = createPortfolioDto.template;
+      portfolio.customDomain = createPortfolioDto.customDomain || '';
+      portfolio.bio = createPortfolioDto.bio || '';
+      portfolio.avatar = createPortfolioDto.avatar || '';
+      portfolio.linkedinUrl = createPortfolioDto.linkedinUrl || '';
+      portfolio.githubUrl = createPortfolioDto.githubUrl || '';
+      portfolio.websiteUrl = createPortfolioDto.websiteUrl || '';
+      portfolio.generatedHtml = html;
+      portfolio.generatedUrl = url;
+      portfolio.updatedAt = new Date();
+    } else {
+      // Create new portfolio
+      const uuid = randomUUID();
+      portfolio = this.portfolioRepository.create({
+        username,
+        uuid,
+        template: createPortfolioDto.template,
+        customDomain: createPortfolioDto.customDomain,
+        bio: createPortfolioDto.bio,
+        avatar: createPortfolioDto.avatar,
+        linkedinUrl: createPortfolioDto.linkedinUrl,
+        githubUrl: createPortfolioDto.githubUrl,
+        websiteUrl: createPortfolioDto.websiteUrl,
+        generatedHtml: html,
+        generatedUrl: url,
+        userId,
+      });
+    }
+    
+    return await this.portfolioRepository.save(portfolio);
+  }
+
+  async getUserPortfolio(userId: string): Promise<PortfolioEntity | null> {
+    return await this.portfolioRepository.findOne({
+      where: { userId, isActive: true }
+    });
+  }
+
   async getPortfolioByUsername(username: string): Promise<PortfolioData> {
-    // This would typically query a portfolio table
-    // For now, we'll use a simple approach
+    // Find portfolio by username
+    const portfolio = await this.portfolioRepository.findOne({
+      where: { username, isActive: true },
+      order: { createdAt: 'DESC' }
+    });
+    
+    if (!portfolio) {
     throw new NotFoundException('Portfolio not found');
+    }
+    
+    // Get user data
+    const user = await this.usersService.findByEmail(`${username}@default.com`);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
+    // Get CV data
+    const cvs = await this.cvService.getUserCvs(user.id);
+    const cvData = cvs.length > 0 ? cvs[0] : null;
+    
+    // Get projects data
+    const projects = await this.projectsService.getUserProjects(user.id);
+    
+    // Return the complete portfolio data
+    return {
+      user: {
+        name: user.name || portfolio.bio || 'Portfolio Owner',
+        email: user.email || '',
+        avatar: portfolio.avatar || user.avatar || '',
+        bio: portfolio.bio || '',
+        linkedinUrl: portfolio.linkedinUrl || '',
+        githubUrl: portfolio.githubUrl || '',
+        websiteUrl: portfolio.websiteUrl || '',
+      },
+      cv: cvData ? {
+        summary: cvData.parsedData?.summary || '',
+        skills: cvData.parsedData?.skills || { technical: [], soft: [], languages: [], tools: [] },
+        experience: cvData.parsedData?.experience || [],
+        education: cvData.parsedData?.education || [],
+      } : {
+        summary: '',
+        skills: { technical: [], soft: [], languages: [], tools: [] },
+        experience: [],
+        education: [],
+      },
+      projects: projects || [],
+      template: portfolio.template,
+      customDomain: portfolio.customDomain,
+    };
+  }
+
+  async getPortfolioByUuid(uuid: string): Promise<PortfolioEntity> {
+    const portfolio = await this.portfolioRepository.findOne({
+      where: { uuid, isActive: true }
+    });
+    
+    if (!portfolio) {
+      throw new NotFoundException('Portfolio not found');
+    }
+    
+    return portfolio;
   }
 
   async generatePortfolioHTML(portfolioData: PortfolioData): Promise<string> {
-    const template = this.getTemplate(portfolioData.template);
+    const template = await this.getTemplate(portfolioData.template);
     return this.renderTemplate(template, portfolioData);
   }
 
@@ -65,292 +189,221 @@ export class PortfolioService {
     const user = await this.usersService.findById(userId);
     const username = user.email.split('@')[0].toLowerCase();
     
-    if (customDomain) {
-      return `https://${customDomain}`;
+    // Always return the backend URL as primary portfolio URL
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    return `${baseUrl}/portfolio/${username}`;
+  }
+
+  /**
+   * Validates and formats custom domain
+   * @returns formatted custom domain or null if invalid
+   */
+  validateCustomDomain(customDomain?: string): string | null {
+    if (!customDomain || customDomain.trim() === '') {
+      return null;
     }
     
-    return `https://${username}.resumate.app/portfolio`;
+    // Clean up custom domain - remove protocol if present
+    const cleanDomain = customDomain.replace(/^https?:\/\//, '').trim();
+    
+    // Validate domain format (must contain at least one dot for valid domain)
+    if (cleanDomain && cleanDomain.includes('.')) {
+      return cleanDomain;
+    }
+    
+    return null;
   }
 
-  private getTemplate(template: PortfolioTemplate): string {
-    const templates = {
-      [PortfolioTemplate.BASIC]: this.getBasicTemplate(),
-      [PortfolioTemplate.MODERN]: this.getModernTemplate(),
-      [PortfolioTemplate.CREATIVE]: this.getCreativeTemplate(),
+  private async getTemplate(template: PortfolioTemplate): Promise<string> {
+    const templateMap = {
+      [PortfolioTemplate.BASIC]: 'basic',
+      [PortfolioTemplate.MODERN]: 'modern',
+      [PortfolioTemplate.CREATIVE]: 'creative',
+      [PortfolioTemplate.MUHAMMAD_ISMAIL]: 'muhammad-ismail',
     };
     
-    return templates[template];
+    const templateName = templateMap[template];
+    return await this.templateLoaderService.loadTemplate(templateName);
   }
 
-  private getBasicTemplate(): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{user.name}} - Portfolio</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #333; margin: 0; }
-        .header p { color: #666; margin: 10px 0; }
-        .section { margin-bottom: 30px; }
-        .section h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
-        .skills { display: flex; flex-wrap: wrap; gap: 10px; }
-        .skill { background: #007bff; color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
-        .project { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        .project h3 { margin: 0 0 10px 0; color: #333; }
-        .project p { margin: 5px 0; color: #666; }
-        .tech-stack { font-style: italic; color: #007bff; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>{{user.name}}</h1>
-            <p>{{user.bio}}</p>
-            <p>{{user.email}}</p>
-        </div>
-        
-        <div class="section">
-            <h2>Skills</h2>
-            <div class="skills">
-                {{#each cv.skills}}
-                <span class="skill">{{this}}</span>
-                {{/each}}
-            </div>
-        </div>
-        
-        <div class="section">
-            <h2>Experience</h2>
-            {{#each cv.experience}}
-            <div class="project">
-                <h3>{{role}} at {{company}}</h3>
-                <p><strong>Duration:</strong> {{duration}}</p>
-                <p>{{description}}</p>
-            </div>
-            {{/each}}
-        </div>
-        
-        <div class="section">
-            <h2>Projects</h2>
-            {{#each projects}}
-            <div class="project">
-                <h3>{{name}}</h3>
-                <p>{{description}}</p>
-                <p class="tech-stack">Tech Stack: {{techStack}}</p>
-                {{#if demoLink}}<p><a href="{{demoLink}}" target="_blank">Demo</a></p>{{/if}}
-                {{#if githubLink}}<p><a href="{{githubLink}}" target="_blank">GitHub</a></p>{{/if}}
-            </div>
-            {{/each}}
-        </div>
-    </div>
-</body>
-</html>
-    `;
-  }
 
-  private getModernTemplate(): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{user.name}} - Portfolio</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 0; text-align: center; }
-        .hero h1 { font-size: 3rem; margin-bottom: 20px; }
-        .hero p { font-size: 1.2rem; opacity: 0.9; }
-        .content { padding: 60px 0; }
-        .section { margin-bottom: 60px; }
-        .section h2 { font-size: 2rem; margin-bottom: 30px; color: #333; position: relative; }
-        .section h2::after { content: ''; position: absolute; bottom: -10px; left: 0; width: 50px; height: 3px; background: #667eea; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
-        .card:hover { transform: translateY(-5px); }
-        .skills { display: flex; flex-wrap: wrap; gap: 10px; }
-        .skill { background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; }
-        .project h3 { color: #333; margin-bottom: 15px; }
-        .project p { color: #666; margin-bottom: 10px; }
-        .tech-stack { color: #667eea; font-weight: 500; }
-    </style>
-</head>
-<body>
-    <div class="hero">
-        <div class="container">
-            <h1>{{user.name}}</h1>
-            <p>{{user.bio}}</p>
-        </div>
-    </div>
-    
-    <div class="content">
-        <div class="container">
-            <div class="section">
-                <h2>Skills</h2>
-                <div class="skills">
-                    {{#each cv.skills}}
-                    <span class="skill">{{this}}</span>
-                    {{/each}}
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2>Experience</h2>
-                <div class="grid">
-                    {{#each cv.experience}}
-                    <div class="card">
-                        <h3>{{role}} at {{company}}</h3>
-                        <p><strong>Duration:</strong> {{duration}}</p>
-                        <p>{{description}}</p>
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2>Projects</h2>
-                <div class="grid">
-                    {{#each projects}}
-                    <div class="card">
-                        <h3>{{name}}</h3>
-                        <p>{{description}}</p>
-                        <p class="tech-stack">Tech Stack: {{techStack}}</p>
-                        {{#if demoLink}}<p><a href="{{demoLink}}" target="_blank">View Demo</a></p>{{/if}}
-                        {{#if githubLink}}<p><a href="{{githubLink}}" target="_blank">View Code</a></p>{{/if}}
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-    `;
-  }
 
-  private getCreativeTemplate(): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{user.name}} - Portfolio</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; background: #0a0a0a; color: #fff; overflow-x: hidden; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
-        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; position: relative; }
-        .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle, rgba(255,0,150,0.3) 0%, rgba(0,0,0,0.8) 70%); }
-        .hero-content { position: relative; z-index: 1; }
-        .hero h1 { font-size: 4rem; margin-bottom: 20px; background: linear-gradient(45deg, #ff0096, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p { font-size: 1.5rem; opacity: 0.8; }
-        .content { padding: 100px 0; }
-        .section { margin-bottom: 100px; }
-        .section h2 { font-size: 3rem; margin-bottom: 50px; text-align: center; background: linear-gradient(45deg, #ff0096, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .skills { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-        .skill { background: linear-gradient(45deg, #ff0096, #00ff88); padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: bold; transform: rotate(-2deg); transition: transform 0.3s ease; }
-        .skill:hover { transform: rotate(0deg) scale(1.1); }
-        .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 40px; }
-        .project { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: transform 0.3s ease; }
-        .project:hover { transform: translateY(-10px); }
-        .project h3 { font-size: 1.5rem; margin-bottom: 20px; color: #00ff88; }
-        .project p { margin-bottom: 15px; opacity: 0.8; }
-        .tech-stack { color: #ff0096; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>{{user.name}}</h1>
-                <p>{{user.bio}}</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="content">
-        <div class="container">
-            <div class="section">
-                <h2>Skills</h2>
-                <div class="skills">
-                    {{#each cv.skills}}
-                    <span class="skill">{{this}}</span>
-                    {{/each}}
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2>Projects</h2>
-                <div class="projects-grid">
-                    {{#each projects}}
-                    <div class="project">
-                        <h3>{{name}}</h3>
-                        <p>{{description}}</p>
-                        <p class="tech-stack">Tech Stack: {{techStack}}</p>
-                        {{#if demoLink}}<p><a href="{{demoLink}}" target="_blank" style="color: #00ff88;">View Demo</a></p>{{/if}}
-                        {{#if githubLink}}<p><a href="{{githubLink}}" target="_blank" style="color: #ff0096;">View Code</a></p>{{/if}}
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-    `;
-  }
 
   private renderTemplate(template: string, data: PortfolioData): string {
-    // Simple template rendering (in production, use a proper template engine like Handlebars)
+    // Enhanced template rendering for Muhammad Ismail template
     let html = template;
     
     // Replace user data
     html = html.replace(/\{\{user\.name\}\}/g, data.user.name || '');
     html = html.replace(/\{\{user\.bio\}\}/g, data.user.bio || '');
     html = html.replace(/\{\{user\.email\}\}/g, data.user.email || '');
+    html = html.replace(/\{\{user\.avatar\}\}/g, data.user.avatar || '');
+    html = html.replace(/\{\{user\.linkedinUrl\}\}/g, data.user.linkedinUrl || '');
+    html = html.replace(/\{\{user\.githubUrl\}\}/g, data.user.githubUrl || '');
+    html = html.replace(/\{\{user\.websiteUrl\}\}/g, data.user.websiteUrl || '');
     
     // Replace CV data
     html = html.replace(/\{\{cv\.summary\}\}/g, data.cv.summary || '');
     
-    // Replace skills
-    const allSkills = [
-      ...(data.cv.skills.technical || []),
-      ...(data.cv.skills.soft || []),
-      ...(data.cv.skills.languages || []),
-      ...(data.cv.skills.tools || [])
-    ];
-    const skillsHtml = allSkills.map(skill => `<span class="skill">${skill}</span>`).join('');
-    html = html.replace(/\{\{#each cv\.skills\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
+    // Handle conditional blocks for user data
+    html = this.renderConditionalBlocks(html, data);
     
-    // Replace experience
+    // Handle skills sections
+    html = this.renderSkillsSections(html, data);
+    
+    // Handle experience section
+    html = this.renderExperienceSection(html, data);
+    
+    // Handle projects section
+    html = this.renderProjectsSection(html, data);
+    
+    // Clean up any remaining Handlebars syntax
+    html = this.cleanupRemainingHandlebars(html);
+    
+    return html;
+  }
+
+  private renderConditionalBlocks(html: string, data: PortfolioData): string {
+    // Handle {{#if user.avatar}} blocks
+    html = html.replace(/\{\{#if user\.avatar\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      return data.user.avatar ? content : '';
+    });
+    
+    // Handle {{#if user.linkedinUrl}} blocks
+    html = html.replace(/\{\{#if user\.linkedinUrl\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      return data.user.linkedinUrl ? content : '';
+    });
+    
+    // Handle {{#if user.githubUrl}} blocks
+    html = html.replace(/\{\{#if user\.githubUrl\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      return data.user.githubUrl ? content : '';
+    });
+    
+    // Handle {{#if user.websiteUrl}} blocks
+    html = html.replace(/\{\{#if user\.websiteUrl\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      return data.user.websiteUrl ? content : '';
+    });
+    
+    // Handle {{#if cv.experience}} blocks
+    html = html.replace(/\{\{#if cv\.experience\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      return data.cv.experience && data.cv.experience.length > 0 ? content : '';
+    });
+    
+    // Handle {{#if projects}} blocks
+    html = html.replace(/\{\{#if projects\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      return data.projects && data.projects.length > 0 ? content : '';
+    });
+    
+    return html;
+  }
+
+  private renderSkillsSections(html: string, data: PortfolioData): string {
+    // Handle technical skills
+    html = html.replace(/\{\{#if cv\.skills\.technical\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      if (!data.cv.skills.technical || data.cv.skills.technical.length === 0) return '';
+      
+      const skillsHtml = data.cv.skills.technical.map(skill => 
+        `<span class="skill">${skill}</span>`
+      ).join('');
+      
+      return content.replace(/\{\{#each cv\.skills\.technical\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
+    });
+    
+    // Handle soft skills
+    html = html.replace(/\{\{#if cv\.skills\.soft\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      if (!data.cv.skills.soft || data.cv.skills.soft.length === 0) return '';
+      
+      const skillsHtml = data.cv.skills.soft.map(skill => 
+        `<span class="skill">${skill}</span>`
+      ).join('');
+      
+      return content.replace(/\{\{#each cv\.skills\.soft\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
+    });
+    
+    // Handle languages
+    html = html.replace(/\{\{#if cv\.skills\.languages\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      if (!data.cv.skills.languages || data.cv.skills.languages.length === 0) return '';
+      
+      const skillsHtml = data.cv.skills.languages.map(skill => 
+        `<span class="skill">${skill}</span>`
+      ).join('');
+      
+      return content.replace(/\{\{#each cv\.skills\.languages\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
+    });
+    
+    // Handle tools
+    html = html.replace(/\{\{#if cv\.skills\.tools\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
+      if (!data.cv.skills.tools || data.cv.skills.tools.length === 0) return '';
+      
+      const skillsHtml = data.cv.skills.tools.map(skill => 
+        `<span class="skill">${skill}</span>`
+      ).join('');
+      
+      return content.replace(/\{\{#each cv\.skills\.tools\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
+    });
+    
+    return html;
+  }
+
+  private renderExperienceSection(html: string, data: PortfolioData): string {
+    if (!data.cv.experience || data.cv.experience.length === 0) {
+      return html.replace(/\{\{#if cv\.experience\}\}([\s\S]*?)\{\{\/if\}\}/g, '');
+    }
+    
     const experienceHtml = data.cv.experience.map(exp => `
-      <div class="project">
-        <h3>${exp.role} at ${exp.company}</h3>
-        <p><strong>Duration:</strong> ${exp.duration}</p>
-        <p>${exp.description}</p>
+      <div class="experience-item">
+        <div class="experience-card">
+          <h3>${exp.role || 'Position'}</h3>
+          <div class="company">${exp.company || 'Company'}</div>
+          <div class="duration">${exp.duration || 'Duration'}</div>
+          <p>${exp.description || 'No description available'}</p>
+        </div>
       </div>
     `).join('');
-    html = html.replace(/\{\{#each cv\.experience\}\}[\s\S]*?\{\{\/each\}\}/g, experienceHtml);
     
-    // Replace projects
+    html = html.replace(/\{\{#each cv\.experience\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, content) => {
+      return experienceHtml;
+    });
+    
+    return html;
+  }
+
+  private renderProjectsSection(html: string, data: PortfolioData): string {
+    if (!data.projects || data.projects.length === 0) {
+      return html.replace(/\{\{#if projects\}\}([\s\S]*?)\{\{\/if\}\}/g, '');
+    }
+    
     const projectsHtml = data.projects.map(project => `
-      <div class="project">
-        <h3>${project.name}</h3>
-        <p>${project.description}</p>
-        <p class="tech-stack">Tech Stack: ${project.techStack.join(', ')}</p>
+      <div class="card">
+        <h3>${project.name || 'Project Name'}</h3>
+        <p>${project.description || 'No description available'}</p>
+        <p class="tech-stack">Tech Stack: ${project.techStack ? project.techStack.join(', ') : 'Not specified'}</p>
         ${project.demoLink ? `<p><a href="${project.demoLink}" target="_blank">View Demo</a></p>` : ''}
         ${project.githubLink ? `<p><a href="${project.githubLink}" target="_blank">View Code</a></p>` : ''}
       </div>
     `).join('');
-    html = html.replace(/\{\{#each projects\}\}[\s\S]*?\{\{\/each\}\}/g, projectsHtml);
+    
+    html = html.replace(/\{\{#each projects\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, content) => {
+      return projectsHtml;
+    });
     
     return html;
   }
+
+  private cleanupRemainingHandlebars(html: string): string {
+    // Remove any remaining Handlebars syntax that wasn't processed
+    html = html.replace(/\{\{[^}]*\}\}/g, '');
+    
+    // Remove empty conditional blocks
+    html = html.replace(/\{\{#if[^}]*\}\}[\s\S]*?\{\{\/if\}\}/g, '');
+    
+    // Remove empty each blocks
+    html = html.replace(/\{\{#each[^}]*\}\}[\s\S]*?\{\{\/each\}\}/g, '');
+    
+    // Clean up any remaining empty lines or whitespace
+    html = html.replace(/\n\s*\n\s*\n/g, '\n\n');
+    
+    return html;
+  }
+
 }

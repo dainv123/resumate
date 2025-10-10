@@ -102,6 +102,16 @@ export interface JobDescription {
   updatedAt: string;
 }
 
+export interface CompatibilityAnalysis {
+  score: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  matchedExperience: string[];
+  missingRequirements: string[];
+  suggestions: string[];
+  strengths: string[];
+}
+
 export const cvApi = {
   uploadCv: async (file: File): Promise<CV> => {
     const formData = new FormData();
@@ -135,6 +145,16 @@ export const cvApi = {
     return response.data;
   },
 
+  analyzeCompatibility: async (id: string, jobDescription: string): Promise<CompatibilityAnalysis> => {
+    const response = await api.post(`/cv/${id}/analyze-compatibility`, { jobDescription });
+    return response.data;
+  },
+
+  generateCoverLetter: async (id: string, jobDescription: string): Promise<{ coverLetter: string }> => {
+    const response = await api.post(`/cv/${id}/generate-cover-letter`, { jobDescription });
+    return response.data;
+  },
+
   getSuggestions: async (id: string): Promise<string[]> => {
     const response = await api.get(`/cv/${id}/suggestions`);
     return response.data;
@@ -144,9 +164,10 @@ export const cvApi = {
     await api.delete(`/cv/${id}`);
   },
 
-  exportToPDF: async (id: string): Promise<Blob> => {
+  exportToPDF: async (id: string, template: string = 'professional'): Promise<Blob> => {
     const response = await api.get(`/cv/${id}/export/pdf`, {
       responseType: 'blob',
+      params: { template },
     });
     return response.data;
   },

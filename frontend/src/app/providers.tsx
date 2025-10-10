@@ -4,6 +4,8 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,10 +21,14 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {children}
-        <ReactQueryDevtools initialIsOpen={false} />
-      </AuthProvider>
+      <LanguageProvider>
+        <ToastProvider>
+          <AuthProvider>
+            {children}
+            <ReactQueryDevtools initialIsOpen={false} />
+          </AuthProvider>
+        </ToastProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };

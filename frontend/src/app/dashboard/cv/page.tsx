@@ -6,6 +6,7 @@ import { cvApi, CV } from "@/lib/cv";
 import CVUpload from "@/components/cv/CVUpload";
 import CVPreview from "@/components/cv/CVPreview";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import { Plus, FileText, AlertCircle } from "lucide-react";
 
 export default function CVPage() {
@@ -39,16 +40,18 @@ export default function CVPage() {
     mutationFn: async ({
       cv,
       format,
+      template = "professional",
     }: {
       cv: CV;
       format: "pdf" | "word" | "ats";
+      template?: string;
     }) => {
       let blob: Blob;
       let filename: string;
 
       switch (format) {
         case "pdf":
-          blob = await cvApi.exportToPDF(cv.id);
+          blob = await cvApi.exportToPDF(cv.id, template);
           filename = `${cv.originalFileName.replace(/\.[^/.]+$/, "")}.pdf`;
           break;
         case "word":
@@ -94,8 +97,12 @@ export default function CVPage() {
     window.location.href = `/dashboard/job-tailor?cvId=${cv.id}`;
   };
 
-  const handleExport = (cv: CV, format: "pdf" | "word" | "ats") => {
-    exportMutation.mutate({ cv, format });
+  const handleExport = (
+    cv: CV,
+    format: "pdf" | "word" | "ats",
+    template?: string
+  ) => {
+    exportMutation.mutate({ cv, format, template });
   };
 
   // const handleView = (cv: CV) => {
@@ -252,366 +259,343 @@ export default function CVPage() {
       </div>
 
       {/* Upload Modal */}
-      {showUpload && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Upload New CV</h3>
-              <button
-                onClick={() => setShowUpload(false)}
-                className="text-gray-400 hover:text-gray-600">
-                ×
-              </button>
-            </div>
-            <CVUpload
-              onSuccess={handleUploadSuccess}
-              onError={(error) => console.error("Upload error:", error)}
-            />
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showUpload}
+        onClose={() => setShowUpload(false)}
+        title="Upload New CV"
+        size="lg">
+        <CVUpload
+          onSuccess={handleUploadSuccess}
+          onError={(error) => console.error("Upload error:", error)}
+        />
+      </Modal>
 
       {/* Edit Modal */}
-      {showEdit && selectedCv && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                Edit CV: {selectedCv.originalFileName}
-              </h3>
-              <button
-                onClick={() => setShowEdit(false)}
-                className="text-gray-400 hover:text-gray-600">
-                ×
-              </button>
+      <Modal
+        isOpen={showEdit && !!selectedCv}
+        onClose={() => setShowEdit(false)}
+        title={
+          selectedCv ? `Edit CV: ${selectedCv.originalFileName}` : "Edit CV"
+        }
+        size="xl"
+        footer={
+          <>
+            <Button onClick={() => setShowEdit(false)} variant="outline">
+              Cancel
+            </Button>
+            <Button>Save Changes</Button>
+          </>
+        }>
+        {selectedCv && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                File Name
+              </label>
+              <input
+                type="text"
+                defaultValue={selectedCv.originalFileName}
+                className="input-base"
+              />
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File Name
-                </label>
-                <input
-                  type="text"
-                  defaultValue={selectedCv.originalFileName}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              {selectedCv.parsedData && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={selectedCv.parsedData.name || ""}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      defaultValue={selectedCv.parsedData.email || ""}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={selectedCv.parsedData.phone || ""}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+            {selectedCv.parsedData && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={selectedCv.parsedData.name || ""}
+                    className="input-base"
+                  />
                 </div>
-              )}
-              <div className="flex justify-end space-x-2">
-                <Button onClick={() => setShowEdit(false)} variant="outline">
-                  Cancel
-                </Button>
-                <Button>Save Changes</Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    defaultValue={selectedCv.parsedData.email || ""}
+                    className="input-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={selectedCv.parsedData.phone || ""}
+                    className="input-base"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {/* View Modal */}
-      {showView && selectedCv && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                CV Details: {selectedCv.originalFileName}
-              </h3>
-              <button
-                onClick={() => setShowView(false)}
-                className="text-gray-400 hover:text-gray-600">
-                ×
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    File Name
-                  </label>
-                  <p className="text-gray-900">{selectedCv.originalFileName}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Upload Date
-                  </label>
-                  <p className="text-gray-900">
-                    {new Date(selectedCv.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
+      <Modal
+        isOpen={showView && !!selectedCv}
+        onClose={() => setShowView(false)}
+        title={
+          selectedCv
+            ? `CV Details: ${selectedCv.originalFileName}`
+            : "CV Details"
+        }
+        size="xl"
+        footer={<Button onClick={() => setShowView(false)}>Close</Button>}>
+        {selectedCv && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  File Name
+                </label>
+                <p className="text-gray-900">{selectedCv.originalFileName}</p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Date
+                </label>
+                <p className="text-gray-900">
+                  {new Date(selectedCv.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
 
-              {selectedCv.parsedData ? (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Parsed Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCv.parsedData.name && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Name
-                        </label>
-                        <p className="text-gray-900">
-                          {selectedCv.parsedData.name}
-                        </p>
-                      </div>
-                    )}
-                    {selectedCv.parsedData.email && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email
-                        </label>
-                        <p className="text-gray-900">
-                          {selectedCv.parsedData.email}
-                        </p>
-                      </div>
-                    )}
-                    {selectedCv.parsedData.phone && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Phone
-                        </label>
-                        <p className="text-gray-900">
-                          {selectedCv.parsedData.phone}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            {selectedCv.parsedData ? (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Parsed Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedCv.parsedData.name && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Name
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedCv.parsedData.name}
+                      </p>
+                    </div>
+                  )}
+                  {selectedCv.parsedData.email && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedCv.parsedData.email}
+                      </p>
+                    </div>
+                  )}
+                  {selectedCv.parsedData.phone && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedCv.parsedData.phone}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-                  {selectedCv.parsedData.experience &&
-                    selectedCv.parsedData.experience.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Experience
-                        </label>
-                        <div className="space-y-2">
-                          {selectedCv.parsedData.experience.map(
-                            (exp, index) => (
-                              <div
-                                key={index}
-                                className="border border-gray-200 rounded-lg p-3">
-                                <h4 className="font-medium text-gray-900">
-                                  {exp.title}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {exp.company}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {exp.duration}
-                                </p>
-                                {exp.location && (
-                                  <p className="text-sm text-gray-500">
-                                    📍 {exp.location}
-                                  </p>
-                                )}
-                                {exp.technologies &&
-                                  exp.technologies.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Technologies:
-                                      </p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {exp.technologies.map(
-                                          (tech, techIndex) => (
-                                            <span
-                                              key={techIndex}
-                                              className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                              {tech}
-                                            </span>
-                                          )
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                  {selectedCv.parsedData.skills && (
+                {selectedCv.parsedData.experience &&
+                  selectedCv.parsedData.experience.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Skills
+                        Experience
                       </label>
-                      <div className="space-y-3">
-                        {selectedCv.parsedData.skills.technical &&
-                          selectedCv.parsedData.skills.technical.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-600 mb-1">
-                                Technical Skills:
+                      <div className="space-y-2">
+                        {selectedCv.parsedData.experience.map((exp, index) => (
+                          <div
+                            key={index}
+                            className="border border-gray-200 rounded-lg p-3">
+                            <h4 className="font-medium text-gray-900">
+                              {exp.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {exp.company}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {exp.duration}
+                            </p>
+                            {exp.location && (
+                              <p className="text-sm text-gray-500">
+                                📍 {exp.location}
                               </p>
-                              <div className="flex flex-wrap gap-1">
-                                {selectedCv.parsedData.skills.technical.map(
-                                  (skill, index) => (
-                                    <span
-                                      key={index}
-                                      className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                                      {skill}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        {selectedCv.parsedData.skills.soft &&
-                          selectedCv.parsedData.skills.soft.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-600 mb-1">
-                                Soft Skills:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {selectedCv.parsedData.skills.soft.map(
-                                  (skill, index) => (
-                                    <span
-                                      key={index}
-                                      className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
-                                      {skill}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        {selectedCv.parsedData.skills.languages &&
-                          selectedCv.parsedData.skills.languages.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-600 mb-1">
-                                Languages:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {selectedCv.parsedData.skills.languages.map(
-                                  (lang, index) => (
-                                    <span
-                                      key={index}
-                                      className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                                      {lang}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
+                            )}
+                            {exp.technologies &&
+                              exp.technologies.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    Technologies:
+                                  </p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {exp.technologies.map((tech, techIndex) => (
+                                      <span
+                                        key={techIndex}
+                                        className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                        {tech}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
-                  {selectedCv.parsedData.projects &&
-                    selectedCv.parsedData.projects.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Projects
-                        </label>
-                        <div className="space-y-2">
-                          {selectedCv.parsedData.projects.map(
-                            (project, index) => (
-                              <div
-                                key={index}
-                                className="border border-gray-200 rounded-lg p-3">
-                                <h4 className="font-medium text-gray-900">
-                                  {project.name}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {project.description}
-                                </p>
-                                {project.techStack &&
-                                  project.techStack.length > 0 && (
-                                    <div className="mt-2">
-                                      <div className="flex flex-wrap gap-1">
-                                        {project.techStack.map(
-                                          (tech, techIndex) => (
-                                            <span
-                                              key={techIndex}
-                                              className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                              {tech}
-                                            </span>
-                                          )
-                                        )}
-                                      </div>
+                {selectedCv.parsedData.skills && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Skills
+                    </label>
+                    <div className="space-y-3">
+                      {selectedCv.parsedData.skills.technical &&
+                        selectedCv.parsedData.skills.technical.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">
+                              Technical Skills:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedCv.parsedData.skills.technical.map(
+                                (skill, index) => (
+                                  <span
+                                    key={index}
+                                    className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                    {skill}
+                                  </span>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      {selectedCv.parsedData.skills.soft &&
+                        selectedCv.parsedData.skills.soft.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">
+                              Soft Skills:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedCv.parsedData.skills.soft.map(
+                                (skill, index) => (
+                                  <span
+                                    key={index}
+                                    className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                    {skill}
+                                  </span>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      {selectedCv.parsedData.skills.languages &&
+                        selectedCv.parsedData.skills.languages.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">
+                              Languages:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedCv.parsedData.skills.languages.map(
+                                (lang, index) => (
+                                  <span
+                                    key={index}
+                                    className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+                                    {lang}
+                                  </span>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedCv.parsedData.projects &&
+                  selectedCv.parsedData.projects.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Projects
+                      </label>
+                      <div className="space-y-2">
+                        {selectedCv.parsedData.projects.map(
+                          (project, index) => (
+                            <div
+                              key={index}
+                              className="border border-gray-200 rounded-lg p-3">
+                              <h4 className="font-medium text-gray-900">
+                                {project.name}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {project.description}
+                              </p>
+                              {project.techStack &&
+                                project.techStack.length > 0 && (
+                                  <div className="mt-2">
+                                    <div className="flex flex-wrap gap-1">
+                                      {project.techStack.map(
+                                        (tech, techIndex) => (
+                                          <span
+                                            key={techIndex}
+                                            className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                            {tech}
+                                          </span>
+                                        )
+                                      )}
                                     </div>
-                                  )}
-                              </div>
-                            )
-                          )}
-                        </div>
+                                  </div>
+                                )}
+                            </div>
+                          )
+                        )}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                  {selectedCv.parsedData.certifications &&
-                    selectedCv.parsedData.certifications.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Certifications
-                        </label>
-                        <div className="space-y-2">
-                          {selectedCv.parsedData.certifications.map(
-                            (cert, index) => (
-                              <div
-                                key={index}
-                                className="border border-gray-200 rounded-lg p-3">
-                                <h4 className="font-medium text-gray-900">
-                                  {cert.name}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {cert.issuer}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {cert.date}
-                                </p>
-                              </div>
-                            )
-                          )}
-                        </div>
+                {selectedCv.parsedData.certifications &&
+                  selectedCv.parsedData.certifications.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Certifications
+                      </label>
+                      <div className="space-y-2">
+                        {selectedCv.parsedData.certifications.map(
+                          (cert, index) => (
+                            <div
+                              key={index}
+                              className="border border-gray-200 rounded-lg p-3">
+                              <h4 className="font-medium text-gray-900">
+                                {cert.name}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {cert.issuer}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {cert.date}
+                              </p>
+                            </div>
+                          )
+                        )}
                       </div>
-                    )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">CV has not been parsed yet</p>
-                </div>
-              )}
-
-              <div className="flex justify-end">
-                <Button onClick={() => setShowView(false)}>Close</Button>
+                    </div>
+                  )}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">CV has not been parsed yet</p>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {/* Search and Filter */}
       <div className="flex gap-4 mb-6">
@@ -620,14 +604,14 @@ export default function CVPage() {
           placeholder="Search CVs..."
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 input-base"
         />
         <select
           value={filterStatus}
           onChange={(e) =>
             handleFilterChange(e.target.value as "all" | "parsed" | "unparsed")
           }
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          className="input-base w-auto">
           <option value="all">All CVs</option>
           <option value="parsed">Parsed</option>
           <option value="unparsed">Unparsed</option>

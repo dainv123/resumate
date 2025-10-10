@@ -125,6 +125,91 @@ export class GoogleAIService {
     }
   }
 
+  async analyzeCompatibility(cvData: any, jobDescription: string): Promise<{
+    score: number;
+    matchedSkills: string[];
+    missingSkills: string[];
+    matchedExperience: string[];
+    missingRequirements: string[];
+    suggestions: string[];
+    strengths: string[];
+  }> {
+    try {
+      const prompt = `
+        Analyze the compatibility between this CV and job description. Provide a detailed assessment.
+        
+        Job Description:
+        ${jobDescription}
+        
+        CV Data:
+        ${JSON.stringify(cvData, null, 2)}
+        
+        Analyze and return a JSON object with:
+        {
+          "score": (number 0-10, how well CV matches the job),
+          "matchedSkills": (array of skills from CV that match job requirements),
+          "missingSkills": (array of important skills mentioned in JD but missing from CV),
+          "matchedExperience": (array of relevant experience that matches job requirements),
+          "missingRequirements": (array of key requirements from JD that CV doesn't meet),
+          "suggestions": (array of 3-5 specific suggestions to improve compatibility),
+          "strengths": (array of 3-5 CV strengths that stand out for this role)
+        }
+        
+        Be specific and actionable in your analysis.
+      `;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const responseText = response.text();
+      
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in compatibility analysis');
+      }
+      
+      return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      this.logger.error('Error analyzing compatibility:', error);
+      throw error;
+    }
+  }
+
+  async generateCoverLetter(cvData: any, jobDescription: string): Promise<string> {
+    try {
+      const prompt = `
+        Generate a professional cover letter based on this CV and job description.
+        
+        Job Description:
+        ${jobDescription}
+        
+        CV Data:
+        Name: ${cvData.name || 'Candidate'}
+        Email: ${cvData.email || ''}
+        Summary: ${cvData.summary || ''}
+        Skills: ${JSON.stringify(cvData.skills)}
+        Experience: ${JSON.stringify(cvData.experience?.slice(0, 3))}
+        Education: ${JSON.stringify(cvData.education?.slice(0, 2))}
+        
+        Requirements:
+        1. Professional tone and format
+        2. Address why the candidate is a great fit for this role
+        3. Highlight relevant skills and experience from CV
+        4. Show enthusiasm for the position
+        5. Keep it concise (3-4 paragraphs)
+        6. Include proper salutation and closing
+        
+        Return ONLY the cover letter text, no JSON, no explanations.
+      `;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      this.logger.error('Error generating cover letter:', error);
+      throw error;
+    }
+  }
+
   async parseCvContent(text: string): Promise<any> {
     try {
       const prompt = `

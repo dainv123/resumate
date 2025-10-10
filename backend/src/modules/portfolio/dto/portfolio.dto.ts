@@ -4,6 +4,7 @@ export enum PortfolioTemplate {
   BASIC = 'basic',
   MODERN = 'modern',
   CREATIVE = 'creative',
+  MUHAMMAD_ISMAIL = 'muhammad_ismail',
 }
 
 export class CreatePortfolioDto {
@@ -12,7 +13,7 @@ export class CreatePortfolioDto {
 
   @IsOptional()
   @IsString()
-  customDomain?: string;
+  customDomain?: string; // Custom domain for display (e.g., myportfolio.com) - requires DNS setup
 
   @IsOptional()
   @IsString()

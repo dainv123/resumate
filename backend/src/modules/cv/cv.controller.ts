@@ -89,10 +89,11 @@ export class CvController {
   async exportToPDF(
     @Param('id') id: string,
     @GetUser('id') userId: string,
+    @Query('template') template: string = 'professional',
     @Res() res: Response,
   ) {
     const cv = await this.cvService.getCvById(id, userId);
-    const pdfBuffer = await this.exportService.exportToPDF(cv.parsedData);
+    const pdfBuffer = await this.exportService.exportToPDF(cv.parsedData, template);
     
     res.set({
       'Content-Type': 'application/pdf',
@@ -162,5 +163,97 @@ export class CvController {
   ) {
     const tailoredCv = await this.cvService.tailorCv(id, userId, tailorCvDto.jobDescription);
     return tailoredCv;
+  }
+
+  @Post(':id/analyze-compatibility')
+  async analyzeCompatibility(
+    @Param('id') id: string,
+    @GetUser('id') userId: string,
+    @Body() body: { jobDescription: string },
+  ) {
+    return this.cvService.analyzeCompatibility(id, userId, body.jobDescription);
+  }
+
+  @Post(':id/generate-cover-letter')
+  async generateCoverLetter(
+    @Param('id') id: string,
+    @GetUser('id') userId: string,
+    @Body() body: { jobDescription: string },
+  ) {
+    return this.cvService.generateCoverLetter(id, userId, body.jobDescription);
+  }
+
+  @Get('template/test')
+  async testTemplate(
+    @GetUser('id') userId: string,
+    @Query('template') template: string = 'two-column',
+    @Res() res: Response,
+  ) {
+    // Create sample CV data for testing
+    const sampleCvData = {
+      name: 'Nguyen Van Test',
+      email: 'test@example.com',
+      phone: '+84 123 456 789',
+      address: 'Ho Chi Minh City, Vietnam',
+      linkedin: 'https://linkedin.com/in/test',
+      summary: 'Experienced software developer with 5+ years in full-stack development. Passionate about creating innovative solutions and leading technical teams.',
+      experience: [
+        {
+          title: 'Senior Full Stack Developer',
+          company: 'Tech Company ABC',
+          duration: '2022 - Present',
+          responsibilities: [
+            'Lead development of web applications using React and Node.js',
+            'Mentor junior developers and conduct code reviews',
+            'Implement CI/CD pipelines and DevOps practices'
+          ],
+          achievements: [
+            'Improved application performance by 40%',
+            'Reduced deployment time from 2 hours to 15 minutes'
+          ],
+          technologies: ['React', 'Node.js', 'TypeScript', 'AWS', 'Docker']
+        },
+        {
+          title: 'Full Stack Developer',
+          company: 'Startup XYZ',
+          duration: '2020 - 2022',
+          responsibilities: [
+            'Developed responsive web applications',
+            'Collaborated with design team on UI/UX implementation'
+          ],
+          technologies: ['Vue.js', 'Python', 'PostgreSQL']
+        }
+      ],
+      education: [
+        {
+          degree: 'Bachelor of Computer Science',
+          school: 'University of Technology',
+          year: '2020',
+          gpa: '3.8/4.0'
+        }
+      ],
+      skills: {
+        technical: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'AWS', 'Docker', 'Git'],
+        soft: ['Leadership', 'Problem Solving', 'Communication', 'Teamwork'],
+        languages: ['English (Fluent)', 'Vietnamese (Native)']
+      },
+      projects: [
+        {
+          name: 'E-commerce Platform',
+          description: 'Built a full-stack e-commerce platform with payment integration',
+          techStack: ['React', 'Node.js', 'MongoDB', 'Stripe'],
+          link: 'https://github.com/test/ecommerce'
+        }
+      ]
+    };
+
+    const pdfBuffer = await this.exportService.exportToPDF(sampleCvData as any, template);
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="test-${template}-template.pdf"`,
+    });
+    
+    res.send(pdfBuffer);
   }
 }

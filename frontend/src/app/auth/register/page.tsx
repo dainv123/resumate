@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { FileText, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 const registerSchema = z
   .object({
@@ -49,9 +50,11 @@ export default function RegisterPage() {
       await registerUser(data.email, data.name, data.password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      const errorMessage = err && typeof err === 'object' && 'response' in err 
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || "Đăng ký thất bại"
-        : "Đăng ký thất bại";
+      const errorMessage =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Đăng ký thất bại"
+          : "Đăng ký thất bại";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -60,6 +63,11 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Language Switcher - Top Right */}
+      <div className="fixed top-6 right-6 z-50">
+        <LanguageSwitcher />
+      </div>
+
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
@@ -101,7 +109,7 @@ export default function RegisterPage() {
                 {...register("name")}
                 type="text"
                 autoComplete="name"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="input-base mt-1"
                 placeholder="Nhập họ và tên"
               />
               {errors.name && (
@@ -121,7 +129,7 @@ export default function RegisterPage() {
                 {...register("email")}
                 type="email"
                 autoComplete="email"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="input-base mt-1"
                 placeholder="Nhập email của bạn"
               />
               {errors.email && (
@@ -142,7 +150,7 @@ export default function RegisterPage() {
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="input-base pr-10"
                   placeholder="Nhập mật khẩu"
                 />
                 <button

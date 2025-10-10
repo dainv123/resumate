@@ -340,4 +340,38 @@ export class CvService {
     return this.cvRepository.save(tailoredCv);
   }
 
+  async analyzeCompatibility(cvId: string, userId: string, jobDescription: string): Promise<{
+    score: number;
+    matchedSkills: string[];
+    missingSkills: string[];
+    matchedExperience: string[];
+    missingRequirements: string[];
+    suggestions: string[];
+    strengths: string[];
+  }> {
+    const cv = await this.getCvById(cvId, userId);
+    
+    // Use AI to analyze compatibility
+    const analysis = await this.aiService.analyzeCompatibility(
+      cv.parsedData,
+      jobDescription
+    );
+
+    return analysis;
+  }
+
+  async generateCoverLetter(cvId: string, userId: string, jobDescription: string): Promise<{
+    coverLetter: string;
+  }> {
+    const cv = await this.getCvById(cvId, userId);
+    
+    // Use AI to generate cover letter
+    const coverLetter = await this.aiService.generateCoverLetter(
+      cv.parsedData,
+      jobDescription
+    );
+
+    return { coverLetter };
+  }
+
 }
