@@ -127,8 +127,8 @@ export class PortfolioService {
     throw new NotFoundException('Portfolio not found');
     }
     
-    // Get user data
-    const user = await this.usersService.findByEmail(`${username}@default.com`);
+    // Get user data using userId from portfolio
+    const user = await this.usersService.findById(portfolio.userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }

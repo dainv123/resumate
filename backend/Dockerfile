@@ -27,10 +27,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install basic dependencies
+# Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
   curl \
   && rm -rf /var/cache/apk/*
+
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Copy package files
 COPY package*.json ./
