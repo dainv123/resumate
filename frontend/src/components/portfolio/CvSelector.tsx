@@ -143,7 +143,7 @@ export default function CvSelector({
                   <h4 className="font-medium text-gray-900 truncate">
                     {cv.originalFileName}
                   </h4>
-                  {selectedCvId === cv.id && (
+                  {/* {selectedCvId === cv.id && (
                     <svg
                       className="w-5 h-5 text-blue-600 flex-shrink-0"
                       fill="currentColor"
@@ -154,7 +154,7 @@ export default function CvSelector({
                         clipRule="evenodd"
                       />
                     </svg>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Badges */}
@@ -209,11 +209,11 @@ export default function CvSelector({
             </div>
 
             {/* Selection Overlay */}
-            {selectedCvId === cv.id && (
+            {/* {selectedCvId === cv.id && (
               <div className="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
                 Selected
               </div>
-            )}
+            )} */}
           </div>
         ))}
       </div>

@@ -169,11 +169,11 @@ export default function TemplateSelector({
             </div>
 
             {/* Selection Overlay */}
-            {selectedTemplate === template.id && (
+            {/* {selectedTemplate === template.id && (
               <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                 Selected
               </div>
-            )}
+            )} */}
           </div>
         ))}
       </div>
