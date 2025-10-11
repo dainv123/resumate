@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   User,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,6 +27,7 @@ const navigationItems = [
   { key: "projects", href: "/dashboard/projects", icon: Briefcase },
   { key: "jobTailor", href: "/dashboard/job-tailor", icon: Sparkles },
   { key: "portfolio", href: "/dashboard/portfolio", icon: Users },
+  { key: "analytics", href: "/dashboard/analytics", icon: BarChart3 },
 ];
 
 const bottomNavigationItems = [
@@ -116,6 +118,7 @@ export default function Sidebar() {
             <Link
               key={item.key}
               href={item.href}
+              data-tour={item.key === "settings" ? "settings-nav" : undefined}
               className={cn(
                 "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors font-karla",
                 isActive

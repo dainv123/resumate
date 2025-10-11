@@ -138,6 +138,14 @@ export class Cv {
     lastUpdated: string;
   };
 
+  @Column('jsonb', { nullable: true, default: () => "'[]'" })
+  versionHistory: {
+    version: number;
+    parsedData: CVData;
+    updatedAt: string;
+    updatedBy?: string;
+  }[];
+
   @CreateDateColumn()
   createdAt: Date;
 

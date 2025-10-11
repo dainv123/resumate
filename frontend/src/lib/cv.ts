@@ -14,9 +14,13 @@ export interface CVData {
     technical: string[];
     soft: string[];
     languages: string[];
+    tools?: string[];
   };
   projects: Project[];
   certifications: Certification[];
+  awards?: Award[];
+  publications?: Publication[];
+  volunteer?: Volunteer[];
 }
 
 export interface Education {
@@ -38,6 +42,12 @@ export interface Experience {
   responsibilities?: string[];
   achievements?: string[];
   technologies?: string[];
+  subProjects?: {
+    name: string;
+    role?: string;
+    responsibilities?: string[];
+    techStack?: string[];
+  }[];
 }
 
 export interface Project {
@@ -56,11 +66,37 @@ export interface Certification {
   link?: string;
 }
 
+export interface Award {
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface Publication {
+  title: string;
+  journal: string;
+  date: string;
+  authors: string;
+}
+
+export interface Volunteer {
+  role: string;
+  organization: string;
+  duration: string;
+  description: string;
+}
+
 export interface ImprovementNotes {
   parsingImprovements: string[];
   templateEnhancements: string[];
   dataCompleteness: string[];
   lastUpdated: string;
+}
+
+export interface ExportHistory {
+  date: string;
+  format: string;
+  template: string;
 }
 
 export interface CV {
@@ -75,6 +111,7 @@ export interface CV {
   originalCvId?: string;
   jobDescriptionId?: string;
   improvementNotes?: ImprovementNotes;
+  exportHistory?: ExportHistory[];
   originalCv?: CV;
   jobDescription?: JobDescription;
   tailoredVersions?: CV[];
@@ -135,6 +172,11 @@ export const cvApi = {
     return response.data;
   },
 
+  getCvVersions: async (id: string): Promise<CV[]> => {
+    const response = await api.get(`/cv/${id}/versions`);
+    return response.data;
+  },
+
   updateCv: async (id: string, data: Partial<CV>): Promise<CV> => {
     const response = await api.put(`/cv/${id}`, data);
     return response.data;
@@ -162,6 +204,16 @@ export const cvApi = {
 
   deleteCv: async (id: string): Promise<void> => {
     await api.delete(`/cv/${id}`);
+  },
+
+  duplicateCv: async (id: string): Promise<CV> => {
+    const response = await api.post(`/cv/${id}/duplicate`);
+    return response.data;
+  },
+
+  restoreVersion: async (id: string, version: number): Promise<CV> => {
+    const response = await api.post(`/cv/${id}/restore/${version}`);
+    return response.data;
   },
 
   exportToPDF: async (id: string, template: string = 'professional'): Promise<Blob> => {

@@ -374,3 +374,123 @@ h6 {
   @apply disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed;
   @apply transition-colors resize-none; */
 }
+
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+/* Dark Mode Variables */
+.dark {
+  --main-color: #e2e8f0;
+  --dark-color: #f1f5f9;
+  --yellow-color: #fbbf24;
+  --blue-color: #60a5fa;
+  --white-color: #1e293b;
+  
+  /* Background colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  
+  /* Text colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  
+  /* Border colors */
+  --border-color: #334155;
+}
+
+/* Dark Mode Global Styles */
+.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: var(--text-primary);
+}
+
+.dark a {
+  color: var(--blue-color);
+}
+
+.dark a:hover {
+  color: var(--yellow-color);
+}
+
+/* Dark Mode Component Styles */
+.dark .bg-white {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark .portfolio-card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 30px 40px 80px rgba(0, 0, 0, 0.3);
+}
+
+.dark .input-base {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark .input-base:hover {
+  border-color: var(--blue-color);
+}
+
+.dark .textarea-base {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}

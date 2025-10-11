@@ -2,16 +2,27 @@ import { Controller, Post, Get, Put, Body, Param, UseGuards, Query, Res } from '
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PortfolioService } from './portfolio.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 import { CreatePortfolioDto, UpdatePortfolioDto } from './dto/portfolio.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
+import { TrackActivity } from '../../common/decorators/track-activity.decorator';
+import { ActivityType } from '../../common/enums/activity-type.enum';
 import { getAllTemplateConfigs } from './portfolio.constants';
 
 @Controller('portfolio')
 export class PortfolioController {
-  constructor(private portfolioService: PortfolioService) {}
+  constructor(
+    private portfolioService: PortfolioService,
+    private analyticsService: AnalyticsService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('generate')
+  @TrackActivity(ActivityType.PORTFOLIO_CREATED, {
+    getMetadata: (result, context) => ({
+      template: context.body.template
+    }),
+  })
   async generatePortfolio(
     @GetUser('id') userId: string,
     @Body() createPortfolioDto: CreatePortfolioDto,
@@ -20,10 +31,20 @@ export class PortfolioController {
   }
 
   @Get('templates')
-  async getTemplates() {
-    return {
-      templates: getAllTemplateConfigs()
-    };
+  async getTemplates(@GetUser('id') userId?: string) {
+    const templates = await this.portfolioService.getTemplates();
+    return { templates };
+  }
+
+  @Get('templates/:id')
+  async getTemplateMetadata(@Param('id') id: string) {
+    return this.portfolioService.getTemplateMetadata(id);
+  }
+
+  @Post('templates/seed')
+  async seedTemplates() {
+    await this.portfolioService.seedTemplates();
+    return { message: 'Portfolio templates seeded successfully' };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -48,6 +69,13 @@ export class PortfolioController {
   ) {
     const existingPortfolio = await this.portfolioService.getUserPortfolio(userId);
     const portfolio = await this.portfolioService.savePortfolio(userId, createPortfolioDto);
+    
+    // Track activity only for new portfolios
+    if (!existingPortfolio) {
+      await this.analyticsService.trackActivity(userId, ActivityType.PORTFOLIO_CREATED, portfolio.id, {
+        template: createPortfolioDto.template
+      });
+    }
     
     return {
       ...portfolio,

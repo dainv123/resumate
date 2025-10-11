@@ -12,6 +12,7 @@ import {
   Briefcase,
   Copy,
   Check,
+  Clock,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Collapse } from "@/components/ui/Collapse";
@@ -19,11 +20,13 @@ import EditCVModal from "./EditCVModal";
 import OriginalCVModal from "./OriginalCVModal";
 import JobDescriptionModal from "./JobDescriptionModal";
 import TemplateSelectionModal from "./TemplateSelectionModal";
+import VersionHistoryModal from "./VersionHistoryModal";
 
 interface CVPreviewProps {
   cv: CV;
   // onEdit?: (cv: CV) => void;
   onDelete?: (cv: CV) => void;
+  onDuplicate?: (cv: CV) => void;
   onTailor?: (cv: CV) => void;
   onExport?: (
     cv: CV,
@@ -37,6 +40,7 @@ export default function CVPreview({
   cv,
   // onEdit,
   onDelete,
+  onDuplicate,
   onTailor,
   onExport,
   onUpdate,
@@ -46,6 +50,7 @@ export default function CVPreview({
   const [showOriginalCVModal, setShowOriginalCVModal] = useState(false);
   const [showJobDescriptionModal, setShowJobDescriptionModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showVersionHistoryModal, setShowVersionHistoryModal] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
 
   const handleCopyId = async () => {
@@ -73,6 +78,13 @@ export default function CVPreview({
             <p className="text-xs text-gray-400">
               Version {cv.version} • Updated {formatDate(cv.updatedAt)}
             </p>
+            <button
+              onClick={() => setShowVersionHistoryModal(true)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-purple-600 bg-purple-50 rounded transition-colors hover:bg-purple-100"
+              title="View Version History">
+              <Clock className="h-3 w-3" />
+              <span>History</span>
+            </button>
             <button
               onClick={handleCopyId}
               className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-blue-600 bg-blue-50 rounded transition-colors"
@@ -381,9 +393,18 @@ export default function CVPreview({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowTemplateModal(true)}>
+            onClick={() => setShowTemplateModal(true)}
+            data-tour="export-button">
             <Download className="h-4 w-4 mr-1" />
             Export
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDuplicate?.(cv)}
+            className="text-blue-600 hover:text-blue-700">
+            <Copy className="h-4 w-4" />
           </Button>
 
           <Button
@@ -440,6 +461,16 @@ export default function CVPreview({
         onExport={(cv, format, template) =>
           onExport?.(cv, format as any, template)
         }
+      />
+
+      <VersionHistoryModal
+        isOpen={showVersionHistoryModal}
+        onClose={() => setShowVersionHistoryModal(false)}
+        cvId={cv.id}
+        onRestore={() => {
+          // Refresh CV list after restore
+          onUpdate?.(cv);
+        }}
       />
     </div>
   );

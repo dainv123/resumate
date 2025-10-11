@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { usersApi, UserStats } from "@/lib/users";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -18,6 +19,8 @@ import {
   Download,
   Calendar,
   CheckCircle,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -26,6 +29,7 @@ type TabType = "profile" | "language" | "plan" | "privacy";
 export default function SettingsPage() {
   const { user, updateUser, logout } = useAuth();
   const { language, setLanguage, languages, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const { showSuccess, showError } = useToast();
   const router = useRouter();
 
@@ -361,7 +365,7 @@ export default function SettingsPage() {
                     value={language}
                     onChange={(e) => {
                       setLanguage(e.target.value as "en" | "vi");
-                      showSuccess(`{t("settings.languageChanged")}`);
+                      showSuccess(t("settings.languageChanged"));
                     }}
                     className="input-base">
                     {languages.map((lang) => (
@@ -385,6 +389,28 @@ export default function SettingsPage() {
                       Your language preference is saved in your browser and will
                       be remembered for future sessions.
                     </p>
+                  </div>
+                </div>
+
+                {/* Dark Mode Toggle */}
+                <div className="mt-6 p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="font-medium text-gray-900">Dark Mode</h5>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Toggle dark mode appearance for better viewing in low
+                        light
+                      </p>
+                    </div>
+                    <button
+                      onClick={toggleTheme}
+                      className="p-3 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      {theme === "dark" ? (
+                        <Sun className="h-5 w-5 text-yellow-500" />
+                      ) : (
+                        <Moon className="h-5 w-5 text-gray-700" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

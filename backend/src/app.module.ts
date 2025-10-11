@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -9,6 +10,10 @@ import { CvModule } from './modules/cv/cv.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { AiModule } from './modules/ai/ai.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { TemplatesModule } from './modules/templates/templates.module';
+// import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ActivityTrackingInterceptor } from './common/interceptors/activity-tracking.interceptor';
 
 @Module({
   imports: [
@@ -37,8 +42,17 @@ import { AiModule } from './modules/ai/ai.module';
     ProjectsModule,
     PortfolioModule,
     AiModule,
+    AnalyticsModule,
+    TemplatesModule,
+    // NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ActivityTrackingInterceptor,
+    },
+  ],
 })
 export class AppModule {}

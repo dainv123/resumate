@@ -546,4 +546,27 @@ export class PortfolioService {
     return html;
   }
 
+  // ============== Template Management ==============
+
+  /**
+   * Get all portfolio templates
+   */
+  async getTemplates() {
+    return this.templateLoaderService.getTemplates();
+  }
+
+  /**
+   * Get single portfolio template metadata
+   */
+  async getTemplateMetadata(id: string) {
+    return this.templateLoaderService.getTemplate(id);
+  }
+
+  /**
+   * Seed default portfolio templates
+   */
+  async seedTemplates() {
+    return this.templateLoaderService.seedPortfolioTemplates();
+  }
+
 }

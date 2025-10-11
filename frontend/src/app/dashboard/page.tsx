@@ -18,12 +18,14 @@ import {
 import Link from "next/link";
 import { cvApi } from "@/lib/cv";
 import { projectsApi } from "@/lib/projects";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [cvs, setCvs] = useState<unknown[]>([]);
   const [projects, setProjects] = useState<unknown[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Calculate real metrics
   const calculateCVQualityScore = (cvs: unknown[]): number => {
@@ -132,6 +134,20 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  // Check if user has seen onboarding tour
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
+    if (!hasSeenOnboarding && user) {
+      // Delay slightly to ensure DOM is ready
+      setTimeout(() => setShowOnboarding(true), 1000);
+    }
+  }, [user]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("hasSeenOnboarding", "true");
+  };
+
   const recentCvs = cvs.slice(0, 3);
   const recentProjects = projects.slice(0, 3);
   const tailoredCvs = cvs.filter((cv) => (cv as any)?.isTailored);
@@ -234,7 +250,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Link href="/dashboard/cv" className="group">
+        <Link href="/dashboard/cv" className="group" data-tour="upload-cv">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-blue">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-blue rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -278,7 +294,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/dashboard/job-tailor" className="group">
+        <Link href="/dashboard/job-tailor" className="group" data-tour="tailor-button">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-purple-500">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -300,7 +316,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/dashboard/portfolio" className="group">
+        <Link href="/dashboard/portfolio" className="group" data-tour="portfolio-nav">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-yellow">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-yellow rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -325,7 +341,7 @@ export default function DashboardPage() {
 
       {/* Recent CVs */}
       {recentCvs.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200" data-tour="cv-preview">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-xl font-semibold text-dark font-inter">
               {t("dashboard.recentCVs")}
@@ -534,6 +550,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour run={showOnboarding} onComplete={handleOnboardingComplete} />
     </div>
   );
 }

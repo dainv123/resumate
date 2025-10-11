@@ -103,6 +103,18 @@ export class CvService {
   async updateCv(id: string, userId: string, updateCvDto: UpdateCvDto): Promise<Cv> {
     const cv = await this.getCvById(id, userId);
     
+    // Save current state to version history before updating
+    if (!cv.versionHistory) {
+      cv.versionHistory = [];
+    }
+    
+    cv.versionHistory.push({
+      version: cv.version,
+      parsedData: cv.parsedData,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    // Update CV data and increment version
     Object.assign(cv, updateCvDto);
     cv.version += 1;
     
@@ -153,16 +165,50 @@ export class CvService {
     await this.cvRepository.remove(cv);
   }
 
-  async getCvVersions(cvId: string, userId: string): Promise<Cv[]> {
-    const originalCv = await this.getCvById(cvId, userId);
+  async getCvVersions(cvId: string, userId: string): Promise<any[]> {
+    const cv = await this.getCvById(cvId, userId);
     
-    return this.cvRepository.find({
-      where: { 
-        userId,
-        originalFileName: originalCv.originalFileName,
+    // Return version history from versionHistory field
+    if (!cv.versionHistory || cv.versionHistory.length === 0) {
+      // If no history, return current version only
+      return [{
+        id: cv.id,
+        version: cv.version,
+        parsedData: cv.parsedData,
+        createdAt: cv.createdAt,
+        updatedAt: cv.updatedAt,
+        isTailored: cv.isTailored,
+        tailoredForJob: cv.tailoredForJob,
+      }];
+    }
+    
+    // Return all versions from history + current version
+    const allVersions = [
+      // Historical versions
+      ...cv.versionHistory.map(vh => ({
+        id: `${cv.id}-v${vh.version}`,
+        version: vh.version,
+        parsedData: vh.parsedData,
+        createdAt: cv.createdAt,
+        updatedAt: vh.updatedAt,
+        isTailored: cv.isTailored,
+        tailoredForJob: cv.tailoredForJob,
+        isHistorical: true,
+      })),
+      // Current version
+      {
+        id: cv.id,
+        version: cv.version,
+        parsedData: cv.parsedData,
+        createdAt: cv.createdAt,
+        updatedAt: cv.updatedAt,
+        isTailored: cv.isTailored,
+        tailoredForJob: cv.tailoredForJob,
+        isHistorical: false,
       },
-      order: { version: 'DESC' },
-    });
+    ];
+    
+    return allVersions.sort((a, b) => b.version - a.version);
   }
 
   async duplicateCv(cvId: string, userId: string): Promise<Cv> {
@@ -178,6 +224,34 @@ export class CvService {
     });
 
     return this.cvRepository.save(duplicatedCv);
+  }
+
+  async restoreVersion(cvId: string, userId: string, versionNumber: number): Promise<Cv> {
+    const cv = await this.getCvById(cvId, userId);
+    
+    // Find the version to restore
+    const versionToRestore = cv.versionHistory?.find(vh => vh.version === versionNumber);
+    
+    if (!versionToRestore) {
+      throw new NotFoundException(`Version ${versionNumber} not found`);
+    }
+    
+    // Save current state before restoring
+    if (!cv.versionHistory) {
+      cv.versionHistory = [];
+    }
+    
+    cv.versionHistory.push({
+      version: cv.version,
+      parsedData: cv.parsedData,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    // Restore the selected version
+    cv.parsedData = versionToRestore.parsedData;
+    cv.version += 1; // Increment version (restore creates new version)
+    
+    return this.cvRepository.save(cv);
   }
 
   private generateImprovementNotes(parsedData: any): any {

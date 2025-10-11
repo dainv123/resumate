@@ -46,6 +46,10 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5000}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:5001}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      DOMAIN_NAME: ${DOMAIN_NAME}
     depends_on:
       - postgres
     volumes:

@@ -8,6 +8,7 @@ import { Cv } from './entities/cv.entity';
 import { JobDescription } from './entities/job-description.entity';
 import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 import { ExportService } from '../../shared/services/export.service';
 import { HtmlTemplateService } from '../../shared/services/html-template.service';
 import { DocumentParserService } from '../ai/providers/document-parser.service';
@@ -18,6 +19,7 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
     TypeOrmModule.forFeature([Cv, JobDescription]),
     AiModule,
     UsersModule,
+    AnalyticsModule,
     MulterModule.register({
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB

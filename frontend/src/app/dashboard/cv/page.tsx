@@ -36,6 +36,13 @@ export default function CVPage() {
     },
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: cvApi.duplicateCv,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cvs"] });
+    },
+  });
+
   const exportMutation = useMutation({
     mutationFn: async ({
       cv,
@@ -90,6 +97,10 @@ export default function CVPage() {
     if (confirm("Are you sure you want to delete this CV?")) {
       deleteMutation.mutate(cv.id);
     }
+  };
+
+  const handleDuplicate = (cv: CV) => {
+    duplicateMutation.mutate(cv.id);
   };
 
   const handleTailor = (cv: CV) => {
@@ -649,6 +660,7 @@ export default function CVPage() {
                 cv={cv}
                 // onEdit={handleEdit}
                 onDelete={handleDelete}
+                onDuplicate={handleDuplicate}
                 onTailor={handleTailor}
                 onExport={handleExport}
                 onUpdate={() => {

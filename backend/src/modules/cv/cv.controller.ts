@@ -19,6 +19,8 @@ import { CvService } from './cv.service';
 import { ExportService } from '../../shared/services/export.service';
 import { UpdateCvDto, TailorCvDto } from './dto/cv.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
+import { TrackActivity } from '../../common/decorators/track-activity.decorator';
+import { ActivityType } from '../../common/enums/activity-type.enum';
 import { User } from '../users/entities/user.entity';
 
 @Controller('cv')
@@ -31,6 +33,12 @@ export class CvController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
+  @TrackActivity(ActivityType.CV_UPLOADED, {
+    getMetadata: (cv, args) => ({
+      fileName: cv.originalFileName,
+      fileSize: cv.fileSize,
+    }),
+  })
   async uploadCv(
     @GetUser('id') userId: string,
     @UploadedFile() file: Express.Multer.File,
@@ -60,6 +68,7 @@ export class CvController {
   }
 
   @Put(':id')
+  @TrackActivity(ActivityType.CV_EDITED)
   async updateCv(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -86,6 +95,13 @@ export class CvController {
   }
 
   @Get(':id/export/pdf')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (result, context) => context.params.id,
+    getMetadata: (result, context) => ({ 
+      format: 'pdf', 
+      template: context.query.template || 'professional' 
+    }),
+  })
   async exportToPDF(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -104,6 +120,10 @@ export class CvController {
   }
 
   @Get(':id/export/word')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (result, context) => context.params.id,
+    getMetadata: () => ({ format: 'word', template: 'default' }),
+  })
   async exportToWord(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -121,6 +141,10 @@ export class CvController {
   }
 
   @Get(':id/export/ats')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (result, context) => context.params.id,
+    getMetadata: () => ({ format: 'ats', template: 'text' }),
+  })
   async exportToATS(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -155,14 +179,24 @@ export class CvController {
     return duplicatedCv;
   }
 
+  @Post(':id/restore/:version')
+  async restoreVersion(
+    @Param('id') id: string,
+    @Param('version') version: string,
+    @GetUser('id') userId: string,
+  ) {
+    const restoredCv = await this.cvService.restoreVersion(id, userId, parseInt(version));
+    return restoredCv;
+  }
+
   @Post(':id/tailor')
+  @TrackActivity(ActivityType.CV_TAILORED)
   async tailorCv(
     @Param('id') id: string,
     @GetUser('id') userId: string,
     @Body() tailorCvDto: TailorCvDto,
   ) {
-    const tailoredCv = await this.cvService.tailorCv(id, userId, tailorCvDto.jobDescription);
-    return tailoredCv;
+    return this.cvService.tailorCv(id, userId, tailorCvDto.jobDescription);
   }
 
   @Post(':id/analyze-compatibility')
