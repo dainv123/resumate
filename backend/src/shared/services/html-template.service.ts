@@ -134,7 +134,7 @@ export class HtmlTemplateService {
 
         small::before {
             display: block;
-            content: 'Stack technique :';
+            content: 'Stack:';
             margin-right: .2rem;
         }
 
@@ -150,9 +150,9 @@ export class HtmlTemplateService {
             display: flex;
             flex-direction: row;
             width: 205mm;
-            height: 296mm;
+            min-height: 296mm;
             background: var(--primaryColor);
-            overflow: hidden;
+            /* overflow: hidden; */
             margin: 0 auto;
         }
 
@@ -170,11 +170,11 @@ export class HtmlTemplateService {
 
         .main-part {
             flex: 1.9;
-            justify-content: space-between;
+            justify-content: flex-start;
             margin-right: .3rem;
             margin-left: 5mm;
             padding-bottom: 3rem;
-            overflow: hidden;
+            /* overflow: hidden; */
         }
 
         .main-part>section {
@@ -327,27 +327,23 @@ export class HtmlTemplateService {
         }
 
         .side-part>section:nth-of-type(2)>div ul {
-            display: flex;
-            flex-wrap: wrap;
+            display: block;
             margin: 0;
-            padding: 0;
+            padding-left: 1.2rem;
+            list-style-type: disc;
         }
 
         .side-part>section:nth-of-type(2)>div ul li {
-            display: flex;
-            margin: .20rem 0rem;
+            display: list-item;
+            margin: .15rem 0;
             font-weight: 500;
             font-size: .78rem;
+            line-height: 1.4;
         }
 
         #languages>ul {
             display: block;
-        }
-
-        .side-part>section:nth-of-type(2)>div:not(#languages) ul li:not(:last-child)::after {
-            content: "•";
-            margin-left: 0.3rem;
-            margin-right: 0.3rem;
+            list-style-type: disc;
         }
 
         .side-part>section h3 {
@@ -356,6 +352,7 @@ export class HtmlTemplateService {
             font-size: .95rem;
             margin: .3rem 0;
         }
+
 
         @media print {
             body {
@@ -447,6 +444,24 @@ export class HtmlTemplateService {
                                 <ul>
                                     ${exp.achievements.map(ach => `<li>${ach}</li>`).join('')}
                                 </ul>
+                            ` : ''}
+                            ${exp.subProjects && exp.subProjects.length > 0 ? `
+                                <div style="margin-left: 1rem; margin-top: 0.5rem;">
+                                    <p style="font-weight: 600; color: var(--chineseBlue55); margin-bottom: 0.3rem;">Sub-Projects:</p>
+                                    ${exp.subProjects.map(sub => `
+                                        <div style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid var(--chineseBlue55);">
+                                            <p style="font-weight: 500;">${sub.name}${sub.role ? ` - ${sub.role}` : ''}</p>
+                                            ${sub.responsibilities && sub.responsibilities.length > 0 ? `
+                                                <ul style="margin: 0.2rem 0;">
+                                                    ${sub.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+                                                </ul>
+                                            ` : ''}
+                                            ${sub.techStack && sub.techStack.length > 0 ? `
+                                                <small>${sub.techStack.join(', ')}</small>
+                                            ` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
                             ` : ''}
                             ${exp.technologies && exp.technologies.length > 0 ? `
                                 <small>${exp.technologies.join(', ')}</small>

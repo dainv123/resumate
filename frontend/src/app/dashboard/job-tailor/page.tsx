@@ -33,6 +33,12 @@ import {
   Briefcase,
   GraduationCap,
   Code,
+  Linkedin,
+  Calendar,
+  Heart,
+  FileCheck,
+  BookOpen,
+  ExternalLink,
 } from "lucide-react";
 
 export default function JobTailorPage() {
@@ -768,6 +774,18 @@ Example:
                             {tailoredCv.parsedData.address}
                           </span>
                         )}
+                        {tailoredCv.parsedData.linkedin && (
+                          <span className="flex items-center gap-1">
+                            <Linkedin className="h-4 w-4" />
+                            {tailoredCv.parsedData.linkedin}
+                          </span>
+                        )}
+                        {tailoredCv.parsedData.dateOfBirth && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {tailoredCv.parsedData.dateOfBirth}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -876,9 +894,22 @@ Example:
                                   <p className="text-sm text-gray-600 mb-2">
                                     {exp.company}
                                   </p>
+                                  {exp.teamSize && (
+                                    <p className="text-xs text-gray-500 mb-1">
+                                      <span className="font-medium">
+                                        Team Size:
+                                      </span>{" "}
+                                      {exp.teamSize}
+                                    </p>
+                                  )}
+                                  {exp.companyDescription && (
+                                    <p className="text-xs text-gray-600 italic mb-2">
+                                      {exp.companyDescription}
+                                    </p>
+                                  )}
                                   {exp.responsibilities &&
                                     exp.responsibilities.length > 0 && (
-                                      <ul className="text-sm text-gray-700 space-y-1">
+                                      <ul className="text-sm text-gray-700 space-y-1 mb-2">
                                         {exp.responsibilities.map(
                                           (resp, idx) => (
                                             <li
@@ -892,6 +923,76 @@ Example:
                                           )
                                         )}
                                       </ul>
+                                    )}
+                                  {exp.achievements &&
+                                    exp.achievements.length > 0 && (
+                                      <div className="mb-2">
+                                        <p className="text-xs font-medium text-green-700 mb-1">
+                                          Achievements:
+                                        </p>
+                                        <ul className="text-sm text-gray-700 space-y-1">
+                                          {exp.achievements.map((ach, idx) => (
+                                            <li
+                                              key={idx}
+                                              className="flex items-start gap-2">
+                                              <span className="text-green-500 mt-1">
+                                                ✓
+                                              </span>
+                                              <span>{ach}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  {exp.subProjects &&
+                                    exp.subProjects.length > 0 && (
+                                      <div className="mt-3 ml-3 space-y-2">
+                                        <p className="text-xs font-medium text-purple-700 mb-2">
+                                          Sub-Projects:
+                                        </p>
+                                        {exp.subProjects.map((sub, subIdx) => (
+                                          <div
+                                            key={subIdx}
+                                            className="border-l-2 border-purple-200 pl-3 pb-2">
+                                            <p className="text-sm font-medium text-gray-800">
+                                              {sub.name}
+                                              {sub.role && ` - ${sub.role}`}
+                                            </p>
+                                            {sub.responsibilities &&
+                                              sub.responsibilities.length >
+                                                0 && (
+                                                <ul className="text-xs text-gray-700 space-y-0.5 mt-1">
+                                                  {sub.responsibilities.map(
+                                                    (resp, respIdx) => (
+                                                      <li
+                                                        key={respIdx}
+                                                        className="flex items-start gap-2">
+                                                        <span className="text-purple-500 mt-0.5">
+                                                          •
+                                                        </span>
+                                                        <span>{resp}</span>
+                                                      </li>
+                                                    )
+                                                  )}
+                                                </ul>
+                                              )}
+                                            {sub.techStack &&
+                                              sub.techStack.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                  {sub.techStack.map(
+                                                    (tech, techIdx) => (
+                                                      <span
+                                                        key={techIdx}
+                                                        className="text-xs px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded">
+                                                        {tech}
+                                                      </span>
+                                                    )
+                                                  )}
+                                                </div>
+                                              )}
+                                          </div>
+                                        ))}
+                                      </div>
                                     )}
                                   {exp.technologies &&
                                     exp.technologies.length > 0 && (
@@ -968,12 +1069,37 @@ Example:
                                 <div
                                   key={index}
                                   className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                                  <h4 className="font-medium text-gray-900 mb-1">
-                                    {project.name}
-                                  </h4>
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h4 className="font-medium text-gray-900">
+                                      {project.name}
+                                    </h4>
+                                    {project.duration && (
+                                      <span className="text-xs text-gray-500">
+                                        {project.duration}
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="text-sm text-gray-700 mb-2">
                                     {project.description}
                                   </p>
+                                  {project.results && (
+                                    <p className="text-xs text-green-600 italic mb-2">
+                                      <span className="font-medium">
+                                        Results:
+                                      </span>{" "}
+                                      {project.results}
+                                    </p>
+                                  )}
+                                  {project.link && (
+                                    <a
+                                      href={project.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-2">
+                                      <ExternalLink className="h-3 w-3" />
+                                      View Project
+                                    </a>
+                                  )}
                                   {project.techStack &&
                                     project.techStack.length > 0 && (
                                       <div className="flex flex-wrap gap-1">
@@ -1015,7 +1141,108 @@ Example:
                                     <p className="text-xs text-gray-600">
                                       {cert.issuer} • {cert.date}
                                     </p>
+                                    {cert.link && (
+                                      <a
+                                        href={cert.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1">
+                                        <ExternalLink className="h-3 w-3" />
+                                        View Certificate
+                                      </a>
+                                    )}
                                   </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Awards */}
+                    {tailoredCv.parsedData.awards &&
+                      tailoredCv.parsedData.awards.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <FileCheck className="h-4 w-4 text-amber-600" />
+                            Awards
+                          </h3>
+                          <div className="space-y-2">
+                            {tailoredCv.parsedData.awards.map(
+                              (award, index) => (
+                                <div
+                                  key={index}
+                                  className="border-l-2 border-amber-200 pl-3">
+                                  <p className="font-medium text-sm text-gray-900">
+                                    {award.name}
+                                  </p>
+                                  <p className="text-xs text-gray-600">
+                                    {award.issuer} • {award.date}
+                                  </p>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Publications */}
+                    {tailoredCv.parsedData.publications &&
+                      tailoredCv.parsedData.publications.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            Publications
+                          </h3>
+                          <div className="space-y-3">
+                            {tailoredCv.parsedData.publications.map(
+                              (pub, index) => (
+                                <div
+                                  key={index}
+                                  className="border-l-2 border-blue-200 pl-3">
+                                  <p className="font-medium text-sm text-gray-900">
+                                    {pub.title}
+                                  </p>
+                                  <p className="text-xs text-gray-600">
+                                    {pub.journal} • {pub.date}
+                                  </p>
+                                  {pub.authors && (
+                                    <p className="text-xs text-gray-500 italic mt-1">
+                                      Authors: {pub.authors}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Volunteer Experience */}
+                    {tailoredCv.parsedData.volunteer &&
+                      tailoredCv.parsedData.volunteer.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <Heart className="h-4 w-4 text-pink-600" />
+                            Volunteer Experience
+                          </h3>
+                          <div className="space-y-3">
+                            {tailoredCv.parsedData.volunteer.map(
+                              (vol, index) => (
+                                <div
+                                  key={index}
+                                  className="border-l-2 border-pink-200 pl-3">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <p className="font-medium text-sm text-gray-900">
+                                      {vol.role} - {vol.organization}
+                                    </p>
+                                    <span className="text-xs text-gray-500">
+                                      {vol.duration}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700">
+                                    {vol.description}
+                                  </p>
                                 </div>
                               )
                             )}

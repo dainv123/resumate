@@ -110,7 +110,7 @@ export default function CVPreview({
           className="mb-6 border-green-200"
           headerClassName="bg-gradient-to-r from-green-50 to-emerald-50"
           contentClassName="bg-white">
-          <div className="p-4 space-y-2">
+          <div className="space-y-2">
             {cv.originalCv && (
               <div className="text-xs text-green-700">
                 <span className="font-medium">📄 Original CV:</span>{" "}
@@ -161,7 +161,7 @@ export default function CVPreview({
           className="mb-6 border-blue-200"
           headerClassName="bg-gradient-to-r from-blue-50 to-indigo-50"
           contentClassName="bg-white">
-          <div className="p-4">
+          <div>
             {/* Top Key Improvements - Show first 3 most important */}
             {(() => {
               const allImprovements = [

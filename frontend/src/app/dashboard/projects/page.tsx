@@ -188,7 +188,7 @@ export default function ProjectsPage() {
         title={editingProject ? t("projects.edit") : t("projects.addNew")}
         size="lg"
         footer={
-          <>
+          <div className="flex justify-start space-x-3 w-full">
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
@@ -198,7 +198,7 @@ export default function ProjectsPage() {
               loading={createMutation.isPending || updateMutation.isPending}>
               {editingProject ? t("projects.update") : t("projects.create")}
             </Button>
-          </>
+          </div>
         }>
         <ProjectForm
           project={editingProject || undefined}

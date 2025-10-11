@@ -1567,8 +1567,8 @@ ${vol.description}`
       
       // Write HTML to temporary file
       const tempDir = os.tmpdir();
-      const tempHtmlFile = path.join(tempDir, `cv-${Date.now()}.html`);
-      const tempPdfFile = path.join(tempDir, `cv-${Date.now()}.pdf`);
+      const tempHtmlFile = path.join(tempDir, `Resumated-${Date.now()}.html`);
+      const tempPdfFile = path.join(tempDir, `Resumated-${Date.now()}.pdf`);
       
       await fs.promises.writeFile(tempHtmlFile, htmlContent, 'utf8');
       

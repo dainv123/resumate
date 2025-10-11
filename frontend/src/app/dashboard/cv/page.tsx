@@ -7,7 +7,7 @@ import CVUpload from "@/components/cv/CVUpload";
 import CVPreview from "@/components/cv/CVPreview";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import { Plus, FileText, AlertCircle } from "lucide-react";
+import { Plus, FileText, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function CVPage() {
   const [showUpload, setShowUpload] = useState(false);
@@ -616,7 +616,11 @@ export default function CVPage() {
           <option value="parsed">Parsed</option>
           <option value="unparsed">Unparsed</option>
         </select>
-        <Button onClick={handleRefresh} variant="outline" className="h-full">
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          className="h-full py-3 flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
       </div>

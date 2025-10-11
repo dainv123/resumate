@@ -53,7 +53,7 @@ export default function TemplateSelectionModal({
       size="lg"
       title="Choose Template & Format"
       footer={
-        <div className="flex justify-end space-x-3">
+        <div className="flex justify-start space-x-3 w-full">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
