@@ -14,44 +14,106 @@
         .section h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
         .skills { display: flex; flex-wrap: wrap; gap: 10px; }
         .skill { background: #007bff; color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
-        .project { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        .project h3 { margin: 0 0 10px 0; color: #333; }
-        .project p { margin: 5px 0; color: #666; }
+        .item { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .item h3 { margin: 0 0 10px 0; color: #333; }
+        .item p { margin: 5px 0; color: #666; }
         .tech-stack { font-style: italic; color: #007bff; }
+        .social-links { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
+        .social-links a { color: #007bff; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- SECTION:HERO -->
         <div class="header">
+            {{#if user.avatar}}
+            <img src="{{user.avatar}}" alt="Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
+            {{/if}}
             <h1>{{user.name}}</h1>
             <p>{{user.bio}}</p>
-            <p>{{user.email}}</p>
         </div>
+        <!-- /SECTION:HERO -->
         
+        <!-- SECTION:CONTACT -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <p>{{user.email}}</p>
+            <div class="social-links">
+                {{#if user.linkedinUrl}}<a href="{{user.linkedinUrl}}" target="_blank">LinkedIn</a>{{/if}}
+                {{#if user.githubUrl}}<a href="{{user.githubUrl}}" target="_blank">GitHub</a>{{/if}}
+                {{#if user.websiteUrl}}<a href="{{user.websiteUrl}}" target="_blank">Website</a>{{/if}}
+            </div>
+        </div>
+        <!-- /SECTION:CONTACT -->
+        
+        <!-- SECTION:ABOUT -->
+        {{#if cv.summary}}
+        <div class="section">
+            <h2>About Me</h2>
+            <p>{{cv.summary}}</p>
+        </div>
+        {{/if}}
+        <!-- /SECTION:ABOUT -->
+        
+        <!-- SECTION:SKILLS -->
         <div class="section">
             <h2>Skills</h2>
             <div class="skills">
-                {{#each cv.skills}}
+                {{#if cv.skills.technical}}
+                {{#each cv.skills.technical}}
                 <span class="skill">{{this}}</span>
                 {{/each}}
+                {{/if}}
+                {{#if cv.skills.tools}}
+                {{#each cv.skills.tools}}
+                <span class="skill">{{this}}</span>
+                {{/each}}
+                {{/if}}
             </div>
         </div>
+        <!-- /SECTION:SKILLS -->
         
+        <!-- SECTION:EXPERIENCE -->
+        {{#if cv.experience}}
         <div class="section">
             <h2>Experience</h2>
             {{#each cv.experience}}
-            <div class="project">
-                <h3>{{role}} at {{company}}</h3>
+            <div class="item">
+                <h3>{{title}} at {{company}}</h3>
                 <p><strong>Duration:</strong> {{duration}}</p>
-                <p>{{description}}</p>
+                {{#if responsibilities}}
+                <ul>
+                {{#each responsibilities}}
+                <li>{{this}}</li>
+                {{/each}}
+                </ul>
+                {{/if}}
             </div>
             {{/each}}
         </div>
+        {{/if}}
+        <!-- /SECTION:EXPERIENCE -->
         
+        <!-- SECTION:EDUCATION -->
+        {{#if cv.education}}
+        <div class="section">
+            <h2>Education</h2>
+            {{#each cv.education}}
+            <div class="item">
+                <h3>{{degree}}</h3>
+                <p>{{school}} - {{year}}</p>
+                {{#if gpa}}<p>GPA: {{gpa}}</p>{{/if}}
+            </div>
+            {{/each}}
+        </div>
+        {{/if}}
+        <!-- /SECTION:EDUCATION -->
+        
+        <!-- SECTION:PROJECTS -->
+        {{#if projects}}
         <div class="section">
             <h2>Projects</h2>
             {{#each projects}}
-            <div class="project">
+            <div class="item">
                 <h3>{{name}}</h3>
                 <p>{{description}}</p>
                 <p class="tech-stack">Tech Stack: {{techStack}}</p>
@@ -60,6 +122,37 @@
             </div>
             {{/each}}
         </div>
+        {{/if}}
+        <!-- /SECTION:PROJECTS -->
+        
+        <!-- SECTION:CERTIFICATIONS -->
+        {{#if cv.certifications}}
+        <div class="section">
+            <h2>Certifications</h2>
+            {{#each cv.certifications}}
+            <div class="item">
+                <h3>{{name}}</h3>
+                <p>{{issuer}} - {{date}}</p>
+                {{#if link}}<p><a href="{{link}}" target="_blank">View Certificate</a></p>{{/if}}
+            </div>
+            {{/each}}
+        </div>
+        {{/if}}
+        <!-- /SECTION:CERTIFICATIONS -->
+        
+        <!-- SECTION:AWARDS -->
+        {{#if cv.awards}}
+        <div class="section">
+            <h2>Awards</h2>
+            {{#each cv.awards}}
+            <div class="item">
+                <h3>{{name}}</h3>
+                <p>{{issuer}} - {{date}}</p>
+            </div>
+            {{/each}}
+        </div>
+        {{/if}}
+        <!-- /SECTION:AWARDS -->
     </div>
 </body>
 </html>

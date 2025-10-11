@@ -55,9 +55,9 @@ export default function EditCVModal({
     }
   }, [isOpen, cv.parsedData]);
 
-  useEffect(() => {
-    console.log("FormData updated:", formData);
-  }, [formData, forceUpdate]);
+  // useEffect(() => {
+  //   console.log("FormData updated:", formData);
+  // }, [formData, forceUpdate]);
 
   const handleSave = async () => {
     setIsSaving(true);

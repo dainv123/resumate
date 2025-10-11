@@ -18,12 +18,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
+const homeNavigationItems = [{ key: "home", href: "/", icon: "" }];
+
 const navigationItems = [
   { key: "dashboard", href: "/dashboard", icon: Home },
   { key: "myCV", href: "/dashboard/cv", icon: FileText },
   { key: "projects", href: "/dashboard/projects", icon: Briefcase },
   { key: "jobTailor", href: "/dashboard/job-tailor", icon: Sparkles },
   { key: "portfolio", href: "/dashboard/portfolio", icon: Users },
+];
+
+const bottomNavigationItems = [
+  { key: "settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -34,12 +40,14 @@ export default function Sidebar() {
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg flex flex-col">
       {/* Logo - Fixed at top */}
-      <div className="flex items-center px-6 py-4 border-b flex-shrink-0">
+      <Link
+        href={homeNavigationItems[0].href}
+        className="flex items-center px-6 py-4 border-b flex-shrink-0">
         <FileText className="h-8 w-8 text-main" />
         <span className="ml-2 text-xl font-bold text-dark font-inter">
           Resumate
         </span>
-      </div>
+      </Link>
 
       {/* User Info - Fixed below logo */}
       <div className="px-6 py-4 border-b flex-shrink-0">
@@ -99,25 +107,37 @@ export default function Sidebar() {
 
       {/* Settings & Logout - Fixed at bottom */}
       <div className="px-4 py-4 border-t space-y-1 flex-shrink-0">
-        <div className="px-3 py-2">
-          <LanguageSwitcher />
+        <div className="py-2">
+          <LanguageSwitcher className=" w-full" />
         </div>
-        <div className="px-3 py-2">
-          <Link
-            href="/dashboard/settings"
-            className="group flex items-center px-3 py-2 text-sm font-medium text-main rounded-md hover:bg-gray-50 hover:text-dark font-karla">
-            <Settings className="mr-3 h-5 w-5 text-main group-hover:text-dark" />
-            {t("nav.settings")}
-          </Link>
-        </div>
-        <div className="px-3 py-2">
-          <button
-            onClick={logout}
-            className="group flex items-center w-full px-3 py-2 text-sm font-medium text-main rounded-md hover:bg-gray-50 hover:text-dark font-karla">
-            <LogOut className="mr-3 h-5 w-5 text-main group-hover:text-dark" />
-            {t("nav.logout")}
-          </button>
-        </div>
+        {bottomNavigationItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(
+                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors font-karla",
+                isActive
+                  ? "bg-blue text-white"
+                  : "text-main hover:bg-gray-50 hover:text-dark"
+              )}>
+              <item.icon
+                className={cn(
+                  "mr-3 h-5 w-5 flex-shrink-0",
+                  isActive ? "text-white" : "text-main group-hover:text-dark"
+                )}
+              />
+              {t(`nav.${item.key}`)}
+            </Link>
+          );
+        })}
+        <button
+          onClick={logout}
+          className="group flex items-center w-full px-3 py-2 text-sm font-medium text-main rounded-md hover:bg-gray-50 hover:text-dark font-karla transition-colors">
+          <LogOut className="mr-3 h-5 w-5 text-main group-hover:text-dark" />
+          {t("nav.logout")}
+        </button>
       </div>
     </div>
   );

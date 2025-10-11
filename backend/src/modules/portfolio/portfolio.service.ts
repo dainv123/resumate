@@ -5,9 +5,10 @@ import { randomUUID } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { CvService } from '../cv/cv.service';
 import { ProjectsService } from '../projects/projects.service';
-import { CreatePortfolioDto, UpdatePortfolioDto, PortfolioData, PortfolioTemplate } from './dto/portfolio.dto';
+import { CreatePortfolioDto, UpdatePortfolioDto, PortfolioData, PortfolioTemplate, PortfolioSections } from './dto/portfolio.dto';
 import { TemplateLoaderService } from './templates/template-loader.service';
 import { Portfolio as PortfolioEntity } from './entities/portfolio.entity';
+import { getTemplateConfig } from './portfolio.constants';
 
 @Injectable()
 export class PortfolioService {
@@ -24,13 +25,25 @@ export class PortfolioService {
     // Get user data
     const user = await this.usersService.findById(userId);
     
-    // Get latest CV
+    // Get CVs and select the appropriate one
     const cvs = await this.cvService.getUserCvs(userId);
-    const latestCv = cvs[0];
+    const selectedCv = createPortfolioDto.selectedCvId
+      ? cvs.find(cv => cv.id === createPortfolioDto.selectedCvId)
+      : cvs[0]; // Default to latest CV
 
     // Get projects
     const projects = await this.projectsService.getProjectsForPortfolio(userId);
 
+    // Get template configuration
+    const templateConfig = getTemplateConfig(createPortfolioDto.template);
+    
+    // Merge template default sections with user custom sections
+    const finalSections: PortfolioSections = {
+      ...templateConfig.sections,
+      ...(createPortfolioDto.customSections || {}),
+    };
+
+    // Build portfolio data based on active sections
     return {
       user: {
         name: user.name,
@@ -42,19 +55,23 @@ export class PortfolioService {
         websiteUrl: createPortfolioDto.websiteUrl,
       },
       cv: {
-        summary: latestCv?.parsedData.summary,
-        skills: latestCv?.parsedData.skills || {
+        summary: finalSections.about ? selectedCv?.parsedData.summary : undefined,
+        skills: finalSections.skills ? (selectedCv?.parsedData.skills || {
           technical: [],
           soft: [],
           languages: [],
           tools: []
-        },
-        experience: latestCv?.parsedData.experience || [],
-        education: latestCv?.parsedData.education || [],
+        }) : undefined,
+        experience: finalSections.experience ? (selectedCv?.parsedData.experience || []) : undefined,
+        education: finalSections.education ? (selectedCv?.parsedData.education || []) : undefined,
+        certifications: finalSections.certifications ? (selectedCv?.parsedData.certifications || []) : undefined,
+        awards: finalSections.awards ? (selectedCv?.parsedData.awards || []) : undefined,
       },
-      projects,
+      projects: finalSections.projects ? projects : undefined,
       template: createPortfolioDto.template,
       customDomain: createPortfolioDto.customDomain,
+      sections: finalSections,
+      selectedCvId: createPortfolioDto.selectedCvId,
     };
   }
 
@@ -151,6 +168,7 @@ export class PortfolioService {
         githubUrl: portfolio.githubUrl || '',
         websiteUrl: portfolio.websiteUrl || '',
       },
+      sections: { hero: true, about: true, experience: true, education: true, skills: true, projects: true, contact: true, certifications: true, awards: true },
       cv: cvData ? {
         summary: cvData.parsedData?.summary || '',
         skills: cvData.parsedData?.skills || { technical: [], soft: [], languages: [], tools: [] },
@@ -233,6 +251,9 @@ export class PortfolioService {
     // Enhanced template rendering for Muhammad Ismail template
     let html = template;
     
+    // Remove sections that are not enabled before rendering data
+    html = this.removeSectionsByMarkers(html, data.sections);
+    
     // Replace user data
     html = html.replace(/\{\{user\.name\}\}/g, data.user.name || '');
     html = html.replace(/\{\{user\.bio\}\}/g, data.user.bio || '');
@@ -248,18 +269,74 @@ export class PortfolioService {
     // Handle conditional blocks for user data
     html = this.renderConditionalBlocks(html, data);
     
-    // Handle skills sections
-    html = this.renderSkillsSections(html, data);
+    // Handle skills sections (if enabled)
+    if (data.sections.skills && data.cv.skills) {
+      html = this.renderSkillsSections(html, data);
+    }
     
-    // Handle experience section
-    html = this.renderExperienceSection(html, data);
+    // Handle experience section (if enabled)
+    if (data.sections.experience && data.cv.experience) {
+      html = this.renderExperienceSection(html, data);
+    }
     
-    // Handle projects section
-    html = this.renderProjectsSection(html, data);
+    // Handle education section (if enabled)
+    if (data.sections.education && data.cv.education) {
+      html = this.renderEducationSection(html, data);
+    }
+    
+    // Handle certifications section (if enabled)
+    if (data.sections.certifications && data.cv.certifications) {
+      html = this.renderCertificationsSection(html, data);
+    }
+    
+    // Handle awards section (if enabled)
+    if (data.sections.awards && data.cv.awards) {
+      html = this.renderAwardsSection(html, data);
+    }
+    
+    // Handle projects section (if enabled)
+    if (data.sections.projects && data.projects) {
+      html = this.renderProjectsSection(html, data);
+    }
     
     // Clean up any remaining Handlebars syntax
     html = this.cleanupRemainingHandlebars(html);
     
+    return html;
+  }
+
+  /**
+   * Remove sections based on HTML comment markers
+   * Example: <!-- SECTION:EXPERIENCE -->...<!-- /SECTION:EXPERIENCE -->
+   */
+  private removeSectionsByMarkers(html: string, sections: PortfolioSections): string {
+    const sectionMarkers = [
+      { key: 'hero', marker: 'HERO' },
+      { key: 'about', marker: 'ABOUT' },
+      { key: 'skills', marker: 'SKILLS' },
+      { key: 'experience', marker: 'EXPERIENCE' },
+      { key: 'education', marker: 'EDUCATION' },
+      { key: 'projects', marker: 'PROJECTS' },
+      { key: 'certifications', marker: 'CERTIFICATIONS' },
+      { key: 'awards', marker: 'AWARDS' },
+      { key: 'contact', marker: 'CONTACT' },
+    ];
+
+    for (const { key, marker } of sectionMarkers) {
+      if (!sections[key]) {
+        // Remove the entire section including markers
+        const regex = new RegExp(
+          `<!--\\s*SECTION:${marker}\\s*-->[\\s\\S]*?<!--\\s*/SECTION:${marker}\\s*-->`,
+          'gi'
+        );
+        html = html.replace(regex, '');
+      } else {
+        // Keep section but remove markers for cleaner HTML
+        html = html.replace(new RegExp(`<!--\\s*SECTION:${marker}\\s*-->`, 'gi'), '');
+        html = html.replace(new RegExp(`<!--\\s*/SECTION:${marker}\\s*-->`, 'gi'), '');
+      }
+    }
+
     return html;
   }
 
@@ -300,7 +377,7 @@ export class PortfolioService {
   private renderSkillsSections(html: string, data: PortfolioData): string {
     // Handle technical skills
     html = html.replace(/\{\{#if cv\.skills\.technical\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
-      if (!data.cv.skills.technical || data.cv.skills.technical.length === 0) return '';
+      if (!data.cv?.skills?.technical || data.cv.skills.technical.length === 0) return '';
       
       const skillsHtml = data.cv.skills.technical.map(skill => 
         `<span class="skill">${skill}</span>`
@@ -311,7 +388,7 @@ export class PortfolioService {
     
     // Handle soft skills
     html = html.replace(/\{\{#if cv\.skills\.soft\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
-      if (!data.cv.skills.soft || data.cv.skills.soft.length === 0) return '';
+      if (!data.cv?.skills?.soft || data.cv.skills.soft.length === 0) return '';
       
       const skillsHtml = data.cv.skills.soft.map(skill => 
         `<span class="skill">${skill}</span>`
@@ -319,10 +396,10 @@ export class PortfolioService {
       
       return content.replace(/\{\{#each cv\.skills\.soft\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
     });
-    
+
     // Handle languages
     html = html.replace(/\{\{#if cv\.skills\.languages\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
-      if (!data.cv.skills.languages || data.cv.skills.languages.length === 0) return '';
+      if (!data.cv?.skills?.languages || data.cv.skills.languages.length === 0) return '';
       
       const skillsHtml = data.cv.skills.languages.map(skill => 
         `<span class="skill">${skill}</span>`
@@ -330,10 +407,10 @@ export class PortfolioService {
       
       return content.replace(/\{\{#each cv\.skills\.languages\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
     });
-    
+
     // Handle tools
     html = html.replace(/\{\{#if cv\.skills\.tools\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
-      if (!data.cv.skills.tools || data.cv.skills.tools.length === 0) return '';
+      if (!data.cv?.skills?.tools || data.cv.skills.tools.length === 0) return '';
       
       const skillsHtml = data.cv.skills.tools.map(skill => 
         `<span class="skill">${skill}</span>`
@@ -385,6 +462,69 @@ export class PortfolioService {
     
     html = html.replace(/\{\{#each projects\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, content) => {
       return projectsHtml;
+    });
+    
+    return html;
+  }
+
+  private renderEducationSection(html: string, data: PortfolioData): string {
+    if (!data.cv.education || data.cv.education.length === 0) {
+      return html.replace(/\{\{#if cv\.education\}\}([\s\S]*?)\{\{\/if\}\}/g, '');
+    }
+    
+    const educationHtml = data.cv.education.map(edu => `
+      <div class="education-item">
+        <h3>${edu.degree || 'Degree'}</h3>
+        <div class="school">${edu.school || 'School'}</div>
+        <div class="year">${edu.year || ''}</div>
+        ${edu.gpa ? `<div class="gpa">GPA: ${edu.gpa}</div>` : ''}
+        ${edu.honors ? `<div class="honors">${edu.honors}</div>` : ''}
+      </div>
+    `).join('');
+    
+    html = html.replace(/\{\{#each cv\.education\}\}([\s\S]*?)\{\{\/each\}\}/g, () => {
+      return educationHtml;
+    });
+    
+    return html;
+  }
+
+  private renderCertificationsSection(html: string, data: PortfolioData): string {
+    if (!data.cv.certifications || data.cv.certifications.length === 0) {
+      return html.replace(/\{\{#if cv\.certifications\}\}([\s\S]*?)\{\{\/if\}\}/g, '');
+    }
+    
+    const certificationsHtml = data.cv.certifications.map(cert => `
+      <div class="certification-item">
+        <h3>${cert.name || 'Certification'}</h3>
+        <div class="issuer">${cert.issuer || 'Issuer'}</div>
+        <div class="date">${cert.date || ''}</div>
+        ${cert.link ? `<a href="${cert.link}" target="_blank">View Certificate</a>` : ''}
+      </div>
+    `).join('');
+    
+    html = html.replace(/\{\{#each cv\.certifications\}\}([\s\S]*?)\{\{\/each\}\}/g, () => {
+      return certificationsHtml;
+    });
+    
+    return html;
+  }
+
+  private renderAwardsSection(html: string, data: PortfolioData): string {
+    if (!data.cv.awards || data.cv.awards.length === 0) {
+      return html.replace(/\{\{#if cv\.awards\}\}([\s\S]*?)\{\{\/if\}\}/g, '');
+    }
+    
+    const awardsHtml = data.cv.awards.map(award => `
+      <div class="award-item">
+        <h3>${award.name || 'Award'}</h3>
+        <div class="issuer">${award.issuer || 'Issuer'}</div>
+        <div class="date">${award.date || ''}</div>
+      </div>
+    `).join('');
+    
+    html = html.replace(/\{\{#each cv\.awards\}\}([\s\S]*?)\{\{\/each\}\}/g, () => {
+      return awardsHtml;
     });
     
     return html;

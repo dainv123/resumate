@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { Collapse } from "@/components/ui/Collapse";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/contexts/ToastContext";
 import {
   Sparkles,
   FileText,
@@ -26,10 +27,17 @@ import {
   XCircle,
   Lightbulb,
   Award,
+  Phone,
+  MapPin,
+  User,
+  Briefcase,
+  GraduationCap,
+  Code,
 } from "lucide-react";
 
 export default function JobTailorPage() {
   const { t } = useLanguage();
+  const { showSuccess, showError } = useToast();
   const [selectedCv, setSelectedCv] = useState<CV | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [isTailoring, setIsTailoring] = useState(false);
@@ -91,9 +99,13 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setTailoredCv(data);
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
+      showSuccess(
+        "CV tailored successfully! Your CV has been optimized for this job."
+      );
     },
     onError: (error: Error) => {
       console.error("Tailoring failed:", error);
+      showError(t("jobTailor.failedToTailor"));
     },
   });
 
@@ -127,7 +139,7 @@ export default function JobTailorPage() {
 
   const handleTailor = async () => {
     if (!selectedCv || !jobDescription.trim()) {
-      alert("Please select a CV and enter a job description");
+      showError(t("jobTailor.selectCVAndJD"));
       return;
     }
 
@@ -144,7 +156,7 @@ export default function JobTailorPage() {
 
   const handleAnalyzeCompatibility = async () => {
     if (!selectedCv || !jobDescription.trim()) {
-      alert("Please select a CV and enter a job description");
+      showError(t("jobTailor.selectCVAndJD"));
       return;
     }
 
@@ -156,7 +168,7 @@ export default function JobTailorPage() {
 
   const handleGenerateCoverLetter = async () => {
     if (!selectedCv || !jobDescription.trim()) {
-      alert("Please select a CV and enter a job description");
+      showError(t("jobTailor.selectCVAndJD"));
       return;
     }
 
@@ -237,7 +249,7 @@ export default function JobTailorPage() {
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No CVs available
+            {t("jobTailor.noCVsAvailable")}
           </h3>
           <p className="text-gray-600 mb-6">
             Please upload a CV first to use the job tailoring feature
@@ -268,7 +280,7 @@ export default function JobTailorPage() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search CVs by name or filename..."
+                    placeholder={t("jobTailor.searchPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/20 focus:border-main text-sm"
@@ -343,8 +355,8 @@ export default function JobTailorPage() {
                       <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                       <p className="text-sm">
                         {searchTerm
-                          ? "No CVs match your search"
-                          : "No CVs available"}
+                          ? t("jobTailor.noCVsMatch")
+                          : t("jobTailor.noCVsAvailable")}
                       </p>
                     </div>
                   ) : (
@@ -371,10 +383,12 @@ export default function JobTailorPage() {
                                 <FileText className="h-5 w-5 text-main" />
                               </div>
                               <div>
-                                <h4 className="font-semibold text-gray-900">
+                                <h4 className="font-semibold text-gray-900 truncate">
                                   {cv.parsedData.name}
                                 </h4>
-                                <p className="text-sm text-gray-500">
+                                <p
+                                  className="text-sm text-gray-500 truncate max-w-[300px]"
+                                  title={cv.originalFileName}>
                                   Version {cv.version} • {cv.originalFileName}
                                 </p>
                               </div>
@@ -618,8 +632,8 @@ Example:
                       <div className="text-left">
                         <p className="text-sm font-bold">
                           {isTailoring
-                            ? "Tailoring CV..."
-                            : "Tailor CV with AI"}
+                            ? t("jobTailor.tailoringCV")
+                            : t("jobTailor.tailorCVButton")}
                         </p>
                         <p className="text-xs text-white/80">
                           Create optimized version for this job
@@ -643,13 +657,13 @@ Example:
                     <span>
                       {!selectedCv &&
                         !jobDescription.trim() &&
-                        "Select a CV and enter job description to continue"}
+                        t("jobTailor.selectCVPrompt")}
                       {!selectedCv &&
                         jobDescription.trim() &&
-                        "Select a CV to continue"}
+                        t("jobTailor.selectCVOnly")}
                       {selectedCv &&
                         !jobDescription.trim() &&
-                        "Enter job description to continue"}
+                        t("jobTailor.enterJobOnly")}
                     </span>
                   </div>
                 )}
@@ -717,98 +731,305 @@ Example:
 
             {tailoredCv && (
               <div className="space-y-4">
-                {/* Success Message */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                    <p className="text-green-800">
-                      CV tailored successfully! Your CV has been optimized for
-                      this job.
-                    </p>
+                {/* Tailored CV Preview - Full */}
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <Eye className="h-5 w-5 text-blue-600" />
+                        Tailored CV Preview
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        Review before download
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Tailored CV Preview */}
-                <div className="bg-white border rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-3">
-                    Tailored CV Preview
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Name</p>
-                      <p className="text-sm text-gray-900">
+                  <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
+                    {/* Header Info */}
+                    <div className="border-b border-gray-200 pb-4">
+                      <h2 className="text-2xl font-bold text-gray-900">
                         {tailoredCv.parsedData.name}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Email</p>
-                      <p className="text-sm text-gray-900">
-                        {tailoredCv.parsedData.email}
-                      </p>
-                    </div>
-                    {tailoredCv.parsedData.summary && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">
-                          Summary
-                        </p>
-                        <p className="text-sm text-gray-900">
-                          {tailoredCv.parsedData.summary}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Skills
-                      </p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {Array.isArray(
-                          tailoredCv.parsedData.skills?.technical
-                        ) &&
-                        tailoredCv.parsedData.skills.technical.length > 0 ? (
-                          <>
-                            {tailoredCv.parsedData.skills.technical
-                              .slice(0, 8)
-                              .map((skill, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                  {skill}
-                                </span>
-                              ))}
-                            {tailoredCv.parsedData.skills.technical.length >
-                              8 && (
-                              <span className="text-xs text-gray-500">
-                                +
-                                {tailoredCv.parsedData.skills.technical.length -
-                                  8}{" "}
-                                more
-                              </span>
-                            )}
-                          </>
-                        ) : Array.isArray(tailoredCv.parsedData.skills) ? (
-                          <>
-                            {tailoredCv.parsedData.skills
-                              .slice(0, 8)
-                              .map((skill, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                  {skill}
-                                </span>
-                              ))}
-                            {tailoredCv.parsedData.skills.length > 8 && (
-                              <span className="text-xs text-gray-500">
-                                +{tailoredCv.parsedData.skills.length - 8} more
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-xs text-gray-500">
-                            No skills found
+                      </h2>
+                      <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Mail className="h-4 w-4" />
+                          {tailoredCv.parsedData.email}
+                        </span>
+                        {tailoredCv.parsedData.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-4 w-4" />
+                            {tailoredCv.parsedData.phone}
+                          </span>
+                        )}
+                        {tailoredCv.parsedData.address && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {tailoredCv.parsedData.address}
                           </span>
                         )}
                       </div>
                     </div>
+
+                    {/* Summary */}
+                    {tailoredCv.parsedData.summary && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          <User className="h-4 w-4 text-blue-600" />
+                          Professional Summary
+                        </h3>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {tailoredCv.parsedData.summary}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Skills */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-purple-600" />
+                        Skills
+                      </h3>
+                      <div className="space-y-2">
+                        {tailoredCv.parsedData.skills?.technical &&
+                          tailoredCv.parsedData.skills.technical.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 mb-1">
+                                Technical Skills
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {tailoredCv.parsedData.skills.technical.map(
+                                  (skill, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+                                      {skill}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        {tailoredCv.parsedData.skills?.soft &&
+                          tailoredCv.parsedData.skills.soft.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 mb-1">
+                                Soft Skills
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {tailoredCv.parsedData.skills.soft.map(
+                                  (skill, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
+                                      {skill}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        {tailoredCv.parsedData.skills?.languages &&
+                          tailoredCv.parsedData.skills.languages.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 mb-1">
+                                Languages
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {tailoredCv.parsedData.skills.languages.map(
+                                  (skill, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800">
+                                      {skill}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+
+                    {/* Experience */}
+                    {tailoredCv.parsedData.experience &&
+                      tailoredCv.parsedData.experience.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <Briefcase className="h-4 w-4 text-green-600" />
+                            Work Experience
+                          </h3>
+                          <div className="space-y-4">
+                            {tailoredCv.parsedData.experience.map(
+                              (exp, index) => (
+                                <div
+                                  key={index}
+                                  className="border-l-2 border-blue-200 pl-4">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h4 className="font-medium text-gray-900">
+                                      {exp.title}
+                                    </h4>
+                                    <span className="text-xs text-gray-500">
+                                      {exp.duration}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {exp.company}
+                                  </p>
+                                  {exp.responsibilities &&
+                                    exp.responsibilities.length > 0 && (
+                                      <ul className="text-sm text-gray-700 space-y-1">
+                                        {exp.responsibilities.map(
+                                          (resp, idx) => (
+                                            <li
+                                              key={idx}
+                                              className="flex items-start gap-2">
+                                              <span className="text-blue-500 mt-1">
+                                                •
+                                              </span>
+                                              <span>{resp}</span>
+                                            </li>
+                                          )
+                                        )}
+                                      </ul>
+                                    )}
+                                  {exp.technologies &&
+                                    exp.technologies.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {exp.technologies.map((tech, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
+                                            {tech}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Education */}
+                    {tailoredCv.parsedData.education &&
+                      tailoredCv.parsedData.education.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <GraduationCap className="h-4 w-4 text-indigo-600" />
+                            Education
+                          </h3>
+                          <div className="space-y-3">
+                            {tailoredCv.parsedData.education.map(
+                              (edu, index) => (
+                                <div
+                                  key={index}
+                                  className="border-l-2 border-indigo-200 pl-4">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h4 className="font-medium text-gray-900">
+                                      {edu.degree}
+                                    </h4>
+                                    <span className="text-xs text-gray-500">
+                                      {edu.year}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-600">
+                                    {edu.school}
+                                  </p>
+                                  {edu.gpa && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      GPA: {edu.gpa}
+                                    </p>
+                                  )}
+                                  {edu.honors && (
+                                    <p className="text-xs text-indigo-600 mt-1">
+                                      {edu.honors}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Projects */}
+                    {tailoredCv.parsedData.projects &&
+                      tailoredCv.parsedData.projects.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <Code className="h-4 w-4 text-orange-600" />
+                            Projects
+                          </h3>
+                          <div className="space-y-3">
+                            {tailoredCv.parsedData.projects.map(
+                              (project, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                  <h4 className="font-medium text-gray-900 mb-1">
+                                    {project.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-700 mb-2">
+                                    {project.description}
+                                  </p>
+                                  {project.techStack &&
+                                    project.techStack.length > 0 && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {project.techStack.map((tech, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded">
+                                            {tech}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Certifications */}
+                    {tailoredCv.parsedData.certifications &&
+                      tailoredCv.parsedData.certifications.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <Award className="h-4 w-4 text-yellow-600" />
+                            Certifications
+                          </h3>
+                          <div className="space-y-2">
+                            {tailoredCv.parsedData.certifications.map(
+                              (cert, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-start gap-3 p-2 bg-yellow-50 rounded-lg">
+                                  <Award className="h-4 w-4 text-yellow-600 mt-0.5" />
+                                  <div>
+                                    <p className="font-medium text-sm text-gray-900">
+                                      {cert.name}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {cert.issuer} • {cert.date}
+                                    </p>
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+
+                  {/* Preview Footer */}
+                  <div className="bg-gray-50 border-t border-gray-200 p-4">
+                    <p className="text-xs text-gray-500 text-center">
+                      This is a preview of your tailored CV. Download below to
+                      get the formatted version.
+                    </p>
                   </div>
                 </div>
 
@@ -999,26 +1220,25 @@ Example:
                 </div>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Compatibility Score
+                {t("jobTailor.compatibilityScore")}
               </h3>
               <p className="text-sm text-gray-600">
                 {compatibilityAnalysis.score >= 8 &&
-                  "Excellent match! Your CV aligns well with this job."}
+                  t("jobTailor.excellentMatch")}
                 {compatibilityAnalysis.score >= 6 &&
                   compatibilityAnalysis.score < 8 &&
-                  "Good match! Some improvements recommended."}
+                  t("jobTailor.goodMatch")}
                 {compatibilityAnalysis.score >= 4 &&
                   compatibilityAnalysis.score < 6 &&
-                  "Fair match. Consider tailoring your CV."}
-                {compatibilityAnalysis.score < 4 &&
-                  "Low match. Significant tailoring recommended."}
+                  t("jobTailor.fairMatch")}
+                {compatibilityAnalysis.score < 4 && t("jobTailor.lowMatch")}
               </p>
             </div>
 
             {/* Strengths */}
             {compatibilityAnalysis.strengths.length > 0 && (
               <Collapse
-                title="Strengths"
+                title={t("jobTailor.strengths")}
                 icon={<Award className="h-4 w-4 text-green-600" />}
                 badge={compatibilityAnalysis.strengths.length}
                 defaultOpen={true}>
@@ -1036,7 +1256,7 @@ Example:
             {/* Matched Skills */}
             {compatibilityAnalysis.matchedSkills.length > 0 && (
               <Collapse
-                title="Matched Skills"
+                title={t("jobTailor.matchedSkills")}
                 icon={<CheckSquare className="h-4 w-4 text-green-600" />}
                 badge={compatibilityAnalysis.matchedSkills.length}
                 defaultOpen={true}>
@@ -1055,7 +1275,7 @@ Example:
             {/* Missing Skills */}
             {compatibilityAnalysis.missingSkills.length > 0 && (
               <Collapse
-                title="Missing Skills"
+                title={t("jobTailor.missingSkills")}
                 icon={<XCircle className="h-4 w-4 text-red-600" />}
                 badge={compatibilityAnalysis.missingSkills.length}
                 defaultOpen={true}>
@@ -1074,7 +1294,7 @@ Example:
             {/* Matched Experience */}
             {compatibilityAnalysis.matchedExperience.length > 0 && (
               <Collapse
-                title="Relevant Experience"
+                title={t("jobTailor.relevantExperience")}
                 icon={<CheckSquare className="h-4 w-4 text-blue-600" />}
                 badge={compatibilityAnalysis.matchedExperience.length}
                 defaultOpen={false}>
@@ -1092,7 +1312,7 @@ Example:
             {/* Missing Requirements */}
             {compatibilityAnalysis.missingRequirements.length > 0 && (
               <Collapse
-                title="Missing Requirements"
+                title={t("jobTailor.missingRequirements")}
                 icon={<XCircle className="h-4 w-4 text-orange-600" />}
                 badge={compatibilityAnalysis.missingRequirements.length}
                 defaultOpen={false}>
@@ -1114,7 +1334,7 @@ Example:
             {/* Suggestions */}
             {compatibilityAnalysis.suggestions.length > 0 && (
               <Collapse
-                title="Suggestions for Improvement"
+                title={t("jobTailor.suggestions")}
                 icon={<Lightbulb className="h-4 w-4 text-yellow-600" />}
                 badge={compatibilityAnalysis.suggestions.length}
                 defaultOpen={true}>
@@ -1140,7 +1360,7 @@ Example:
       <Modal
         isOpen={showCoverLetterModal}
         onClose={() => setShowCoverLetterModal(false)}
-        title="Generated Cover Letter"
+        title={t("jobTailor.coverLetter")}
         size="xl"
         footer={
           <>

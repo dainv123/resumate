@@ -186,3 +186,8 @@ export const cvApi = {
     return response.data;
   },
 };
+
+// Export helper functions for easier imports
+export const getAllCvs = cvApi.getUserCvs;
+export const getCvById = cvApi.getCvById;
+export const uploadCv = cvApi.uploadCv;

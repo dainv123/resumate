@@ -2,22 +2,18 @@
 
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-// import Button from "@/components/ui/Button";
 import { FileText, Users, Briefcase, Sparkles } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/dashboard");
-    }
-  }, [user, loading, router]);
-
+  // Loading authentication state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -40,26 +36,43 @@ export default function HomePage() {
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
-              <div className="elisc_tm_button" data-style="border">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/auth/login");
-                  }}>
-                  Đăng nhập
-                </a>
-              </div>
-              <div className="elisc_tm_button">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/auth/register");
-                  }}>
-                  Đăng ký
-                </a>
-              </div>
+              {user ? (
+                // User đã login → show Dashboard button
+                <div className="elisc_tm_button">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push("/dashboard");
+                    }}>
+                    Go to Dashboard →
+                  </a>
+                </div>
+              ) : (
+                // User chưa login → show Login/Register
+                <>
+                  <div className="elisc_tm_button" data-style="border">
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        router.push("/auth/login");
+                      }}>
+                      {t("landing.login")}
+                    </a>
+                  </div>
+                  <div className="elisc_tm_button">
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        router.push("/auth/register");
+                      }}>
+                      {t("landing.register")}
+                    </a>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -70,15 +83,16 @@ export default function HomePage() {
         <div className="text-center">
           <h1
             className="text-4xl md:text-6xl font-bold mb-6"
-            style={{ color: "var(--dark-color)" }}>
-            Update CV của bạn trong <span className="blueColor">1 phút</span>
-          </h1>
+            style={{ color: "var(--dark-color)" }}
+            dangerouslySetInnerHTML={{
+              __html: t("landing.title")
+                .replace("<span>", '<span className="blueColor">')
+                .replace("</span>", "</span>"),
+            }}></h1>
           <p
             className="text-xl mb-8 max-w-3xl mx-auto"
             style={{ color: "var(--main-color)" }}>
-            Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project
-            mới hoặc Job Description. Giảm thời gian chỉnh sửa thủ công, tăng
-            tính chuyên nghiệp.
+            {t("landing.subtitle")}
           </p>
           {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <div className="elisc_tm_button">
@@ -113,10 +127,10 @@ export default function HomePage() {
             <h3
               className="text-lg font-semibold mb-2"
               style={{ color: "var(--dark-color)" }}>
-              Upload CV
+              {t("landing.feature1Title")}
             </h3>
             <p style={{ color: "var(--main-color)" }}>
-              Upload CV hiện tại, AI sẽ phân tích và trích xuất thông tin
+              {t("landing.feature1Desc")}
             </p>
           </div>
 
@@ -125,10 +139,10 @@ export default function HomePage() {
             <h3
               className="text-lg font-semibold mb-2"
               style={{ color: "var(--dark-color)" }}>
-              Thêm Project
+              {t("landing.feature2Title")}
             </h3>
             <p style={{ color: "var(--main-color)" }}>
-              Thêm project mới, AI tự động tạo bullet points chuyên nghiệp
+              {t("landing.feature2Desc")}
             </p>
           </div>
 
@@ -137,10 +151,10 @@ export default function HomePage() {
             <h3
               className="text-lg font-semibold mb-2"
               style={{ color: "var(--dark-color)" }}>
-              Job Tailoring
+              {t("landing.feature3Title")}
             </h3>
             <p style={{ color: "var(--main-color)" }}>
-              Upload JD, AI tạo CV tailored phù hợp với job description
+              {t("landing.feature3Desc")}
             </p>
           </div>
 
@@ -149,10 +163,10 @@ export default function HomePage() {
             <h3
               className="text-lg font-semibold mb-2"
               style={{ color: "var(--dark-color)" }}>
-              Portfolio
+              {t("landing.feature4Title")}
             </h3>
             <p style={{ color: "var(--main-color)" }}>
-              Tạo portfolio online đẹp mắt để showcase cho khách hàng
+              {t("landing.feature4Desc")}
             </p>
           </div>
         </div>
@@ -162,20 +176,20 @@ export default function HomePage() {
           <h2
             className="text-3xl font-bold mb-4"
             style={{ color: "var(--dark-color)" }}>
-            Sẵn sàng bắt đầu?
+            {user ? t("landing.ctaTitleLoggedIn") : t("landing.ctaTitle")}
           </h2>
           <p className="text-lg mb-8" style={{ color: "var(--main-color)" }}>
-            Tham gia hàng nghìn freelancer đã sử dụng Resumate để cập nhật CV
+            {user ? t("landing.ctaSubtitleLoggedIn") : t("landing.ctaSubtitle")}
           </p>
           <div className="elisc_tm_button">
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                router.push("/auth/register");
+                router.push(user ? "/dashboard" : "/auth/register");
               }}
               className="text-lg px-8 py-4">
-              Tạo tài khoản miễn phí
+              {user ? t("landing.ctaButtonLoggedIn") : t("landing.ctaButton")}
             </a>
           </div>
         </div>
@@ -192,9 +206,7 @@ export default function HomePage() {
               Resumate
             </span>
           </div>
-          <p style={{ color: "var(--blue-color)" }}>
-            © 2024 Resumate. All rights reserved.
-          </p>
+          <p style={{ color: "var(--blue-color)" }}>{t("landing.footer")}</p>
         </div>
       </footer>
     </div>

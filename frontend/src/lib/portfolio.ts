@@ -9,6 +9,8 @@ export enum PortfolioTemplate {
 
 export interface CreatePortfolioData {
   template: PortfolioTemplate;
+  selectedCvId?: string;
+  customSections?: any;
   customDomain?: string;
   bio?: string;
   avatar?: string;

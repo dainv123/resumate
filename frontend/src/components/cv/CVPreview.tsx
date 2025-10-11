@@ -14,6 +14,7 @@ import {
   Check,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { Collapse } from "@/components/ui/Collapse";
 import EditCVModal from "./EditCVModal";
 import OriginalCVModal from "./OriginalCVModal";
 import JobDescriptionModal from "./JobDescriptionModal";
@@ -102,21 +103,25 @@ export default function CVPreview({
 
       {/* CV Relationships */}
       {cv.isTailored && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-          <h4 className="text-sm font-semibold text-green-900 mb-3 flex items-center">
-            <Sparkles className="h-4 w-4 mr-2" />
-            CV Relationships
-          </h4>
-
-          <div className="space-y-2">
+        <Collapse
+          title="CV Relationships"
+          icon={<Sparkles className="h-4 w-4 text-green-600" />}
+          defaultOpen={false}
+          className="mb-6 border-green-200"
+          headerClassName="bg-gradient-to-r from-green-50 to-emerald-50"
+          contentClassName="bg-white">
+          <div className="p-4 space-y-2">
             {cv.originalCv && (
               <div className="text-xs text-green-700">
                 <span className="font-medium">📄 Original CV:</span>{" "}
                 <button
                   onClick={() => setShowOriginalCVModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline cursor-pointer flex items-center">
-                  <FileText className="h-3 w-3 mr-1" />
-                  {cv.originalCv.originalFileName}
+                  className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center max-w-full"
+                  title={cv.originalCv.originalFileName}>
+                  <FileText className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">
+                    {cv.originalCv.originalFileName}
+                  </span>
                 </button>
               </div>
             )}
@@ -125,9 +130,10 @@ export default function CVPreview({
                 <span className="font-medium">🎯 Tailored for:</span>{" "}
                 <button
                   onClick={() => setShowJobDescriptionModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline cursor-pointer flex items-center">
-                  <Briefcase className="h-3 w-3 mr-1" />
-                  {cv.jobDescription.title}
+                  className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center max-w-full"
+                  title={cv.jobDescription.title}>
+                  <Briefcase className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{cv.jobDescription.title}</span>
                 </button>
               </div>
             )}
@@ -138,77 +144,161 @@ export default function CVPreview({
               </div>
             )}
           </div>
-        </div>
+        </Collapse>
       )}
 
       {/* Improvement Notes */}
       {cv.improvementNotes && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-          <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center">
-            <Sparkles className="h-4 w-4 mr-2" />
-            AI Enhancements Applied
-          </h4>
+        <Collapse
+          title="AI Enhancements Applied"
+          icon={<Sparkles className="h-4 w-4 text-blue-600" />}
+          badge={
+            (cv.improvementNotes.parsingImprovements?.length || 0) +
+            ((cv.improvementNotes as any).structureImprovements?.length || 0) +
+            ((cv.improvementNotes as any).contentImprovements?.length || 0)
+          }
+          defaultOpen={false}
+          className="mb-6 border-blue-200"
+          headerClassName="bg-gradient-to-r from-blue-50 to-indigo-50"
+          contentClassName="bg-white">
+          <div className="p-4">
+            {/* Top Key Improvements - Show first 3 most important */}
+            {(() => {
+              const allImprovements = [
+                ...(cv.improvementNotes.parsingImprovements || []).map(
+                  (imp) => ({
+                    text: imp,
+                    category: "📊 Parsing",
+                  })
+                ),
+                ...(
+                  (cv.improvementNotes as any).structureImprovements || []
+                ).map((imp: string) => ({
+                  text: imp,
+                  category: "🏗️ Structure",
+                })),
+                ...((cv.improvementNotes as any).contentImprovements || []).map(
+                  (imp: string) => ({
+                    text: imp,
+                    category: "✍️ Content",
+                  })
+                ),
+              ];
 
-          {cv.improvementNotes.parsingImprovements &&
-            cv.improvementNotes.parsingImprovements.length > 0 && (
-              <div className="mb-3">
-                <h5 className="text-xs font-medium text-blue-800 mb-2">
-                  📊 Parsing Improvements:
-                </h5>
-                <ul className="space-y-1">
-                  {cv.improvementNotes.parsingImprovements
-                    .slice(0, 3)
-                    .map((improvement, index) => (
-                      <li key={index} className="text-xs text-blue-700">
-                        {improvement}
+              const topImprovements = allImprovements.slice(0, 3);
+
+              return topImprovements.length > 0 ? (
+                <div className="mb-4 p-3 bg-white bg-opacity-60 rounded-lg border border-blue-100">
+                  <h5 className="text-xs font-semibold text-blue-900 mb-2">
+                    🎯 Key Improvements:
+                  </h5>
+                  <ul className="space-y-1.5">
+                    {topImprovements.map((imp, index) => (
+                      <li
+                        key={index}
+                        className="text-xs text-blue-800 flex items-start">
+                        <span className="text-blue-600 mr-2 flex-shrink-0">
+                          •
+                        </span>
+                        <span>
+                          <span className="font-medium text-blue-900">
+                            {imp.category}:
+                          </span>{" "}
+                          {imp.text}
+                        </span>
                       </li>
                     ))}
-                  {cv.improvementNotes.parsingImprovements.length > 3 && (
-                    <li className="text-xs text-blue-600 font-medium">
-                      +{cv.improvementNotes.parsingImprovements.length - 3} more
-                      improvements
-                    </li>
+                  </ul>
+                  {allImprovements.length > 3 && (
+                    <p className="text-xs text-blue-600 mt-2 font-medium">
+                      +{allImprovements.length - 3} more improvements below
+                    </p>
                   )}
-                </ul>
-              </div>
-            )}
+                </div>
+              ) : null;
+            })()}
 
-          {cv.improvementNotes.templateEnhancements &&
-            cv.improvementNotes.templateEnhancements.length > 0 && (
-              <div className="mb-3">
-                <h5 className="text-xs font-medium text-blue-800 mb-2">
-                  🎨 Template Enhancements:
-                </h5>
-                <ul className="space-y-1">
-                  {cv.improvementNotes.templateEnhancements
-                    .slice(0, 2)
-                    .map((enhancement, index) => (
-                      <li key={index} className="text-xs text-blue-700">
-                        {enhancement}
+            {cv.improvementNotes.parsingImprovements &&
+              cv.improvementNotes.parsingImprovements.length > 0 && (
+                <div className="mb-4 p-3 bg-white bg-opacity-60 rounded-lg border border-blue-100">
+                  <h5 className="text-xs font-semibold text-blue-900 mb-2">
+                    📊 Parsing Improvements:
+                  </h5>
+                  <ul className="space-y-1.5">
+                    {cv.improvementNotes.parsingImprovements
+                      .slice(0, 3)
+                      .map((improvement, index) => (
+                        <li
+                          key={index}
+                          className="text-xs text-blue-800 flex items-start">
+                          <span className="text-blue-600 mr-2 flex-shrink-0">
+                            •
+                          </span>
+                          <span>{improvement}</span>
+                        </li>
+                      ))}
+                    {cv.improvementNotes.parsingImprovements.length > 3 && (
+                      <li className="text-xs text-blue-600 font-medium flex items-start">
+                        <span className="text-blue-600 mr-2 flex-shrink-0">
+                          •
+                        </span>
+                        <span>
+                          +{cv.improvementNotes.parsingImprovements.length - 3}{" "}
+                          more improvements
+                        </span>
                       </li>
-                    ))}
-                </ul>
-              </div>
-            )}
+                    )}
+                  </ul>
+                </div>
+              )}
 
-          {cv.improvementNotes.dataCompleteness &&
-            cv.improvementNotes.dataCompleteness.length > 0 && (
-              <div>
-                <h5 className="text-xs font-medium text-blue-800 mb-2">
-                  📈 Data Completeness:
-                </h5>
-                <ul className="space-y-1">
-                  {cv.improvementNotes.dataCompleteness
-                    .slice(0, 2)
-                    .map((completeness, index) => (
-                      <li key={index} className="text-xs text-blue-700">
-                        {completeness}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-        </div>
+            {cv.improvementNotes.templateEnhancements &&
+              cv.improvementNotes.templateEnhancements.length > 0 && (
+                <div className="mb-4 p-3 bg-white bg-opacity-60 rounded-lg border border-blue-100">
+                  <h5 className="text-xs font-semibold text-blue-900 mb-2">
+                    🎨 Template Enhancements:
+                  </h5>
+                  <ul className="space-y-1.5">
+                    {cv.improvementNotes.templateEnhancements
+                      .slice(0, 2)
+                      .map((enhancement, index) => (
+                        <li
+                          key={index}
+                          className="text-xs text-blue-800 flex items-start">
+                          <span className="text-blue-600 mr-2 flex-shrink-0">
+                            •
+                          </span>
+                          <span>{enhancement}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+
+            {cv.improvementNotes.dataCompleteness &&
+              cv.improvementNotes.dataCompleteness.length > 0 && (
+                <div className="mb-4 p-3 bg-white bg-opacity-60 rounded-lg border border-blue-100">
+                  <h5 className="text-xs font-semibold text-blue-900 mb-2">
+                    📈 Data Completeness:
+                  </h5>
+                  <ul className="space-y-1.5">
+                    {cv.improvementNotes.dataCompleteness
+                      .slice(0, 2)
+                      .map((completeness, index) => (
+                        <li
+                          key={index}
+                          className="text-xs text-blue-800 flex items-start">
+                          <span className="text-blue-600 mr-2 flex-shrink-0">
+                            •
+                          </span>
+                          <span>{completeness}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+          </div>
+        </Collapse>
       )}
 
       {/* Summary */}

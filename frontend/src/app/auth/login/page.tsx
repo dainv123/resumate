@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { GoogleOAuthButton } from "@/components/auth/GoogleOAuthButton";
@@ -12,20 +13,21 @@ import { FileText, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
-const loginSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
-  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
-
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const { login } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
+
+  const loginSchema = z.object({
+    email: z.string().email(t("auth.emailInvalid")),
+    password: z.string().min(6, t("auth.passwordMin").replace("{{min}}", "6")),
+  });
+
+  type LoginForm = z.infer<typeof loginSchema>;
 
   const {
     register,
@@ -46,8 +48,8 @@ export default function LoginPage() {
       const errorMessage =
         err && typeof err === "object" && "response" in err
           ? (err as { response?: { data?: { message?: string } } }).response
-              ?.data?.message || "Đăng nhập thất bại"
-          : "Đăng nhập thất bại";
+              ?.data?.message || t("auth.loginFailed")
+          : t("auth.loginFailed");
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -72,14 +74,14 @@ export default function LoginPage() {
             </div>
           </div>
           <h3 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Đăng nhập vào tài khoản
+            {t("auth.loginTitle")}
           </h3>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Hoặc{" "}
+            {t("auth.orLoginWith")}{" "}
             <Link
               href="/auth/register"
               className="font-medium text-blue-600 hover:text-blue-500">
-              tạo tài khoản mới
+              {t("auth.createAccount")}
             </Link>
           </p>
         </div>
@@ -96,14 +98,14 @@ export default function LoginPage() {
               <label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700">
-                Email
+                {t("auth.email")}
               </label>
               <input
                 {...register("email")}
                 type="email"
                 autoComplete="email"
                 className="input-base mt-1"
-                placeholder="Nhập email của bạn"
+                placeholder={t("auth.emailPlaceholder")}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">
@@ -116,7 +118,7 @@ export default function LoginPage() {
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700">
-                Mật khẩu
+                {t("auth.password")}
               </label>
               <div className="mt-1 relative">
                 <input
@@ -124,7 +126,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   className="input-base pr-10"
-                  placeholder="Nhập mật khẩu"
+                  placeholder={t("auth.passwordPlaceholder")}
                 />
                 <button
                   type="button"
@@ -147,7 +149,7 @@ export default function LoginPage() {
 
           <div className="space-y-4">
             <Button type="submit" className="w-full" loading={isLoading}>
-              Đăng nhập
+              {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
             </Button>
 
             <div className="relative">
@@ -155,7 +157,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Hoặc</span>
+                <span className="px-2 bg-white text-gray-500">
+                  {t("auth.orLoginWith")}
+                </span>
               </div>
             </div>
 
@@ -166,7 +170,7 @@ export default function LoginPage() {
             <Link
               href="/"
               className="text-sm text-blue-600 hover:text-blue-500">
-              ← Quay lại trang chủ
+              {t("auth.backToHome")}
             </Link>
           </div>
         </form>

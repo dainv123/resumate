@@ -14,11 +14,15 @@ import ProjectCard from "@/components/projects/ProjectCard";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { Plus, Briefcase, AlertCircle } from "lucide-react";
+import { useToast } from "@/contexts/ToastContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
+  const { t } = useLanguage();
 
   const {
     data: projects = [],
@@ -103,14 +107,14 @@ export default function ProjectsPage() {
   };
 
   const handleDelete = (project: Project) => {
-    if (confirm("Are you sure you want to delete this project?")) {
+    if (confirm(t("projects.deleteConfirm"))) {
       deleteMutation.mutate(project.id);
     }
   };
 
   const handleAddToCv = (project: Project) => {
     if (cvs.length === 0) {
-      alert("Please upload a CV first");
+      showError(t("projects.uploadCVFirst"));
       return;
     }
 
@@ -118,7 +122,7 @@ export default function ProjectsPage() {
       addToCvMutation.mutate({ project, cvId: cvs[0].id });
     } else {
       // TODO: Show CV selection modal
-      const cvId = prompt("Enter CV ID to add project to:");
+      const cvId = prompt(t("projects.enterCVId"));
       if (cvId) {
         addToCvMutation.mutate({ project, cvId });
       }
@@ -130,7 +134,7 @@ export default function ProjectsPage() {
       removeFromCvMutation.mutate({ project, cvId: cvs[0].id });
     } else {
       // TODO: Show CV selection modal
-      const cvId = prompt("Enter CV ID to remove project from:");
+      const cvId = prompt(t("projects.enterCVIdRemove"));
       if (cvId) {
         removeFromCvMutation.mutate({ project, cvId });
       }
@@ -181,7 +185,7 @@ export default function ProjectsPage() {
       <Modal
         isOpen={showForm}
         onClose={handleCancel}
-        title={editingProject ? "Edit Project" : "Add New Project"}
+        title={editingProject ? t("projects.edit") : t("projects.addNew")}
         size="lg"
         footer={
           <>
@@ -192,7 +196,7 @@ export default function ProjectsPage() {
               type="submit"
               form="project-form"
               loading={createMutation.isPending || updateMutation.isPending}>
-              {editingProject ? "Update Project" : "Create Project"}
+              {editingProject ? t("projects.update") : t("projects.create")}
             </Button>
           </>
         }>

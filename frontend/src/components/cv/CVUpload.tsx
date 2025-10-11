@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cvApi } from "@/lib/cv";
 import Button from "@/components/ui/Button";
 import { Upload, FileText, X, CheckCircle } from "lucide-react";
@@ -16,6 +17,7 @@ interface CVUploadProps {
 export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
@@ -120,7 +122,7 @@ export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
       {uploadedFile && (
         <div className="flex justify-center">
           <Button onClick={handleUpload} loading={isUploading} className="px-8">
-            {isUploading ? "Uploading..." : "Upload CV"}
+            {isUploading ? t("common.loading") : t("cv.upload")}
           </Button>
         </div>
       )}
@@ -130,9 +132,7 @@ export default function CVUpload({ onSuccess, onError }: CVUploadProps) {
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
             <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-            <p className="text-green-800">
-              CV uploaded successfully! AI is analyzing your CV content.
-            </p>
+            <p className="text-green-800">{t("cv.uploadSuccess")}</p>
           </div>
         </div>
       )}

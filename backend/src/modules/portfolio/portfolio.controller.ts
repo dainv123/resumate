@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PortfolioService } from './portfolio.service';
 import { CreatePortfolioDto, UpdatePortfolioDto } from './dto/portfolio.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
+import { getAllTemplateConfigs } from './portfolio.constants';
 
 @Controller('portfolio')
 export class PortfolioController {
@@ -16,6 +17,13 @@ export class PortfolioController {
     @Body() createPortfolioDto: CreatePortfolioDto,
   ) {
     return this.portfolioService.generatePortfolio(userId, createPortfolioDto);
+  }
+
+  @Get('templates')
+  async getTemplates() {
+    return {
+      templates: getAllTemplateConfigs()
+    };
   }
 
   @UseGuards(JwtAuthGuard)
