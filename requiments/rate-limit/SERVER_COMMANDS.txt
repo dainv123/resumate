@@ -1,0 +1,543 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         PRODUCTION SERVER COMMANDS - COPY & PASTE             ║
+║                   Resumate Rate Limiting                      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📌 NOTE: Thay thế YOUR_USER và YOUR_SERVER_IP với thông tin thực tế
+
+
+═══════════════════════════════════════════════════════════════
+  PART 1: INITIAL SERVER SETUP (One-time)
+═══════════════════════════════════════════════════════════════
+
+# SSH vào server
+ssh YOUR_USER@YOUR_SERVER_IP
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Install utilities
+sudo apt install -y git curl wget nano htop ufw nginx certbot python3-certbot-nginx jq
+
+# LOGOUT and LOGIN again for docker group to take effect
+exit
+ssh YOUR_USER@YOUR_SERVER_IP
+
+
+═══════════════════════════════════════════════════════════════
+  PART 2: CLONE PROJECT
+═══════════════════════════════════════════════════════════════
+
+# Navigate home
+cd ~
+
+# Clone project (replace with your repo)
+git clone https://github.com/your-username/resumate.git
+
+# Or upload files from local
+# From your LOCAL machine, run:
+# rsync -avz -e ssh /Users/dainguyen/Documents/project/resumate/ YOUR_USER@YOUR_SERVER_IP:~/resumate/
+
+# Enter project
+cd resumate
+
+
+═══════════════════════════════════════════════════════════════
+  PART 3: SETUP ENVIRONMENT VARIABLES
+═══════════════════════════════════════════════════════════════
+
+# Backend environment
+cd ~/resumate/backend
+cp env.example .env
+nano .env
+
+# ⚠️ UPDATE THESE VALUES IN .env:
+# DB_PASSWORD=CHANGE_ME
+# JWT_SECRET=CHANGE_ME_TO_RANDOM_STRING
+# GOOGLE_AI_API_KEY=your_key
+# AWS_ACCESS_KEY_ID=your_key
+# AWS_SECRET_ACCESS_KEY=your_secret
+# GOOGLE_CLIENT_ID=your_client_id
+# GOOGLE_CLIENT_SECRET=your_secret
+# Save: Ctrl+X, Y, Enter
+
+# Frontend environment
+cd ~/resumate/frontend
+nano .env.production
+
+# ⚠️ UPDATE THESE VALUES:
+# NEXT_PUBLIC_API_URL=https://api.your-domain.com
+# NEXT_PUBLIC_APP_URL=https://your-domain.com
+# NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id
+# Save: Ctrl+X, Y, Enter
+
+
+═══════════════════════════════════════════════════════════════
+  PART 4: CREATE BACKUP DIRECTORIES
+═══════════════════════════════════════════════════════════════
+
+sudo mkdir -p /backups/postgres
+sudo mkdir -p /backups/redis
+sudo mkdir -p /var/log/resumate-backups
+sudo chown -R $USER:$USER /backups
+sudo chmod -R 755 /backups /var/log/resumate-backups
+
+
+═══════════════════════════════════════════════════════════════
+  PART 5: INSTALL & BUILD
+═══════════════════════════════════════════════════════════════
+
+cd ~/resumate/backend
+npm install
+npm run build
+
+# Make deployment scripts executable
+cd ~/resumate/deployment
+chmod +x *.sh
+
+
+═══════════════════════════════════════════════════════════════
+  PART 6: START SERVICES
+═══════════════════════════════════════════════════════════════
+
+cd ~/resumate
+docker-compose up -d
+
+# Wait for services
+sleep 30
+
+# Check status
+docker-compose ps
+
+
+═══════════════════════════════════════════════════════════════
+  PART 7: VERIFY DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+
+# Redis
+docker exec resumate-redis redis-cli ping
+
+# PostgreSQL
+docker exec resumate-postgres pg_isready -U postgres
+
+# Backend
+curl http://localhost:5001/api/health
+
+# Rate Limit Status
+curl http://localhost:5001/api/health/rate-limit-status | jq
+
+# If all return OK, continue to next step
+
+
+═══════════════════════════════════════════════════════════════
+  PART 8: SETUP CRON JOBS (COPY ENTIRE BLOCK)
+═══════════════════════════════════════════════════════════════
+
+crontab -e
+
+# Choose editor (usually 1 for nano)
+# Paste these lines at the END of file:
+
+# Resumate Automated Backups
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Daily PostgreSQL backup (2 AM)
+0 2 * * * /home/YOUR_USER/resumate/deployment/backup-postgres.sh >> /var/log/resumate-backups/postgres.log 2>&1
+
+# Weekly Redis backup (Sunday 3 AM)
+0 3 * * 0 /home/YOUR_USER/resumate/deployment/backup-redis.sh >> /var/log/resumate-backups/redis.log 2>&1
+
+# Monthly cleanup (1st day, 4 AM)
+0 4 1 * * /home/YOUR_USER/resumate/deployment/cleanup-backups.sh >> /var/log/resumate-backups/cleanup.log 2>&1
+
+# Daily health check (6 AM)
+0 6 * * * curl -sf http://localhost:5001/api/health/rate-limit-status >> /var/log/resumate-backups/health.log 2>&1
+
+# Weekly Redis memory check (Monday 1 AM)
+0 1 * * 1 docker exec resumate-redis redis-cli INFO memory >> /var/log/resumate-backups/redis-memory.log 2>&1
+
+# ⚠️ REMEMBER: Replace YOUR_USER with actual username!
+# Save: Ctrl+X, Y, Enter
+
+
+═══════════════════════════════════════════════════════════════
+  PART 9: TEST BACKUPS
+═══════════════════════════════════════════════════════════════
+
+# Test PostgreSQL backup
+~/resumate/deployment/backup-postgres.sh
+
+# Verify backup created
+ls -lh /backups/postgres/ | head -5
+
+# Test Redis backup
+~/resumate/deployment/backup-redis.sh
+
+# Verify backup created
+ls -lh /backups/redis/ | head -5
+
+# Verify cron is installed
+crontab -l | grep -i resumate
+
+
+═══════════════════════════════════════════════════════════════
+  PART 10: SETUP FIREWALL
+═══════════════════════════════════════════════════════════════
+
+# Allow SSH (IMPORTANT - DO THIS FIRST!)
+sudo ufw allow 22/tcp
+
+# Allow HTTP/HTTPS
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# Enable firewall
+sudo ufw --force enable
+
+# Check status
+sudo ufw status
+
+
+═══════════════════════════════════════════════════════════════
+  PART 11: SETUP NGINX (COPY ENTIRE BLOCK)
+═══════════════════════════════════════════════════════════════
+
+sudo tee /etc/nginx/sites-available/resumate > /dev/null << 'EOF'
+# Backend API
+server {
+    listen 80;
+    server_name api.YOUR_DOMAIN.com;
+
+    location / {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+    }
+}
+
+# Frontend
+server {
+    listen 80;
+    server_name YOUR_DOMAIN.com www.YOUR_DOMAIN.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+    }
+}
+EOF
+
+# ⚠️ Replace YOUR_DOMAIN.com with your actual domain!
+# Edit the file:
+sudo nano /etc/nginx/sites-available/resumate
+
+# Enable site
+sudo ln -s /etc/nginx/sites-available/resumate /etc/nginx/sites-enabled/
+
+# Test Nginx config
+sudo nginx -t
+
+# Reload Nginx
+sudo systemctl reload nginx
+
+
+═══════════════════════════════════════════════════════════════
+  PART 12: SETUP SSL (FREE)
+═══════════════════════════════════════════════════════════════
+
+# Get SSL certificate
+sudo certbot --nginx -d YOUR_DOMAIN.com -d www.YOUR_DOMAIN.com -d api.YOUR_DOMAIN.com
+
+# Follow prompts:
+# - Enter email
+# - Agree to terms (Y)
+# - Share email (optional)
+# - Redirect HTTP to HTTPS (2 - recommended)
+
+# Test auto-renewal
+sudo certbot renew --dry-run
+
+
+═══════════════════════════════════════════════════════════════
+  PART 13: FINAL VERIFICATION
+═══════════════════════════════════════════════════════════════
+
+# Services status
+docker-compose ps
+
+# Health checks
+curl https://YOUR_DOMAIN.com
+curl https://api.YOUR_DOMAIN.com/api/health
+curl https://api.YOUR_DOMAIN.com/api/health/rate-limit-status | jq
+
+# Backups
+ls -lh /backups/postgres/
+ls -lh /backups/redis/
+
+# Cron jobs
+crontab -l | grep -i resumate
+
+# Firewall
+sudo ufw status
+
+# Nginx
+sudo systemctl status nginx
+
+# View logs
+docker-compose logs --tail=50
+
+
+═══════════════════════════════════════════════════════════════
+  MONITORING COMMANDS (Daily use)
+═══════════════════════════════════════════════════════════════
+
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f redis
+tail -f /var/log/resumate-backups/*.log
+
+# Check services
+docker-compose ps
+docker stats --no-stream
+
+# Monitor Redis
+docker exec resumate-redis redis-cli INFO stats
+docker exec resumate-redis redis-cli KEYS "rate:*"
+docker exec resumate-redis redis-cli DBSIZE
+
+# Monitor PostgreSQL
+docker exec resumate-postgres psql -U postgres -d resumate -c "SELECT COUNT(*) FROM user_usage;"
+
+# Check disk space
+df -h
+
+# Check backups
+ls -lht /backups/postgres/ | head -5
+ls -lht /backups/redis/ | head -3
+
+# Health check
+curl http://localhost:5001/api/health/rate-limit-status | jq
+
+
+═══════════════════════════════════════════════════════════════
+  RESTART COMMANDS
+═══════════════════════════════════════════════════════════════
+
+# Restart all services
+cd ~/resumate
+docker-compose restart
+
+# Restart specific service
+docker-compose restart backend
+docker-compose restart redis
+
+# Stop all
+docker-compose down
+
+# Start all
+docker-compose up -d
+
+# Update and redeploy
+git pull
+docker-compose down
+docker-compose up -d --build
+
+
+═══════════════════════════════════════════════════════════════
+  BACKUP & RESTORE COMMANDS
+═══════════════════════════════════════════════════════════════
+
+# Manual backup
+~/resumate/deployment/backup-postgres.sh
+~/resumate/deployment/backup-redis.sh
+
+# Restore PostgreSQL
+gunzip < /backups/postgres/postgres-YYYYMMDD-HHMMSS.sql.gz | docker exec -i resumate-postgres psql -U postgres resumate
+
+# Restore Redis
+docker cp /backups/redis/redis-YYYYMMDD-HHMMSS.rdb resumate-redis:/data/dump.rdb
+docker-compose restart redis
+
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING COMMANDS
+═══════════════════════════════════════════════════════════════
+
+# Redis not working?
+docker-compose restart redis
+docker logs resumate-redis
+docker exec resumate-redis redis-cli ping
+
+# Backend not working?
+docker logs resumate-backend
+docker-compose restart backend
+docker exec resumate-backend env | grep -E "REDIS|RATE_LIMIT"
+
+# Clear Redis cache
+docker exec resumate-redis redis-cli FLUSHDB
+
+# Check PostgreSQL connection
+docker exec resumate-postgres psql -U postgres -c "\l"
+
+# Disk space full?
+df -h
+docker system prune -a
+
+# Check cron logs
+tail -f /var/log/resumate-backups/*.log
+tail -f /var/log/syslog | grep CRON
+
+
+═══════════════════════════════════════════════════════════════
+  DISABLE RATE LIMITING (Emergency)
+═══════════════════════════════════════════════════════════════
+
+# Method 1: Environment variable
+cd ~/resumate
+nano docker-compose.yml
+# Change: ENABLE_RATE_LIMITING: "false"
+# Save and restart:
+docker-compose restart backend
+
+# Method 2: Edit .env
+cd ~/resumate/backend
+nano .env
+# Add: ENABLE_RATE_LIMITING=false
+# Save and restart:
+cd ~/resumate
+docker-compose restart backend
+
+
+═══════════════════════════════════════════════════════════════
+  📅 CRON JOB SCHEDULE (Already configured after PART 8)
+═══════════════════════════════════════════════════════════════
+
+Daily 2:00 AM     → PostgreSQL backup
+Weekly Sunday 3AM → Redis backup  
+Monthly 1st 4AM   → Cleanup old backups
+Daily 6:00 AM     → Health check
+Weekly Monday 1AM → Redis memory check
+
+
+═══════════════════════════════════════════════════════════════
+  ✅ VERIFICATION CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+Run these commands to verify everything works:
+
+docker-compose ps                          # All services running?
+docker exec resumate-redis redis-cli ping  # Returns PONG?
+curl http://localhost:5001/api/health      # Returns {"status":"ok"}?
+curl http://localhost:5001/api/health/rate-limit-status | jq  # Returns healthy?
+ls -lh /backups/postgres/                  # Backups exist?
+crontab -l | grep resumate                 # Cron jobs installed?
+sudo ufw status                            # Firewall active?
+sudo systemctl status nginx                # Nginx running?
+curl -I https://your-domain.com            # SSL working?
+
+
+═══════════════════════════════════════════════════════════════
+  🚀 ONE-COMMAND QUICK DEPLOY (Alternative)
+═══════════════════════════════════════════════════════════════
+
+# If you want automated setup, run:
+cd ~/resumate/deployment
+./QUICK_DEPLOY.sh
+
+# This will automatically:
+# - Create directories
+# - Install dependencies
+# - Start services
+# - Setup cron jobs
+# - Verify health
+
+
+═══════════════════════════════════════════════════════════════
+  📞 USEFUL INFO
+═══════════════════════════════════════════════════════════════
+
+Project path:     ~/resumate
+Backend:          http://localhost:5001
+Frontend:         http://localhost:5000
+Backups:          /backups/
+Logs:             /var/log/resumate-backups/
+Docker compose:   ~/resumate/docker-compose.yml
+
+Deployment docs:
+- PRODUCTION_DEPLOYMENT_STEPS.md  (Complete guide)
+- DEPLOYMENT_READY.md              (Quick reference)
+- RATE_LIMIT_QUICKSTART.md         (Feature guide)
+- CRON_SETUP_GUIDE.md              (Cron details)
+
+
+═══════════════════════════════════════════════════════════════
+  📊 MONITORING (Run daily/weekly)
+═══════════════════════════════════════════════════════════════
+
+# Daily health check
+~/resumate/deployment/monitor.sh
+
+# Weekly backup verification
+ls -lht /backups/postgres/ | head -5
+tail -20 /var/log/resumate-backups/postgres.log
+
+# Monthly review
+docker system df
+du -sh /backups/*
+tail -100 /var/log/resumate-backups/*.log
+
+
+═══════════════════════════════════════════════════════════════
+  ⚡ QUICK REFERENCE
+═══════════════════════════════════════════════════════════════
+
+View logs:       docker-compose logs -f backend
+Restart:         docker-compose restart
+Stop:            docker-compose down
+Start:           docker-compose up -d
+Update:          git pull && docker-compose up -d --build
+Backup:          ~/resumate/deployment/backup-postgres.sh
+Monitor:         ~/resumate/deployment/monitor.sh
+Cron:            crontab -l
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ Copy commands từng block và paste vào server terminal
+📝 Remember to replace YOUR_USER, YOUR_SERVER_IP, YOUR_DOMAIN
+🎯 Total time: ~30-45 minutes for full setup
+

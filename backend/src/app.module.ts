@@ -14,6 +14,8 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 // import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ActivityTrackingInterceptor } from './common/interceptors/activity-tracking.interceptor';
+import { RedisModule } from './shared/redis/redis.module';
+import { RateLimitModule } from './common/rate-limit.module';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { ActivityTrackingInterceptor } from './common/interceptors/activity-trac
         idleTimeoutMillis: 30000,
       },
     }),
+    RedisModule,
+    RateLimitModule,
     AuthModule,
     UsersModule,
     CvModule,

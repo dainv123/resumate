@@ -1,0 +1,31 @@
+# Resumate Automated Backups and Maintenance
+# Copy to /etc/cron.d/resumate or install via: setup-cronjobs.sh
+
+# Environment variables
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PROJECT_ROOT=/Users/dainguyen/Documents/project/resumate
+BACKUP_DIR=/backups
+LOG_DIR=/var/log/resumate-backups
+
+# Daily PostgreSQL backup at 2:00 AM (weekdays)
+0 2 * * 1-5 root /Users/dainguyen/Documents/project/resumate/deployment/backup-postgres.sh >> /var/log/resumate-backups/postgres-backup.log 2>&1
+
+# Weekly full PostgreSQL backup (Sunday 2:00 AM)
+0 2 * * 0 root /Users/dainguyen/Documents/project/resumate/deployment/backup-postgres.sh >> /var/log/resumate-backups/postgres-backup.log 2>&1
+
+# Weekly Redis backup (Sunday 3:00 AM)
+0 3 * * 0 root /Users/dainguyen/Documents/project/resumate/deployment/backup-redis.sh >> /var/log/resumate-backups/redis-backup.log 2>&1
+
+# Monthly cleanup (1st of month, 4:00 AM)
+0 4 1 * * root /Users/dainguyen/Documents/project/resumate/deployment/cleanup-backups.sh >> /var/log/resumate-backups/cleanup.log 2>&1
+
+# Daily health check (every 6 hours)
+0 */6 * * * root curl -sf http://localhost:5001/api/health/rate-limit-status || echo "Health check failed at $(date)" >> /var/log/resumate-backups/health-check.log 2>&1
+
+# Weekly Redis memory check (Monday 1:00 AM)
+0 1 * * 1 root docker exec resumate-redis redis-cli INFO memory >> /var/log/resumate-backups/redis-memory.log 2>&1
+
+# Daily log rotation (midnight)
+0 0 * * * root find /var/log/resumate-backups -name "*.log" -size +100M -exec truncate -s 50M {} \;
+

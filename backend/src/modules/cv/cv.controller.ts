@@ -22,6 +22,11 @@ import { GetUser } from '../../common/decorators/get-user.decorator';
 import { TrackActivity } from '../../common/decorators/track-activity.decorator';
 import { ActivityType } from '../../common/enums/activity-type.enum';
 import { User } from '../users/entities/user.entity';
+import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
+import { UsageGuard } from '../../common/guards/usage.guard';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
+import { CheckUsage } from '../../common/decorators/check-usage.decorator';
+import { UsersService } from '../users/users.service';
 
 @Controller('cv')
 @UseGuards(JwtAuthGuard)
@@ -29,9 +34,13 @@ export class CvController {
   constructor(
     private cvService: CvService,
     private exportService: ExportService,
+    private usersService: UsersService,
   ) {}
 
   @Post('upload')
+  @UseGuards(RateLimitGuard, UsageGuard)
+  @RateLimit(10, 'minute')
+  @CheckUsage('cvUploads')
   @UseInterceptors(FileInterceptor('file'))
   @TrackActivity(ActivityType.CV_UPLOADED, {
     getMetadata: (cv, args) => ({
@@ -40,10 +49,28 @@ export class CvController {
     }),
   })
   async uploadCv(
-    @GetUser('id') userId: string,
+    @GetUser() user: User,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.cvService.uploadCv(userId, file);
+    const cv = await this.cvService.uploadCv(user.id, file);
+    
+    // Increment usage
+    await this.usersService.incrementUsage(user.id, 'cvUploads');
+    
+    // Get usage info
+    const usage = await this.usersService.getUserUsage(user.id);
+    const limits = this.usersService.getLimits(user.plan);
+    
+    return {
+      ...cv,
+      usage: {
+        cvUploads: {
+          used: usage.cvUploads,
+          limit: limits.cvUploads,
+        },
+        resetsAt: usage.resetDate,
+      },
+    };
   }
 
   @Get()
@@ -95,6 +122,9 @@ export class CvController {
   }
 
   @Get(':id/export/pdf')
+  @UseGuards(RateLimitGuard, UsageGuard)
+  @RateLimit(20, 'minute')
+  @CheckUsage('exports')
   @TrackActivity(ActivityType.CV_EXPORTED, {
     getResourceId: (result, context) => context.params.id,
     getMetadata: (result, context) => ({ 
@@ -104,12 +134,15 @@ export class CvController {
   })
   async exportToPDF(
     @Param('id') id: string,
-    @GetUser('id') userId: string,
+    @GetUser() user: User,
     @Query('template') template: string = 'professional',
     @Res() res: Response,
   ) {
-    const cv = await this.cvService.getCvById(id, userId);
+    const cv = await this.cvService.getCvById(id, user.id);
     const pdfBuffer = await this.exportService.exportToPDF(cv.parsedData, template);
+    
+    // Increment usage
+    await this.usersService.incrementUsage(user.id, 'exports');
     
     res.set({
       'Content-Type': 'application/pdf',
@@ -120,17 +153,23 @@ export class CvController {
   }
 
   @Get(':id/export/word')
+  @UseGuards(RateLimitGuard, UsageGuard)
+  @RateLimit(20, 'minute')
+  @CheckUsage('exports')
   @TrackActivity(ActivityType.CV_EXPORTED, {
     getResourceId: (result, context) => context.params.id,
     getMetadata: () => ({ format: 'word', template: 'default' }),
   })
   async exportToWord(
     @Param('id') id: string,
-    @GetUser('id') userId: string,
+    @GetUser() user: User,
     @Res() res: Response,
   ) {
-    const cv = await this.cvService.getCvById(id, userId);
+    const cv = await this.cvService.getCvById(id, user.id);
     const wordBuffer = await this.exportService.exportToWord(cv.parsedData);
+    
+    // Increment usage
+    await this.usersService.incrementUsage(user.id, 'exports');
     
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

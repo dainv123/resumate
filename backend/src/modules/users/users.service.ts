@@ -7,6 +7,7 @@ import { UserUsage } from './entities/user-usage.entity';
 import { UpdateProfileDto, ChangePasswordDto } from './dto/update-user.dto';
 import { Cv } from '../cv/entities/cv.entity';
 import { Project } from '../projects/entities/project.entity';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +20,7 @@ export class UsersService {
     private cvRepository: Repository<Cv>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    private redisService: RedisService,
   ) {}
 
   async findById(id: string): Promise<User> {
@@ -185,29 +187,67 @@ export class UsersService {
     const usage = await this.getUserUsage(userId);
     (usage as any)[feature] = ((usage as any)[feature] as number) + 1;
     await this.userUsageRepository.save(usage);
+
+    // Invalidate cache
+    const cacheKey = `usage:${userId}:${feature}`;
+    await this.redisService.del(cacheKey);
   }
 
   async checkUserLimit(userId: string, feature: string): Promise<boolean> {
-    return true;
-    const user = await this.findById(userId);
-    const usage = await this.getUserUsage(userId);
-    
-    const limits = {
-      free: { 
-        cvUploads: 1, 
-        projects: 3, 
-        jobTailors: 5, 
-        exports: 10 
-      },
-      pro: { 
-        cvUploads: -1, 
-        projects: -1, 
-        jobTailors: -1, 
-        exports: -1 
+    try {
+      // Try cache first (5 minute TTL)
+      const cacheKey = `usage:${userId}:${feature}`;
+      const cached = await this.redisService.get(cacheKey);
+
+      let currentUsage: number;
+
+      if (cached !== null) {
+        currentUsage = parseInt(cached);
+      } else {
+        // Query database
+        const usage = await this.getUserUsage(userId);
+        currentUsage = usage[feature] as number;
+
+        // Cache for 5 minutes
+        await this.redisService.setex(cacheKey, 300, currentUsage.toString());
       }
+
+      // Get user plan and limits
+      const user = await this.findById(userId);
+      const limits = this.getLimits(user.plan);
+      const limit = limits[feature];
+
+      // -1 means unlimited
+      return limit === -1 || currentUsage < limit;
+    } catch (error) {
+      console.error('Error checking user limit:', error);
+      // Fail-open: allow request if check fails
+      return true;
+    }
+  }
+
+  getLimits(plan: string): Record<string, number> {
+    const planLimits = {
+      free: {
+        cvUploads: 1,
+        projects: 3,
+        jobTailors: 5,
+        exports: 10,
+      },
+      pro: {
+        cvUploads: 10,
+        projects: 50,
+        jobTailors: 100,
+        exports: 500,
+      },
+      enterprise: {
+        cvUploads: -1, // unlimited
+        projects: -1,
+        jobTailors: -1,
+        exports: -1,
+      },
     };
-    
-    const userLimit = limits[user.plan][feature];
-    return userLimit === -1 || (usage[feature] as number) < userLimit;
+
+    return planLimits[plan] || planLimits.free;
   }
 }

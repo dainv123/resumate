@@ -13,18 +13,47 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto, UpdateProjectDto, AddToCvDto } from './dto/project.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
+import { UsageGuard } from '../../common/guards/usage.guard';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
+import { CheckUsage } from '../../common/decorators/check-usage.decorator';
+import { UsersService } from '../users/users.service';
 
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(private projectsService: ProjectsService) {}
+  constructor(
+    private projectsService: ProjectsService,
+    private usersService: UsersService,
+  ) {}
 
   @Post()
+  @UseGuards(RateLimitGuard, UsageGuard)
+  @RateLimit(20, 'minute')
+  @CheckUsage('projects')
   async createProject(
-    @GetUser('id') userId: string,
+    @GetUser() user: User,
     @Body() createProjectDto: CreateProjectDto,
   ) {
-    return this.projectsService.createProject(userId, createProjectDto);
+    const project = await this.projectsService.createProject(user.id, createProjectDto);
+    
+    // Increment usage
+    await this.usersService.incrementUsage(user.id, 'projects');
+    
+    // Get usage info
+    const usage = await this.usersService.getUserUsage(user.id);
+    const limits = this.usersService.getLimits(user.plan);
+    
+    return {
+      ...project,
+      usage: {
+        projects: {
+          used: usage.projects,
+          limit: limits.projects,
+        },
+        resetsAt: usage.resetDate,
+      },
+    };
   }
 
   @Get()

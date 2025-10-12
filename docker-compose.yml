@@ -18,6 +18,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - resumate-network
+
+  # Redis Cache & Rate Limiting
+  redis:
+    image: redis:7-alpine
+    container_name: resumate-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+      - ./backend/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - resumate-network
 
   # Backend Service
   backend:
@@ -37,8 +58,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_DATABASE: ${DB_DATABASE:-resumate}
       DB_NAME: ${DB_NAME:-postgres}
-      REDIS_HOST: ${REDIS_HOST:-localhost}
+      REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
+      RATE_LIMIT_STRATEGY: ${RATE_LIMIT_STRATEGY:-redis}
+      ENABLE_RATE_LIMITING: ${ENABLE_RATE_LIMITING:-true}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION:-us-east-1}
@@ -58,6 +81,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
     healthcheck:
@@ -65,6 +90,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - resumate-network
 
   # Frontend Service
   frontend:
@@ -90,7 +117,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - resumate-network
 
 volumes:
   postgres_data:
     driver: local
+  redis_data:
+    driver: local
+
+networks:
+  resumate-network:
+    driver: bridge
