@@ -111,9 +111,11 @@ export class ProjectsService {
     cv.parsedData.projects.push(projectData);
     cv.version += 1;
 
-    // Mark project as added to CV
-    project.isAddedToCv = true;
-    await this.projectRepository.save(project);
+    // Add CV ID to project's cvIds array if not already present
+    if (!project.cvIds.includes(addToCvDto.cvId)) {
+      project.cvIds.push(addToCvDto.cvId);
+      await this.projectRepository.save(project);
+    }
 
     return this.cvRepository.save(cv);
   }
@@ -134,8 +136,8 @@ export class ProjectsService {
     );
     cv.version += 1;
 
-    // Mark project as not added to CV
-    project.isAddedToCv = false;
+    // Remove CV ID from project's cvIds array
+    project.cvIds = project.cvIds.filter(id => id !== cvId);
     await this.projectRepository.save(project);
 
     return this.cvRepository.save(cv);

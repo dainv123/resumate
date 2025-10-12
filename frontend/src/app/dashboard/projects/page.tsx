@@ -11,6 +11,7 @@ import {
 import { cvApi } from "@/lib/cv";
 import ProjectForm from "@/components/projects/ProjectForm";
 import ProjectCard from "@/components/projects/ProjectCard";
+import CVMultiSelectionModal from "@/components/projects/CVMultiSelectionModal";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { Plus, Briefcase, AlertCircle } from "lucide-react";
@@ -20,8 +21,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showManageCVsModal, setShowManageCVsModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const queryClient = useQueryClient();
-  const { showError } = useToast();
+  const { showSuccess, showError } = useToast();
   const { t } = useLanguage();
 
   const {
@@ -64,22 +67,39 @@ export default function ProjectsPage() {
     },
   });
 
-  const addToCvMutation = useMutation({
-    mutationFn: ({ project, cvId }: { project: Project; cvId: string }) =>
-      projectsApi.addProjectToCv(project.id, cvId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["cvs"] });
-    },
-  });
+  const syncCVsMutation = useMutation({
+    mutationFn: async ({
+      project,
+      newCvIds,
+    }: {
+      project: Project;
+      newCvIds: string[];
+    }) => {
+      const currentCvIds = project.cvIds || [];
+      const cvsToAdd = newCvIds.filter((id) => !currentCvIds.includes(id));
+      const cvsToRemove = currentCvIds.filter((id) => !newCvIds.includes(id));
 
-  const removeFromCvMutation = useMutation({
-    mutationFn: ({ project, cvId }: { project: Project; cvId: string }) =>
-      projectsApi.removeProjectFromCv(project.id, cvId),
+      // Add to new CVs
+      for (const cvId of cvsToAdd) {
+        await projectsApi.addProjectToCv(project.id, cvId);
+      }
+
+      // Remove from old CVs
+      for (const cvId of cvsToRemove) {
+        await projectsApi.removeProjectFromCv(project.id, cvId);
+      }
+
+      return { cvsToAdd, cvsToRemove };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
-      setShowForm(false);
+      showSuccess(t("projects.cvsUpdatedSuccess"));
+      setShowManageCVsModal(false);
+      setSelectedProject(null);
+    },
+    onError: () => {
+      showError(t("common.error"));
     },
   });
 
@@ -112,32 +132,22 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleAddToCv = (project: Project) => {
+  const handleManageCVs = (project: Project) => {
     if (cvs.length === 0) {
       showError(t("projects.uploadCVFirst"));
       return;
     }
 
-    if (cvs.length === 1) {
-      addToCvMutation.mutate({ project, cvId: cvs[0].id });
-    } else {
-      // TODO: Show CV selection modal
-      const cvId = prompt(t("projects.enterCVId"));
-      if (cvId) {
-        addToCvMutation.mutate({ project, cvId });
-      }
-    }
+    setSelectedProject(project);
+    setShowManageCVsModal(true);
   };
 
-  const handleRemoveFromCv = (project: Project) => {
-    if (cvs.length === 1) {
-      removeFromCvMutation.mutate({ project, cvId: cvs[0].id });
-    } else {
-      // TODO: Show CV selection modal
-      const cvId = prompt(t("projects.enterCVIdRemove"));
-      if (cvId) {
-        removeFromCvMutation.mutate({ project, cvId });
-      }
+  const handleConfirmCVSelection = (newCvIds: string[]) => {
+    if (selectedProject) {
+      syncCVsMutation.mutate({
+        project: selectedProject,
+        newCvIds,
+      });
     }
   };
 
@@ -230,10 +240,10 @@ export default function ProjectsPage() {
             <ProjectCard
               key={project.id}
               project={project}
+              cvs={cvs}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              onAddToCv={handleAddToCv}
-              onRemoveFromCv={handleRemoveFromCv}
+              onManageCVs={handleManageCVs}
             />
           ))}
         </div>
@@ -256,7 +266,7 @@ export default function ProjectsPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {projects.filter((p) => p.isAddedToCv).length}
+                {projects.filter((p) => p.cvIds && p.cvIds.length > 0).length}
               </div>
               <div className="text-sm text-gray-500">
                 {t("projects.addedToCV")}
@@ -273,6 +283,19 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
+
+      {/* CV Multi-Selection Modal */}
+      <CVMultiSelectionModal
+        isOpen={showManageCVsModal}
+        onClose={() => {
+          setShowManageCVsModal(false);
+          setSelectedProject(null);
+        }}
+        cvs={cvs}
+        selectedCvIds={selectedProject?.cvIds || []}
+        onConfirm={handleConfirmCVSelection}
+        isLoading={syncCVsMutation.isPending}
+      />
     </div>
   );
 }

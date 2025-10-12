@@ -11,7 +11,6 @@ import {
   FileText,
   Briefcase,
   Copy,
-  Check,
   Clock,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -51,17 +50,6 @@ export default function CVPreview({
   const [showJobDescriptionModal, setShowJobDescriptionModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showVersionHistoryModal, setShowVersionHistoryModal] = useState(false);
-  const [copiedId, setCopiedId] = useState(false);
-
-  const handleCopyId = async () => {
-    try {
-      await navigator.clipboard.writeText(cv.id);
-      setCopiedId(true);
-      setTimeout(() => setCopiedId(false), 2000);
-    } catch (error) {
-      console.error("Failed to copy ID:", error);
-    }
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -84,22 +72,6 @@ export default function CVPreview({
               title="View Version History">
               <Clock className="h-3 w-3" />
               <span>History</span>
-            </button>
-            <button
-              onClick={handleCopyId}
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-blue-600 bg-blue-50 rounded transition-colors"
-              title="Copy CV ID">
-              {copiedId ? (
-                <>
-                  <Check className="h-3 w-3 text-green-600" />
-                  <span className="text-green-600">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3 w-3" />
-                  <span>ID</span>
-                </>
-              )}
             </button>
           </div>
         </div>

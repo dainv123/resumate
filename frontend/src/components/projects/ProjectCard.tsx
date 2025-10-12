@@ -2,32 +2,32 @@
 
 import React from "react";
 import { Project } from "@/lib/projects";
+import { CV } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
-import {
-  Edit,
-  Trash2,
-  ExternalLink,
-  Github,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Edit, Trash2, ExternalLink, Github, FileText } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProjectCardProps {
   project: Project;
+  cvs: CV[];
   onEdit?: (project: Project) => void;
   onDelete?: (project: Project) => void;
-  onAddToCv?: (project: Project) => void;
-  onRemoveFromCv?: (project: Project) => void;
+  onManageCVs?: (project: Project) => void;
 }
 
 export default function ProjectCard({
   project,
+  cvs,
   onEdit,
   onDelete,
-  onAddToCv,
-  onRemoveFromCv,
+  onManageCVs,
 }: ProjectCardProps) {
+  const { t } = useLanguage();
+
+  // Get CVs that contain this project
+  const assignedCvs = cvs.filter((cv) => project.cvIds.includes(cv.id));
+
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
       {/* Header */}
@@ -41,16 +41,28 @@ export default function ProjectCard({
             Created {formatDate(project.createdAt)}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          {project.isAddedToCv ? (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              In CV
-            </span>
+        <div className="flex flex-col items-end gap-2">
+          {assignedCvs.length > 0 ? (
+            <>
+              <div className="flex flex-wrap gap-1 justify-end max-w-[200px]">
+                {assignedCvs.slice(0, 2).map((cv) => (
+                  <span
+                    key={cv.id}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <FileText className="h-3 w-3 mr-1" />
+                    {cv.parsedData.name}
+                  </span>
+                ))}
+              </div>
+              {assignedCvs.length > 2 && (
+                <span className="text-xs text-gray-500">
+                  +{assignedCvs.length - 2} {t("common.more")}
+                </span>
+              )}
+            </>
           ) : (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              <XCircle className="h-3 w-3 mr-1" />
-              Not in CV
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              {t("projects.notInAnyCv")}
             </span>
           )}
         </div>
@@ -137,26 +149,17 @@ export default function ProjectCard({
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={() => onEdit?.(project)}>
             <Edit className="h-4 w-4 mr-1" />
-            Edit
+            {t("common.edit")}
           </Button>
 
-          {project.isAddedToCv ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onRemoveFromCv?.(project)}
-              className="text-orange-600 hover:text-orange-700">
-              Remove from CV
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAddToCv?.(project)}
-              className="text-green-600 hover:text-green-700">
-              Add to CV
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onManageCVs?.(project)}
+            className="text-blue-600 hover:text-blue-700">
+            <FileText className="h-4 w-4 mr-1" />
+            {t("projects.manageCVs")}
+          </Button>
         </div>
 
         <Button
