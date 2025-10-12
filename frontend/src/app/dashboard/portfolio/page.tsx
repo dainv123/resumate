@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { portfolioApi, CreatePortfolioData } from "@/lib/portfolio";
 import Button from "@/components/ui/Button";
@@ -16,7 +15,6 @@ import SectionCustomizer from "@/components/portfolio/SectionCustomizer";
 type Step = 1 | 2 | 3 | 4;
 
 export default function PortfolioPage() {
-  const { user } = useAuth();
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState<Step>(1);
 
@@ -113,7 +111,7 @@ export default function PortfolioPage() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     // TODO: Add toast notification
-    alert("Copied to clipboard!");
+    alert(t("portfolio.success.copied"));
   };
 
   const canProceedToStep = (step: Step): boolean => {
@@ -133,10 +131,10 @@ export default function PortfolioPage() {
 
   const renderStepIndicator = () => {
     const steps = [
-      { number: 1, label: "Template" },
-      { number: 2, label: "CV" },
-      { number: 3, label: "Customize" },
-      { number: 4, label: "Details" },
+      { number: 1, label: t("portfolio.steps.template") },
+      { number: 2, label: t("portfolio.steps.cv") },
+      { number: 3, label: t("portfolio.steps.customize") },
+      { number: 4, label: t("portfolio.steps.details") },
     ];
 
     return (
@@ -201,8 +199,10 @@ export default function PortfolioPage() {
         return (
           <div className="space-y-6">
             <div>
-              <h4 className="text-xl font-semibold mb-2">Personal Details</h4>
-              <p className="text-gray-600">Add your bio and social links</p>
+              <h4 className="text-xl font-semibold mb-2">
+                {t("portfolio.details.title")}
+              </h4>
+              <p className="text-gray-600">{t("portfolio.details.subtitle")}</p>
             </div>
 
             {/* Bio */}
@@ -210,7 +210,7 @@ export default function PortfolioPage() {
               <label
                 htmlFor="bio"
                 className="block text-sm font-medium text-gray-700 mb-2">
-                Bio / Tagline
+                {t("portfolio.details.bioLabel")}
               </label>
               <textarea
                 id="bio"
@@ -218,7 +218,7 @@ export default function PortfolioPage() {
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Software Engineer | Full-stack Developer | Tech Enthusiast"
+                placeholder={t("portfolio.details.bioPlaceholder2")}
               />
             </div>
 
@@ -227,7 +227,7 @@ export default function PortfolioPage() {
               <label
                 htmlFor="avatar"
                 className="block text-sm font-medium text-gray-700 mb-2">
-                Avatar URL (Optional)
+                {t("portfolio.details.avatar")}
               </label>
               <input
                 type="url"
@@ -235,7 +235,7 @@ export default function PortfolioPage() {
                 value={avatar}
                 onChange={(e) => setAvatar(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://example.com/your-photo.jpg"
+                placeholder={t("portfolio.details.avatarPlaceholder")}
               />
             </div>
 
@@ -245,7 +245,7 @@ export default function PortfolioPage() {
                 <label
                   htmlFor="linkedinUrl"
                   className="block text-sm font-medium text-gray-700 mb-2">
-                  LinkedIn URL
+                  {t("portfolio.details.linkedinUrl")}
                 </label>
                 <input
                   type="url"
@@ -253,7 +253,7 @@ export default function PortfolioPage() {
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://linkedin.com/in/yourname"
+                  placeholder={t("portfolio.details.linkedinPlaceholder")}
                 />
               </div>
 
@@ -261,7 +261,7 @@ export default function PortfolioPage() {
                 <label
                   htmlFor="githubUrl"
                   className="block text-sm font-medium text-gray-700 mb-2">
-                  GitHub URL
+                  {t("portfolio.details.githubUrl")}
                 </label>
                 <input
                   type="url"
@@ -269,7 +269,7 @@ export default function PortfolioPage() {
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://github.com/yourname"
+                  placeholder={t("portfolio.details.githubPlaceholder")}
                 />
               </div>
 
@@ -277,7 +277,7 @@ export default function PortfolioPage() {
                 <label
                   htmlFor="websiteUrl"
                   className="block text-sm font-medium text-gray-700 mb-2">
-                  Website URL
+                  {t("portfolio.details.websiteUrl")}
                 </label>
                 <input
                   type="url"
@@ -285,7 +285,7 @@ export default function PortfolioPage() {
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://yourwebsite.com"
+                  placeholder={t("portfolio.details.websitePlaceholder")}
                 />
               </div>
 
@@ -293,7 +293,7 @@ export default function PortfolioPage() {
                 <label
                   htmlFor="customDomain"
                   className="block text-sm font-medium text-gray-700 mb-2">
-                  Custom Domain (Optional)
+                  {t("portfolio.details.customDomainLabel")}
                 </label>
                 <input
                   type="text"
@@ -301,7 +301,7 @@ export default function PortfolioPage() {
                   value={customDomain}
                   onChange={(e) => setCustomDomain(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="portfolio.yourname.com"
+                  placeholder={t("portfolio.details.customDomainPlaceholder")}
                 />
               </div>
             </div>
@@ -314,14 +314,14 @@ export default function PortfolioPage() {
                 loading={previewMutation.isPending}
                 className="flex-1">
                 <Eye className="w-4 h-4 mr-2" />
-                Preview
+                {t("portfolio.details.previewButton")}
               </Button>
               <Button
                 onClick={handleSave}
                 loading={saveMutation.isPending}
                 className="flex-1">
                 <Check className="w-4 h-4 mr-2" />
-                Save & Publish
+                {t("portfolio.details.savePublish")}
               </Button>
             </div>
 
@@ -331,14 +331,14 @@ export default function PortfolioPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h5 className="font-medium text-green-900">
-                      Preview Ready!
+                      {t("portfolio.success.previewReady")}
                     </h5>
                     <p className="text-sm text-green-700">
-                      Your portfolio is ready to view
+                      {t("portfolio.success.previewDesc")}
                     </p>
                   </div>
                   <Button onClick={handlePreviewInNewTab} size="sm">
-                    Open Preview
+                    {t("portfolio.success.openPreview")}
                   </Button>
                 </div>
               </div>
@@ -348,10 +348,10 @@ export default function PortfolioPage() {
             {portfolioUrl && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h5 className="font-medium text-blue-900 mb-2">
-                  Portfolio Published! 🎉
+                  {t("portfolio.success.published")}
                 </h5>
                 <p className="text-sm text-blue-700 mb-3">
-                  Your portfolio is now live and accessible at:
+                  {t("portfolio.success.publishedDesc")}
                 </p>
                 <div className="flex items-center gap-2">
                   <input
@@ -381,10 +381,10 @@ export default function PortfolioPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h3 className="text-3xl font-bold text-gray-900">Create Portfolio</h3>
-        <p className="text-gray-600 mt-1">
-          Build a professional portfolio to showcase your work and skills
-        </p>
+        <h3 className="text-3xl font-bold text-gray-900">
+          {t("portfolio.title")}
+        </h3>
+        <p className="text-gray-600 mt-1">{t("portfolio.subtitle")}</p>
       </div>
 
       {/* Existing Portfolio Notice */}
@@ -394,17 +394,17 @@ export default function PortfolioPage() {
             <div className="text-2xl">ℹ️</div>
             <div className="flex-1">
               <h5 className="font-medium text-blue-900">
-                You already have a portfolio
+                {t("portfolio.existingPortfolio.title")}
               </h5>
               <p className="text-sm text-blue-700 mt-1">
-                Creating a new portfolio will override your existing one.
+                {t("portfolio.existingPortfolio.desc")}
               </p>
               <a
                 href={existingPortfolio.portfolio?.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-blue-600 hover:underline mt-2 inline-block">
-                View current portfolio →
+                {t("portfolio.existingPortfolio.view")}
               </a>
             </div>
           </div>
@@ -428,7 +428,7 @@ export default function PortfolioPage() {
           variant="outline"
           disabled={currentStep === 1}>
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Previous
+          {t("portfolio.steps.previous")}
         </Button>
 
         {currentStep < 4 ? (
@@ -437,11 +437,13 @@ export default function PortfolioPage() {
               setCurrentStep((prev) => Math.min(4, prev + 1) as Step)
             }
             disabled={!canProceedToStep((currentStep + 1) as Step)}>
-            Next
+            {t("portfolio.steps.next")}
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         ) : (
-          <div className="text-sm text-gray-500">Complete the form above</div>
+          <div className="text-sm text-gray-500">
+            {t("portfolio.steps.complete")}
+          </div>
         )}
       </div>
     </div>

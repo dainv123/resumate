@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { analyticsApi } from "@/lib/analytics";
 import { formatDate } from "@/lib/utils";
 import {
@@ -29,6 +30,7 @@ import {
 } from "recharts";
 
 export default function AnalyticsPage() {
+  const { t } = useLanguage();
   const [dateRange, setDateRange] = useState(30);
   const [filterFormat, setFilterFormat] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -125,11 +127,9 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-3xl font-bold text-gray-900">
-            Analytics Dashboard
+            {t("analytics.title")}
           </h3>
-          <p className="text-gray-600 mt-1">
-            Track your CV performance and usage metrics
-          </p>
+          <p className="text-gray-600 mt-1">{t("analytics.subtitle")}</p>
         </div>
 
         {/* Date Range Selector */}
@@ -137,10 +137,10 @@ export default function AnalyticsPage() {
           value={dateRange}
           onChange={(e) => setDateRange(Number(e.target.value))}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-          <option value={365}>Last year</option>
+          <option value={7}>{t("analytics.dateRange.last7")}</option>
+          <option value={30}>{t("analytics.dateRange.last30")}</option>
+          <option value={90}>{t("analytics.dateRange.last90")}</option>
+          <option value={365}>{t("analytics.dateRange.lastYear")}</option>
         </select>
       </div>
 
@@ -148,21 +148,21 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           icon={Download}
-          title="Total Exports"
+          title={t("analytics.stats.totalExports")}
           value={stats?.stats.cvDownloads || 0}
           color="blue"
           loading={statsLoading}
         />
         <StatCard
           icon={FileText}
-          title="CVs Uploaded"
+          title={t("analytics.stats.cvsUploaded")}
           value={stats?.stats.cvUploads || 0}
           color="green"
           loading={statsLoading}
         />
         <StatCard
           icon={Sparkles}
-          title="CVs Tailored"
+          title={t("analytics.stats.cvsTailored")}
           value={stats?.stats.tailoringCount || 0}
           color="purple"
           loading={statsLoading}
@@ -175,45 +175,52 @@ export default function AnalyticsPage() {
         <div className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
           <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-purple-600" />
-            All Activities
+            {t("analytics.charts.allActivities")}
           </h4>
           {activitiesTypeLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-500">
-              Loading chart...
+              {t("analytics.loading")}
             </div>
-          ) : activitiesByTypeData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={activitiesByTypeData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry: any) => {
-                    const percent = (
-                      (entry.value /
-                        Object.values(activitiesByType).reduce(
-                          (a: number, b: number) => a + b,
-                          0
-                        )) *
-                      100
-                    ).toFixed(0);
-                    return `${entry.name} (${percent}%)`;
-                  }}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value">
-                  {activitiesByTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-500">
-              No activity data yet
-            </div>
+            (() => {
+              // Filter out activities with value = 0
+              const filteredActivities = activitiesByTypeData.filter(
+                (d) => d.value > 0
+              );
+              return filteredActivities.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={filteredActivities}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry: any) => {
+                        const total = filteredActivities.reduce(
+                          (sum, item) => sum + item.value,
+                          0
+                        );
+                        const percent = ((entry.value / total) * 100).toFixed(
+                          0
+                        );
+                        return `${entry.name} (${percent}%)`;
+                      }}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value">
+                      {filteredActivities.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  {t("analytics.noActivityData")}
+                </div>
+              );
+            })()
           )}
         </div>
 
@@ -221,41 +228,48 @@ export default function AnalyticsPage() {
         <div className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
           <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-blue-600" />
-            Exports by Format
+            {t("analytics.charts.exportsByFormat")}
           </h4>
           {statsLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-500">
-              Loading chart...
+              {t("analytics.loading")}
             </div>
-          ) : exportsByFormatData.length > 0 &&
-            exportsByFormatData.some((d) => d.value > 0) ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={exportsByFormatData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }: any) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value">
-                  {exportsByFormatData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-500">
-              No export data yet
-            </div>
+            (() => {
+              // Filter out data with value = 0
+              const filteredData = exportsByFormatData.filter(
+                (d) => d.value > 0
+              );
+              return filteredData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={filteredData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }: any) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value">
+                      {filteredData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  {t("analytics.noExportData")}
+                </div>
+              );
+            })()
           )}
         </div>
 
@@ -263,11 +277,15 @@ export default function AnalyticsPage() {
         <div className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
           <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
-            Activity Timeline (Last {dateRange} days)
+            {t("analytics.charts.activityTimeline")} (
+            {dateRange === 7 && t("analytics.dateRange.last7")}
+            {dateRange === 30 && t("analytics.dateRange.last30")}
+            {dateRange === 90 && t("analytics.dateRange.last90")}
+            {dateRange === 365 && t("analytics.dateRange.lastYear")})
           </h4>
           {timelineLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-500">
-              Loading chart...
+              {t("analytics.loading")}
             </div>
           ) : timelineData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -299,7 +317,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-500">
-              No activity data yet
+              {t("analytics.noActivityData")}
             </div>
           )}
         </div>
@@ -309,7 +327,9 @@ export default function AnalyticsPage() {
       <div className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
         <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-purple-600" />
-          Recent Export History ({filteredExports.length} exports)
+          {t("analytics.table.recentExportHistory", {
+            count: filteredExports.length,
+          })}
         </h4>
 
         {/* Filters */}
@@ -317,7 +337,7 @@ export default function AnalyticsPage() {
           <div className="mb-4 flex flex-wrap gap-3">
             <input
               type="text"
-              placeholder="Search by CV name or template..."
+              placeholder={t("analytics.table.search")}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -332,17 +352,17 @@ export default function AnalyticsPage() {
                 setCurrentPage(1);
               }}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="all">All Formats</option>
-              <option value="pdf">PDF Only</option>
-              <option value="word">Word Only</option>
-              <option value="ats">ATS Only</option>
+              <option value="all">{t("analytics.table.allFormats")}</option>
+              <option value="pdf">{t("analytics.table.pdfOnly")}</option>
+              <option value="word">{t("analytics.table.wordOnly")}</option>
+              <option value="ats">{t("analytics.table.atsOnly")}</option>
             </select>
           </div>
         )}
 
         {exportsLoading ? (
           <div className="text-center py-8 text-gray-500">
-            Loading exports...
+            {t("analytics.table.loadingExports")}
           </div>
         ) : filteredExports.length > 0 ? (
           <div className="overflow-x-auto">
@@ -350,16 +370,16 @@ export default function AnalyticsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    {t("analytics.table.date")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Format
+                    {t("analytics.table.format")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Template
+                    {t("analytics.table.template")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CV Name
+                    {t("analytics.table.cvName")}
                   </th>
                 </tr>
               </thead>
@@ -396,16 +416,21 @@ export default function AnalyticsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
                 <div className="text-sm text-gray-700">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, filteredExports.length)}{" "}
-                  of {filteredExports.length} exports
+                  {t("analytics.table.showing", {
+                    from: (currentPage - 1) * itemsPerPage + 1,
+                    to: Math.min(
+                      currentPage * itemsPerPage,
+                      filteredExports.length
+                    ),
+                    total: filteredExports.length,
+                  })}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Previous
+                    {t("analytics.table.previous")}
                   </button>
                   <div className="flex items-center gap-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -427,7 +452,7 @@ export default function AnalyticsPage() {
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Next
+                    {t("analytics.table.next")}
                   </button>
                 </div>
               </div>
@@ -436,8 +461,8 @@ export default function AnalyticsPage() {
         ) : (
           <div className="text-center py-8 text-gray-500">
             {exportHistory.length > 0
-              ? "No exports match your filters"
-              : "No exports yet. Export your first CV to see history here."}
+              ? t("analytics.table.noExportsMatch")
+              : t("analytics.table.noExportsYet")}
           </div>
         )}
       </div>
@@ -447,7 +472,9 @@ export default function AnalyticsPage() {
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-700 font-medium">Total Exports</p>
+              <p className="text-sm text-blue-700 font-medium">
+                {t("analytics.summary.totalExports")}
+              </p>
               <p className="text-3xl font-bold text-blue-900 mt-2">
                 {stats?.totalExports || 0}
               </p>
@@ -460,7 +487,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-700 font-medium">
-                Export Activities
+                {t("analytics.summary.exportActivities")}
               </p>
               <p className="text-3xl font-bold text-green-900 mt-2">
                 {stats?.totalActivities || 0}
@@ -474,12 +501,12 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-purple-700 font-medium">
-                Last Activity
+                {t("analytics.summary.lastActivity")}
               </p>
               <p className="text-sm font-semibold text-purple-900 mt-2">
                 {stats?.lastActivity
                   ? formatDate(stats.lastActivity)
-                  : "No activity yet"}
+                  : t("analytics.summary.noActivityYet")}
               </p>
             </div>
             <Calendar className="h-12 w-12 text-purple-500 opacity-50" />

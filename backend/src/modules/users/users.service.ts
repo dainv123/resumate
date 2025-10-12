@@ -74,17 +74,29 @@ export class UsersService {
   }
 
   async getUserStats(userId: string) {
-    const [cvCount, projectCount, tailoredCvCount] = await Promise.all([
+    const [cvCount, projectCount, tailoredCvCount, cvs] = await Promise.all([
       this.cvRepository.count({ where: { userId } }),
       this.projectRepository.count({ where: { userId } }),
       this.cvRepository.count({ where: { userId, isTailored: true } }),
+      this.cvRepository.find({ where: { userId } }),
     ]);
+
+    // Count total subProjects from all CVs
+    const totalSubProjects = cvs.reduce((count, cv) => {
+      if (cv.parsedData?.experience && Array.isArray(cv.parsedData.experience)) {
+        return count + cv.parsedData.experience.reduce((expCount, exp) => {
+          return expCount + (Array.isArray(exp.subProjects) ? exp.subProjects.length : 0);
+        }, 0);
+      }
+      return count;
+    }, 0);
 
     const user = await this.findById(userId);
 
     return {
       totalCvs: cvCount,
       totalProjects: projectCount,
+      totalSubProjects,
       tailoredCvs: tailoredCvCount,
       plan: user.plan,
       createdAt: user.createdAt,

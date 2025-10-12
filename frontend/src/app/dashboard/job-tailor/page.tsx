@@ -105,9 +105,7 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setTailoredCv(data);
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
-      showSuccess(
-        "CV tailored successfully! Your CV has been optimized for this job."
-      );
+      showSuccess(t("jobTailor.success"));
     },
     onError: (error: Error) => {
       console.error("Tailoring failed:", error);
@@ -257,12 +255,10 @@ export default function JobTailorPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {t("jobTailor.noCVsAvailable")}
           </h3>
-          <p className="text-gray-600 mb-6">
-            Please upload a CV first to use the job tailoring feature
-          </p>
+          <p className="text-gray-600 mb-6">{t("jobTailor.uploadCVPrompt")}</p>
           <Button onClick={() => (window.location.href = "/dashboard/cv")}>
             <Upload className="h-4 w-4 mr-2" />
-            Upload CV
+            {t("jobTailor.uploadCV")}
           </Button>
         </div>
       ) : (
@@ -273,10 +269,13 @@ export default function JobTailorPage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-medium text-gray-700">
-                  Select CV to Tailor
+                  {t("jobTailor.selectCV")}
                 </label>
                 <span className="text-xs text-gray-500">
-                  {filteredAndSortedCvs.length} of {cvs.length} CVs
+                  {t("jobTailor.cvsCount", {
+                    count: filteredAndSortedCvs.length,
+                    total: cvs.length,
+                  })}
                 </span>
               </div>
 
@@ -310,12 +309,20 @@ export default function JobTailorPage() {
                 {/* Sort and Filter Options */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Sort by:</span>
+                    <span className="text-xs text-gray-500">
+                      {t("jobTailor.sortBy")}
+                    </span>
                     <div className="flex gap-1">
                       {[
-                        { value: "newest", label: "Newest" },
-                        { value: "oldest", label: "Oldest" },
-                        { value: "name", label: "Name" },
+                        {
+                          value: "newest",
+                          label: t("jobTailor.sortNewest"),
+                        },
+                        {
+                          value: "oldest",
+                          label: t("jobTailor.sortOldest"),
+                        },
+                        { value: "name", label: t("jobTailor.sortName") },
                       ].map((option) => (
                         <button
                           key={option.value}
@@ -343,7 +350,7 @@ export default function JobTailorPage() {
                       onChange={(e) => setShowOnlyTailored(e.target.checked)}
                       className="rounded border-gray-300 text-main focus:ring-main"
                     />
-                    <span>Show only tailored CVs</span>
+                    <span>{t("jobTailor.showOnlyTailored")}</span>
                   </label>
                 </div>
               </div>
@@ -558,7 +565,7 @@ Example:
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
                 <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-purple-600" />
-                  AI-Powered Tools
+                  {t("jobTailor.aiPoweredTools")}
                 </h4>
 
                 <div className="space-y-2">
@@ -577,10 +584,10 @@ Example:
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-semibold text-gray-900">
-                          Analyze Compatibility
+                          {t("jobTailor.analyzeCompatibility")}
                         </p>
                         <p className="text-xs text-gray-600">
-                          Get detailed score & gap analysis
+                          {t("jobTailor.analyzeDesc")}
                         </p>
                       </div>
                     </div>
@@ -608,10 +615,10 @@ Example:
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-semibold text-gray-900">
-                          Generate Cover Letter
+                          {t("jobTailor.generateCoverLetter")}
                         </p>
                         <p className="text-xs text-gray-600">
-                          AI writes personalized letter
+                          {t("jobTailor.coverLetterDesc")}
                         </p>
                       </div>
                     </div>
@@ -638,11 +645,11 @@ Example:
                       <div className="text-left">
                         <p className="text-sm font-bold">
                           {isTailoring
-                            ? t("jobTailor.tailoringCV")
-                            : t("jobTailor.tailorCVButton")}
+                            ? t("jobTailor.tailoring")
+                            : t("jobTailor.tailorCV")}
                         </p>
                         <p className="text-xs text-white/80">
-                          Create optimized version for this job
+                          {t("jobTailor.tailorDesc")}
                         </p>
                       </div>
                     </div>

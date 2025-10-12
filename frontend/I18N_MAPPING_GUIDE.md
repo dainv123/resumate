@@ -214,3 +214,4 @@ After applying translations:
 - `frontend/src/locales/vi.json`
 - `frontend/I18N_GUIDE.md` (detailed guide)
 
+

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cvApi, CV } from "@/lib/cv";
 import CVUpload from "@/components/cv/CVUpload";
 import CVPreview from "@/components/cv/CVPreview";
@@ -10,6 +11,7 @@ import Modal from "@/components/ui/Modal";
 import { Plus, FileText, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function CVPage() {
+  const { t } = useLanguage();
   const [showUpload, setShowUpload] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showView, setShowView] = useState(false);
@@ -94,7 +96,7 @@ export default function CVPage() {
   };
 
   const handleDelete = (cv: CV) => {
-    if (confirm("Are you sure you want to delete this CV?")) {
+    if (confirm(t("cv.confirm.delete"))) {
       deleteMutation.mutate(cv.id);
     }
   };
@@ -202,6 +204,23 @@ export default function CVPage() {
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       return new Date(cv.createdAt) > oneWeekAgo;
     }).length,
+    totalSubProjects: cvs.reduce((count, cv) => {
+      if (
+        cv.parsedData?.experience &&
+        Array.isArray(cv.parsedData.experience)
+      ) {
+        return (
+          count +
+          cv.parsedData.experience.reduce((expCount, exp) => {
+            return (
+              expCount +
+              (Array.isArray(exp.subProjects) ? exp.subProjects.length : 0)
+            );
+          }, 0)
+        );
+      }
+      return count;
+    }, 0),
   };
 
   if (isLoading) {
@@ -228,44 +247,54 @@ export default function CVPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold text-gray-900">My CVs</h3>
-          <p className="text-gray-600">
-            Manage and update your CVs with AI-powered features
-          </p>
+          <h3 className="text-2xl font-bold text-gray-900">{t("cv.title")}</h3>
+          <p className="text-gray-600">{t("cv.subtitle")}</p>
         </div>
         <Button
           onClick={() => setShowUpload(true)}
           className="flex items-center">
           <Plus className="h-4 w-4 mr-2" />
-          Upload CV
+          {t("cv.uploadCV")}
         </Button>
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-blue-600">
             {cvStats.total}
           </div>
-          <div className="text-sm text-blue-800">Total CVs</div>
+          <div className="text-sm text-blue-800">{t("cv.stats.totalCVs")}</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
             {cvStats.parsed}
           </div>
-          <div className="text-sm text-green-800">Parsed</div>
+          <div className="text-sm text-green-800">{t("cv.stats.parsed")}</div>
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-yellow-600">
             {cvStats.unparsed}
           </div>
-          <div className="text-sm text-yellow-800">Unparsed</div>
+          <div className="text-sm text-yellow-800">
+            {t("cv.stats.unparsed")}
+          </div>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-purple-600">
+            {cvStats.totalSubProjects}
+          </div>
+          <div className="text-sm text-purple-800">
+            {t("cv.stats.subProjects")}
+          </div>
+        </div>
+        <div className="bg-indigo-50 p-4 rounded-lg">
+          <div className="text-2xl font-bold text-indigo-600">
             {cvStats.recent}
           </div>
-          <div className="text-sm text-purple-800">This Week</div>
+          <div className="text-sm text-indigo-800">
+            {t("cv.stats.thisWeek")}
+          </div>
         </div>
       </div>
 
@@ -273,7 +302,7 @@ export default function CVPage() {
       <Modal
         isOpen={showUpload}
         onClose={() => setShowUpload(false)}
-        title="Upload New CV"
+        title={t("cv.modals.uploadTitle")}
         size="lg">
         <CVUpload
           onSuccess={handleUploadSuccess}
@@ -286,7 +315,11 @@ export default function CVPage() {
         isOpen={showEdit && !!selectedCv}
         onClose={() => setShowEdit(false)}
         title={
-          selectedCv ? `Edit CV: ${selectedCv.originalFileName}` : "Edit CV"
+          selectedCv
+            ? t("cv.modals.editTitle", {
+                fileName: selectedCv.originalFileName,
+              })
+            : t("modal.editCV")
         }
         size="xl"
         footer={
@@ -353,23 +386,29 @@ export default function CVPage() {
         onClose={() => setShowView(false)}
         title={
           selectedCv
-            ? `CV Details: ${selectedCv.originalFileName}`
-            : "CV Details"
+            ? t("cv.modals.viewTitle", {
+                fileName: selectedCv.originalFileName,
+              })
+            : t("cv.modals.viewTitle", { fileName: "" })
         }
         size="xl"
-        footer={<Button onClick={() => setShowView(false)}>Close</Button>}>
+        footer={
+          <Button onClick={() => setShowView(false)}>
+            {t("common.close")}
+          </Button>
+        }>
         {selectedCv && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  File Name
+                  {t("cv.modals.fileName")}
                 </label>
                 <p className="text-gray-900">{selectedCv.originalFileName}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Date
+                  {t("cv.modals.uploadDate")}
                 </label>
                 <p className="text-gray-900">
                   {new Date(selectedCv.createdAt).toLocaleDateString()}
@@ -380,7 +419,7 @@ export default function CVPage() {
             {selectedCv.parsedData ? (
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Parsed Information
+                  {t("cv.modals.parsedInfo")}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedCv.parsedData.name && (
@@ -419,13 +458,13 @@ export default function CVPage() {
                   selectedCv.parsedData.experience.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Experience
+                        {t("cv.sections.experience")}
                       </label>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {selectedCv.parsedData.experience.map((exp, index) => (
                           <div
                             key={index}
-                            className="border border-gray-200 rounded-lg p-3">
+                            className="border border-gray-200 rounded-lg p-4">
                             <h4 className="font-medium text-gray-900">
                               {exp.title}
                             </h4>
@@ -440,11 +479,13 @@ export default function CVPage() {
                                 📍 {exp.location}
                               </p>
                             )}
+
+                            {/* Technologies */}
                             {exp.technologies &&
                               exp.technologies.length > 0 && (
                                 <div className="mt-2">
                                   <p className="text-xs text-gray-500 mb-1">
-                                    Technologies:
+                                    {t("cv.sections.technologies")}
                                   </p>
                                   <div className="flex flex-wrap gap-1">
                                     {exp.technologies.map((tech, techIndex) => (
@@ -457,6 +498,74 @@ export default function CVPage() {
                                   </div>
                                 </div>
                               )}
+
+                            {/* Sub-Projects */}
+                            {Array.isArray(exp.subProjects) &&
+                              exp.subProjects.length > 0 && (
+                                <div className="mt-3 space-y-2 bg-purple-50 p-3 rounded-lg">
+                                  <p className="text-xs font-semibold text-purple-800 uppercase">
+                                    {t("cv.sections.subProjects", {
+                                      count: exp.subProjects.length,
+                                    })}
+                                  </p>
+                                  {exp.subProjects.map((subProj, subIdx) => (
+                                    <div
+                                      key={subIdx}
+                                      className="border-l-2 border-purple-300 pl-3 py-2 bg-white rounded-r">
+                                      <div className="flex items-start justify-between gap-2 mb-1">
+                                        <h5 className="text-sm font-semibold text-gray-900">
+                                          {subProj.name ||
+                                            t("cv.sections.subProjectDefault", {
+                                              number: subIdx + 1,
+                                            })}
+                                        </h5>
+                                        {subProj.role && (
+                                          <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
+                                            {subProj.role}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Sub-project Tech Stack */}
+                                      {Array.isArray(subProj.techStack) &&
+                                        subProj.techStack.length > 0 && (
+                                          <div className="flex flex-wrap gap-1 mt-2">
+                                            {subProj.techStack.map(
+                                              (tech, techIdx) => (
+                                                <span
+                                                  key={techIdx}
+                                                  className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded border border-purple-200">
+                                                  {tech}
+                                                </span>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+
+                                      {/* Sub-project Responsibilities */}
+                                      {Array.isArray(
+                                        subProj.responsibilities
+                                      ) &&
+                                        subProj.responsibilities.length > 0 && (
+                                          <ul className="text-xs text-gray-700 mt-2 space-y-1">
+                                            {subProj.responsibilities.map(
+                                              (resp, respIdx) => (
+                                                <li
+                                                  key={respIdx}
+                                                  className="flex items-start gap-1.5">
+                                                  <span className="text-purple-500 font-bold mt-0.5">
+                                                    ▸
+                                                  </span>
+                                                  <span>{resp}</span>
+                                                </li>
+                                              )
+                                            )}
+                                          </ul>
+                                        )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                           </div>
                         ))}
                       </div>
@@ -466,14 +575,14 @@ export default function CVPage() {
                 {selectedCv.parsedData.skills && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Skills
+                      {t("cv.sections.skills")}
                     </label>
                     <div className="space-y-3">
                       {selectedCv.parsedData.skills.technical &&
                         selectedCv.parsedData.skills.technical.length > 0 && (
                           <div>
                             <p className="text-sm font-medium text-gray-600 mb-1">
-                              Technical Skills:
+                              {t("cv.sections.technicalSkills")}
                             </p>
                             <div className="flex flex-wrap gap-1">
                               {selectedCv.parsedData.skills.technical.map(
@@ -492,7 +601,7 @@ export default function CVPage() {
                         selectedCv.parsedData.skills.soft.length > 0 && (
                           <div>
                             <p className="text-sm font-medium text-gray-600 mb-1">
-                              Soft Skills:
+                              {t("cv.sections.softSkills")}
                             </p>
                             <div className="flex flex-wrap gap-1">
                               {selectedCv.parsedData.skills.soft.map(
@@ -511,7 +620,7 @@ export default function CVPage() {
                         selectedCv.parsedData.skills.languages.length > 0 && (
                           <div>
                             <p className="text-sm font-medium text-gray-600 mb-1">
-                              Languages:
+                              {t("cv.sections.languages")}
                             </p>
                             <div className="flex flex-wrap gap-1">
                               {selectedCv.parsedData.skills.languages.map(
@@ -534,7 +643,7 @@ export default function CVPage() {
                   selectedCv.parsedData.projects.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Projects
+                        {t("cv.sections.projects")}
                       </label>
                       <div className="space-y-2">
                         {selectedCv.parsedData.projects.map(
@@ -575,7 +684,7 @@ export default function CVPage() {
                   selectedCv.parsedData.certifications.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Certifications
+                        {t("cv.sections.certifications")}
                       </label>
                       <div className="space-y-2">
                         {selectedCv.parsedData.certifications.map(
@@ -601,7 +710,7 @@ export default function CVPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">CV has not been parsed yet</p>
+                <p className="text-gray-500">{t("cv.modals.notParsed")}</p>
               </div>
             )}
           </div>
@@ -612,7 +721,7 @@ export default function CVPage() {
       <div className="flex gap-4 mb-6">
         <input
           type="text"
-          placeholder="Search CVs..."
+          placeholder={t("cv.search")}
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           className="flex-1 input-base"
@@ -623,16 +732,16 @@ export default function CVPage() {
             handleFilterChange(e.target.value as "all" | "parsed" | "unparsed")
           }
           className="input-base w-auto">
-          <option value="all">All CVs</option>
-          <option value="parsed">Parsed</option>
-          <option value="unparsed">Unparsed</option>
+          <option value="all">{t("cv.filter.all")}</option>
+          <option value="parsed">{t("cv.filter.parsed")}</option>
+          <option value="unparsed">{t("cv.filter.unparsed")}</option>
         </select>
         <Button
           onClick={handleRefresh}
           variant="outline"
           className="h-full py-3 flex items-center gap-2">
           <RefreshCw className="h-4 w-4" />
-          Refresh
+          {t("cv.refresh")}
         </Button>
       </div>
 
@@ -642,14 +751,12 @@ export default function CVPage() {
           <div className="text-center py-12">
             <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No CVs uploaded yet
+              {t("cv.empty.noCVs")}
             </h3>
-            <p className="text-gray-600 mb-6">
-              Upload your first CV to get started with AI-powered features
-            </p>
+            <p className="text-gray-600 mb-6">{t("cv.empty.description")}</p>
             <Button onClick={() => setShowUpload(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Upload Your First CV
+              {t("cv.empty.uploadFirst")}
             </Button>
           </div>
         ) : (
@@ -678,7 +785,7 @@ export default function CVPage() {
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            Exporting...
+            {t("cv.exporting")}
           </div>
         </div>
       )}

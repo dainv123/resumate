@@ -432,7 +432,7 @@ export default function SettingsPage() {
                       <h5 className="text-2xl font-bold mb-2">
                         {stats?.plan.toUpperCase() || "FREE"} Plan
                       </h5>
-                      <p className="opacity-90">
+                      <p className="opacity-90 text-dark">
                         {t("settings.enjoyFeatures")}
                       </p>
                     </div>
@@ -441,7 +441,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Usage Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-main">
@@ -469,9 +469,21 @@ export default function SettingsPage() {
                   <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-main">
-                        {t("settings.tailoredCVs")}
+                        {t("settings.subProjects")}
                       </span>
                       <CheckCircle size={18} className="text-purple-500" />
+                    </div>
+                    <p className="text-3xl font-bold text-dark">
+                      {stats?.totalSubProjects || 0}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-main">
+                        {t("settings.tailoredCVs")}
+                      </span>
+                      <CheckCircle size={18} className="text-blue-500" />
                     </div>
                     <p className="text-3xl font-bold text-dark">
                       {stats?.tailoredCvs || 0}

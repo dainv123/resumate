@@ -1,11 +1,17 @@
-import { IsString, IsOptional, IsEnum, IsObject, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsBoolean,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum PortfolioTemplate {
   BASIC = 'basic',
   MODERN = 'modern',
   CREATIVE = 'creative',
-  MUHAMMAD_ISMAIL = 'muhammad_ismail',
+  MUHAMMAD_ISMAIL = 'muhammad-ismail',
 }
 
 export class CustomSectionsDto {

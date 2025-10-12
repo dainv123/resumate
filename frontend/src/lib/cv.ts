@@ -99,6 +99,13 @@ export interface ExportHistory {
   template: string;
 }
 
+export interface VersionHistory {
+  version: number;
+  parsedData: CVData;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
 export interface CV {
   id: string;
   userId: string;
@@ -112,6 +119,7 @@ export interface CV {
   jobDescriptionId?: string;
   improvementNotes?: ImprovementNotes;
   exportHistory?: ExportHistory[];
+  versionHistory?: VersionHistory[];
   originalCv?: CV;
   jobDescription?: JobDescription;
   tailoredVersions?: CV[];

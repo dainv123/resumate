@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { portfolioApi, PortfolioTemplateMetadata } from "@/lib/portfolio";
 
 export interface TemplateSection {
   hero: boolean;
@@ -32,26 +35,34 @@ export default function TemplateSelector({
   selectedTemplate,
   onSelectTemplate,
 }: TemplateSelectorProps) {
-  const [templates, setTemplates] = useState<TemplateConfig[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
+  // Use React Query with caching to prevent duplicate calls
+  const {
+    data: templatesData = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ["portfolio-templates"],
+    queryFn: portfolioApi.getTemplates,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes (templates rarely change)
+    retry: 2,
+  });
 
-  const fetchTemplates = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/portfolio/templates`
-      );
-      const data = await response.json();
-      setTemplates(data.templates || []);
-    } catch (error) {
-      console.error("Failed to fetch templates:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Transform templates
+  const templates = useMemo(() => {
+    return templatesData.map((t: PortfolioTemplateMetadata) => ({
+      id: t.name,
+      name: t.displayName,
+      description: t.description,
+      sections: t.metadata.sections,
+      allowCustomization: t.metadata.allowCustomization,
+      previewImage: undefined,
+    }));
+  }, [templatesData]);
+
+  const error = queryError ? t("portfolio.templateSelection.error") : null;
 
   const getSectionsList = (sections: TemplateSection): string[] => {
     const sectionNames: { [key in keyof TemplateSection]: string } = {
@@ -66,9 +77,11 @@ export default function TemplateSelector({
       contact: "Contact",
     };
 
-    return Object.entries(sections)
-      .filter(([_, enabled]) => enabled)
-      .map(([key, _]) => sectionNames[key as keyof TemplateSection]);
+    return (
+      Object.entries(sections)
+        ?.filter(([, enabled]) => enabled)
+        ?.map(([key]) => sectionNames[key as keyof TemplateSection]) || []
+    );
   };
 
   if (loading) {
@@ -79,12 +92,45 @@ export default function TemplateSelector({
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <div className="text-red-600 text-center">
+          <p className="text-lg font-semibold mb-2">⚠️ {t("common.error")}</p>
+          <p className="text-sm">{error}</p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          {t("portfolio.templateSelection.retry")}
+        </button>
+      </div>
+    );
+  }
+
+  if (templates.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <div className="text-gray-600 text-center">
+          <p className="text-lg font-semibold mb-2">
+            📭 {t("portfolio.templateSelection.noTemplates")}
+          </p>
+          <p className="text-sm">
+            {t("portfolio.templateSelection.contactAdmin")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-xl font-semibold mb-2">Choose a Template</h4>
+        <h4 className="text-xl font-semibold mb-2">
+          {t("portfolio.templateSelection.title")}
+        </h4>
         <p className="text-gray-600">
-          Select a portfolio template that fits your style
+          {t("portfolio.templateSelection.subtitle")}
         </p>
       </div>
 
@@ -135,7 +181,7 @@ export default function TemplateSelector({
               {/* Sections Preview */}
               <div>
                 <p className="text-xs font-medium text-gray-700 mb-2">
-                  Includes:
+                  {t("portfolio.templateSelection.includes")}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {getSectionsList(template.sections).map((section) => (
@@ -163,7 +209,7 @@ export default function TemplateSelector({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  <span>Customizable sections</span>
+                  <span>{t("portfolio.templateSelection.customizable")}</span>
                 </div>
               )}
             </div>

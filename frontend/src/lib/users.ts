@@ -13,6 +13,7 @@ export interface ChangePasswordData {
 export interface UserStats {
   totalCvs: number;
   totalProjects: number;
+  totalSubProjects: number;
   tailoredCvs: number;
   plan: string;
   createdAt: string;

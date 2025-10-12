@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { User, authApi, isAuthenticated } from "@/lib/auth";
 
 interface AuthContextType {
@@ -27,9 +33,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const initRef = useRef(false); // Prevent double init in Strict Mode
 
   useEffect(() => {
     const initAuth = async () => {
+      // Skip if already initialized (Strict Mode protection)
+      if (initRef.current) return;
+      initRef.current = true;
+
       // Chỉ chạy trên client side
       if (typeof window !== "undefined" && isAuthenticated()) {
         try {

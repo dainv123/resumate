@@ -21,7 +21,7 @@ export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const queryClient = useQueryClient();
-  const { showSuccess, showError } = useToast();
+  const { showError } = useToast();
   const { t } = useLanguage();
 
   const {
@@ -170,14 +170,14 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold text-gray-900">My Projects</h3>
-          <p className="text-gray-600">
-            Manage your projects and generate professional CV bullets
-          </p>
+          <h3 className="text-2xl font-bold text-gray-900">
+            {t("projects.title")}
+          </h3>
+          <p className="text-gray-600">{t("projects.subtitle")}</p>
         </div>
         <Button onClick={() => setShowForm(true)} className="flex items-center">
           <Plus className="h-4 w-4 mr-2" />
-          Add Project
+          {t("projects.addProject")}
         </Button>
       </div>
 
@@ -190,7 +190,7 @@ export default function ProjectsPage() {
         footer={
           <div className="flex justify-start space-x-3 w-full">
             <Button type="button" variant="outline" onClick={handleCancel}>
-              Cancel
+              {t("projects.cancel")}
             </Button>
             <Button
               type="submit"
@@ -214,14 +214,14 @@ export default function ProjectsPage() {
         <div className="text-center py-12">
           <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No projects yet
+            {t("projects.noProjects")}
           </h3>
           <p className="text-gray-600 mb-6">
-            Add your first project to start building your portfolio
+            {t("projects.noProjectsSubtitle")}
           </p>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Your First Project
+            {t("projects.addFirstProject")}
           </Button>
         </div>
       ) : (
@@ -243,26 +243,32 @@ export default function ProjectsPage() {
       {projects.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Project Statistics
+            {t("projects.statistics")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
                 {projects.length}
               </div>
-              <div className="text-sm text-gray-500">Total Projects</div>
+              <div className="text-sm text-gray-500">
+                {t("projects.totalProjects")}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
                 {projects.filter((p) => p.isAddedToCv).length}
               </div>
-              <div className="text-sm text-gray-500">Added to CV</div>
+              <div className="text-sm text-gray-500">
+                {t("projects.addedToCV")}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {projects.reduce((acc, p) => acc + p.techStack.length, 0)}
               </div>
-              <div className="text-sm text-gray-500">Technologies Used</div>
+              <div className="text-sm text-gray-500">
+                {t("projects.technologiesUsed")}
+              </div>
             </div>
           </div>
         </div>

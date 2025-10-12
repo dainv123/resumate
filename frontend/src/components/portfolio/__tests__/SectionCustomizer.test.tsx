@@ -24,7 +24,7 @@ describe("SectionCustomizer", () => {
 
   const nonCustomizableTemplate: TemplateConfig = {
     ...mockTemplateConfig,
-    id: "muhammad_ismail",
+    id: "muhammad-ismail",
     name: "Muhammad Ismail",
     allowCustomization: false,
   };

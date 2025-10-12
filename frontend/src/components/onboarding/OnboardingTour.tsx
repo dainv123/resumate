@@ -10,6 +10,7 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface OnboardingTourProps {
   run: boolean;
@@ -17,65 +18,57 @@ interface OnboardingTourProps {
 }
 
 interface TourStep {
-  title: string;
-  content: string;
+  titleKey: string;
+  contentKey: string;
   target?: string;
   placement?: "top" | "bottom" | "left" | "right" | "center";
 }
 
 const steps: TourStep[] = [
   {
-    title: "Welcome to Resumate! 🎉",
-    content:
-      "Let's take a quick tour to help you get started with creating and managing your professional CVs.",
+    titleKey: "onboarding.welcome.title",
+    contentKey: "onboarding.welcome.content",
     placement: "center",
   },
   {
-    title: "Upload Your CV",
-    content:
-      "Start by uploading your existing CV (PDF or Word format). Our AI will automatically extract and organize all your information.",
+    titleKey: "onboarding.uploadCV.title",
+    contentKey: "onboarding.uploadCV.content",
     target: '[data-tour="upload-cv"]',
     placement: "bottom",
   },
   {
-    title: "View Your Parsed CV",
-    content:
-      "Once uploaded, you'll see your CV data beautifully organized. You can edit, duplicate, or export it anytime.",
+    titleKey: "onboarding.viewCV.title",
+    contentKey: "onboarding.viewCV.content",
     target: '[data-tour="cv-preview"]',
     placement: "top",
   },
   {
-    title: "Tailor for Jobs",
-    content:
-      "Customize your CV for specific job descriptions. Our AI will highlight relevant experience and optimize keywords.",
+    titleKey: "onboarding.tailorJob.title",
+    contentKey: "onboarding.tailorJob.content",
     target: '[data-tour="tailor-button"]',
     placement: "bottom",
   },
   {
-    title: "Export Your CV",
-    content:
-      "Export your CV in multiple formats: PDF (with templates), Word, or ATS-friendly text format.",
+    titleKey: "onboarding.export.title",
+    contentKey: "onboarding.export.content",
     target: '[data-tour="export-button"]',
     placement: "left",
   },
   {
-    title: "Create Portfolio",
-    content:
-      "Generate a beautiful online portfolio from your CV data and share it with potential employers or clients.",
+    titleKey: "onboarding.portfolio.title",
+    contentKey: "onboarding.portfolio.content",
     target: '[data-tour="portfolio-nav"]',
     placement: "right",
   },
   {
-    title: "Settings & Preferences",
-    content:
-      "Customize your experience: change language, enable dark mode, and manage your account.",
+    titleKey: "onboarding.settings.title",
+    contentKey: "onboarding.settings.content",
     target: '[data-tour="settings-nav"]',
     placement: "right",
   },
   {
-    title: "You're All Set! 🚀",
-    content:
-      "Ready to create amazing CVs? Start by uploading your first CV or explore the features at your own pace.",
+    titleKey: "onboarding.allSet.title",
+    contentKey: "onboarding.allSet.content",
     placement: "center",
   },
 ];
@@ -84,6 +77,7 @@ export default function OnboardingTour({
   run,
   onComplete,
 }: OnboardingTourProps) {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -369,17 +363,17 @@ export default function OnboardingTour({
       return (
         <>
           <CheckCircle className="h-4 w-4 mr-1" />
-          Finish
+          {t("onboarding.finish")}
         </>
       );
     }
     return (
       <>
-        Next
+        {t("onboarding.next")}
         <ArrowRight className="h-4 w-4 ml-1" />
       </>
     );
-  }, [currentStep]);
+  }, [currentStep, t]);
 
   return (
     <AnimatePresence>
@@ -406,11 +400,14 @@ export default function OnboardingTour({
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-900">
-                    {currentStepData.title}
+                    {t(currentStepData.titleKey as any)}
                   </h3>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs text-gray-500">
-                      Step {currentStep + 1} of {steps.length}
+                      {t("onboarding.step", {
+                        current: currentStep + 1,
+                        total: steps.length,
+                      })}
                     </span>
                     <div className="flex-1 bg-gray-200 rounded-full h-1.5">
                       <div
@@ -431,7 +428,7 @@ export default function OnboardingTour({
 
               {/* Content */}
               <p className="text-gray-700 mb-6 leading-relaxed">
-                {currentStepData.content}
+                {t(currentStepData.contentKey as any)}
               </p>
 
               {/* Footer */}
@@ -440,14 +437,14 @@ export default function OnboardingTour({
                   {currentStep > 0 && (
                     <Button variant="outline" size="sm" onClick={handleBack}>
                       <ArrowLeft className="h-4 w-4 mr-1" />
-                      Back
+                      {t("onboarding.back")}
                     </Button>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={handleSkip}>
-                    Skip Tour
+                    {t("onboarding.skipTour")}
                   </Button>
                   <Button onClick={handleNext}>{nextButtonContent}</Button>
                 </div>

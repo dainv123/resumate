@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
@@ -23,11 +24,31 @@ import OnboardingTour from "@/components/onboarding/OnboardingTour";
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [cvs, setCvs] = useState<unknown[]>([]);
-  const [projects, setProjects] = useState<unknown[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Use React Query with caching to prevent duplicate calls
+  const { data: cvs = [] } = useQuery({
+    queryKey: ["cvs"],
+    queryFn: cvApi.getUserCvs,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: projectsApi.getUserProjects,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   // Calculate real metrics
+  // CV Quality Score Breakdown:
+  // - Basic Info: 20 points (name, email, phone, address: 5 each)
+  // - Experience: 30 points (10 per experience, max 30)
+  // - Sub-Projects: +10 bonus points (2 per sub-project, max 10)
+  // - Skills: 20 points (2 per skill, max 20)
+  // - Projects: 15 points (5 per project, max 15)
+  // - Education: 10 points
+  // - Summary: 5 points
+  // Total possible: 110 points (capped at 100)
   const calculateCVQualityScore = (cvs: unknown[]): number => {
     if (cvs.length === 0) return 0;
 
@@ -42,9 +63,24 @@ export default function DashboardPage() {
       if (data.phone) score += 5;
       if (data.address) score += 5;
 
-      // Experience (30 points)
+      // Experience (30 points base + up to 10 bonus from sub-projects)
       if (data.experience && data.experience.length > 0) {
         score += Math.min(30, data.experience.length * 10);
+
+        // Bonus for sub-projects (up to 10 extra points)
+        const totalSubProjects = data.experience.reduce(
+          (count: number, exp: any) => {
+            return (
+              count +
+              (Array.isArray(exp.subProjects) ? exp.subProjects.length : 0)
+            );
+          },
+          0
+        );
+
+        if (totalSubProjects > 0) {
+          score += Math.min(10, totalSubProjects * 2);
+        }
       }
 
       // Skills (20 points)
@@ -116,23 +152,6 @@ export default function DashboardPage() {
   const cvQualityScore = calculateCVQualityScore(cvs);
   const profileCompleteness = calculateProfileCompleteness(user, cvs, projects);
   const successRate = calculateSuccessRate(cvs);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cvsData, projectsData] = await Promise.all([
-          cvApi.getUserCvs(),
-          projectsApi.getUserProjects(),
-        ]);
-        setCvs(cvsData);
-        setProjects(projectsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   // Check if user has seen onboarding tour
   useEffect(() => {
@@ -294,7 +313,10 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/dashboard/job-tailor" className="group" data-tour="tailor-button">
+        <Link
+          href="/dashboard/job-tailor"
+          className="group"
+          data-tour="tailor-button">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-purple-500">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -316,7 +338,10 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/dashboard/portfolio" className="group" data-tour="portfolio-nav">
+        <Link
+          href="/dashboard/portfolio"
+          className="group"
+          data-tour="portfolio-nav">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-yellow">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-yellow rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -341,7 +366,9 @@ export default function DashboardPage() {
 
       {/* Recent CVs */}
       {recentCvs.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200" data-tour="cv-preview">
+        <div
+          className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
+          data-tour="cv-preview">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-xl font-semibold text-dark font-inter">
               {t("dashboard.recentCVs")}
@@ -552,7 +579,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Onboarding Tour */}
-      <OnboardingTour run={showOnboarding} onComplete={handleOnboardingComplete} />
+      <OnboardingTour
+        run={showOnboarding}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 }

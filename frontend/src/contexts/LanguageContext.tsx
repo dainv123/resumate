@@ -11,7 +11,10 @@ type TranslationKey = string;
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: TranslationKey) => string;
+  t: (
+    key: TranslationKey,
+    variables?: Record<string, string | number>
+  ) => string;
   languages: { code: Language; name: string; nativeName: string }[];
 }
 
@@ -48,7 +51,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, lang);
   };
 
-  const t = (key: TranslationKey): string => {
+  const t = (
+    key: TranslationKey,
+    variables?: Record<string, string | number>
+  ): string => {
     const keys = key.split(".");
     let value: any = translations[language];
 
@@ -65,11 +71,24 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             return key; // Return key itself if not found
           }
         }
-        return fallback;
+        value = fallback;
+        break;
       }
     }
 
-    return typeof value === "string" ? value : key;
+    let result = typeof value === "string" ? value : key;
+
+    // Replace variables in the format {{variable}}
+    if (variables) {
+      Object.entries(variables).forEach(([varKey, varValue]) => {
+        result = result.replace(
+          new RegExp(`\\{\\{${varKey}\\}\\}`, "g"),
+          String(varValue)
+        );
+      });
+    }
+
+    return result;
   };
 
   const languages = [
