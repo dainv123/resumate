@@ -120,3 +120,4 @@ rm -f html_template_test.pdf
 echo ""
 echo "🎉 HTML template test completed!"
 
+

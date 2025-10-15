@@ -54,7 +54,7 @@ function AuthCallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams, router, login, updateUser]);
+  }, [searchParams, router, updateUser, t]);
 
   if (loading) {
     return (

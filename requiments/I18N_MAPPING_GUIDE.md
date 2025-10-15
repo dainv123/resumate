@@ -215,3 +215,4 @@ After applying translations:
 - `frontend/I18N_GUIDE.md` (detailed guide)
 
 
+

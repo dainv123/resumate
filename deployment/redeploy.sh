@@ -9,13 +9,13 @@ set -e
 if [ -f "/home/resumate/docker-compose.prod.yml" ] || [ -f "./docker-compose.prod.yml" ] || [ -f "../docker-compose.prod.yml" ]; then
     # Running on server directly
     SERVER_IP="localhost"
-    DOMAIN=${1:-"daidev.click"}
+    DOMAIN=${1:-"resumate.click"}
     FORCE_REBUILD=${2:-"false"}
     echo "🔍 Detected: Running on server directly"
 else
     # Running from remote
     SERVER_IP=${1:-"103.90.234.177"}
-    DOMAIN=${2:-"daidev.click"}
+    DOMAIN=${2:-"resumate.click"}
     FORCE_REBUILD=${3:-"false"}
     echo "🔍 Detected: Running from remote"
 fi
@@ -160,8 +160,8 @@ check_status() {
     
     echo ""
     print_status $YELLOW "🔗 Service URLs:"
-    echo "   - Frontend: http://$DOMAIN:5000"
-    echo "   - Backend: http://$DOMAIN:5001"
+    echo "   - Frontend: https://$DOMAIN"
+    echo "   - Backend: https://api.$DOMAIN"
     
     echo ""
     print_status $YELLOW "🔍 Environment Variables:"

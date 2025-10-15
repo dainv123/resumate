@@ -4,9 +4,36 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { memo } from "react";
 import { FileText, Users, Briefcase, Sparkles } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+
+// Memoized Feature Card Component
+const FeatureCard = memo(
+  ({
+    icon: Icon,
+    title,
+    description,
+    iconColor,
+  }: {
+    icon: any;
+    title: string;
+    description: string;
+    iconColor: string;
+  }) => (
+    <div className="portfolio-card text-center">
+      <Icon className={`h-12 w-12 ${iconColor} mx-auto mb-4`} />
+      <h3
+        className="text-lg font-semibold mb-2"
+        style={{ color: "var(--dark-color)" }}>
+        {title}
+      </h3>
+      <p style={{ color: "var(--main-color)" }}>{description}</p>
+    </div>
+  )
+);
+
+FeatureCard.displayName = "FeatureCard";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -122,53 +149,30 @@ export default function HomePage() {
 
         {/* Features */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="portfolio-card text-center">
-            <FileText className="h-12 w-12 blueColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              {t("landing.feature1Title")}
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              {t("landing.feature1Desc")}
-            </p>
-          </div>
-
-          <div className="portfolio-card text-center">
-            <Briefcase className="h-12 w-12 yellowColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              {t("landing.feature2Title")}
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              {t("landing.feature2Desc")}
-            </p>
-          </div>
-
-          <div className="portfolio-card text-center">
-            <Sparkles className="h-12 w-12 blueColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              {t("landing.feature3Title")}
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              {t("landing.feature3Desc")}
-            </p>
-          </div>
-
-          <div className="portfolio-card text-center">
-            <Users className="h-12 w-12 yellowColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              {t("landing.feature4Title")}
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              {t("landing.feature4Desc")}
-            </p>
-          </div>
+          <FeatureCard
+            icon={FileText}
+            title={t("landing.feature1Title")}
+            description={t("landing.feature1Desc")}
+            iconColor="blueColor"
+          />
+          <FeatureCard
+            icon={Briefcase}
+            title={t("landing.feature2Title")}
+            description={t("landing.feature2Desc")}
+            iconColor="yellowColor"
+          />
+          <FeatureCard
+            icon={Sparkles}
+            title={t("landing.feature3Title")}
+            description={t("landing.feature3Desc")}
+            iconColor="blueColor"
+          />
+          <FeatureCard
+            icon={Users}
+            title={t("landing.feature4Title")}
+            description={t("landing.feature4Desc")}
+            iconColor="yellowColor"
+          />
         </div>
 
         {/* CTA Section */}
