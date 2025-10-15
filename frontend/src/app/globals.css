@@ -283,6 +283,149 @@ h6 {
   .portfolio-card {
     padding: 30px 20px;
   }
+
+  /* Mobile-specific styles */
+  .mobile-header-height {
+    height: 115px; /* Actual mobile header height */
+  }
+
+  .mobile-header-height-with-user {
+    height: 115px; /* Height when user info bar is shown */
+  }
+
+  /* Ensure proper spacing for mobile */
+  .mobile-content-padding {
+    padding-top: 115px; /* Space for fixed mobile header */
+  }
+
+  .mobile-content-padding-with-user {
+    padding-top: 115px; /* Space when user info bar is shown */
+  }
+
+  /* Mobile navigation improvements */
+  .mobile-nav-item {
+    padding: 12px 16px;
+    font-size: 16px; /* Larger touch targets */
+  }
+
+  /* Mobile button improvements */
+  .mobile-button {
+    min-height: 44px; /* iOS recommended touch target */
+    padding: 12px 24px;
+  }
+
+  /* Mobile form improvements */
+  .mobile-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px 16px;
+  }
+
+  /* Mobile card adjustments */
+  .mobile-card {
+    margin: 8px;
+    border-radius: 8px;
+  }
+
+  /* Mobile grid adjustments */
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Mobile text adjustments */
+  .mobile-text-sm {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .mobile-text-lg {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  /* Mobile spacing utilities */
+  .mobile-p-4 {
+    padding: 16px;
+  }
+
+  .mobile-p-6 {
+    padding: 24px;
+  }
+
+  .mobile-m-4 {
+    margin: 16px;
+  }
+
+  .mobile-m-6 {
+    margin: 24px;
+  }
+}
+
+/* Tablet styles */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .portfolio-card {
+    padding: 35px 25px;
+  }
+
+  /* Tablet grid adjustments */
+  .tablet-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  /* Tablet spacing */
+  .tablet-p-6 {
+    padding: 24px;
+  }
+}
+
+/* Mobile landscape and small tablets */
+@media (max-width: 896px) and (orientation: landscape) {
+  .mobile-landscape-header {
+    height: 50px; /* Smaller header for landscape */
+  }
+
+  .mobile-landscape-content {
+    padding-top: 50px;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+    line-height: 22px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+  h2 {
+    font-size: 24px;
+  }
+  h3 {
+    font-size: 20px;
+  }
+
+  .portfolio-card {
+    padding: 20px 15px;
+  }
+
+  /* Extra small mobile adjustments */
+  .xs-mobile-p-3 {
+    padding: 12px;
+  }
+
+  .xs-mobile-text-sm {
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .xs-mobile-button {
+    min-height: 40px;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 
 /* Toast Animations */
@@ -311,6 +454,25 @@ h6 {
   --z-popover: 1500;
   --z-tooltip: 1600;
   --z-toast: 1700;
+}
+
+/* Mobile-specific z-index fixes */
+@media (max-width: 1024px) {
+  .mobile-dropdown {
+    z-index: 60 !important;
+  }
+
+  .mobile-header {
+    z-index: 40 !important;
+  }
+
+  .mobile-sidebar {
+    z-index: 40 !important;
+  }
+
+  .mobile-overlay {
+    z-index: 30 !important;
+  }
 }
 
 /* Modal Animations */
@@ -386,17 +548,17 @@ h6 {
   --yellow-color: #fbbf24;
   --blue-color: #60a5fa;
   --white-color: #1e293b;
-  
+
   /* Background colors */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
-  
+
   /* Text colors */
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  
+
   /* Border colors */
   --border-color: #334155;
 }

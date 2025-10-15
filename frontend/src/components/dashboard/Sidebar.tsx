@@ -34,114 +34,147 @@ const bottomNavigationItems = [
   { key: "settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { t } = useLanguage();
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg flex flex-col">
-      {/* Logo - Fixed at top */}
-      <Link
-        href={homeNavigationItems[0].href}
-        className="flex items-center px-6 py-4 border-b flex-shrink-0">
-        <FileText className="h-8 w-8 text-main" />
-        <span className="ml-2 text-xl font-bold text-dark font-inter">
-          Resumate
-        </span>
-      </Link>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
-      {/* User Info - Fixed below logo */}
-      <div className="px-6 py-4 border-b flex-shrink-0">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            {user?.avatar ? (
-              <img
-                className="h-10 w-10 rounded-full"
-                src={user.avatar}
-                alt={user.name}
-              />
-            ) : (
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="h-6 w-6 text-blue-600" />
-              </div>
-            )}
-          </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-dark font-karla">
-              {user?.name}
-            </p>
-            <p className="text-xs text-main">{user?.email}</p>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue text-white">
-              {user?.plan === "free" ? "Free Plan" : "Pro Plan"}
-            </span>
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "fixed left-0 top-0 h-full w-64 bg-white shadow-lg flex flex-col z-40 transition-transform duration-300 ease-in-out",
+          "lg:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+        {/* Logo - Fixed at top */}
+        <Link
+          href={homeNavigationItems[0].href}
+          className="flex items-center px-6 py-4 border-b flex-shrink-0">
+          <FileText className="h-8 w-8 text-main" />
+          <span className="ml-2 text-xl font-bold text-dark font-inter">
+            Resumate
+          </span>
+        </Link>
+
+        {/* User Info - Fixed below logo */}
+        <div className="px-6 py-4 border-b flex-shrink-0">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              {user?.avatar ? (
+                <img
+                  className="h-10 w-10 rounded-full"
+                  src={user.avatar}
+                  alt={user.name}
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <User className="h-6 w-6 text-blue-600" />
+                </div>
+              )}
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-dark font-karla">
+                {user?.name}
+              </p>
+              <p className="text-xs text-main">{user?.email}</p>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue text-white">
+                {user?.plan === "free" ? "Free Plan" : "Pro Plan"}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation - Scrollable middle section */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-        {navigationItems.map((item) => {
-          // Simple exact match for active state
-          const isActive = pathname === item.href;
+        {/* Navigation - Scrollable middle section */}
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          {navigationItems.map((item) => {
+            // Simple exact match for active state
+            const isActive = pathname === item.href;
 
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={cn(
-                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors font-karla",
-                isActive
-                  ? "bg-blue text-white"
-                  : "text-main hover:bg-gray-50 hover:text-dark"
-              )}>
-              <item.icon
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                onClick={() => {
+                  // Close sidebar on mobile when navigation item is clicked
+                  if (onClose) {
+                    onClose();
+                  }
+                }}
                 className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive ? "text-white" : "text-main group-hover:text-dark"
-                )}
-              />
-              {t(`nav.${item.key}`)}
-            </Link>
-          );
-        })}
-      </nav>
+                  "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors font-karla",
+                  isActive
+                    ? "bg-blue text-white"
+                    : "text-main hover:bg-gray-50 hover:text-dark"
+                )}>
+                <item.icon
+                  className={cn(
+                    "mr-3 h-5 w-5 flex-shrink-0",
+                    isActive ? "text-white" : "text-main group-hover:text-dark"
+                  )}
+                />
+                {t(`nav.${item.key}`)}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Settings & Logout - Fixed at bottom */}
-      <div className="px-4 py-4 border-t space-y-1 flex-shrink-0">
-        <div className="py-2">
-          <LanguageSwitcher className=" w-full" />
+        {/* Settings & Logout - Fixed at bottom */}
+        <div className="px-4 py-4 border-t space-y-1 flex-shrink-0">
+          <div className="py-2">
+            <LanguageSwitcher className=" w-full" />
+          </div>
+          {bottomNavigationItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                onClick={() => {
+                  // Close sidebar on mobile when navigation item is clicked
+                  if (onClose) {
+                    onClose();
+                  }
+                }}
+                data-tour={item.key === "settings" ? "settings-nav" : undefined}
+                className={cn(
+                  "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors font-karla",
+                  isActive
+                    ? "bg-blue text-white"
+                    : "text-main hover:bg-gray-50 hover:text-dark"
+                )}>
+                <item.icon
+                  className={cn(
+                    "mr-3 h-5 w-5 flex-shrink-0",
+                    isActive ? "text-white" : "text-main group-hover:text-dark"
+                  )}
+                />
+                {t(`nav.${item.key}`)}
+              </Link>
+            );
+          })}
+          <button
+            onClick={logout}
+            className="group flex items-center w-full px-3 py-2 text-sm font-medium text-main rounded-md hover:bg-gray-50 hover:text-dark font-karla transition-colors">
+            <LogOut className="mr-3 h-5 w-5 text-main group-hover:text-dark" />
+            {t("nav.logout")}
+          </button>
         </div>
-        {bottomNavigationItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              data-tour={item.key === "settings" ? "settings-nav" : undefined}
-              className={cn(
-                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors font-karla",
-                isActive
-                  ? "bg-blue text-white"
-                  : "text-main hover:bg-gray-50 hover:text-dark"
-              )}>
-              <item.icon
-                className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive ? "text-white" : "text-main group-hover:text-dark"
-                )}
-              />
-              {t(`nav.${item.key}`)}
-            </Link>
-          );
-        })}
-        <button
-          onClick={logout}
-          className="group flex items-center w-full px-3 py-2 text-sm font-medium text-main rounded-md hover:bg-gray-50 hover:text-dark font-karla transition-colors">
-          <LogOut className="mr-3 h-5 w-5 text-main group-hover:text-dark" />
-          {t("nav.logout")}
-        </button>
       </div>
-    </div>
+    </>
   );
 }
