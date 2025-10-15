@@ -6,22 +6,36 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
   title: {
-    default: "Resumate - Update CV của bạn trong 1 phút",
+    default: "Resumate - Update CV in 1 Minute | Cập nhật CV trong 1 phút",
     template: "%s | Resumate",
   },
   description:
-    "Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project mới hoặc Job Description. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
+    "AI-powered CV & Portfolio builder for freelancers. Update your CV automatically from new projects or job descriptions. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
   keywords: [
-    "CV",
-    "Resume",
-    "Portfolio",
-    "Freelancer",
+    // English keywords
+    "CV builder",
+    "Resume builder",
+    "Portfolio builder",
+    "Freelancer tools",
+    "AI CV generator",
+    "CV maker online",
+    "Professional resume",
+    "Job application",
+    "Career tools",
+    "CV optimization",
+    "Resume templates",
+    "Portfolio website",
+    // Vietnamese keywords
     "Tạo CV",
     "CV online",
     "AI CV",
-    "Job application",
-    "Career",
-    "Professional CV",
+    "CV chuyên nghiệp",
+    "Portfolio online",
+    "Freelancer Việt Nam",
+    "Tìm việc",
+    "Ứng tuyển",
+    "CV đẹp",
+    "Mẫu CV",
   ],
   authors: [{ name: "Resumate Team" }],
   creator: "Resumate",
@@ -42,9 +56,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Resumate - Update CV của bạn trong 1 phút",
+    title: "Resumate - AI CV Builder | Tạo CV với AI",
     description:
-      "Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project mới hoặc Job Description",
+      "AI-powered CV & Portfolio builder. Create professional resumes automatically. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
     url: "/",
     siteName: "Resumate",
     images: [
@@ -52,17 +66,18 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Resumate - Tạo CV chuyên nghiệp",
+        alt: "Resumate - AI CV Builder | Tạo CV với AI",
       },
     ],
-    locale: "vi_VN",
+    locale: "en_US",
     type: "website",
+    alternateLocale: ["vi_VN"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Resumate - Update CV của bạn trong 1 phút",
+    title: "Resumate - AI CV Builder | Tạo CV với AI",
     description:
-      "Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project mới hoặc Job Description",
+      "AI-powered CV & Portfolio builder. Create professional resumes automatically. Tạo CV chuyên nghiệp với AI.",
     images: ["/og-image.jpg"],
     creator: "@resumate",
   },
@@ -106,26 +121,40 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebApplication",
               name: "Resumate",
+              alternateName: "Resumate - AI CV Builder",
               description:
-                "Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project mới hoặc Job Description",
+                "AI-powered CV & Portfolio builder for freelancers. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
               url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web Browser",
+              inLanguage: ["en", "vi"],
               offers: {
                 "@type": "Offer",
                 price: "0",
-                priceCurrency: "VND",
+                priceCurrency: "USD",
+                availability: "https://schema.org/InStock",
               },
               creator: {
                 "@type": "Organization",
                 name: "Resumate Team",
+                url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
               },
               featureList: [
+                "AI-powered CV generation",
+                "Automatic CV optimization",
+                "Portfolio management",
+                "Job description integration",
                 "Tạo CV tự động với AI",
                 "Tối ưu hóa CV cho từ khóa công việc",
                 "Quản lý Portfolio",
                 "Tích hợp với Job Description",
               ],
+              audience: {
+                "@type": "Audience",
+                audienceType: "Freelancers, Job Seekers, Professionals",
+              },
+              keywords:
+                "CV builder, Resume builder, AI CV, Portfolio, Freelancer tools, Tạo CV, CV online, CV chuyên nghiệp",
             }),
           }}
         />
