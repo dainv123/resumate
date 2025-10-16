@@ -123,7 +123,7 @@ export default function HomePage() {
             style={{ color: "var(--dark-color)" }}
             dangerouslySetInnerHTML={{
               __html: t("landing.title")
-                .replace("<span>", '<span className="blueColor">')
+                .replace("<span>", '<span class="blueColor">')
                 .replace("</span>", "</span>"),
             }}></h1>
           <p
