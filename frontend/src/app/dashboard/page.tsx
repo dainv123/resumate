@@ -15,11 +15,16 @@ import {
   TrendingUp,
   CheckCircle,
   ArrowRight,
+  Zap,
+  Clock,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
-import { cvApi } from "@/lib/cv";
+import { useCvsPaginated } from "@/hooks/useCvs";
 import { projectsApi } from "@/lib/projects";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import RecentCvsSection from "@/components/dashboard/RecentCvsSection";
+// import { CVUtils } from '@/utils/cv.utils';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -27,11 +32,8 @@ export default function DashboardPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Use React Query with caching to prevent duplicate calls
-  const { data: cvs = [] } = useQuery({
-    queryKey: ["cvs"],
-    queryFn: cvApi.getUserCvs,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
+  const { data: cvsData } = useCvsPaginated({ limit: 50, sortBy: "updatedAt", sortOrder: "desc" });
+  const cvs = cvsData?.data ?? [];
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
@@ -167,12 +169,49 @@ export default function DashboardPage() {
     localStorage.setItem("hasSeenOnboarding", "true");
   };
 
-  const recentCvs = cvs.slice(0, 3);
   const recentProjects = projects.slice(0, 3);
   const tailoredCvs = cvs.filter((cv) => (cv as any)?.isTailored);
 
   return (
     <div className="space-y-8">
+      {/* Quick Action Banner */}
+      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 rounded-lg shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold mb-1">
+              {t("landing.quickBuild.title")}
+            </h3>
+            <p className="text-sm opacity-90 mb-2">
+              {t("landing.quickBuild.subtitle")}
+            </p>
+            <div className="flex items-center gap-2 text-xs opacity-75">
+              <Clock className="h-3 w-3" />
+              <span>{t("landing.quickBuild.countdown")}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard/job-tailor">
+              <Button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 px-4 py-2">
+                <Zap className="h-4 w-4" />
+                {t("landing.quickBuild.button")}
+              </Button>
+            </Link>
+            <Link href="/dashboard/ai-wizard">
+              <Button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 px-4 py-2">
+                <Bot className="h-4 w-4" />
+                AI Wizard
+              </Button>
+            </Link>
+            <Link href="/dashboard/templates">
+              <Button className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 px-4 py-2">
+                <Sparkles className="h-4 w-4" />
+                Templates
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Welcome Section */}
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <div className="flex items-center justify-between">
@@ -364,61 +403,12 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Recent CVs */}
-      {recentCvs.length > 0 && (
-        <div
-          className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
-          data-tour="cv-preview">
-          <div className="flex items-center justify-between mb-6">
-            <h4 className="text-xl font-semibold text-dark font-inter">
-              {t("dashboard.recentCVs")}
-            </h4>
-            <Link
-              href="/dashboard/cv"
-              className="text-blue text-sm font-medium hover:text-dark transition-colors">
-              {t("dashboard.viewAll")}
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {recentCvs.map((cv) => (
-              <div
-                key={(cv as any)?.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex items-center min-w-0 flex-1 pr-10">
-                  <div className="w-10 h-10 bg-blue rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <FileText className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h5
-                      className="font-medium text-dark font-karla truncate"
-                      title={(cv as any)?.originalFileName}>
-                      {(cv as any)?.originalFileName}
-                    </h5>
-                    <p className="text-sm text-main">
-                      {(cv as any)?.isTailored
-                        ? t("dashboard.tailoredCV")
-                        : t("dashboard.originalCV")}{" "}
-                      • {new Date((cv as any)?.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-                  {(cv as any)?.isTailored && (
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
-                      {t("dashboard.tailored")}
-                    </span>
-                  )}
-                  <Link href={`/dashboard/cv`}>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Recent CVs with Lazy Loading */}
+      <div
+        className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
+        data-tour="cv-preview">
+        <RecentCvsSection limit={3} showViewAll={true} />
+      </div>
 
       {/* Recent Projects */}
       {recentProjects.length > 0 && (

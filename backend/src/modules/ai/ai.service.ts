@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleAIService } from './providers/google-ai.service';
 import { DocumentParserService } from './providers/document-parser.service';
-import { CVData } from '../cv/entities/cv.entity';
+import { CVData } from '../../shared/interfaces/cv-data.interface';
 
 @Injectable()
 export class AiService {
@@ -140,7 +140,8 @@ ${cvData.summary || 'I am a dedicated professional with a strong track record of
 Thank you for considering my application.
 
 Sincerely,
-${cvData.name || 'Candidate'}`;
+      // @ts-ignore
+      ${cvData.contact?.name || 'Candidate'}`;
   }
 
   private async fallbackParsing(fileBuffer: Buffer, mimeType: string): Promise<CVData> {
@@ -153,10 +154,12 @@ ${cvData.name || 'Candidate'}`;
       const phoneMatch = text.match(/(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/);
       
       return {
-        name: 'Unknown',
-        email: emailMatch ? emailMatch[0] : 'unknown@email.com',
-        phone: phoneMatch ? phoneMatch[0] : '',
-        address: '',
+        contact: {
+          name: 'Unknown',
+          email: emailMatch ? emailMatch[0] : 'unknown@email.com',
+          phone: phoneMatch ? phoneMatch[0] : '',
+          address: '',
+        },
         summary: '',
         education: [],
         experience: [],
@@ -175,10 +178,12 @@ ${cvData.name || 'Candidate'}`;
     } catch (error) {
       this.logger.error('Fallback parsing also failed:', error);
       return {
-        name: 'Unknown',
-        email: 'unknown@email.com',
-        phone: '',
-        address: '',
+        contact: {
+          name: 'Unknown',
+          email: 'unknown@email.com',
+          phone: '',
+          address: '',
+        },
         summary: '',
         education: [],
         experience: [],

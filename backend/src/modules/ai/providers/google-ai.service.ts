@@ -106,19 +106,73 @@ export class GoogleAIService {
         5. Highlight relevant projects and achievements
         6. Ensure ATS compatibility
         
-        Return the tailored CV data as a JSON object with the same structure as the input.
+        IMPORTANT: Return the tailored CV data as a JSON object with EXACTLY the same structure as the input.
+        - Keep the "contact" object nested (do not flatten it)
+        - Maintain all array structures (experience, education, projects, etc.)
+        - Preserve the skills object with technical, soft, languages, tools arrays
+        - Do not change the top-level structure, only modify the content within each field
       `;
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
       
+      // Debug logging
+      this.logger.log('=== AI TAILOR RESPONSE ===');
+      this.logger.log(responseText);
+      this.logger.log('=== END AI RESPONSE ===');
+      
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in tailored response');
       }
       
-      return JSON.parse(jsonMatch[0]);
+      const tailoredData = JSON.parse(jsonMatch[0]);
+      
+      // Debug logging
+      this.logger.log('=== PARSED TAILORED DATA ===');
+      this.logger.log(JSON.stringify(tailoredData, null, 2));
+      this.logger.log('=== END PARSED DATA ===');
+      
+      // Debug logging before restructure
+      this.logger.log('=== BEFORE RESTRUCTURE ===');
+      this.logger.log(`Has name: ${!!tailoredData.name}`);
+      this.logger.log(`Has contact: ${!!tailoredData.contact}`);
+      this.logger.log(`Keys: ${Object.keys(tailoredData).join(', ')}`);
+      
+      // Ensure the response maintains the standardized CVData structure
+      // If AI flattened contact info, restructure it properly
+      if (tailoredData.name && !tailoredData.contact) {
+        this.logger.log('=== RESTRUCTURING FLATTENED DATA ===');
+        tailoredData.contact = {
+          name: tailoredData.name,
+          email: tailoredData.email || '',
+          phone: tailoredData.phone || '',
+          address: tailoredData.address || '',
+          linkedin: tailoredData.linkedin || '',
+          github: tailoredData.github || '',
+          website: tailoredData.website || '',
+          location: tailoredData.location || ''
+        };
+        
+        // Remove flattened fields
+        delete tailoredData.name;
+        delete tailoredData.email;
+        delete tailoredData.phone;
+        delete tailoredData.address;
+        delete tailoredData.linkedin;
+        delete tailoredData.github;
+        delete tailoredData.website;
+        delete tailoredData.location;
+        
+        this.logger.log('=== AFTER RESTRUCTURE ===');
+        this.logger.log(`Has contact: ${!!tailoredData.contact}`);
+        this.logger.log(`Contact keys: ${tailoredData.contact ? Object.keys(tailoredData.contact).join(', ') : 'none'}`);
+      } else {
+        this.logger.log('=== NO RESTRUCTURE NEEDED ===');
+      }
+      
+      return tailoredData;
     } catch (error) {
       this.logger.error('Error tailoring CV content:', error);
       throw error;
@@ -183,8 +237,8 @@ export class GoogleAIService {
         ${jobDescription}
         
         CV Data:
-        Name: ${cvData.name || 'Candidate'}
-        Email: ${cvData.email || ''}
+        Name: ${cvData.contact?.name || cvData.name || 'Candidate'}
+        Email: ${cvData.contact?.email || cvData.email || ''}
         Summary: ${cvData.summary || ''}
         Skills: ${JSON.stringify(cvData.skills)}
         Experience: ${JSON.stringify(cvData.experience?.slice(0, 3))}
@@ -252,11 +306,16 @@ export class GoogleAIService {
 
         Extract and return a JSON object with this comprehensive structure:
         {
-          "name": "Full Name",
-          "email": "email@example.com",
-          "phone": "phone number",
-          "address": "address",
-          "linkedin": "url (optional)",
+          "contact": {
+            "name": "Full Name",
+            "email": "email@example.com",
+            "phone": "phone number",
+            "address": "address",
+            "linkedin": "url (optional)",
+            "github": "url (optional)",
+            "website": "url (optional)",
+            "location": "location (optional)"
+          },
           "dateOfBirth": "date (optional)",
           "summary": "professional summary",
           "education": [
@@ -400,11 +459,16 @@ export class GoogleAIService {
   private cleanupParsedData(data: any): any {
     // Preserve all original data and only ensure structure consistency
     const cleanedData = {
-      name: data.name || '',
-      email: data.email || '',
-      phone: data.phone || '',
-      address: data.address || '',
-      linkedin: data.linkedin || '',
+      contact: {
+        name: data.contact?.name || data.name || '',
+        email: data.contact?.email || data.email || '',
+        phone: data.contact?.phone || data.phone || '',
+        address: data.contact?.address || data.address || '',
+        linkedin: data.contact?.linkedin || data.linkedin || '',
+        github: data.contact?.github || data.github || '',
+        website: data.contact?.website || data.website || '',
+        location: data.contact?.location || data.location || ''
+      },
       dateOfBirth: data.dateOfBirth || '',
       summary: data.summary || '',
       education: Array.isArray(data.education) ? data.education.map(edu => ({

@@ -16,7 +16,7 @@ export default function MobileHeader({
   onToggleSidebar,
 }: MobileHeaderProps) {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
 
   return (
     <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white shadow-sm border-b">

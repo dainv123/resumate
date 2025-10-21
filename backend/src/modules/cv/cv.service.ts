@@ -1,16 +1,41 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cv } from './entities/cv.entity';
 import { JobDescriptionService } from './job-description.service';
 import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
-import { CreateCvDto, UpdateCvDto, TailorCvDto } from './dto/cv.dto';
+import { CreateCvDto, UpdateCvDto, TailorCvDto, QuickBuildCvDto } from './dto/cv.dto';
 import { DocumentParserService } from '../ai/providers/document-parser.service';
 import { FileUploadService } from '../../shared/services/file-upload.service';
+import { ExportService } from '../../shared/services/export.service';
+import { DynamicTemplateService } from '../../shared/services/dynamic-template.service';
+import { TemplatesService } from '../templates/templates.service';
+import { CVData, TemplateConfig } from '../../shared/interfaces/cv-data.interface';
+import { CVDataUtils } from '../../shared/utils/cv-data.utils';
+
+export interface PaginationOptions {
+  page: number;
+  limit: number;
+  search?: string;
+  sortBy: string;
+  sortOrder: 'ASC' | 'DESC';
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
 
 @Injectable()
 export class CvService {
+  private readonly logger = new Logger(CvService.name);
+
   constructor(
     @InjectRepository(Cv)
     private cvRepository: Repository<Cv>,
@@ -19,6 +44,9 @@ export class CvService {
     private usersService: UsersService,
     private documentParserService: DocumentParserService,
     private fileUploadService: FileUploadService,
+    private exportService: ExportService,
+    private dynamicTemplateService: DynamicTemplateService,
+    private templatesService: TemplatesService,
   ) {}
 
   async uploadCv(userId: string, file: Express.Multer.File): Promise<Cv> {
@@ -85,6 +113,56 @@ export class CvService {
       relations: ['originalCv', 'jobDescription', 'tailoredVersions'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async getUserCvsPaginated(userId: string, options: PaginationOptions): Promise<PaginatedResult<Cv>> {
+    const { page, limit, search, sortBy, sortOrder } = options;
+    const skip = (page - 1) * limit;
+
+    // Build query
+    const queryBuilder = this.cvRepository
+      .createQueryBuilder('cv')
+      .leftJoinAndSelect('cv.originalCv', 'originalCv')
+      .leftJoinAndSelect('cv.jobDescription', 'jobDescription')
+      .leftJoinAndSelect('cv.tailoredVersions', 'tailoredVersions')
+      .where('cv.userId = :userId', { userId });
+
+    // Add search filter
+    if (search) {
+      queryBuilder.andWhere(
+        '(cv.originalFileName ILIKE :search OR cv.parsedData::text ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Add sorting
+    const validSortFields = ['createdAt', 'updatedAt', 'originalFileName', 'version'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    queryBuilder.orderBy(`cv.${sortField}`, sortOrder);
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Get paginated data
+    const data = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getMany();
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrev = page > 1;
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNext,
+      hasPrev,
+    };
   }
 
   async getCvWithRelations(id: string, userId: string): Promise<Cv> {
@@ -379,14 +457,26 @@ export class CvService {
   }
 
   async tailorCv(cvId: string, userId: string, jobDescription: string): Promise<Cv> {
-    const originalCv = await this.getCvById(cvId, userId);
-    
-    // Create JobDescription
-    const jobDesc = await this.jobDescriptionService.createJobDescription(
-      userId,
-      'Job Description',
-      jobDescription
-    );
+    try {
+      // Debug: Log parameters to see what's being passed
+      console.log('=== DEBUG tailorCv ===');
+      console.log('cvId:', cvId, 'type:', typeof cvId);
+      console.log('userId:', userId, 'type:', typeof userId);
+      console.log('jobDescription:', jobDescription, 'type:', typeof jobDescription);
+      console.log('=== END DEBUG ===');
+      
+      const originalCv = await this.getCvById(cvId, userId);
+      
+      // Create JobDescription
+      const jobDesc = await this.jobDescriptionService.createJobDescription(
+        userId,
+        'Job Description',
+        jobDescription
+      );
+      
+      console.log('Created JobDescription:', jobDesc);
+      console.log('JobDescription ID:', jobDesc.id);
+      console.log('JobDescription ID type:', typeof jobDesc.id);
     
     // Use AI to tailor CV content
     const tailoredData = await this.aiService.tailorCvContent(
@@ -412,6 +502,10 @@ export class CvService {
     });
 
     return this.cvRepository.save(tailoredCv);
+    } catch (error) {
+      console.error('Error in tailorCv:', error);
+      throw error;
+    }
   }
 
   async analyzeCompatibility(cvId: string, userId: string, jobDescription: string): Promise<{
@@ -446,6 +540,242 @@ export class CvService {
     );
 
     return { coverLetter };
+  }
+
+  async quickBuildCv(userId: string, quickBuildDto: QuickBuildCvDto): Promise<Cv> {
+    // Check user limits
+    const canUpload = await this.usersService.checkUserLimit(userId, 'cvUploads');
+    if (!canUpload) {
+      throw new BadRequestException('CV upload limit reached for your plan');
+    }
+
+    try {
+      // Create basic CV data structure using standardized CVData format
+      const cvData = {
+        contact: {
+          name: quickBuildDto.name,
+          email: quickBuildDto.email,
+          phone: '',
+          address: '',
+          linkedin: '',
+          github: '',
+          website: '',
+          location: ''
+        },
+        summary: `Experienced ${quickBuildDto.targetRole} looking for new opportunities`,
+        experience: [],
+        skills: {
+          technical: [],
+          soft: [],
+          languages: [],
+          tools: []
+        },
+        education: [],
+        projects: [],
+        certifications: [],
+        awards: [],
+        publications: [],
+        volunteer: []
+      };
+
+      // Use AI to tailor the CV based on job description
+      const tailoredCvData = await this.aiService.tailorCvForJob(
+        cvData as any,
+        quickBuildDto.jobDescription
+      );
+
+      // Ensure the data is in the correct standardized format
+      const normalizedCvData = CVDataUtils.normalizeCVData(tailoredCvData);
+
+      // Create CV record
+      const cv = this.cvRepository.create({
+        userId,
+        originalFileName: `CV_${quickBuildDto.name}_${Date.now()}.pdf`,
+        fileUrl: '',
+        parsedData: normalizedCvData,
+        isTailored: true,
+        tailoredForJob: quickBuildDto.jobDescription.substring(0, 100)
+      });
+
+      const savedCv = await this.cvRepository.save(cv);
+
+      // Increment usage
+      await this.usersService.incrementUsage(userId, 'cvUploads');
+
+      return savedCv;
+    } catch (error) {
+      this.logger.error('Quick build CV failed:', error);
+      throw new BadRequestException('Failed to create CV from basic information');
+    }
+  }
+
+  async updateCvWithQuickBuild(cvId: string, userId: string, quickBuildDto: QuickBuildCvDto): Promise<Cv> {
+    // Get existing CV
+    const existingCv = await this.getCvById(cvId, userId);
+
+    try {
+      // Create updated CV data structure using standardized CVData format
+      const cvData = {
+        contact: {
+          name: quickBuildDto.name,
+          email: quickBuildDto.email,
+          phone: (existingCv.parsedData as any).contact?.phone || (existingCv.parsedData as any).phone || '',
+          address: (existingCv.parsedData as any).contact?.address || (existingCv.parsedData as any).address || '',
+          linkedin: (existingCv.parsedData as any).contact?.linkedin || (existingCv.parsedData as any).linkedin || '',
+          github: (existingCv.parsedData as any).contact?.github || '',
+          website: (existingCv.parsedData as any).contact?.website || '',
+          location: (existingCv.parsedData as any).contact?.location || ''
+        },
+        summary: `Experienced ${quickBuildDto.targetRole} looking for new opportunities`,
+        experience: existingCv.parsedData.experience || [],
+        skills: existingCv.parsedData.skills || {
+          technical: [],
+          soft: [],
+          languages: [],
+          tools: []
+        },
+        education: existingCv.parsedData.education || [],
+        projects: existingCv.parsedData.projects || [],
+        certifications: existingCv.parsedData.certifications || [],
+        awards: existingCv.parsedData.awards || [],
+        publications: existingCv.parsedData.publications || [],
+        volunteer: existingCv.parsedData.volunteer || []
+      };
+
+      // Use AI to tailor the CV based on job description
+      const tailoredCvData = await this.aiService.tailorCvForJob(
+        cvData as any,
+        quickBuildDto.jobDescription
+      );
+
+      // Ensure the data is in the correct standardized format
+      const normalizedCvData = CVDataUtils.normalizeCVData(tailoredCvData);
+
+      // Update CV record
+      existingCv.parsedData = normalizedCvData;
+      existingCv.tailoredForJob = quickBuildDto.jobDescription.substring(0, 100);
+      existingCv.version = existingCv.version + 1;
+
+      return this.cvRepository.save(existingCv);
+    } catch (error) {
+      this.logger.error('Update CV with quick build failed:', error);
+      throw new BadRequestException('Failed to update CV with new information');
+    }
+  }
+
+  /**
+   * Export CV to PDF with template support
+   */
+  async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
+    return this.exportService.exportToPDF(cvData, template);
+  }
+
+  /**
+   * Export CV to PDF with custom configuration
+   */
+  async exportToPDFWithConfig(cvData: CVData, template: string, templateConfig: TemplateConfig): Promise<Buffer> {
+    return this.exportService.exportToPDF(cvData, template, templateConfig);
+  }
+
+  /**
+   * Export CV to Word document
+   */
+  async exportToWord(cvData: CVData): Promise<Buffer> {
+    return this.exportService.exportToWord(cvData);
+  }
+
+  /**
+   * Export CV to ATS-friendly format
+   */
+  async exportToATS(cvData: CVData): Promise<Buffer> {
+    return this.exportService.exportToATS(cvData);
+  }
+
+  /**
+   * Generate template preview HTML
+   */
+  async generateTemplatePreview(cvData: CVData, template: string, templateConfig: TemplateConfig): Promise<string> {
+    // Normalize CV data before generating template
+    const normalizedCVData = CVDataUtils.normalizeCVData(cvData);
+    return this.dynamicTemplateService.generateDynamicTemplate(normalizedCVData, templateConfig, true);
+  }
+
+  /**
+   * Get available templates
+   */
+  async getAvailableTemplates() {
+    return this.templatesService.findAll();
+  }
+
+  /**
+   * Save job description to CV
+   */
+  async saveJobDescription(cvId: string, userId: string, jobDescription: any) {
+    const cv = await this.cvRepository.findOne({
+      where: { id: cvId, userId }
+    });
+
+    if (!cv) {
+      throw new NotFoundException('CV not found');
+    }
+
+    cv.jobDescription = jobDescription;
+    await this.cvRepository.save(cv);
+    return cv;
+  }
+
+  /**
+   * Save matching analysis to CV
+   */
+  async saveMatchingAnalysis(cvId: string, userId: string, analysis: any) {
+    const cv = await this.cvRepository.findOne({
+      where: { id: cvId, userId }
+    });
+
+    if (!cv) {
+      throw new NotFoundException('CV not found');
+    }
+
+    cv.matchingAnalysis = analysis;
+    await this.cvRepository.save(cv);
+    return cv;
+  }
+
+  /**
+   * Save cover letter to CV
+   */
+  async saveCoverLetter(cvId: string, userId: string, coverLetter: string) {
+    const cv = await this.cvRepository.findOne({
+      where: { id: cvId, userId }
+    });
+
+    if (!cv) {
+      throw new NotFoundException('CV not found');
+    }
+
+    cv.coverLetter = coverLetter;
+    await this.cvRepository.save(cv);
+    return cv;
+  }
+
+  /**
+   * Get CV with all related data
+   */
+  async getCvWithRelatedData(cvId: string, userId: string) {
+    const cv = await this.cvRepository.findOne({
+      where: { id: cvId, userId }
+    });
+
+    if (!cv) {
+      throw new NotFoundException('CV not found');
+    }
+
+    return {
+      ...cv,
+      jobDescription: cv.jobDescription || null,
+      matchingAnalysis: cv.matchingAnalysis || null,
+      coverLetter: cv.coverLetter || null,
+    };
   }
 
 }

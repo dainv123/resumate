@@ -85,7 +85,7 @@ export class UsersService {
     const totalSubProjects = cvs.reduce((count, cv) => {
       if (cv.parsedData?.experience && Array.isArray(cv.parsedData.experience)) {
         return count + cv.parsedData.experience.reduce((expCount, exp) => {
-          return expCount + (Array.isArray(exp.subProjects) ? exp.subProjects.length : 0);
+          return expCount + (Array.isArray((exp as any).subProjects) ? (exp as any).subProjects.length : 0);
         }, 0);
       }
       return count;

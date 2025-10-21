@@ -1,17 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getAllCvs } from "@/lib/cv";
-
-interface CvItem {
-  id: string;
-  originalFileName: string;
-  version: number;
-  isTailored: boolean;
-  tailoredForJob?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import React, { useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useCvsInfinite } from "@/hooks/useCvs";
 
 interface CvSelectorProps {
   selectedCvId?: string;
@@ -22,32 +13,53 @@ export default function CvSelector({
   selectedCvId,
   onSelectCv,
 }: CvSelectorProps) {
-  const [cvs, setCvs] = useState<CvItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const {
+    data: cvsData,
+    isLoading: loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+  } = useCvsInfinite({ limit: 20, sortBy: "updatedAt", sortOrder: "desc" });
+  // Handle both infinite and paginated data structures
+  const cvs = React.useMemo(() => {
+    if (!cvsData) return [];
 
-  const fetchCvs = async () => {
-    try {
-      setLoading(true);
-      const data = await getAllCvs();
-      setCvs(data);
-
-      // Auto-select latest CV if none selected
-      if (!selectedCvId && data.length > 0) {
-        onSelectCv(data[0].id);
-      }
-    } catch (err) {
-      console.error("Failed to fetch CVs:", err);
-      setError("Failed to load CVs");
-    } finally {
-      setLoading(false);
+    // If it's infinite query structure
+    if (cvsData.pages && Array.isArray(cvsData.pages)) {
+      return cvsData.pages.flatMap((page) => page.data || []);
     }
-  };
+
+    // If it's paginated structure (fallback)
+    if (cvsData.data && Array.isArray(cvsData.data)) {
+      return cvsData.data;
+    }
+
+    return [];
+  }, [cvsData]);
+
+  // Debug logging
+  console.log("CvSelector Debug:", {
+    loading,
+    isFetching,
+    isFetchingNextPage,
+    cvsLength: cvs.length,
+    hasNextPage,
+    pagesCount: cvsData?.pages?.length || 0,
+    cvsData,
+    rawCvs: cvsData?.pages,
+    parsedCvs: cvs,
+  });
 
   useEffect(() => {
-    fetchCvs();
+    // Auto-select latest CV if none selected
+    if (!selectedCvId && cvs.length > 0) {
+      onSelectCv(cvs[0].id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cvs]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -58,10 +70,11 @@ export default function CvSelector({
     }).format(date);
   };
 
-  if (loading) {
+  if (loading && cvs.length === 0) {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2">Loading CVs...</span>
       </div>
     );
   }
@@ -69,7 +82,7 @@ export default function CvSelector({
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
+        <p className="text-red-800">Failed to load CVs</p>
       </div>
     );
   }
@@ -78,27 +91,12 @@ export default function CvSelector({
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
         <div className="text-4xl mb-3">📄</div>
-        <h4 className="font-medium text-yellow-900 mb-2">No CVs Found</h4>
+        <h4 className="font-medium text-yellow-900 mb-2">
+          {t("portfolio.noCVsFound")}
+        </h4>
         <p className="text-sm text-yellow-700 mb-4">
-          You need to upload a CV before creating a portfolio.
+          {t("portfolio.noCVsFoundDescription")}
         </p>
-        <a
-          href="/dashboard/cv"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Upload CV
-        </a>
       </div>
     );
   }
@@ -106,11 +104,10 @@ export default function CvSelector({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-xl font-semibold mb-2">Select CV</h3>
-        <p className="text-gray-600">
-          Choose which CV to use for your portfolio data (experience, skills,
-          education)
-        </p>
+        <h3 className="text-xl font-semibold mb-2">
+          {t("portfolio.selectCV")}
+        </h3>
+        <p className="text-gray-600">{t("portfolio.selectCVDescription")}</p>
       </div>
 
       <div className="space-y-3">
@@ -218,11 +215,39 @@ export default function CvSelector({
         ))}
       </div>
 
+      {/* Load More Button */}
+      {hasNextPage && (
+        <div className="flex justify-center py-4">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {isFetchingNextPage ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Loading more CVs...</span>
+              </div>
+            ) : (
+              "Load More CVs"
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Background loading indicator */}
+      {isFetching && !isFetchingNextPage && cvs.length > 0 && (
+        <div className="flex justify-center py-2">
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+            <span>Updating...</span>
+          </div>
+        </div>
+      )}
+
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-900">
-          <strong>Tip:</strong> If you have multiple CVs tailored for different
-          jobs, you can select the most relevant one for your portfolio.
+          <strong>{t("portfolio.tip")}:</strong> {t("portfolio.tipDescription")}
         </p>
       </div>
     </div>

@@ -9,8 +9,10 @@ import { JobDescription } from './entities/job-description.entity';
 import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { TemplatesModule } from '../templates/templates.module';
 import { ExportService } from '../../shared/services/export.service';
 import { HtmlTemplateService } from '../../shared/services/html-template.service';
+import { DynamicTemplateService } from '../../shared/services/dynamic-template.service';
 import { DocumentParserService } from '../ai/providers/document-parser.service';
 import { FileUploadService } from '../../shared/services/file-upload.service';
 
@@ -20,6 +22,7 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
     AiModule,
     UsersModule,
     AnalyticsModule,
+    TemplatesModule,
     MulterModule.register({
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB
@@ -27,7 +30,7 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
     }),
   ],
   controllers: [CvController],
-  providers: [CvService, JobDescriptionService, ExportService, HtmlTemplateService, DocumentParserService, FileUploadService],
+  providers: [CvService, JobDescriptionService, ExportService, HtmlTemplateService, DynamicTemplateService, DocumentParserService, FileUploadService],
   exports: [CvService, TypeOrmModule],
 })
 export class CvModule {}

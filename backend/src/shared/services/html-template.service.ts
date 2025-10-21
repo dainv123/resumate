@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CVData } from '../../modules/cv/entities/cv.entity';
+import { CVData } from '../interfaces/cv-data.interface';
 
 @Injectable()
 export class HtmlTemplateService {
@@ -369,12 +369,11 @@ export class HtmlTemplateService {
             <div class="side-part">
                 <!-- Contact Information -->
                 <section>
-                    <span><i>👤</i> ${cvData.name}</span>
-                    ${cvData.dateOfBirth ? `<span><i>🎂</i> ${cvData.dateOfBirth}</span>` : ""}
-                    <span><i>✉️</i> ${cvData.email}</span>
-                    <span><i>📞</i> ${cvData.phone}</span>
-                    ${cvData.address ? `<span><i>📍</i> ${cvData.address}</span>` : ''}
-                    ${cvData.linkedin ? `<span><i>💼</i> <a target="_blank" rel="noopener noreferrer" href="${cvData.linkedin}">LinkedIn</a></span>` : ''}
+                    <span><i>👤</i> ${cvData.contact?.name || 'N/A'}</span>
+                    <span><i>✉️</i> ${cvData.contact?.email || 'N/A'}</span>
+                    <span><i>📞</i> ${cvData.contact?.phone || 'N/A'}</span>
+                    ${cvData.contact?.address ? `<span><i>📍</i> ${cvData.contact.address}</span>` : ''}
+                    ${cvData.contact?.linkedin ? `<span><i>💼</i> <a target="_blank" rel="noopener noreferrer" href="${cvData.contact.linkedin}">LinkedIn</a></span>` : ''}
                 </section>
 
                 <!-- Skills and Languages -->
@@ -432,7 +431,7 @@ export class HtmlTemplateService {
                     ${cvData.experience.map(exp => `
                         <h4>${exp.title} - ${exp.company}</h4>
                         <div>
-                            <p>${exp.duration}</p>
+                            <p>${exp.startDate} - ${exp.endDate || 'Present'}</p>
                             ${exp.teamSize ? `<p><b>Team Size:</b> ${exp.teamSize}</p>` : ""}
                             ${exp.companyDescription ? `<p><i>${exp.companyDescription}</i></p>` : ""}
                             ${exp.responsibilities && exp.responsibilities.length > 0 ? `
@@ -444,24 +443,6 @@ export class HtmlTemplateService {
                                 <ul>
                                     ${exp.achievements.map(ach => `<li>${ach}</li>`).join('')}
                                 </ul>
-                            ` : ''}
-                            ${exp.subProjects && exp.subProjects.length > 0 ? `
-                                <div style="margin-left: 1rem; margin-top: 0.5rem;">
-                                    <p style="font-weight: 600; color: var(--chineseBlue55); margin-bottom: 0.3rem;">Sub-Projects:</p>
-                                    ${exp.subProjects.map(sub => `
-                                        <div style="margin-bottom: 0.5rem; padding-left: 0.5rem; border-left: 2px solid var(--chineseBlue55);">
-                                            <p style="font-weight: 500;">${sub.name}${sub.role ? ` - ${sub.role}` : ''}</p>
-                                            ${sub.responsibilities && sub.responsibilities.length > 0 ? `
-                                                <ul style="margin: 0.2rem 0;">
-                                                    ${sub.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
-                                                </ul>
-                                            ` : ''}
-                                            ${sub.techStack && sub.techStack.length > 0 ? `
-                                                <small>${sub.techStack.join(', ')}</small>
-                                            ` : ''}
-                                        </div>
-                                    `).join('')}
-                                </div>
                             ` : ''}
                             ${exp.technologies && exp.technologies.length > 0 ? `
                                 <small>${exp.technologies.join(', ')}</small>
@@ -478,13 +459,12 @@ export class HtmlTemplateService {
                 <section id="formation">
                     <h3>Education</h3>
                     ${cvData.education.map(edu => `
-                        <h4>${edu.school}</h4>
+                        <h4>${edu.institution}</h4>
                         <div>
-                            <p>${edu.year}</p>
+                            <p>${edu.startDate} - ${edu.endDate || 'Present'}</p>
                             <h4>${edu.degree}</h4>
                             ${edu.gpa ? `<span>GPA: ${edu.gpa}</span>` : ''}
                             ${edu.location ? `<span>📍 ${edu.location}</span>` : ""}
-                            ${edu.honors ? `<p><i>🏆 ${edu.honors}</i></p>` : ""}
                         </div>
                     `).join('')}
                 </section>
@@ -499,8 +479,8 @@ export class HtmlTemplateService {
                         <section>
                             <h4>${project.name}</h4>
                             <p>${project.description}</p>
-                            ${project.techStack && project.techStack.length > 0 ? `
-                                <small>${project.techStack.join(', ')}</small>
+                            ${project.technologies && project.technologies.length > 0 ? `
+                                <small>${project.technologies.join(', ')}</small>
                             ` : ''}
                             ${project.link ? `
                                 <nav>
@@ -523,7 +503,7 @@ export class HtmlTemplateService {
                         <div>
                             <h4>${cert.name}</h4>
                             <p>${cert.issuer} - ${cert.date}</p>
-                            ${cert.link ? `<a href="${cert.link}" target="_blank" class="custom-link">View Certificate</a>` : ''}
+                            ${cert.credentialUrl ? `<a href="${cert.credentialUrl}" target="_blank" class="custom-link">View Certificate</a>` : ''}
                         </div>
                     `).join('')}
                 </section>
@@ -536,7 +516,7 @@ export class HtmlTemplateService {
                     <h3>Awards</h3>
                     ${cvData.awards.map(award => `
                         <div>
-                            <h4>${award.name}</h4>
+                            <h4>${award.title}</h4>
                             <p>${award.issuer} - ${award.date}</p>
                         </div>
                     `).join('')}
@@ -551,7 +531,7 @@ export class HtmlTemplateService {
                     ${cvData.publications.map(pub => `
                         <div>
                             <h4>${pub.title}</h4>
-                            <p>${pub.journal} - ${pub.date}</p>
+                            <p>${pub.journal} - ${pub.publicationDate}</p>
                             <p><i>Authors: ${pub.authors}</i></p>
                         </div>
                     `).join('')}
@@ -566,7 +546,7 @@ export class HtmlTemplateService {
                     ${cvData.volunteer.map(vol => `
                         <div>
                             <h4>${vol.role} - ${vol.organization}</h4>
-                            <p>${vol.duration}</p>
+                            <p>${vol.startDate} - ${vol.endDate || 'Present'}</p>
                             <p>${vol.description}</p>
                         </div>
                     `).join('')}

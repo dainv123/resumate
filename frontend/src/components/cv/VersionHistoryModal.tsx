@@ -178,10 +178,9 @@ export default function VersionHistoryModal({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRestore(version);
-                    }}
+                     onClick={() => {
+                       handleRestore(version);
+                     }}
                     disabled={(version as any).isHistorical === false}>
                     <RotateCcw className="h-4 w-4 mr-1" />
                     {(version as any).isHistorical === false

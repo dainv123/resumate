@@ -8,16 +8,7 @@ import { CreateProjectData, UpdateProjectData, Project } from "@/lib/projects";
 import Button from "@/components/ui/Button";
 import { Collapse } from "@/components/ui/Collapse";
 import Input, { Textarea } from "@/components/ui/Input";
-import {
-  X,
-  FileText,
-  User,
-  Code2,
-  FileType,
-  Trophy,
-  Link2,
-  Image as ImageIcon,
-} from "lucide-react";
+import { X, FileText, Code2, FileType, Link2 } from "lucide-react";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -62,6 +53,7 @@ export default function ProjectForm({
     defaultValues: {
       name: project?.name || "",
       role: project?.role || "",
+      techStack: project?.techStack || [],
       description: project?.description || "",
       results: project?.results || "",
       demoLink: project?.demoLink || "",
@@ -69,6 +61,11 @@ export default function ProjectForm({
       imageUrl: project?.imageUrl || "",
     },
   });
+
+  // Sync techStack state with form value
+  React.useEffect(() => {
+    setValue("techStack", techStack);
+  }, [techStack, setValue]);
 
   const addTech = () => {
     if (newTech.trim() && !techStack.includes(newTech.trim())) {
@@ -98,150 +95,159 @@ export default function ProjectForm({
   };
 
   return (
-    <form
-      id="project-form"
-      onSubmit={handleSubmit(handleFormSubmit)}
-      className="space-y-4">
-      {/* Section 1: Basic Information */}
-      <Collapse
-        title="Basic Information"
-        icon={<FileText className="h-4 w-4 text-blue-600" />}
-        defaultOpen={true}>
-        <div className="space-y-4">
-          <Input
-            {...register("name")}
-            label="Project Name"
-            className="input-base mt-1"
-            placeholder="Enter project name"
-            error={errors.name?.message}
-            required
-          />
-
-          <Input
-            {...register("role")}
-            label="Your Role"
-            placeholder="e.g., Frontend Developer, Full Stack Developer"
-            error={errors.role?.message}
-            required
-          />
-        </div>
-      </Collapse>
-
-      {/* Section 2: Tech Stack */}
-      <Collapse
-        title="Tech Stack"
-        icon={<Code2 className="h-4 w-4 text-purple-600" />}
-        badge={techStack.length}
-        defaultOpen={true}>
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2 mb-2">
-            {techStack.map((tech, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {tech}
-                <button
-                  type="button"
-                  onClick={() => removeTech(tech)}
-                  className="ml-2 text-blue-600 hover:text-blue-800">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
+    <div className="space-y-6">
+      <form
+        id="project-form"
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className="space-y-6">
+        {/* Section 1: Basic Information */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <FileText className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-medium text-gray-900">
+              Basic Information
+            </h3>
           </div>
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              value={newTech}
-              onChange={(e) => setNewTech(e.target.value)}
-              onKeyPress={(e) =>
-                e.key === "Enter" && (e.preventDefault(), addTech())
-              }
-              placeholder="Add technology (Press Enter)"
-              className="flex-1"
-            />
-            <Button type="button" onClick={addTech} variant="outline" size="sm">
-              Add
-            </Button>
-          </div>
-          {errors.techStack && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.techStack.message}
-            </p>
-          )}
-        </div>
-      </Collapse>
-
-      {/* Section 3: Description & Results */}
-      <Collapse
-        title="Description & Results"
-        icon={<FileType className="h-4 w-4 text-green-600" />}
-        defaultOpen={true}>
-        <div className="space-y-4">
-          <Textarea
-            {...register("description")}
-            label="Description"
-            rows={4}
-            placeholder="Describe what you built and your contributions"
-            error={errors.description?.message}
-            required
-          />
-
-          <Textarea
-            {...register("results")}
-            label="Results/Achievements"
-            rows={3}
-            placeholder="e.g., Improved performance by 50%, Increased user engagement by 30%"
-            error={errors.results?.message}
-          />
-        </div>
-      </Collapse>
-
-      {/* Section 4: Links & Media */}
-      <Collapse
-        title="Links & Media"
-        icon={<Link2 className="h-4 w-4 text-orange-600" />}
-        defaultOpen={false}>
-        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              {...register("demoLink")}
-              type="url"
-              label="Demo Link"
-              placeholder="https://demo.example.com"
-              error={errors.demoLink?.message}
+              {...register("name")}
+              label="Project Name"
+              className="input-base mt-1"
+              placeholder="Enter project name"
+              error={errors.name?.message}
+              required
             />
 
             <Input
-              {...register("githubLink")}
-              type="url"
-              label="GitHub Link"
-              placeholder="https://github.com/username/repo"
-              error={errors.githubLink?.message}
+              {...register("role")}
+              label="Your Role"
+              placeholder="e.g., Frontend Developer, Full Stack Developer"
+              error={errors.role?.message}
+              required
             />
           </div>
-
-          <Input
-            {...register("imageUrl")}
-            type="url"
-            label="Project Image URL"
-            placeholder="https://example.com/project-image.jpg"
-            error={errors.imageUrl?.message}
-          />
         </div>
-      </Collapse>
 
-      {/* Actions - Only show if showActions is true */}
-      {showActions && (
-        <div className="flex justify-end space-x-3 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={isLoading}>
-            {project ? "Update Project" : "Create Project"}
-          </Button>
-        </div>
-      )}
-    </form>
+        {/* Section 2: Tech Stack */}
+        <Collapse
+          title="Tech Stack"
+          icon={<Code2 className="h-4 w-4 text-purple-600" />}
+          badge={techStack.length}
+          defaultOpen={true}>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+              {techStack.map((tech, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {tech}
+                  <button
+                    type="button"
+                    onClick={() => removeTech(tech)}
+                    className="ml-2 text-blue-600 hover:text-blue-800">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex space-x-2">
+              <Input
+                type="text"
+                value={newTech}
+                onChange={(e) => setNewTech(e.target.value)}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addTech())
+                }
+                placeholder="Add technology (Press Enter)"
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                onClick={addTech}
+                variant="outline"
+                size="sm">
+                Add
+              </Button>
+            </div>
+            {errors.techStack && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.techStack.message}
+              </p>
+            )}
+          </div>
+        </Collapse>
+
+        {/* Section 3: Description & Results */}
+        <Collapse
+          title="Description & Results"
+          icon={<FileType className="h-4 w-4 text-green-600" />}
+          defaultOpen={true}>
+          <div className="space-y-4">
+            <Textarea
+              {...register("description")}
+              label="Description"
+              rows={4}
+              placeholder="Describe what you built and your contributions"
+              error={errors.description?.message}
+              required
+            />
+
+            <Textarea
+              {...register("results")}
+              label="Results/Achievements"
+              rows={3}
+              placeholder="e.g., Improved performance by 50%, Increased user engagement by 30%"
+              error={errors.results?.message}
+            />
+          </div>
+        </Collapse>
+
+        {/* Section 4: Links & Media */}
+        <Collapse
+          title="Links & Media"
+          icon={<Link2 className="h-4 w-4 text-orange-600" />}
+          defaultOpen={false}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                {...register("demoLink")}
+                type="url"
+                label="Demo Link"
+                placeholder="https://demo.example.com"
+                error={errors.demoLink?.message}
+              />
+
+              <Input
+                {...register("githubLink")}
+                type="url"
+                label="GitHub Link"
+                placeholder="https://github.com/username/repo"
+                error={errors.githubLink?.message}
+              />
+            </div>
+
+            <Input
+              {...register("imageUrl")}
+              type="url"
+              label="Project Image URL"
+              placeholder="https://example.com/project-image.jpg"
+              error={errors.imageUrl?.message}
+            />
+          </div>
+        </Collapse>
+
+        {/* Actions - Only show if showActions is true */}
+        {showActions && (
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={isLoading}>
+              {project ? "Update Project" : "Create Project"}
+            </Button>
+          </div>
+        )}
+      </form>
+    </div>
   );
 }

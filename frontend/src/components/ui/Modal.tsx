@@ -70,7 +70,7 @@ export default function Modal({
       onClick={closeOnOverlayClick ? onClose : undefined}>
       <div
         className={cn(
-          "bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden border border-gray-200",
+          "bg-white dark:bg-slate-800 rounded-2xl shadow-2xl dark:shadow-2xl dark:shadow-black/20 max-w-7xl w-full max-h-[95vh] overflow-hidden border border-gray-200 dark:border-gray-700",
           sizeClasses[size],
           className
         )}
@@ -79,21 +79,23 @@ export default function Modal({
         {(title || showCloseButton) && (
           <div
             className={cn(
-              "flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200",
+              "flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-600 border-b border-gray-200 dark:border-gray-600",
               headerClassName
             )}>
             {title &&
               (typeof title === "string" ? (
-                <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {title}
+                </h3>
               ) : (
                 <div className="flex-1">{title}</div>
               ))}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/50 rounded-lg transition-colors ml-auto"
+                className="p-2 hover:bg-white/50 dark:hover:bg-slate-500/50 rounded-lg transition-colors ml-auto"
                 aria-label="Close modal">
-                <X className="h-5 w-5 text-gray-600" />
+                <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               </button>
             )}
           </div>
@@ -102,7 +104,7 @@ export default function Modal({
         {/* Body - Scrollable */}
         <div
           className={cn(
-            "p-6 overflow-y-auto max-h-[calc(95vh-200px)] bg-gray-50/30",
+            "p-6 overflow-y-auto max-h-[calc(95vh-200px)] bg-gray-50/30 dark:bg-slate-800/50",
             bodyClassName
           )}>
           {children}
@@ -112,7 +114,7 @@ export default function Modal({
         {footer && (
           <div
             className={cn(
-              "flex items-center justify-between p-6 bg-white border-t border-gray-200",
+              "flex items-center justify-between p-6 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-600",
               footerClassName
             )}>
             {footer}

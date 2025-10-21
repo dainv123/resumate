@@ -5,9 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cvApi, CV } from "@/lib/cv";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ArrowLeft, GitCompare } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+// import { CVUtils } from '@/utils/cv.utils';
 
 function CompareContent() {
   const { t } = useLanguage();
@@ -196,17 +198,17 @@ function CVDataDisplay({ cv }: { cv: CV }) {
         </h5>
         <div className="space-y-1 text-sm">
           <p>
-            <strong>Name:</strong> {parsedData.name}
+            <strong>Name:</strong> {parsedData.contact?.name || "N/A"}
           </p>
           <p>
-            <strong>Email:</strong> {parsedData.email}
+            <strong>Email:</strong> {parsedData.contact?.email}
           </p>
           <p>
-            <strong>Phone:</strong> {parsedData.phone}
+            <strong>Phone:</strong> {parsedData.contact?.phone}
           </p>
-          {parsedData.address && (
+          {parsedData.contact?.address && (
             <p>
-              <strong>Address:</strong> {parsedData.address}
+              <strong>Address:</strong> {parsedData.contact?.address}
             </p>
           )}
         </div>
@@ -233,7 +235,9 @@ function CVDataDisplay({ cv }: { cv: CV }) {
               <div key={idx} className="border-l-2 border-blue-200 pl-3">
                 <p className="font-medium text-sm">{exp.title}</p>
                 <p className="text-sm text-gray-600">{exp.company}</p>
-                <p className="text-xs text-gray-500">{exp.duration}</p>
+                <p className="text-xs text-gray-500">
+                  {exp.startDate} - {exp.endDate || "Present"}
+                </p>
 
                 {/* Main Responsibilities */}
                 {exp.responsibilities && exp.responsibilities.length > 0 && (
@@ -258,67 +262,71 @@ function CVDataDisplay({ cv }: { cv: CV }) {
                 )}
 
                 {/* Sub Projects */}
-                {Array.isArray(exp.subProjects) &&
-                  exp.subProjects.length > 0 && (
+                {Array.isArray((exp as any).subProjects) &&
+                  (exp as any).subProjects.length > 0 && (
                     <div className="mt-2 space-y-2 bg-purple-50/20 p-2 rounded">
                       <p className="text-xs font-semibold text-purple-800 uppercase tracking-wide">
                         {t("compare.subProjects", {
-                          count: exp.subProjects.length,
+                          count: (exp as any).subProjects.length,
                         })}
                       </p>
-                      {exp.subProjects.map((subProj, subIdx) => (
-                        <div
-                          key={`subproj-${idx}-${subIdx}`}
-                          className="border-l-2 border-purple-300 pl-3 py-1.5 bg-white/50 rounded-r">
-                          {/* Sub-project Name & Role */}
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-xs font-semibold text-gray-900 flex-1">
-                              {subProj.name ||
-                                t("compare.subProjectDefault", {
-                                  number: subIdx + 1,
-                                })}
-                            </p>
-                            {subProj.role && (
-                              <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
-                                {subProj.role}
-                              </span>
-                            )}
-                          </div>
+                      {(exp as any).subProjects.map(
+                        (subProj: any, subIdx: number) => (
+                          <div
+                            key={`subproj-${idx}-${subIdx}`}
+                            className="border-l-2 border-purple-300 pl-3 py-1.5 bg-white/50 rounded-r">
+                            {/* Sub-project Name & Role */}
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs font-semibold text-gray-900 flex-1">
+                                {subProj.name ||
+                                  t("compare.subProjectDefault", {
+                                    number: subIdx + 1,
+                                  })}
+                              </p>
+                              {subProj.role && (
+                                <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
+                                  {subProj.role}
+                                </span>
+                              )}
+                            </div>
 
-                          {/* Sub-project Tech Stack */}
-                          {Array.isArray(subProj.techStack) &&
-                            subProj.techStack.length > 0 && (
-                              <div className="mt-1.5 flex flex-wrap gap-1">
-                                {subProj.techStack.map((tech, techIdx) => (
-                                  <span
-                                    key={`tech-${idx}-${subIdx}-${techIdx}`}
-                                    className="text-xs px-2 py-0.5 bg-purple-100 text-purple-800 rounded border border-purple-200">
-                                    {tech}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                          {/* Sub-project Responsibilities */}
-                          {Array.isArray(subProj.responsibilities) &&
-                            subProj.responsibilities.length > 0 && (
-                              <ul className="text-xs text-gray-700 mt-1.5 space-y-1">
-                                {subProj.responsibilities.map(
-                                  (resp, respIdx) => (
-                                    <li
-                                      key={`resp-${idx}-${subIdx}-${respIdx}`}
-                                      className="flex items-start gap-1.5">
-                                      <span className="text-purple-500 font-bold mt-0.5 flex-shrink-0">
-                                        ▸
+                            {/* Sub-project Tech Stack */}
+                            {Array.isArray(subProj.techStack) &&
+                              subProj.techStack.length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {subProj.techStack.map(
+                                    (tech: any, techIdx: number) => (
+                                      <span
+                                        key={`tech-${idx}-${subIdx}-${techIdx}`}
+                                        className="text-xs px-2 py-0.5 bg-purple-100 text-purple-800 rounded border border-purple-200">
+                                        {tech}
                                       </span>
-                                      <span className="flex-1">{resp}</span>
-                                    </li>
-                                  )
-                                )}
-                              </ul>
-                            )}
-                        </div>
-                      ))}
+                                    )
+                                  )}
+                                </div>
+                              )}
+
+                            {/* Sub-project Responsibilities */}
+                            {Array.isArray(subProj.responsibilities) &&
+                              subProj.responsibilities.length > 0 && (
+                                <ul className="text-xs text-gray-700 mt-1.5 space-y-1">
+                                  {subProj.responsibilities.map(
+                                    (resp: any, respIdx: number) => (
+                                      <li
+                                        key={`resp-${idx}-${subIdx}-${respIdx}`}
+                                        className="flex items-start gap-1.5">
+                                        <span className="text-purple-500 font-bold mt-0.5 flex-shrink-0">
+                                          ▸
+                                        </span>
+                                        <span className="flex-1">{resp}</span>
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                              )}
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
 
@@ -397,8 +405,10 @@ function CVDataDisplay({ cv }: { cv: CV }) {
             {parsedData.education.map((edu, idx) => (
               <div key={idx}>
                 <p className="font-medium text-sm">{edu.degree}</p>
-                <p className="text-sm text-gray-600">{edu.school}</p>
-                <p className="text-xs text-gray-500">{edu.year}</p>
+                <p className="text-sm text-gray-600">{edu.institution}</p>
+                <p className="text-xs text-gray-500">
+                  {edu.startDate} - {edu.endDate || "Present"}
+                </p>
               </div>
             ))}
           </div>

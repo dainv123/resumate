@@ -7,6 +7,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
+    "view": "CV Preview",
     "search": "Search",
     "filter": "Filter",
     "upload": "Upload",
@@ -24,7 +25,11 @@
     "error": "Error",
     "more": "more",
     "selectAll": "Select All",
-    "deselectAll": "Deselect All"
+    "deselectAll": "Deselect All",
+    "yes": "Yes",
+    "no": "No",
+    "current": "Current",
+    "new": "New"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -67,7 +72,41 @@
     "tip3": "Export CVs in various formats",
     "performance": "Performance",
     "cvQualityScore": "CV Quality Score",
-    "profileCompleteness": "Profile Completeness"
+    "profileCompleteness": "Profile Completeness",
+    "deleteCvFailed": "Failed to delete CV",
+    "deleteCvSuccess": "CV deleted successfully",
+    "deleteCvConfirm": "Are you sure you want to delete this CV? This action cannot be undone.",
+    "duplicateCvFailed": "Failed to duplicate CV",
+    "duplicateCvSuccess": "CV duplicated successfully",
+    "duplicateCvConfirm": "Are you sure you want to duplicate this CV?",
+    "currentMode": "Current Mode",
+    "pagination": "Pagination",
+    "infiniteScroll": "Infinite Scroll",
+    "pageBased": "Page-based",
+    "pageBasedDescription": "Navigate through specific pages",
+    "controlledLoading": "Controlled Loading",
+    "controlledLoadingDescription": "Load only current page",
+    "memoryEfficient": "Memory Efficient",
+    "memoryEfficientDescription": "Lower memory usage",
+    "seoFriendly": "SEO Friendly",
+    "seoFriendlyDescription": "URLs can contain page numbers",
+    "seamlessScrolling": "Seamless Scrolling",
+    "seamlessScrollingDescription": "No page breaks",
+    "autoLoading": "Auto Loading",
+    "autoLoadingDescription": "Load more automatically",
+    "mobileFriendly": "Mobile Friendly",
+    "mobileFriendlyDescription": "Better for touch devices",
+    "modernUX": "Modern UX",
+    "modernUXDescription": "Continuous scrolling experience",
+    "clearSelection": "Clear Selection",
+    "searchCvsPlaceholder": "Search CVs by name or filename...",
+    "sortByUpdatedAt": "Sort by updated at",
+    "sortByCreatedAt": "Sort by created at",
+    "sortByFileName": "Sort by file name",
+    "sortAsc": "Sort ascending",
+    "sortDesc": "Sort descending",
+    "upload": "Upload",
+    "recentCvs": "Recent CVs"
   },
   "auth": {
     "login": "Login",
@@ -164,8 +203,7 @@
     "achievementsPlaceholder": "Enter each achievement on a new line",
     "metrics": "Metrics & Impact",
     "metricsPlaceholder": "e.g., Increased performance by 40%",
-    "subtitle": "Manage your project portfolio",
-    "addProject": "Add Project"
+    "createdAt": "Created at"
   },
   "settings": {
     "title": "Settings",
@@ -190,7 +228,7 @@
     "languagePreferences": "Language Preferences",
     "interfaceLanguage": "Interface Language",
     "chooseLanguage": "Choose your preferred language for the interface",
-    "languageSaved": "Language saved automatically",
+    "languageSaved": "Language saved",
     "languageSavedDesc": "Your language preference is saved in your browser and will be remembered for future sessions.",
     "planAndUsageTitle": "Plan & Usage",
     "currentPlan": "{{plan}} Plan",
@@ -227,7 +265,16 @@
     "typeDeletePlaceholder": "Type DELETE to confirm",
     "profileUpdated": "Profile updated successfully",
     "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Failed to change password. Please check your current password.",
+    "incorrectOldPassword": "Current password is incorrect. Please try again.",
+    "invalidPasswordFormat": "Invalid password format. Please check your input.",
     "languageChanged": "Language changed successfully",
+    "geoDetection": "Geolocation Detection",
+    "autoDetectLanguage": "Auto-detect Language",
+    "autoDetectDescription": "Use your location to automatically select the appropriate language",
+    "redetectLanguage": "Redetect Language",
+    "detectingLanguage": "Detecting language...",
+    "redetectDescription": "Redetect language based on your current location",
     "dataExported": "Data exported successfully",
     "accountDeleted": "Account deleted successfully",
     "nameRequired": "Name cannot be empty",
@@ -235,7 +282,16 @@
     "passwordTooShort": "New password must be at least 8 characters",
     "passwordMismatch": "New passwords do not match",
     "typeDeleteCorrectly": "Please type DELETE to confirm",
-    "cannotChangeGooglePassword": "Cannot change password for Google authenticated accounts"
+    "cannotChangeGooglePassword": "Cannot change password for Google authenticated accounts",
+    "darkMode": "Dark Mode",
+    "darkModeDesc": "Toggle dark mode appearance for better viewing in low light",
+    "confirmNewPassword": "Confirm New Password",
+    "confirmNewPasswordPlaceholder": "Confirm new password",
+    "confirmNewPasswordHint": "At least 8 characters required",
+    "confirmNewPasswordMismatch": "New passwords do not match",
+    "confirmNewPasswordRequired": "New password is required",
+    "confirmNewPasswordMin": "New password must be at least 8 characters",
+    "confirmNewPasswordMax": "New password cannot be more than 100 characters"
   },
   "modal": {
     "jobDescription": "Job Description",
@@ -246,8 +302,10 @@
     "cannotBeUndone": "This action cannot be undone."
   },
   "landing": {
-    "title": "Update your CV in <span>1 minute</span>",
-    "subtitle": "Application helps freelancers automatically update CV & Portfolio from new projects or Job Descriptions. Reduce manual editing time, increase professionalism.",
+    "title": "From <span class='text-blue-600'>nothing</span> → <span class='text-purple-600'>CV</span> in seconds <span class='text-yellow-500'>⚡</span>",
+    "titleOld": "Update your CV in <span>1 minute</span>",
+    "subtitle": "AI creates professional CV from Job Description in just 30 seconds. No need to upload old CV, just paste JD and get complete CV!",
+    "subtitleOld": "Application helps freelancers automatically update CV & Portfolio from new projects or Job Descriptions. Reduce manual editing time, increase professionalism.",
     "login": "Login",
     "register": "Register",
     "getStarted": "Get Started Free",
@@ -265,7 +323,13 @@
     "ctaSubtitleLoggedIn": "Access dashboard to manage CV and create portfolio",
     "ctaButton": "Create free account",
     "ctaButtonLoggedIn": "Go to Dashboard →",
-    "footer": "© 2024 Resumate. All rights reserved."
+    "footer": "© 2024 Resumate. All rights reserved.",
+    "quickBuild": {
+      "title": "🚀 Quick CV Builder",
+      "subtitle": "From Job Description → Complete CV in seconds",
+      "button": "Try Now",
+      "countdown": "Average time: 15-30 seconds"
+    }
   },
   "cv": {
     "title": "My CVs",
@@ -337,7 +401,117 @@
     "noCVDescription": "Upload your first CV to get started",
     "uploadFirst": "Upload Your First CV",
     "uploadSuccess": "CV uploaded successfully! AI is analyzing your CV content.",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "edit": "Edit",
+    "preview": "Preview",
+    "basicInfo": "Basic Information",
+    "personalInfo": "Personal Information",
+    "contactInfo": "Contact Information",
+    "education": "Education",
+    "experience": "Experience",
+    "skills": "Skills",
+    "projects": "Projects",
+    "subProjects": "Sub-Projects",
+    "summary": "Summary",
+    "achievements": "Achievements",
+    "certifications": "Certifications",
+    "awards": "Awards",
+    "publications": "Publications",
+    "volunteer": "Volunteer",
+    "references": "References",
+    "languages": "Languages",
+    "tools": "Tools",
+    "jobTitle": "Job Title",
+    "company": "Company",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "current": "Current",
+    "location": "Location",
+    "description": "Description",
+    "responsibilities": "Responsibilities",
+    "technicalSkills": "Technical Skills",
+    "softSkills": "Soft Skills",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "website": "Website",
+    "customDomain": "Custom Domain",
+    "avatar": "Avatar URL (Optional)",
+    "avatarPlaceholder": "https://example.com/your-photo.jpg",
+    "linkedinUrl": "LinkedIn URL",
+    "linkedinPlaceholder": "https://linkedin.com/in/yourname",
+    "githubUrl": "GitHub URL",
+    "githubPlaceholder": "https://github.com/yourname",
+    "websiteUrl": "Website URL",
+    "websitePlaceholder": "https://yourwebsite.com",
+    "customDomainLabel": "Custom Domain (Optional)",
+    "customDomainPlaceholder": "portfolio.yourname.com",
+    "previewButton": "Preview",
+    "savePublish": "Save & Publish",
+    "bio": "Bio/About Me",
+    "bioPlaceholder": "Write a brief introduction about yourself...",
+    "portfolioURL": "Your Portfolio URL",
+    "copyURL": "Copy URL",
+    "openPortfolio": "Open Portfolio",
+    "details": {
+      "title": "Personal Details",
+      "subtitle": "Add your bio and social links",
+      "bioLabel": "Bio / Tagline",
+      "bioPlaceholder2": "Software Engineer | Full-stack Developer | Tech Enthusiast",
+      "avatar": "Avatar URL (Optional)",
+      "avatarPlaceholder": "https://example.com/your-photo.jpg",
+      "linkedinUrl": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/in/yourname",
+      "githubUrl": "GitHub URL",
+      "githubPlaceholder": "https://github.com/yourname",
+      "websiteUrl": "Website URL",
+      "websitePlaceholder": "https://yourwebsite.com",
+      "customDomainLabel": "Custom Domain (Optional)",
+      "customDomainPlaceholder": "portfolio.yourname.com",
+      "previewButton": "Preview",
+      "savePublish": "Save & Publish"
+    },
+    "success": {
+      "previewReady": "Preview Ready!",
+      "previewDesc": "Your portfolio is ready to view",
+      "openPreview": "Open Preview",
+      "published": "Portfolio Published! 🎉",
+      "publishedDesc": "Your portfolio is now live and accessible at:",
+      "copied": "Copied to clipboard!"
+    },
+    "tailor": "Tailor CV",
+    "delete": "Delete CV",
+    "created": "Created",
+    "updated": "Updated",
+    "tailored": "Tailored",
+    "relationships": "CV Relationships",
+    "view": "View",
+    "pdf": "PDF",
+    "word": "Word",
+    "ats": "ATS",
+    "yes": "Yes",
+    "no": "No",
+    "customPDF": "Custom PDF",
+    "viewDetail": "View Detail",
+    "viewDetailSubtitle": "View details of {{fileName}}",
+    "cvManagement": "CV Management",
+    "file": "File",
+    "type": "Type",
+    "pagination": "Pagination",
+    "infiniteScroll": "Infinite Scroll",
+    "pageBased": "Page-based",
+    "pageBasedDescription": "Navigate through specific pages",
+    "controlledLoading": "Controlled Loading",
+    "controlledLoadingDescription": "Load only current page",
+    "memoryEfficient": "Memory Efficient",
+    "memoryEfficientDescription": "Lower memory usage",
+    "seoFriendly": "SEO Friendly",
+    "exportAll": "Export All",
+    "createNewCv": "Create New CV",
+    "settings": "Settings"
   },
   "compare": {
     "title": "Version Comparison",
@@ -358,8 +532,32 @@
     "failed": "Failed to load versions for comparison"
   },
   "portfolio": {
+    "selectCV": "Select CV",
+    "selectCVDescription": "Choose which CV to use for your portfolio data (experience, skills, education)",
+    "noCVsFound": "No CVs found",
+    "noCVsFoundDescription": "You need to upload a CV before creating a portfolio.",
+    "tip": "Tip:",
+    "tipDescription": "If you have multiple CVs tailored for different jobs, you can select the most relevant one for your portfolio.",
     "title": "Create Portfolio",
     "subtitle": "Build a professional portfolio to showcase your work and skills",
+    "templates": {
+      "basic": {
+        "name": "Basic",
+        "description": "Simple and professional portfolio with all essential sections"
+      },
+      "creative": {
+        "name": "Creative",
+        "description": "Eye-catching design focused on showcasing projects"
+      },
+      "modern": {
+        "name": "Modern",
+        "description": "Clean and modern professional portfolio"
+      },
+      "muhammad-ismail": {
+        "name": "Developer Pro",
+        "description": "Comprehensive resume-style portfolio with all sections"
+      }
+    },
     "steps": {
       "template": "Template",
       "cv": "CV",
@@ -618,7 +816,119 @@
     "personalizeGreeting": "Personalize the greeting with the hiring manager's name if known",
     "adjustTone": "Adjust the tone to match the company culture",
     "addExamples": "Add specific examples from your experience",
-    "proofread": "Proofread carefully before sending"
+    "proofread": "Proofread carefully before sending",
+    "ux": {
+      "processingTitle": "⚡ AI is creating your CV",
+      "processingSubtitle": "From Job Description → Complete CV in seconds",
+      "countdown": "Completing in:",
+      "seconds": "seconds",
+      "processing": "Processing...",
+      "ready": "Ready",
+      "steps": {
+        "reading": "📖 Reading job requirements",
+        "analyzing": "🧠 Analyzing your CV",
+        "tailoring": "✂️ Tailoring content",
+        "generating": "✨ Generating complete CV"
+      },
+      "progress": "Progress: {{current}}/{{total}}",
+      "estimatedTime": "Estimated time: {{time}} seconds",
+      "almostDone": "Almost done!",
+      "completed": "Completed! 🎉"
+    },
+    "exportTitle": "Export CV",
+    "exportDesc": "Export your CV in multiple formats: PDF, Word, or ATS-friendly text format.",
+    "loadingMoreCvs": "Loading more CVs..."
+  },
+  "aiCvWizard": {
+    "title": "🤖 AI CV Wizard",
+    "subtitle": "Create a complete CV just by chatting with AI",
+    "welcomeMessage": "Hello! I'll help you create a professional CV. Let's start by telling me your name and the position you want to apply for.",
+    "startConversation": "Start Conversation",
+    "inputPlaceholder": "Enter your information...",
+    "sendButton": "Send",
+    "thinking": "AI is thinking...",
+    "generating": "Generating CV...",
+    "completed": "CV created successfully!",
+    "downloadCv": "Download CV",
+    "restartWizard": "Create New CV",
+    "conversationSteps": {
+      "basicInfo": "Basic Information",
+      "email": "Email",
+      "targetRole": "Target Position",
+      "experience": "Work Experience",
+      "skills": "Skills",
+      "education": "Education",
+      "projects": "Projects",
+      "finalize": "Finalize"
+    },
+    "questions": {
+      "name": "What's your name?",
+      "email": "What's your email address?",
+      "targetRole": "What position are you applying for?",
+      "experience": "What work experience do you have?",
+      "skills": "What are your main skills?",
+      "education": "What's your education level?",
+      "projects": "Do you have any notable projects?"
+    },
+    "errors": {
+      "completeInfo": "Please complete all information before downloading CV",
+      "downloadFailed": "An error occurred while downloading CV: {{error}}",
+      "processFailed": "Failed to process your request",
+      "tryAgain": "Sorry, there was an error. Please try again.",
+      "cvNotCreated": "CV has not been created yet. Please complete the conversation first."
+    },
+    "success": {
+      "cvDownloaded": "CV downloaded successfully!",
+      "cvCreated": "CV created successfully!"
+    },
+    "chat": {
+      "you": "You",
+      "aiAssistant": "AI Assistant"
+    },
+    "actions": {
+      "editCv": "Edit CV",
+      "createNewCv": "Create New CV"
+    }
+  },
+  "templateGallery": {
+    "title": "🎨 CV Templates Gallery",
+    "subtitle": "Choose the perfect template for your industry",
+    "professional": {
+      "name": "Professional",
+      "description": "Clean and professional template, perfect for office positions, management roles",
+      "features": [
+        "Clean & Modern",
+        "ATS-friendly",
+        "2-column layout",
+        "Corporate style"
+      ]
+    },
+    "creative": {
+      "name": "Creative",
+      "description": "Creative template, perfect for designers, artists, marketing professionals",
+      "features": [
+        "Colorful design",
+        "Visual elements",
+        "Creative layout",
+        "Portfolio showcase"
+      ]
+    },
+    "technical": {
+      "name": "Technical",
+      "description": "Technical template, perfect for developers, engineers, IT professionals",
+      "features": [
+        "Code-friendly",
+        "Skills focus",
+        "Project emphasis",
+        "Tech stack display"
+      ]
+    },
+    "preview": "Preview",
+    "useTemplate": "Use this template",
+    "customize": "Customize",
+    "popular": "Popular",
+    "new": "New",
+    "recommended": "Recommended"
   },
   "analytics": {
     "title": "Analytics Dashboard",
@@ -668,6 +978,76 @@
       "exportActivities": "Export Activities",
       "lastActivity": "Last Activity",
       "noActivityYet": "No activity yet"
+    }
+  },
+  "templateConfig": {
+    "title": "Custom Template Configuration",
+    "layout": {
+      "title": "Layout Options",
+      "description": "Choose how your CV content is organized",
+      "style": "Layout Style",
+      "singleColumn": "Single Column",
+      "twoColumn": "Two Column",
+      "preview": "Preview"
+    },
+    "sections": {
+      "title": "Section Visibility",
+      "description": "Choose which sections to include in your CV",
+      "contact": "Contact Information",
+      "summary": "Professional Summary",
+      "experience": "Work Experience",
+      "education": "Education",
+      "skills": "Skills",
+      "projects": "Projects",
+      "certifications": "Certifications",
+      "awards": "Awards",
+      "publications": "Publications",
+      "volunteer": "Volunteer Work",
+      "languages": "Languages",
+      "tips": "Section Tips",
+      "tip1": "Contact information is always included",
+      "tip2": "Hide sections you don't want to emphasize",
+      "tip3": "Show all sections for comprehensive CVs"
+    },
+    "styling": {
+      "title": "Styling Options",
+      "description": "Customize colors and typography",
+      "colorPresets": "Color Presets",
+      "primaryColor": "Primary Color",
+      "secondaryColor": "Secondary Color",
+      "fontFamily": "Font Family",
+      "fontSize": "Font Size",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "stylePreview": "Style Preview",
+      "previewText": "This is how your CV text will look with the selected styling."
+    },
+    "tabs": {
+      "layout": "Layout",
+      "sections": "Sections",
+      "styling": "Styling"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "exporting": "Exporting...",
+      "exportPDF": "Export PDF"
+    },
+    "colorPresets": {
+      "professionalBlue": "Professional Blue",
+      "purple": "Purple",
+      "green": "Green",
+      "red": "Red",
+      "orange": "Orange",
+      "gray": "Gray"
+    },
+    "fontOptions": {
+      "inter": "Inter",
+      "roboto": "Roboto",
+      "openSans": "Open Sans",
+      "lato": "Lato",
+      "poppins": "Poppins",
+      "sourceSansPro": "Source Sans Pro"
     }
   }
 }

@@ -54,8 +54,8 @@ export default function TemplateSelector({
   const templates = useMemo(() => {
     return templatesData.map((t: PortfolioTemplateMetadata) => ({
       id: t.name,
-      name: t.displayName,
-      description: t.description,
+      name: t.displayName, // This now contains translation key
+      description: t.description, // This now contains translation key
       sections: t.metadata.sections,
       allowCustomization: t.metadata.allowCustomization,
       previewImage: undefined,
@@ -161,7 +161,7 @@ export default function TemplateSelector({
             {/* Template Info */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h5 className="text-lg font-semibold">{template.name}</h5>
+                <h5 className="text-lg font-semibold">{t(template.name)}</h5>
                 {selectedTemplate === template.id && (
                   <svg
                     className="w-6 h-6 text-blue-600"
@@ -176,7 +176,7 @@ export default function TemplateSelector({
                 )}
               </div>
 
-              <p className="text-sm text-gray-600">{template.description}</p>
+              <p className="text-sm text-gray-600">{t(template.description)}</p>
 
               {/* Sections Preview */}
               <div>

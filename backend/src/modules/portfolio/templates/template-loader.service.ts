@@ -93,8 +93,8 @@ export class TemplateLoaderService {
     const templates = [
       {
         name: 'basic',
-        displayName: 'Basic',
-        description: 'Simple and professional portfolio with all essential sections',
+        displayName: 'portfolio.templates.basic.name',
+        description: 'portfolio.templates.basic.description',
         fileName: 'basic.template.html',
         metadata: {
           category: 'basic' as const,
@@ -118,8 +118,8 @@ export class TemplateLoaderService {
       },
       {
         name: 'creative',
-        displayName: 'Creative',
-        description: 'Eye-catching design focused on showcasing projects',
+        displayName: 'portfolio.templates.creative.name',
+        description: 'portfolio.templates.creative.description',
         fileName: 'creative.template.html',
         metadata: {
           category: 'creative' as const,
@@ -143,8 +143,8 @@ export class TemplateLoaderService {
       },
       {
         name: 'modern',
-        displayName: 'Modern',
-        description: 'Clean and modern professional portfolio',
+        displayName: 'portfolio.templates.modern.name',
+        description: 'portfolio.templates.modern.description',
         fileName: 'modern.template.html',
         metadata: {
           category: 'modern' as const,
@@ -168,8 +168,8 @@ export class TemplateLoaderService {
       },
       {
         name: 'muhammad-ismail',
-        displayName: 'Developer Pro',
-        description: 'Comprehensive resume-style portfolio with all sections',
+        displayName: 'portfolio.templates.muhammad-ismail.name',
+        description: 'portfolio.templates.muhammad-ismail.description',
         fileName: 'muhammad-ismail.template.html',
         metadata: {
           category: 'developer' as const,

@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import PerformanceOptimizer from "@/components/ui/PerformanceOptimizer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import LanguageDetectionLoader from "@/components/ui/LanguageDetectionLoader";
 
 export const metadata: Metadata = {
   title: {
@@ -162,7 +163,10 @@ export default function RootLayout({
       <body>
         <GoogleAnalytics />
         <PerformanceOptimizer />
-        <Providers>{children}</Providers>
+        <Providers>
+          <LanguageDetectionLoader />
+          {children}
+        </Providers>
       </body>
     </html>
   );

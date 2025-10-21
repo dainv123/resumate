@@ -40,9 +40,17 @@ export function handleApiError(error: AxiosError) {
     
     // Handle different status codes
     if (response.status === 401) {
-      globalToastHandler.showError('Unauthorized. Please login again.');
-      localStorage.removeItem('token');
-      window.location.href = '/auth/login';
+      // Check if this is a password change error (should not redirect)
+      const url = error.config?.url || '';
+      if (url.includes('/users/password')) {
+        // This is a password change request - don't redirect, just show error
+        // globalToastHandler.showError(message);
+      } else {
+        // This is likely an expired/invalid token - redirect to login
+        globalToastHandler.showError('Session expired. Please login again.');
+        localStorage.removeItem('token');
+        window.location.href = '/auth/login';
+      }
     } else if (response.status === 403) {
       globalToastHandler.showError('Access denied.');
     } else if (response.status === 404) {

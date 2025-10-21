@@ -7,6 +7,7 @@ import { CV } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
 import { FileText, Search, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CVUtils } from "@/utils/cv.utils";
 
 interface CVMultiSelectionModalProps {
   isOpen: boolean;
@@ -44,7 +45,7 @@ export default function CVMultiSelectionModal({
     const search = searchTerm.toLowerCase();
     return cvs.filter(
       (cv) =>
-        cv.parsedData.name.toLowerCase().includes(search) ||
+        cv.parsedData.contact?.name?.toLowerCase().includes(search) ||
         cv.originalFileName.toLowerCase().includes(search)
     );
   }, [cvs, searchTerm]);
@@ -164,7 +165,7 @@ export default function CVMultiSelectionModal({
                   <div className="flex items-center gap-2 mb-1">
                     <FileText className="h-4 w-4 text-blue-600" />
                     <h4 className="font-semibold text-gray-900">
-                      {cv.parsedData.name}
+                      {cv.parsedData.contact?.name || "CV Preview"}
                     </h4>
                     {cv.isTailored && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">

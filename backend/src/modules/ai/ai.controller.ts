@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { AiService } from './ai.service';
-import { CVData } from '../cv/entities/cv.entity';
+import { CVData } from '../../shared/interfaces/cv-data.interface';
 
 @Controller('ai')
 export class AiController {

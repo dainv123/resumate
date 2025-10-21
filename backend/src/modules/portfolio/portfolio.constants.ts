@@ -14,8 +14,8 @@ export interface TemplateSection {
 
 export interface TemplateConfig {
   id: PortfolioTemplate;
-  name: string;
-  description: string;
+  nameKey: string; // Translation key for name
+  descriptionKey: string; // Translation key for description
   sections: TemplateSection;
   allowCustomization: boolean;
   previewImage?: string;
@@ -24,8 +24,8 @@ export interface TemplateConfig {
 export const TEMPLATE_CONFIGS: Record<PortfolioTemplate, TemplateConfig> = {
   [PortfolioTemplate.BASIC]: {
     id: PortfolioTemplate.BASIC,
-    name: 'Basic',
-    description: 'Simple and professional portfolio with all essential sections',
+    nameKey: 'portfolio.templates.basic.name',
+    descriptionKey: 'portfolio.templates.basic.description',
     sections: {
       hero: true,
       about: true,
@@ -42,8 +42,8 @@ export const TEMPLATE_CONFIGS: Record<PortfolioTemplate, TemplateConfig> = {
 
   [PortfolioTemplate.CREATIVE]: {
     id: PortfolioTemplate.CREATIVE,
-    name: 'Creative',
-    description: 'Eye-catching design focused on showcasing projects',
+    nameKey: 'portfolio.templates.creative.name',
+    descriptionKey: 'portfolio.templates.creative.description',
     sections: {
       hero: true,
       about: false, // Creative template uses bio in hero instead
@@ -60,8 +60,8 @@ export const TEMPLATE_CONFIGS: Record<PortfolioTemplate, TemplateConfig> = {
 
   [PortfolioTemplate.MODERN]: {
     id: PortfolioTemplate.MODERN,
-    name: 'Modern',
-    description: 'Clean and modern professional portfolio',
+    nameKey: 'portfolio.templates.modern.name',
+    descriptionKey: 'portfolio.templates.modern.description',
     sections: {
       hero: true,
       about: true,
@@ -78,8 +78,8 @@ export const TEMPLATE_CONFIGS: Record<PortfolioTemplate, TemplateConfig> = {
 
   [PortfolioTemplate.MUHAMMAD_ISMAIL]: {
     id: PortfolioTemplate.MUHAMMAD_ISMAIL,
-    name: 'Developer Pro',
-    description: 'Comprehensive resume-style portfolio with all sections',
+    nameKey: 'portfolio.templates.muhammad-ismail.name',
+    descriptionKey: 'portfolio.templates.muhammad-ismail.description',
     sections: {
       hero: true,
       about: true,

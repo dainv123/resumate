@@ -1,5 +1,7 @@
 export enum ActivityType {
   CV_UPLOADED = 'cv_uploaded',
+  CV_CREATED = 'cv_created',
+  CV_UPDATED = 'cv_updated',
   CV_EDITED = 'cv_edited',
   CV_EXPORTED = 'cv_exported',
   CV_TAILORED = 'cv_tailored',

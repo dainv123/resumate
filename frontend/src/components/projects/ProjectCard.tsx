@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { Edit, Trash2, ExternalLink, Github, FileText } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CVUtils } from "@/utils/cv.utils";
 
 interface ProjectCardProps {
   project: Project;
@@ -29,7 +30,7 @@ export default function ProjectCard({
   const assignedCvs = cvs.filter((cv) => project.cvIds.includes(cv.id));
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -38,7 +39,7 @@ export default function ProjectCard({
           </h3>
           <p className="text-sm text-gray-600 mb-2">{project.role}</p>
           <p className="text-xs text-gray-500">
-            Created {formatDate(project.createdAt)}
+            {t("projects.createdAt")} {formatDate(project.createdAt)}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -50,7 +51,7 @@ export default function ProjectCard({
                     key={cv.id}
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     <FileText className="h-3 w-3 mr-1" />
-                    {cv.parsedData.name}
+                    {cv.parsedData.contact?.name}
                   </span>
                 ))}
               </div>
@@ -145,7 +146,7 @@ export default function ProjectCard({
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={() => onEdit?.(project)}>
             <Edit className="h-4 w-4 mr-1" />

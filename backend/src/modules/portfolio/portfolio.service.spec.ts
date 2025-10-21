@@ -148,7 +148,7 @@ describe('PortfolioService', () => {
       ],
     }).compile();
 
-    service = module.get<PortfolioService>(service);
+    service = module.get<PortfolioService>(PortfolioService);
     portfolioRepository = module.get<Repository<PortfolioEntity>>(
       getRepositoryToken(PortfolioEntity),
     );

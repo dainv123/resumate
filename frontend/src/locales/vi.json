@@ -7,6 +7,7 @@
     "delete": "Xóa",
     "edit": "Sửa",
     "add": "Thêm",
+    "view": "Xem",
     "search": "Tìm kiếm",
     "filter": "Lọc",
     "upload": "Tải lên",
@@ -24,7 +25,11 @@
     "error": "Lỗi",
     "more": "nữa",
     "selectAll": "Chọn Tất Cả",
-    "deselectAll": "Bỏ Chọn Tất Cả"
+    "deselectAll": "Bỏ Chọn Tất Cả",
+    "yes": "Có",
+    "no": "Không",
+    "current": "Hiện tại",
+    "new": "Mới"
   },
   "nav": {
     "dashboard": "Tổng quan",
@@ -60,14 +65,48 @@
     "gettingStarted": "Bắt đầu với Resumate",
     "gettingStartedDesc": "Upload CV đầu tiên của bạn để bắt đầu tạo portfolio chuyên nghiệp và tailored cho từng công việc",
     "uploadCVNow": "Upload CV ngay",
-    "addProject": "Thêm Project",
     "tipsAndTricks": "Tips & Tricks",
     "tip1": "Sử dụng Job Tailor để tạo CV phù hợp với từng vị trí",
     "tip2": "Thêm project mới để cập nhật portfolio",
     "tip3": "Export CV dưới nhiều định dạng khác nhau",
     "performance": "Hiệu suất",
     "cvQualityScore": "Điểm chất lượng CV",
-    "profileCompleteness": "Độ hoàn thiện hồ sơ"
+    "profileCompleteness": "Độ hoàn thiện hồ sơ",
+    "deleteCvFailed": "Xóa CV thất bại",
+    "deleteCvSuccess": "Xóa CV thành công",
+    "deleteCvConfirm": "Bạn có chắc chắn muốn xóa CV này?",
+    "duplicateCvFailed": "Nhân bản CV thất bại",
+    "duplicateCvSuccess": "Nhân bản CV thành công",
+    "duplicateCvConfirm": "Bạn có chắc chắn muốn nhân bản CV này?",
+    "currentMode": "Chế độ hiện tại",
+    "pagination": "Phân trang",
+    "infiniteScroll": "Cuộn vô hạn",
+    "pageBased": "Cơ bản",
+    "pageBasedDescription": "Điều hướng qua các trang cụ thể",
+    "controlledLoading": "Tải chế độ điều khiển",
+    "controlledLoadingDescription": "Tải chỉ trang hiện tại",
+    "memoryEfficient": "Tiết kiệm bộ nhớ",
+    "memoryEfficientDescription": "Sử dụng bộ nhớ thấp hơn",
+    "seoFriendly": "SEO Friendly",
+    "seoFriendlyDescription": "URLs có thể chứa số trang",
+    "seamlessScrolling": "Cuộn liền mạch",
+    "seamlessScrollingDescription": "Không có gián đoạn trang",
+    "autoLoading": "Tải tự động",
+    "autoLoadingDescription": "Tải thêm tự động",
+    "mobileFriendly": "Di động",
+    "mobileFriendlyDescription": "Tốt hơn cho thiết bị di động",
+    "modernUX": "UX hiện đại",
+    "modernUXDescription": "Trải nghiệm cuộn liền mạch",
+    "clearSelection": "Xóa lựa chọn",
+    "searchCvsPlaceholder": "Tìm kiếm CV theo tên hoặc tên file...",
+    "sortByUpdatedAt": "Sắp xếp theo ngày cập nhật",
+    "sortByCreatedAt": "Sắp xếp theo ngày tạo",
+    "sortByFileName": "Sắp xếp theo tên file",
+    "sortAsc": "Tăng dần",
+    "sortDesc": "Giảm dần",
+    "upload": "Tải lên",
+    "export": "Xuất",
+    "recentCvs": "CV gần đây"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -164,8 +203,7 @@
     "achievementsPlaceholder": "Nhập mỗi thành tựu trên một dòng",
     "metrics": "Chỉ số & Tác động",
     "metricsPlaceholder": "VD: Tăng hiệu suất 40%",
-    "subtitle": "Quản lý portfolio dự án của bạn",
-    "addProject": "Thêm Dự Án"
+    "createdAt": "Ngày tạo"
   },
   "settings": {
     "title": "Cài đặt",
@@ -190,7 +228,7 @@
     "languagePreferences": "Tùy chọn ngôn ngữ",
     "interfaceLanguage": "Ngôn ngữ giao diện",
     "chooseLanguage": "Chọn ngôn ngữ ưa thích cho giao diện",
-    "languageSaved": "Ngôn ngữ được lưu tự động",
+    "languageSaved": "Ngôn ngữ đã lưu",
     "languageSavedDesc": "Tùy chọn ngôn ngữ của bạn được lưu trong trình duyệt và sẽ được ghi nhớ cho các phiên sau.",
     "planAndUsageTitle": "Gói & Sử dụng",
     "currentPlan": "Gói {{plan}}",
@@ -227,7 +265,16 @@
     "typeDeletePlaceholder": "Nhập DELETE để xác nhận",
     "profileUpdated": "Cập nhật hồ sơ thành công",
     "passwordChanged": "Đổi mật khẩu thành công",
+    "passwordChangeFailed": "Không thể đổi mật khẩu. Vui lòng kiểm tra mật khẩu hiện tại.",
+    "incorrectOldPassword": "Mật khẩu hiện tại không đúng. Vui lòng thử lại.",
+    "invalidPasswordFormat": "Định dạng mật khẩu không hợp lệ. Vui lòng kiểm tra lại.",
     "languageChanged": "Thay đổi ngôn ngữ thành công",
+    "geoDetection": "Phát hiện vị trí địa lý",
+    "autoDetectLanguage": "Tự động phát hiện ngôn ngữ",
+    "autoDetectDescription": "Sử dụng vị trí của bạn để tự động chọn ngôn ngữ phù hợp",
+    "redetectLanguage": "Phát hiện lại ngôn ngữ",
+    "detectingLanguage": "Đang phát hiện ngôn ngữ...",
+    "redetectDescription": "Phát hiện lại ngôn ngữ dựa trên vị trí hiện tại của bạn",
     "dataExported": "Xuất dữ liệu thành công",
     "accountDeleted": "Xóa tài khoản thành công",
     "nameRequired": "Tên không được để trống",
@@ -235,7 +282,16 @@
     "passwordTooShort": "Mật khẩu mới phải có ít nhất 8 ký tự",
     "passwordMismatch": "Mật khẩu mới không khớp",
     "typeDeleteCorrectly": "Vui lòng nhập DELETE để xác nhận",
-    "cannotChangeGooglePassword": "Không thể đổi mật khẩu cho tài khoản được xác thực bằng Google"
+    "cannotChangeGooglePassword": "Không thể đổi mật khẩu cho tài khoản được xác thực bằng Google",
+    "darkMode": "Chế độ tối",
+    "darkModeDesc": "Chuyển đổi giao diện tối cho việc xem trên màn hình có độ sáng thấp",
+    "confirmNewPassword": "Xác nhận mật khẩu mới",
+    "confirmNewPasswordPlaceholder": "Xác nhận mật khẩu mới",
+    "confirmNewPasswordHint": "Yêu cầu ít nhất 8 ký tự",
+    "confirmNewPasswordMismatch": "Mật khẩu mới không khớp",
+    "confirmNewPasswordRequired": "Mật khẩu mới là bắt buộc",
+    "confirmNewPasswordMin": "Mật khẩu mới phải có ít nhất 8 ký tự",
+    "confirmNewPasswordMax": "Mật khẩu mới không được vượt quá 100 ký tự"
   },
   "modal": {
     "jobDescription": "Mô tả công việc",
@@ -246,6 +302,8 @@
     "cannotBeUndone": "Hành động này không thể hoàn tác."
   },
   "cv": {
+    "view": "Xem CV",
+    "editCV": "Chỉnh sửa CV",
     "title": "CV Của Tôi",
     "subtitle": "Quản lý và cập nhật CV với các tính năng AI",
     "uploadCV": "Upload CV",
@@ -315,7 +373,92 @@
     "noCVDescription": "Tải CV đầu tiên để bắt đầu",
     "uploadFirst": "Tải CV đầu tiên",
     "uploadSuccess": "Upload CV thành công! AI đang phân tích nội dung CV của bạn.",
-    "uploadFailed": "Upload thất bại"
+    "uploadFailed": "Upload thất bại",
+    "edit": "Sửa",
+    "preview": "Xem trước",
+    "basicInfo": "Thông tin cơ bản",
+    "personalInfo": "Thông tin cá nhân",
+    "contactInfo": "Thông tin liên hệ",
+    "education": "Học vấn",
+    "experience": "Kinh nghiệm",
+    "skills": "Kỹ năng",
+    "projects": "Dự án",
+    "subProjects": "Dự án con",
+    "summary": "Tóm tắt",
+    "achievements": "Thành tích",
+    "certifications": "Chứng chỉ",
+    "awards": "Giải thưởng",
+    "publications": "Bài báo",
+    "volunteer": "Tình nguyện",
+    "references": "Tham chiếu",
+    "languages": "Ngôn ngữ",
+    "tools": "Công cụ",
+    "jobTitle": "Chức vụ",
+    "company": "Công ty",
+    "startDate": "Ngày bắt đầu",
+    "endDate": "Ngày kết thúc",
+    "current": "Hiện tại",
+    "location": "Vị trí",
+    "description": "Mô tả",
+    "responsibilities": "Trách nhiệm",
+    "technicalSkills": "Kỹ năng kỹ thuật",
+    "softSkills": "Kỹ năng mềm",
+    "name": "Tên",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "website": "Website",
+    "customDomain": "Tên miền tùy chỉnh",
+    "bio": "Giới thiệu bản thân",
+    "bioPlaceholder": "Software Engineer | Full-stack Developer | Tech Enthusiast",
+    "avatar": "Avatar URL (Tùy chọn)",
+    "avatarPlaceholder": "https://example.com/your-photo.jpg",
+    "linkedinUrl": "LinkedIn URL",
+    "linkedinPlaceholder": "https://linkedin.com/in/yourname",
+    "githubUrl": "GitHub URL",
+    "githubPlaceholder": "https://github.com/yourname",
+    "websiteUrl": "Website URL",
+    "websitePlaceholder": "https://yourwebsite.com",
+    "customDomainLabel": "Custom Domain (Tùy chọn)",
+    "customDomainPlaceholder": "portfolio.yourname.com",
+    "previewButton": "Xem Trước",
+    "savePublish": "Lưu & Xuất Bản",
+    "portfolioURL": "URL Portfolio của bạn",
+    "copyURL": "Sao chép URL",
+    "openPortfolio": "Mở Portfolio",
+    "tailor": "Tùy chỉnh CV",
+    "delete": "Xóa CV",
+    "created": "Ngày tạo",
+    "updated": "Ngày cập nhật",
+    "tailored": "CV đã tùy chỉnh",
+    "relationships": "Quan hệ CV",
+    "export": "Xuất bản",
+    "details": "Chi tiết",
+    "customPDF": "PDF tùy chỉnh",
+    "pdf": "PDF",
+    "word": "Word",
+    "ats": "ATS",
+    "yes": "Có",
+    "no": "Không",
+    "viewDetail": "Xem Chi Tiết",
+    "viewDetailSubtitle": "Xem chi tiết của {{fileName}}",
+    "cvManagement": "Quản Lý CV",
+    "file": "File",
+    "type": "Loại",
+    "pagination": "Phân trang",
+    "infiniteScroll": "Cuộn vô hạn",
+    "pageBased": "Cơ bản",
+    "pageBasedDescription": "Điều hướng qua các trang cụ thể",
+    "controlledLoading": "Tải chế độ điều khiển",
+    "controlledLoadingDescription": "Tải chỉ trang hiện tại",
+    "memoryEfficient": "Tiết kiệm bộ nhớ",
+    "memoryEfficientDescription": "Sử dụng bộ nhớ thấp hơn",
+    "seoFriendly": "SEO Friendly",
+    "exportAll": "Xuất tất cả",
+    "createNewCv": "Tạo CV mới",
+    "settings": "Cài đặt"
   },
   "compare": {
     "title": "So Sánh Phiên Bản",
@@ -336,8 +479,32 @@
     "failed": "Không thể tải các phiên bản để so sánh"
   },
   "portfolio": {
+    "selectCV": "Chọn CV",
+    "selectCVDescription": "Chọn CV nào để sử dụng cho portfolio (kinh nghiệm, kỹ năng, học vấn)",
+    "noCVsFound": "Không tìm thấy CV nào",
+    "noCVsFoundDescription": "Bạn cần tải CV lên trước khi tạo portfolio.",
+    "tip": "Mẹo:",
+    "tipDescription": "Nếu bạn có nhiều CV đã tùy chỉnh cho các công việc khác nhau, bạn có thể chọn CV phù hợp nhất cho portfolio của bạn.",
     "title": "Tạo Portfolio",
     "subtitle": "Xây dựng portfolio chuyên nghiệp để giới thiệu công việc và kỹ năng",
+    "templates": {
+      "basic": {
+        "name": "Cơ Bản",
+        "description": "Portfolio đơn giản và chuyên nghiệp với tất cả các phần cần thiết"
+      },
+      "creative": {
+        "name": "Sáng Tạo",
+        "description": "Thiết kế bắt mắt tập trung vào việc giới thiệu các dự án"
+      },
+      "modern": {
+        "name": "Hiện Đại",
+        "description": "Portfolio chuyên nghiệp sạch sẽ và hiện đại"
+      },
+      "muhammad-ismail": {
+        "name": "Developer Pro",
+        "description": "Portfolio toàn diện kiểu CV với tất cả các phần"
+      }
+    },
     "steps": {
       "template": "Template",
       "cv": "CV",
@@ -596,11 +763,125 @@
     "personalizeGreeting": "Cá nhân hóa lời chào với tên người tuyển dụng nếu biết",
     "adjustTone": "Điều chỉnh giọng điệu phù hợp với văn hóa công ty",
     "addExamples": "Thêm ví dụ cụ thể từ kinh nghiệm của bạn",
-    "proofread": "Kiểm tra cẩn thận trước khi gửi"
+    "proofread": "Kiểm tra cẩn thận trước khi gửi",
+    "ux": {
+      "processingTitle": "⚡ AI đang tạo CV của bạn",
+      "processingSubtitle": "Từ Job Description → CV hoàn chỉnh chỉ vài giây",
+      "countdown": "Hoàn thành trong:",
+      "seconds": "giây",
+      "processing": "Đang xử lý...",
+      "ready": "Sẵn sàng",
+      "steps": {
+        "reading": "📖 Đọc yêu cầu công việc",
+        "analyzing": "🧠 Phân tích CV của bạn",
+        "tailoring": "✂️ Tùy chỉnh nội dung",
+        "generating": "✨ Tạo CV hoàn chỉnh"
+      },
+      "progress": "Tiến độ: {{current}}/{{total}}",
+      "estimatedTime": "Thời gian ước tính: {{time}} giây",
+      "almostDone": "Sắp xong rồi!",
+      "completed": "Hoàn thành! 🎉"
+    },
+    "exportTitle": "Xuất CV",
+    "exportDesc": "Xuất CV của bạn theo nhiều định dạng: PDF, Word, hoặc định dạng text phù hợp ATS.",
+    "loadingMoreCvs": "Đang tải thêm CVs..."
+  },
+  "aiCvWizard": {
+    "title": "🤖 AI CV Wizard",
+    "subtitle": "Tạo CV hoàn chỉnh chỉ bằng cách trò chuyện với AI",
+    "welcomeMessage": "Xin chào! Tôi sẽ giúp bạn tạo CV chuyên nghiệp. Hãy bắt đầu bằng cách cho tôi biết tên và vị trí bạn muốn ứng tuyển.",
+    "startConversation": "Bắt đầu trò chuyện",
+    "inputPlaceholder": "Nhập thông tin của bạn...",
+    "sendButton": "Gửi",
+    "thinking": "AI đang suy nghĩ...",
+    "generating": "Đang tạo CV...",
+    "completed": "CV đã được tạo thành công!",
+    "downloadCv": "Tải CV",
+    "restartWizard": "Tạo CV mới",
+    "conversationSteps": {
+      "basicInfo": "Thông tin cơ bản",
+      "email": "Email",
+      "targetRole": "Vị trí ứng tuyển",
+      "experience": "Kinh nghiệm làm việc",
+      "skills": "Kỹ năng",
+      "education": "Học vấn",
+      "projects": "Dự án",
+      "finalize": "Hoàn thiện"
+    },
+    "questions": {
+      "name": "Tên của bạn là gì?",
+      "email": "Email của bạn là gì?",
+      "targetRole": "Bạn muốn ứng tuyển vị trí nào?",
+      "experience": "Bạn có kinh nghiệm làm việc nào?",
+      "skills": "Kỹ năng chính của bạn là gì?",
+      "education": "Trình độ học vấn của bạn?",
+      "projects": "Bạn có dự án nào đáng chú ý không?"
+    },
+    "errors": {
+      "completeInfo": "Vui lòng hoàn thành tất cả thông tin trước khi tải CV",
+      "downloadFailed": "Có lỗi xảy ra khi tải CV: {{error}}",
+      "processFailed": "Có lỗi xảy ra khi xử lý yêu cầu của bạn",
+      "tryAgain": "Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.",
+      "cvNotCreated": "CV chưa được tạo. Vui lòng hoàn thành conversation trước."
+    },
+    "success": {
+      "cvDownloaded": "CV đã được tải xuống thành công!",
+      "cvCreated": "CV đã được tạo thành công!"
+    },
+    "chat": {
+      "you": "Bạn",
+      "aiAssistant": "AI Assistant"
+    },
+    "actions": {
+      "editCv": "Chỉnh sửa CV",
+      "createNewCv": "Tạo CV mới"
+    }
+  },
+  "templateGallery": {
+    "title": "🎨 CV Templates Gallery",
+    "subtitle": "Chọn template phù hợp với ngành nghề của bạn",
+    "professional": {
+      "name": "Professional",
+      "description": "Template chuyên nghiệp, phù hợp cho các vị trí văn phòng, quản lý",
+      "features": [
+        "Clean & Modern",
+        "ATS-friendly",
+        "2-column layout",
+        "Corporate style"
+      ]
+    },
+    "creative": {
+      "name": "Creative",
+      "description": "Template sáng tạo, phù hợp cho designer, artist, marketing",
+      "features": [
+        "Colorful design",
+        "Visual elements",
+        "Creative layout",
+        "Portfolio showcase"
+      ]
+    },
+    "technical": {
+      "name": "Technical",
+      "description": "Template kỹ thuật, phù hợp cho developer, engineer, IT",
+      "features": [
+        "Code-friendly",
+        "Skills focus",
+        "Project emphasis",
+        "Tech stack display"
+      ]
+    },
+    "preview": "Xem trước",
+    "useTemplate": "Sử dụng template này",
+    "customize": "Tùy chỉnh",
+    "popular": "Phổ biến",
+    "new": "Mới",
+    "recommended": "Được đề xuất"
   },
   "landing": {
-    "title": "Update CV của bạn trong <span>1 phút</span>",
-    "subtitle": "Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project mới hoặc Job Description. Giảm thời gian chỉnh sửa thủ công, tăng tính chuyên nghiệp.",
+    "title": "Từ <span class='text-blue-600'>nothing</span> → <span class='text-purple-600'>CV</span> chỉ vài giây <span class='text-yellow-500'>⚡</span>",
+    "titleOld": "Update CV của bạn trong <span>1 phút</span>",
+    "subtitle": "AI tạo CV chuyên nghiệp từ Job Description chỉ trong 30 giây. Không cần upload CV cũ, chỉ cần paste JD là có CV hoàn chỉnh!",
+    "subtitleOld": "Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project mới hoặc Job Description. Giảm thời gian chỉnh sửa thủ công, tăng tính chuyên nghiệp.",
     "login": "Đăng nhập",
     "register": "Đăng ký",
     "getStarted": "Bắt đầu miễn phí",
@@ -618,7 +899,13 @@
     "ctaSubtitleLoggedIn": "Truy cập dashboard để quản lý CV và tạo portfolio",
     "ctaButton": "Tạo tài khoản miễn phí",
     "ctaButtonLoggedIn": "Vào Dashboard →",
-    "footer": "© 2024 Resumate. All rights reserved."
+    "footer": "© 2024 Resumate. All rights reserved.",
+    "quickBuild": {
+      "title": "🚀 Tạo CV siêu nhanh",
+      "subtitle": "Từ Job Description → CV hoàn chỉnh chỉ vài giây",
+      "button": "Thử ngay",
+      "countdown": "Thời gian trung bình: 15-30 giây"
+    }
   },
   "analytics": {
     "title": "Bảng Phân Tích",
@@ -668,6 +955,76 @@
       "exportActivities": "Hoạt Động Export",
       "lastActivity": "Hoạt Động Gần Nhất",
       "noActivityYet": "Chưa có hoạt động"
+    }
+  },
+  "templateConfig": {
+    "title": "Cấu Hình Template Tùy Chỉnh",
+    "layout": {
+      "title": "Tùy Chọn Bố Cục",
+      "description": "Chọn cách tổ chức nội dung CV của bạn",
+      "style": "Kiểu Bố Cục",
+      "singleColumn": "Một Cột",
+      "twoColumn": "Hai Cột",
+      "preview": "Xem Trước"
+    },
+    "sections": {
+      "title": "Hiển Thị Phần",
+      "description": "Chọn các phần để bao gồm trong CV của bạn",
+      "contact": "Thông Tin Liên Hệ",
+      "summary": "Tóm Tắt Chuyên Nghiệp",
+      "experience": "Kinh Nghiệm Làm Việc",
+      "education": "Học Vấn",
+      "skills": "Kỹ Năng",
+      "projects": "Dự Án",
+      "certifications": "Chứng Chỉ",
+      "awards": "Giải Thưởng",
+      "publications": "Xuất Bản",
+      "volunteer": "Công Việc Tình Nguyện",
+      "languages": "Ngôn Ngữ",
+      "tips": "Mẹo Về Phần",
+      "tip1": "Thông tin liên hệ luôn được bao gồm",
+      "tip2": "Ẩn các phần bạn không muốn nhấn mạnh",
+      "tip3": "Hiển thị tất cả các phần cho CV toàn diện"
+    },
+    "styling": {
+      "title": "Tùy Chọn Kiểu Dáng",
+      "description": "Tùy chỉnh màu sắc và kiểu chữ",
+      "colorPresets": "Bộ Màu Có Sẵn",
+      "primaryColor": "Màu Chính",
+      "secondaryColor": "Màu Phụ",
+      "fontFamily": "Phông Chữ",
+      "fontSize": "Cỡ Chữ",
+      "small": "Nhỏ",
+      "medium": "Trung Bình",
+      "large": "Lớn",
+      "stylePreview": "Xem Trước Kiểu Dáng",
+      "previewText": "Đây là cách văn bản CV của bạn sẽ trông với kiểu dáng đã chọn."
+    },
+    "tabs": {
+      "layout": "Bố Cục",
+      "sections": "Phần",
+      "styling": "Kiểu Dáng"
+    },
+    "buttons": {
+      "cancel": "Hủy",
+      "exporting": "Đang xuất...",
+      "exportPDF": "Xuất PDF"
+    },
+    "colorPresets": {
+      "professionalBlue": "Xanh Chuyên Nghiệp",
+      "purple": "Tím",
+      "green": "Xanh Lá",
+      "red": "Đỏ",
+      "orange": "Cam",
+      "gray": "Xám"
+    },
+    "fontOptions": {
+      "inter": "Inter",
+      "roboto": "Roboto",
+      "openSans": "Open Sans",
+      "lato": "Lato",
+      "poppins": "Poppins",
+      "sourceSansPro": "Source Sans Pro"
     }
   }
 }

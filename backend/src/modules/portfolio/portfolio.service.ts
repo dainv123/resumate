@@ -552,14 +552,32 @@ export class PortfolioService {
    * Get all portfolio templates
    */
   async getTemplates() {
-    return this.templateLoaderService.getTemplates();
+    const templates = await this.templateLoaderService.getTemplates();
+    
+    // Transform displayName and description to use translation keys
+    return templates.map(template => ({
+      ...template,
+      displayName: this.getTemplateTranslationKey(template.name, 'name'),
+      description: this.getTemplateTranslationKey(template.name, 'description'),
+    }));
+  }
+
+  private getTemplateTranslationKey(templateName: string, type: 'name' | 'description'): string {
+    return `portfolio.templates.${templateName}.${type}`;
   }
 
   /**
    * Get single portfolio template metadata
    */
   async getTemplateMetadata(id: string) {
-    return this.templateLoaderService.getTemplate(id);
+    const template = await this.templateLoaderService.getTemplate(id);
+    
+    // Transform displayName and description to use translation keys
+    return {
+      ...template,
+      displayName: this.getTemplateTranslationKey(template.name, 'name'),
+      description: this.getTemplateTranslationKey(template.name, 'description'),
+    };
   }
 
   /**

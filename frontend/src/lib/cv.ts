@@ -1,90 +1,6 @@
 import api from './api';
-
-export interface CVData {
-  name: string;
-  email: string;
-  phone: string;
-  address?: string;
-  linkedin?: string;
-  dateOfBirth?: string;
-  summary?: string;
-  education: Education[];
-  experience: Experience[];
-  skills: {
-    technical: string[];
-    soft: string[];
-    languages: string[];
-    tools?: string[];
-  };
-  projects: Project[];
-  certifications: Certification[];
-  awards?: Award[];
-  publications?: Publication[];
-  volunteer?: Volunteer[];
-}
-
-export interface Education {
-  degree: string;
-  school: string;
-  year: string;
-  location?: string;
-  honors?: string;
-  gpa?: string;
-}
-
-export interface Experience {
-  title: string;
-  company: string;
-  duration: string;
-  location?: string;
-  teamSize?: string;
-  companyDescription?: string;
-  responsibilities?: string[];
-  achievements?: string[];
-  technologies?: string[];
-  subProjects?: {
-    name: string;
-    role?: string;
-    responsibilities?: string[];
-    techStack?: string[];
-  }[];
-}
-
-export interface Project {
-  name: string;
-  description: string;
-  techStack: string[];
-  results?: string;
-  link?: string;
-  duration?: string;
-}
-
-export interface Certification {
-  name: string;
-  issuer: string;
-  date: string;
-  link?: string;
-}
-
-export interface Award {
-  name: string;
-  issuer: string;
-  date: string;
-}
-
-export interface Publication {
-  title: string;
-  journal: string;
-  date: string;
-  authors: string;
-}
-
-export interface Volunteer {
-  role: string;
-  organization: string;
-  duration: string;
-  description: string;
-}
+import { CVData, TemplateConfig } from '../types/cv.types';
+import { CVUtils } from '../utils/cv.utils';
 
 export interface ImprovementNotes {
   parsingImprovements: string[];
@@ -125,6 +41,32 @@ export interface CV {
   tailoredVersions?: CV[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PaginationOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface QuickBuildCvData {
+  name: string;
+  email: string;
+  targetRole: string;
+  jobDescription: string;
+  template?: string;
 }
 
 export interface JobDescription {
@@ -175,8 +117,30 @@ export const cvApi = {
     return response.data;
   },
 
+  getUserCvsPaginated: async (options: PaginationOptions = {}): Promise<PaginatedResult<CV>> => {
+    const params = new URLSearchParams();
+    
+    if (options.page) params.append('page', options.page.toString());
+    if (options.limit) params.append('limit', options.limit.toString());
+    if (options.search) params.append('search', options.search);
+    if (options.sortBy) params.append('sortBy', options.sortBy);
+    if (options.sortOrder) {
+      // Convert lowercase to uppercase for TypeORM compatibility
+      const sortOrder = options.sortOrder.toUpperCase();
+      params.append('sortOrder', sortOrder);
+    }
+
+    const response = await api.get(`/cv/paginated?${params.toString()}`);
+    return response.data;
+  },
+
   getCvById: async (id: string): Promise<CV> => {
     const response = await api.get(`/cv/${id}`);
+    return response.data;
+  },
+
+  getCvWithRelatedData: async (id: string): Promise<CV> => {
+    const response = await api.get(`/cv/${id}/full`);
     return response.data;
   },
 
@@ -225,9 +189,15 @@ export const cvApi = {
   },
 
   exportToPDF: async (id: string, template: string = 'professional'): Promise<Blob> => {
-    const response = await api.get(`/cv/${id}/export/pdf`, {
+    const response = await api.get(`/cv/${id}/export/pdf?template=${template}`, {
       responseType: 'blob',
-      params: { template },
+    });
+    return response.data;
+  },
+
+  exportToPDFWithConfig: async (id: string, templateConfig: any): Promise<Blob> => {
+    const response = await api.post(`/cv/${id}/export/pdf/dynamic`, templateConfig, {
+      responseType: 'blob',
     });
     return response.data;
   },
@@ -243,6 +213,16 @@ export const cvApi = {
     const response = await api.get(`/cv/${id}/export/ats`, {
       responseType: 'blob',
     });
+    return response.data;
+  },
+
+  quickBuildCv: async (data: QuickBuildCvData): Promise<CV> => {
+    const response = await api.post('/cv/quick-build', data);
+    return response.data;
+  },
+
+  updateCvWithQuickBuild: async (id: string, data: QuickBuildCvData): Promise<CV> => {
+    const response = await api.put(`/cv/${id}/quick-build`, data);
     return response.data;
   },
 };

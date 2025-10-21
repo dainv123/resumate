@@ -68,6 +68,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/dashboard/job-tailor`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/dashboard/ai-wizard`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/dashboard/templates`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
       priority: 0.8,
     },
     {

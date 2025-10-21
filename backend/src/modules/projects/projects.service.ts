@@ -103,8 +103,9 @@ export class ProjectsService {
     const projectData = {
       name: project.name,
       description: project.description,
-      techStack: project.techStack,
-      results: project.results,
+      startDate: new Date().toISOString(),
+      technologies: project.techStack,
+      results: project.results ? [project.results] : [],
       link: project.demoLink,
     };
 

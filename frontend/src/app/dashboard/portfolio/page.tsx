@@ -5,17 +5,20 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { portfolioApi, CreatePortfolioData } from "@/lib/portfolio";
 import Button from "@/components/ui/Button";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Eye, Share2, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import TemplateSelector, {
   type TemplateConfig,
 } from "@/components/portfolio/TemplateSelector";
 import CvSelector from "@/components/portfolio/CvSelector";
 import SectionCustomizer from "@/components/portfolio/SectionCustomizer";
+import { useToast } from "@/contexts/ToastContext";
 
 type Step = 1 | 2 | 3 | 4;
 
 export default function PortfolioPage() {
   const { t } = useLanguage();
+  const { showSuccess, showError } = useToast();
   const [currentStep, setCurrentStep] = useState<Step>(1);
 
   // Form state
@@ -110,8 +113,7 @@ export default function PortfolioPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // TODO: Add toast notification
-    alert(t("portfolio.success.copied"));
+    showSuccess(t("portfolio.success.copied"));
   };
 
   const canProceedToStep = (step: Step): boolean => {
@@ -378,74 +380,71 @@ export default function PortfolioPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-3xl font-bold text-gray-900">
-          {t("portfolio.title")}
-        </h3>
-        <p className="text-gray-600 mt-1">{t("portfolio.subtitle")}</p>
-      </div>
-
-      {/* Existing Portfolio Notice */}
-      {existingPortfolio?.exists && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">ℹ️</div>
-            <div className="flex-1">
-              <h5 className="font-medium text-blue-900">
-                {t("portfolio.existingPortfolio.title")}
-              </h5>
-              <p className="text-sm text-blue-700 mt-1">
-                {t("portfolio.existingPortfolio.desc")}
-              </p>
-              <a
-                href={existingPortfolio.portfolio?.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline mt-2 inline-block">
-                {t("portfolio.existingPortfolio.view")}
-              </a>
+    <DashboardLayout
+      title={t("portfolio.title")}
+      subtitle={t("portfolio.subtitle")}
+      showBackButton={false}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Existing Portfolio Notice */}
+        {existingPortfolio?.exists && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">ℹ️</div>
+              <div className="flex-1">
+                <h5 className="font-medium text-blue-900">
+                  {t("portfolio.existingPortfolio.title")}
+                </h5>
+                <p className="text-sm text-blue-700 mt-1">
+                  {t("portfolio.existingPortfolio.desc")}
+                </p>
+                <a
+                  href={existingPortfolio.portfolio?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline mt-2 inline-block">
+                  {t("portfolio.existingPortfolio.view")}
+                </a>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Step Indicator */}
+        {renderStepIndicator()}
+
+        {/* Step Content */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[400px]">
+          {renderStepContent()}
         </div>
-      )}
 
-      {/* Step Indicator */}
-      {renderStepIndicator()}
-
-      {/* Step Content */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[400px]">
-        {renderStepContent()}
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-between">
-        <Button
-          onClick={() =>
-            setCurrentStep((prev) => Math.max(1, prev - 1) as Step)
-          }
-          variant="outline"
-          disabled={currentStep === 1}>
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          {t("portfolio.steps.previous")}
-        </Button>
-
-        {currentStep < 4 ? (
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
           <Button
             onClick={() =>
-              setCurrentStep((prev) => Math.min(4, prev + 1) as Step)
+              setCurrentStep((prev) => Math.max(1, prev - 1) as Step)
             }
-            disabled={!canProceedToStep((currentStep + 1) as Step)}>
-            {t("portfolio.steps.next")}
-            <ChevronRight className="w-4 h-4 ml-1" />
+            variant="outline"
+            disabled={currentStep === 1}>
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            {t("portfolio.steps.previous")}
           </Button>
-        ) : (
-          <div className="text-sm text-gray-500">
-            {t("portfolio.steps.complete")}
-          </div>
-        )}
+
+          {currentStep < 4 ? (
+            <Button
+              onClick={() =>
+                setCurrentStep((prev) => Math.min(4, prev + 1) as Step)
+              }
+              disabled={!canProceedToStep((currentStep + 1) as Step)}>
+              {t("portfolio.steps.next")}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : (
+            <div className="text-sm text-gray-500">
+              {t("portfolio.steps.complete")}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

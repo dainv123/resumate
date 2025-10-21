@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
-import type { CVData } from '../entities/cv.entity';
+import type { CVData } from '../../../shared/interfaces/cv-data.interface';
 
 export class CreateCvDto {
   @IsString()
@@ -28,6 +28,24 @@ export class UpdateCvDto {
 export class TailorCvDto {
   @IsString()
   jobDescription: string;
+}
+
+export class QuickBuildCvDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  email: string;
+
+  @IsString()
+  targetRole: string;
+
+  @IsString()
+  jobDescription: string;
+
+  @IsOptional()
+  @IsString()
+  template?: string;
 }
 
 export class CvResponseDto {
