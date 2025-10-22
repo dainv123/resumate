@@ -155,7 +155,7 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
 
           {/* Loading Status */}
           <div className="mb-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
+            {/* <div className="flex items-center justify-center gap-2 mb-2">
               {isLoading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
               ) : (
@@ -168,8 +168,8 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
                   ? t("jobTailor.ux.processing")
                   : t("jobTailor.ux.ready")}
               </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            </div> */}
+            {/* <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out"
                 style={{
@@ -177,7 +177,7 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
                     ? "100%"
                     : `${((currentStep + 1) / steps.length) * 100}%`,
                 }}></div>
-            </div>
+            </div> */}
           </div>
 
           {/* Progress Steps */}
@@ -229,10 +229,15 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
                   total: steps.length,
                 })}
               </span>
-              <span>
-                {isLoading
-                  ? t("jobTailor.ux.processing")
-                  : t("jobTailor.ux.ready")}
+              <span className="flex items-center gap-2">
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>{" "}
+                    {t("jobTailor.ux.processing")}
+                  </>
+                ) : (
+                  t("jobTailor.ux.ready")
+                )}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -246,13 +251,13 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
           </div>
 
           {/* Almost Done Message */}
-          {currentStep >= steps.length - 1 && isLoading && (
+          {/* {currentStep >= steps.length - 1 && isLoading && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800 font-medium">
                 {t("jobTailor.ux.almostDone")}
               </p>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

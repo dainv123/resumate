@@ -187,6 +187,7 @@ export class GoogleAIService {
     missingRequirements: string[];
     suggestions: string[];
     strengths: string[];
+    reused?: boolean;
   }> {
     try {
       const prompt = `
@@ -228,7 +229,7 @@ export class GoogleAIService {
     }
   }
 
-  async generateCoverLetter(cvData: any, jobDescription: string): Promise<string> {
+  async generateCoverLetter(cvData: any, jobDescription: string): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
       const prompt = `
         Generate a professional cover letter based on this CV and job description.
@@ -257,7 +258,7 @@ export class GoogleAIService {
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      return response.text();
+      return { coverLetter: response.text() };
     } catch (error) {
       this.logger.error('Error generating cover letter:', error);
       throw error;

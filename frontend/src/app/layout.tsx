@@ -164,7 +164,7 @@ export default function RootLayout({
         <GoogleAnalytics />
         <PerformanceOptimizer />
         <Providers>
-          <LanguageDetectionLoader />
+          {/* <LanguageDetectionLoader /> */}
           {children}
         </Providers>
       </body>

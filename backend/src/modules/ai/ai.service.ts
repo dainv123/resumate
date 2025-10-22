@@ -102,6 +102,7 @@ export class AiService {
     missingRequirements: string[];
     suggestions: string[];
     strengths: string[];
+    reused?: boolean;
   }> {
     try {
       return await this.googleAIService.analyzeCompatibility(cvData, jobDescription);
@@ -120,13 +121,13 @@ export class AiService {
     }
   }
 
-  async generateCoverLetter(cvData: CVData, jobDescription: string): Promise<string> {
+  async generateCoverLetter(cvData: CVData, jobDescription: string): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
       return await this.googleAIService.generateCoverLetter(cvData, jobDescription);
     } catch (error) {
       this.logger.error('Error generating cover letter:', error);
       // Return fallback cover letter
-      return this.fallbackCoverLetter(cvData);
+      return { coverLetter: this.fallbackCoverLetter(cvData) };
     }
   }
 
@@ -140,8 +141,7 @@ ${cvData.summary || 'I am a dedicated professional with a strong track record of
 Thank you for considering my application.
 
 Sincerely,
-      // @ts-ignore
-      ${cvData.contact?.name || 'Candidate'}`;
+${cvData.contact?.name || 'Candidate'}`;
   }
 
   private async fallbackParsing(fileBuffer: Buffer, mimeType: string): Promise<CVData> {

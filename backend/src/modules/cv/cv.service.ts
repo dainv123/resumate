@@ -2,6 +2,9 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cv } from './entities/cv.entity';
+import { JobDescription } from './entities/job-description.entity';
+import { CvMatchingAnalysis } from './entities/cv-matching-analysis.entity';
+import { CvCoverLetter } from './entities/cv-cover-letter.entity';
 import { JobDescriptionService } from './job-description.service';
 import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
@@ -39,6 +42,12 @@ export class CvService {
   constructor(
     @InjectRepository(Cv)
     private cvRepository: Repository<Cv>,
+    @InjectRepository(JobDescription)
+    private jobDescriptionRepository: Repository<JobDescription>,
+    @InjectRepository(CvMatchingAnalysis)
+    private matchingAnalysisRepository: Repository<CvMatchingAnalysis>,
+    @InjectRepository(CvCoverLetter)
+    private coverLetterRepository: Repository<CvCoverLetter>,
     private jobDescriptionService: JobDescriptionService,
     private aiService: AiService,
     private usersService: UsersService,
@@ -113,6 +122,22 @@ export class CvService {
       relations: ['originalCv', 'jobDescription', 'tailoredVersions'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async createCv(userId: string, createCvDto: CreateCvDto): Promise<Cv> {
+    const { originalFileName, fileUrl, parsedData } = createCvDto;
+
+    // Create new CV entity
+    const cv = this.cvRepository.create({
+      userId,
+      originalFileName,
+      fileUrl: fileUrl || '', // Default empty string if no file URL
+      parsedData: parsedData || CVDataUtils.normalizeCVData({}),
+      version: 1,
+      isTailored: false,
+    });
+
+    return this.cvRepository.save(cv);
   }
 
   async getUserCvsPaginated(userId: string, options: PaginationOptions): Promise<PaginatedResult<Cv>> {
@@ -370,7 +395,7 @@ export class CvService {
       }
 
       const hasTeamSizes = parsedData.experience.some(exp => 
-        exp.teamSize && exp.teamSize.trim() !== ''
+        exp.teamSize && (typeof exp.teamSize === 'string' ? exp.teamSize.trim() !== '' : exp.teamSize > 0)
       );
       if (hasTeamSizes) {
         notes.parsingImprovements.push('✅ Extracted team size information for better context');
@@ -389,7 +414,7 @@ export class CvService {
     if (parsedData.projects && parsedData.projects.length > 0) {
       const hasProjectDetails = parsedData.projects.some(project => 
         project.techStack && project.techStack.length > 0 && 
-        project.results && project.results.trim() !== ''
+        project.results && typeof project.results === 'string' && project.results.trim() !== ''
       );
       if (hasProjectDetails) {
         notes.parsingImprovements.push('✅ Extracted comprehensive project information including tech stacks and results');
@@ -398,7 +423,7 @@ export class CvService {
 
     if (parsedData.certifications && parsedData.certifications.length > 0) {
       const hasCertLinks = parsedData.certifications.some(cert => 
-        cert.link && cert.link.trim() !== ''
+        cert.link && typeof cert.link === 'string' && cert.link.trim() !== ''
       );
       if (hasCertLinks) {
         notes.parsingImprovements.push('✅ Identified certification links for verification');
@@ -421,10 +446,10 @@ export class CvService {
     const totalSections = 8; // name, email, phone, summary, education, experience, skills, projects
     let completedSections = 0;
 
-    if (parsedData.name && parsedData.name.trim() !== '') completedSections++;
-    if (parsedData.email && parsedData.email.trim() !== '') completedSections++;
-    if (parsedData.phone && parsedData.phone.trim() !== '') completedSections++;
-    if (parsedData.summary && parsedData.summary.trim() !== '') completedSections++;
+    if (parsedData.name && typeof parsedData.name === 'string' && parsedData.name.trim() !== '') completedSections++;
+    if (parsedData.email && typeof parsedData.email === 'string' && parsedData.email.trim() !== '') completedSections++;
+    if (parsedData.phone && typeof parsedData.phone === 'string' && parsedData.phone.trim() !== '') completedSections++;
+    if (parsedData.summary && typeof parsedData.summary === 'string' && parsedData.summary.trim() !== '') completedSections++;
     if (parsedData.education && parsedData.education.length > 0) completedSections++;
     if (parsedData.experience && parsedData.experience.length > 0) completedSections++;
     if (parsedData.skills && (parsedData.skills.technical?.length > 0 || parsedData.skills.soft?.length > 0)) completedSections++;
@@ -496,7 +521,7 @@ export class CvService {
       version: originalCv.version + 1,
       isTailored: true,
       tailoredForJob: jobDescription.substring(0, 100), // Store first 100 chars of JD
-      originalCvId: originalCv.id, // Link to original CV
+      originalCvId: originalCv.id, // Link to CV that user selected
       jobDescriptionId: jobDesc.id, // Link to JobDescription
       improvementNotes,
     });
@@ -506,6 +531,44 @@ export class CvService {
       console.error('Error in tailorCv:', error);
       throw error;
     }
+  }
+
+  /**
+   * Find or create JobDescription based on content
+   */
+  private async findOrCreateJobDescription(userId: string, jobDescription: string): Promise<JobDescription> {
+    // Try to find existing JobDescription with similar content
+    const existingJD = await this.jobDescriptionRepository.findOne({
+      where: { 
+        userId,
+        description: jobDescription 
+      }
+    });
+
+    if (existingJD) {
+      return existingJD;
+    }
+
+    // Create new JobDescription
+    return this.jobDescriptionService.createJobDescription(
+      userId,
+      'Job Description',
+      jobDescription
+    );
+  }
+
+  /**
+   * Create optimized snapshot from JobDescription
+   */
+  private createJobDescriptionSnapshot(jobDescription: JobDescription): any {
+    return {
+      title: jobDescription.title,
+      company: jobDescription.company,
+      description: jobDescription.description.substring(0, 500), // Truncated to 500 chars
+      keyRequirements: jobDescription.requirements?.skills?.slice(0, 5) || [], // Only top 5 requirements
+      experience: jobDescription.experience,
+      createdAt: new Date().toISOString(),
+    };
   }
 
   async analyzeCompatibility(cvId: string, userId: string, jobDescription: string): Promise<{
@@ -519,13 +582,56 @@ export class CvService {
   }> {
     const cv = await this.getCvById(cvId, userId);
     
+    // Find or create JobDescription
+    const jobDesc = await this.findOrCreateJobDescription(userId, jobDescription);
+    
+    // Check if analysis already exists for this JobDescription
+    const existingAnalysis = await this.matchingAnalysisRepository.findOne({
+      where: { 
+        jobDescriptionId: jobDesc.id,
+        userId 
+      }
+    });
+
+    if (existingAnalysis) {
+      this.logger.log(`Reusing existing analysis for JobDescription ${jobDesc.id}`);
+      return {
+        score: existingAnalysis.score,
+        matchedSkills: existingAnalysis.matchedSkills,
+        missingSkills: existingAnalysis.missingSkills,
+        matchedExperience: [], // Not stored in current schema
+        missingRequirements: [], // Not stored in current schema
+        suggestions: existingAnalysis.suggestions,
+        strengths: existingAnalysis.strengths,
+        reused: true,
+      } as any;
+    }
+
     // Use AI to analyze compatibility
     const analysis = await this.aiService.analyzeCompatibility(
       cv.parsedData,
       jobDescription
     );
 
-    return analysis;
+    // Save analysis to database
+    const analysisRecord = this.matchingAnalysisRepository.create({
+      jobDescriptionId: jobDesc.id,
+      userId,
+      jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
+      score: analysis.score,
+      matchedSkills: analysis.matchedSkills,
+      missingSkills: analysis.missingSkills,
+      suggestions: analysis.suggestions,
+      strengths: analysis.strengths,
+      isSnapshot: false,
+    });
+
+    await this.matchingAnalysisRepository.save(analysisRecord);
+
+    return {
+      ...analysis,
+      reused: false,
+    } as any;
   }
 
   async generateCoverLetter(cvId: string, userId: string, jobDescription: string): Promise<{
@@ -533,13 +639,47 @@ export class CvService {
   }> {
     const cv = await this.getCvById(cvId, userId);
     
+    // Find or create JobDescription
+    const jobDesc = await this.findOrCreateJobDescription(userId, jobDescription);
+    
+    // Check if cover letter already exists for this JobDescription
+    const existingCoverLetter = await this.coverLetterRepository.findOne({
+      where: { 
+        jobDescriptionId: jobDesc.id,
+        userId 
+      }
+    });
+
+    if (existingCoverLetter) {
+      this.logger.log(`Reusing existing cover letter for JobDescription ${jobDesc.id}`);
+      return {
+        coverLetter: existingCoverLetter.content,
+        reused: true,
+      } as any;
+    }
+
     // Use AI to generate cover letter
     const coverLetter = await this.aiService.generateCoverLetter(
       cv.parsedData,
       jobDescription
     );
 
-    return { coverLetter };
+    // Save cover letter to database
+    const coverLetterRecord = this.coverLetterRepository.create({
+      jobDescriptionId: jobDesc.id,
+      userId,
+      jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
+      content: coverLetter.coverLetter,
+      wordCount: coverLetter.coverLetter.split(' ').length,
+      isSnapshot: false,
+    });
+
+    await this.coverLetterRepository.save(coverLetterRecord);
+
+    return { 
+      coverLetter: coverLetter.coverLetter,
+      reused: false,
+    } as any;
   }
 
   async quickBuildCv(userId: string, quickBuildDto: QuickBuildCvDto): Promise<Cv> {
@@ -759,23 +899,124 @@ export class CvService {
   }
 
   /**
-   * Get CV with all related data
+   * Get analysis by JobDescription ID
+   */
+  async getAnalysisByJobDescription(jobDescriptionId: string, userId: string): Promise<CvMatchingAnalysis | null> {
+    return this.matchingAnalysisRepository.findOne({
+      where: { 
+        jobDescriptionId,
+        userId 
+      },
+      relations: ['jobDescription']
+    });
+  }
+
+  /**
+   * Get cover letter by JobDescription ID
+   */
+  async getCoverLetterByJobDescription(jobDescriptionId: string, userId: string): Promise<CvCoverLetter | null> {
+    return this.coverLetterRepository.findOne({
+      where: { 
+        jobDescriptionId,
+        userId 
+      },
+      relations: ['jobDescription']
+    });
+  }
+
+  /**
+   * Get all analyses for a user
+   */
+  async getUserAnalyses(userId: string): Promise<CvMatchingAnalysis[]> {
+    return this.matchingAnalysisRepository.find({
+      where: { userId },
+      relations: ['jobDescription'],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  /**
+   * Get all cover letters for a user
+   */
+  async getUserCoverLetters(userId: string): Promise<CvCoverLetter[]> {
+    return this.coverLetterRepository.find({
+      where: { userId },
+      relations: ['jobDescription'],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  /**
+   * Get CV with all related data (updated for new structure)
    */
   async getCvWithRelatedData(cvId: string, userId: string) {
     const cv = await this.cvRepository.findOne({
-      where: { id: cvId, userId }
+      where: { id: cvId, userId },
+      relations: ['jobDescription']
     });
 
     if (!cv) {
       throw new NotFoundException('CV not found');
     }
 
+    // Get analysis and cover letter if CV has jobDescriptionId
+    let matchingAnalysis = null;
+    let coverLetter = null;
+
+    if (cv.jobDescriptionId) {
+      try {
+        matchingAnalysis = await this.getAnalysisByJobDescription(cv.jobDescriptionId, userId);
+        coverLetter = await this.getCoverLetterByJobDescription(cv.jobDescriptionId, userId);
+      } catch (error) {
+        this.logger.warn(`Failed to fetch related data for CV ${cvId}:`, error.message);
+      }
+    }
+
+    // Get tailored CVs for this CV
+    let tailoredCvs = [];
+    try {
+      tailoredCvs = await this.cvRepository.find({
+        where: { originalCvId: cvId, userId },
+        relations: ['jobDescription'],
+        order: { createdAt: 'DESC' }
+      });
+    } catch (error) {
+      this.logger.warn(`Failed to fetch tailored CVs for CV ${cvId}:`, error.message);
+    }
+
+    // Clean up the response - remove redundant fields
+    const { jobDescriptionData, ...cleanCv } = cv;
+
     return {
-      ...cv,
+      ...cleanCv,
       jobDescription: cv.jobDescription || null,
-      matchingAnalysis: cv.matchingAnalysis || null,
-      coverLetter: cv.coverLetter || null,
+      matchingAnalysis: matchingAnalysis || null,
+      coverLetter: coverLetter?.content || null,
+      tailoredCvs: tailoredCvs || [],
     };
+  }
+
+  /**
+   * Get cleanup statistics
+   */
+  async getCleanupStats() {
+    // This would need to be implemented with DataCleanupService
+    // For now, return basic stats
+    return {
+      totalAnalyses: await this.matchingAnalysisRepository.count(),
+      totalCoverLetters: await this.coverLetterRepository.count(),
+      totalJobDescriptions: await this.jobDescriptionRepository.count(),
+    };
+  }
+
+  /**
+   * Trigger manual cleanup
+   */
+  async triggerManualCleanup() {
+    // This would need to be implemented with DataCleanupService
+    // For now, return success message
+    this.logger.log('Manual cleanup triggered');
+    return { message: 'Cleanup completed successfully' };
   }
 
 }

@@ -76,10 +76,6 @@ export default function CVPage() {
     }
   };
 
-  const handleCreateNewCv = () => {
-    router.push("/dashboard/ai-wizard");
-  };
-
   const toggleSortOrder = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
@@ -145,9 +141,15 @@ export default function CVPage() {
               </Button>
               <Button
                 className="flex items-center space-x-2"
-                onClick={handleCreateNewCv}>
+                onClick={() => router.push("/dashboard/ai-wizard")}>
                 <Plus className="h-4 w-4" />
-                <span>{t("cv.createNewCv")}</span>
+                <span>{t("cv.aiCvWizard")}</span>
+              </Button>
+              <Button
+                className="flex items-center space-x-2"
+                onClick={() => router.push("/dashboard/cv/create")}>
+                <Plus className="h-4 w-4" />
+                <span>{t("cv.createNewCV")}</span>
               </Button>
             </div>
           </div>

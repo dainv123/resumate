@@ -29,7 +29,8 @@
     "yes": "Có",
     "no": "Không",
     "current": "Hiện tại",
-    "new": "Mới"
+    "new": "Mới",
+    "creating": "Đang tạo..."
   },
   "nav": {
     "dashboard": "Tổng quan",
@@ -78,6 +79,8 @@
     "duplicateCvFailed": "Nhân bản CV thất bại",
     "duplicateCvSuccess": "Nhân bản CV thành công",
     "duplicateCvConfirm": "Bạn có chắc chắn muốn nhân bản CV này?",
+    "createCvSuccess": "CV đã được tạo thành công!",
+    "createCvFailed": "Không thể tạo CV. Vui lòng thử lại.",
     "currentMode": "Chế độ hiện tại",
     "pagination": "Phân trang",
     "infiniteScroll": "Cuộn vô hạn",
@@ -106,7 +109,50 @@
     "sortDesc": "Giảm dần",
     "upload": "Tải lên",
     "export": "Xuất",
-    "recentCvs": "CV gần đây"
+    "recentCvs": "CV gần đây",
+    "noCvs": "Chưa có CV nào",
+    "noCvsDescription": "Tải CV đầu tiên để bắt đầu",
+    "createFirstCv": "Tạo CV đầu tiên",
+    "create": {
+      "title": "Tạo CV mới",
+      "description": "Tải lên file CV hoặc tạo từ template",
+      "uploadFile": "Tải lên file CV",
+      "uploadDescription": "Tải lên CV hiện tại của bạn ở định dạng PDF hoặc DOCX",
+      "fromTemplate": "Tạo từ Template",
+      "templateDescription": "Xây dựng CV từ đầu bằng template của chúng tôi",
+      "startFromTemplate": "Bắt đầu từ Template",
+      "templateNote": "Bạn luôn có thể chỉnh sửa và tùy chỉnh CV sau này",
+      "success": "Tạo CV thành công",
+      "error": "Tạo CV thất bại",
+      "features": {
+        "title": "Những gì bạn có thể làm",
+        "upload": "Tải lên & Phân tích",
+        "uploadDesc": "Tải lên CV hiện có và để AI trích xuất dữ liệu",
+        "ai": "Nâng cao AI",
+        "aiDesc": "Phân tích và trích xuất dữ liệu bằng AI",
+        "template": "Template chuyên nghiệp",
+        "templateDesc": "Template đẹp, thân thiện với ATS"
+      },
+      "template": {
+        "title": "Tạo CV từ Template",
+        "description": "Xây dựng CV từng bước bằng trình chỉnh sửa form",
+        "formTitle": "Thông tin CV",
+        "formDescription": "Điền thông tin của bạn bên dưới. Bạn có thể thêm hoặc xóa các phần khi cần.",
+        "createCV": "Tạo CV"
+      }
+    },
+    "edit": {
+      "title": "Chỉnh sửa CV",
+      "description": "Chỉnh sửa CV: {{fileName}}",
+      "success": "Cập nhật CV thành công",
+      "error": "Cập nhật CV thất bại",
+      "unsavedChanges": "Bạn có thay đổi chưa lưu",
+      "saveReminder": "Đừng quên lưu thay đổi của bạn",
+      "formTitle": "Chỉnh sửa thông tin CV",
+      "formDescription": "Thực hiện thay đổi cho CV của bạn bên dưới. Thay đổi sẽ được lưu khi bạn nhấn Lưu.",
+      "save": "Lưu thay đổi",
+      "reset": "Đặt lại"
+    }
   },
   "auth": {
     "login": "Đăng nhập",
@@ -307,6 +353,14 @@
     "title": "CV Của Tôi",
     "subtitle": "Quản lý và cập nhật CV với các tính năng AI",
     "uploadCV": "Upload CV",
+    "aiCvWizard": "Trợ lý CV AI",
+    "createNewCV": "Tạo CV mới",
+    "createNewCVSubtitle": "Xây dựng CV từ đầu với trình chỉnh sửa trực quan",
+    "cvName": "Tên CV",
+    "enterCvName": "Nhập tên CV...",
+    "create": "Tạo CV",
+    "createTip": "Mẹo: Di chuột vào các trường để xem thêm tùy chọn",
+    "preview": "Xem trước",
     "stats": {
       "totalCVs": "Tổng Số CV",
       "parsed": "Đã Phân Tích",
@@ -375,7 +429,6 @@
     "uploadSuccess": "Upload CV thành công! AI đang phân tích nội dung CV của bạn.",
     "uploadFailed": "Upload thất bại",
     "edit": "Sửa",
-    "preview": "Xem trước",
     "basicInfo": "Thông tin cơ bản",
     "personalInfo": "Thông tin cá nhân",
     "contactInfo": "Thông tin liên hệ",
@@ -434,7 +487,11 @@
     "updated": "Ngày cập nhật",
     "tailored": "CV đã tùy chỉnh",
     "relationships": "Quan hệ CV",
-    "export": "Xuất bản",
+    "originalCv": "CV gốc",
+    "originalCvDescription": "CV này được tạo từ CV gốc",
+    "tailoredCvs": "CV đã tùy chỉnh",
+    "tailoredFor": "Tùy chỉnh cho",
+    "noRelationships": "Không tìm thấy mối quan hệ CV",
     "details": "Chi tiết",
     "customPDF": "PDF tùy chỉnh",
     "pdf": "PDF",
@@ -458,7 +515,12 @@
     "seoFriendly": "SEO Friendly",
     "exportAll": "Xuất tất cả",
     "createNewCv": "Tạo CV mới",
-    "settings": "Cài đặt"
+    "settings": "Cài đặt",
+    "noCvs": "Chưa có CV nào",
+    "noCvsDescription": "Tải CV đầu tiên để bắt đầu",
+    "createFirstCv": "Tạo CV đầu tiên",
+    "detail": "Chi tiết",
+    "export": "Xuất bản"
   },
   "compare": {
     "title": "So Sánh Phiên Bản",
@@ -651,7 +713,8 @@
       "copy": "Sao Chép",
       "download": "Tải Xuống",
       "copied": "Đã sao chép!",
-      "close": "Đóng"
+      "close": "Đóng",
+      "desc": "Thư xin việc chuyên nghiệp được tạo dựa trên CV và mô tả công việc"
     },
     "tailoredCV": {
       "success": "CV đã được tùy chỉnh thành công!",
@@ -659,6 +722,10 @@
       "download": "Tải CV Đã Tùy Chỉnh",
       "viewOriginal": "Xem CV Gốc"
     },
+    "analysisGenerated": "Phân tích đã được tạo thành công!",
+    "analysisReused": "Sử dụng phân tích hiện có cho mô tả công việc này",
+    "coverLetterGenerated": "Cover letter đã được tạo thành công!",
+    "coverLetterReused": "Sử dụng cover letter hiện có cho mô tả công việc này",
     "description": "Tối ưu hóa CV của bạn cho các công việc cụ thể bằng AI",
     "enterJobDescription": "Nhập mô tả công việc",
     "pasteJobHere": "Dán mô tả công việc vào đây...",
@@ -784,7 +851,8 @@
     },
     "exportTitle": "Xuất CV",
     "exportDesc": "Xuất CV của bạn theo nhiều định dạng: PDF, Word, hoặc định dạng text phù hợp ATS.",
-    "loadingMoreCvs": "Đang tải thêm CVs..."
+    "loadingMoreCvs": "Đang tải thêm CVs...",
+    "scrollToSeeMore": "Cuộn xuống để xem thêm"
   },
   "aiCvWizard": {
     "title": "🤖 AI CV Wizard",

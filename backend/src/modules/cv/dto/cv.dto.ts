@@ -1,12 +1,13 @@
-import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
 import type { CVData } from '../../../shared/interfaces/cv-data.interface';
 
 export class CreateCvDto {
   @IsString()
   originalFileName: string;
 
+  @IsOptional()
   @IsString()
-  fileUrl: string;
+  fileUrl?: string;
 
   @IsOptional()
   parsedData?: CVData;

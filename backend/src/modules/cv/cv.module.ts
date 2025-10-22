@@ -6,6 +6,9 @@ import { CvService } from './cv.service';
 import { JobDescriptionService } from './job-description.service';
 import { Cv } from './entities/cv.entity';
 import { JobDescription } from './entities/job-description.entity';
+import { CvMatchingAnalysis } from './entities/cv-matching-analysis.entity';
+import { CvCoverLetter } from './entities/cv-cover-letter.entity';
+import { User } from '../users/entities/user.entity';
 import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
@@ -18,7 +21,7 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Cv, JobDescription]),
+    TypeOrmModule.forFeature([Cv, JobDescription, CvMatchingAnalysis, CvCoverLetter, User]),
     AiModule,
     UsersModule,
     AnalyticsModule,

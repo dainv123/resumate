@@ -10,10 +10,15 @@ import Button from "@/components/ui/Button";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { TemplateConfig } from "@/types/cv.types";
-import { Edit, Download, Share2, Trash2, Copy, Settings } from "lucide-react";
 
 // Lazy load components
 const CVDisplay = lazy(() => import("@/components/cv/CVDisplay"));
+const CVActions = lazy(() => import("@/components/cv/CVActions"));
+const CVRelationships = lazy(() => import("@/components/cv/CVRelationships"));
+const CVMetadata = lazy(() => import("@/components/cv/CVMetadata"));
+const DeleteConfirmationModal = lazy(
+  () => import("@/components/cv/DeleteConfirmationModal")
+);
 const TemplateConfigModal = lazy(
   () => import("@/components/cv/TemplateConfigModal")
 );
@@ -59,37 +64,9 @@ export default function CVDetailPage() {
     },
   });
 
-  const duplicateMutation = useMutation({
-    mutationFn: cvApi.duplicateCv,
-    onSuccess: (newCv) => {
-      showSuccess(
-        <>
-          {t("dashboard.duplicateCvSuccess")}
-          {"."}
-          {newCv?.id && (
-            <a
-              href={`/dashboard/cv/${newCv.id}`}
-              className="inline-block text-blue-600 underline ml-2"
-              target="_blank"
-              rel="noopener noreferrer">
-              {t("common.view")}
-            </a>
-          )}
-        </>
-      );
-      queryClient.invalidateQueries({ queryKey: ["cvs"] });
-    },
-  });
-
   const handleDelete = () => {
     if (cv) {
       deleteMutation.mutate(cv.id);
-    }
-  };
-
-  const handleDuplicate = () => {
-    if (cv) {
-      duplicateMutation.mutate(cv.id);
     }
   };
 
@@ -227,173 +204,35 @@ export default function CVDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border p-6 border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                {t("cv.actions")}
-              </h4>
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+              <CVActions
+                cv={cv}
+                onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
+                onShowTemplateConfig={handleExportWithConfig}
+                onExport={handleExport}
+              />
+            </Suspense>
 
-              <div className="space-y-3">
-                <Button
-                  onClick={() => router.push(`/dashboard/cv/${cv.id}/edit`)}
-                  className="w-full flex items-center justify-center space-x-2">
-                  <Edit className="h-4 w-4" />
-                  <span>{t("cv.edit")}</span>
-                </Button>
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+              <CVRelationships cv={cv} />
+            </Suspense>
 
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    router.push(`/dashboard/job-tailor?cvId=${cv.id}`)
-                  }
-                  className="w-full flex items-center justify-center space-x-2">
-                  <Share2 className="h-4 w-4" />
-                  <span>{t("cv.tailor")}</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setShowJobDescription(true)}
-                  className="w-full flex items-center justify-center space-x-2">
-                  <Edit className="h-4 w-4" />
-                  <span>View Job Description</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setShowMatchingAnalysis(true)}
-                  className="w-full flex items-center justify-center space-x-2">
-                  <Share2 className="h-4 w-4" />
-                  <span>Matching Analysis</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setShowCoverLetter(true)}
-                  className="w-full flex items-center justify-center space-x-2">
-                  <Edit className="h-4 w-4" />
-                  <span>Cover Letter</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={handleDuplicate}
-                  disabled={duplicateMutation.isPending}
-                  className="w-full flex items-center justify-center space-x-2">
-                  <Copy className="h-4 w-4" />
-                  <span>
-                    {duplicateMutation.isPending
-                      ? t("common.loading")
-                      : t("cv.duplicate")}
-                  </span>
-                </Button>
-
-                <div className="pt-3">
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    {t("cv.export")}
-                  </h4>
-                  <div className="space-y-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExportWithConfig("pdf")}
-                      className="w-full flex items-center justify-center space-x-2">
-                      <Settings className="h-4 w-4" />
-                      <span>{t("cv.customPDF")}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport("pdf")}
-                      className="w-full flex items-center justify-center space-x-2">
-                      <Download className="h-4 w-4" />
-                      <span>{t("cv.pdf")}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport("word")}
-                      className="w-full flex items-center justify-center space-x-2">
-                      <Download className="h-4 w-4" />
-                      <span>{t("cv.word")}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport("ats")}
-                      className="w-full flex items-center justify-center space-x-2">
-                      <Download className="h-4 w-4" />
-                      <span>{t("cv.ats")}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="w-full flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50">
-                      <Trash2 className="h-4 w-4" />
-                      <span>{t("cv.delete")}</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CV Metadata */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 mt-6 border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                {t("cv.details")}
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <strong>{t("cv.created")}:</strong>{" "}
-                  {new Date(cv.createdAt).toLocaleDateString()}
-                </div>
-                <div>
-                  <strong>{t("cv.updated")}:</strong>{" "}
-                  {new Date(cv.updatedAt).toLocaleDateString()}
-                </div>
-                <div>
-                  <strong>{t("cv.version")}:</strong> {cv.version}
-                </div>
-                {cv.isTailored && (
-                  <div>
-                    <strong>{t("cv.tailored")}:</strong>{" "}
-                    {cv.tailoredForJob ? t("common.yes") : t("common.no")}
-                  </div>
-                )}
-              </div>
-            </div>
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+              <CVMetadata cv={cv} />
+            </Suspense>
           </div>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              {t("cv.confirm.delete")}
-            </h4>
-            <p className="text-gray-600 mb-6">
-              {t("cv.confirm.deleteMessage")}
-            </p>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(false)}>
-                {t("common.cancel")}
-              </Button>
-              <Button
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-                className="bg-red-600 hover:bg-red-700">
-                {deleteMutation.isPending
-                  ? t("common.deleting")
-                  : t("cv.delete")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Suspense fallback={<LoadingSkeleton type="modal" />}>
+        <DeleteConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDelete}
+          isLoading={deleteMutation.isPending}
+        />
+      </Suspense>
 
       {/* Template Config Modal */}
       <Suspense fallback={<LoadingSkeleton type="modal" />}>

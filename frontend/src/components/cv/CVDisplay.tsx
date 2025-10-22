@@ -101,7 +101,7 @@ export default function CVDisplay({
             <div className="flex items-center gap-2 mb-1">
               <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {cv.parsedData?.name || cv.originalFileName}
+                {cv.parsedData?.contact?.name || cv.originalFileName}
               </h4>
               {cv.isTailored && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
@@ -193,7 +193,7 @@ export default function CVDisplay({
             <div className="flex items-center gap-3 mb-2">
               <FileText className="h-6 w-6 text-blue-600 flex-shrink-0" />
               <h3 className="text-xl font-bold text-gray-900 truncate">
-                {cv.parsedData?.name || cv.originalFileName}
+                {cv.parsedData?.contact?.name || cv.originalFileName}
               </h3>
               {cv.isTailored && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -439,54 +439,96 @@ export default function CVDisplay({
               )}
 
             {/* Skills */}
-            {cv.parsedData.skills && (
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Award className="h-5 w-5 text-purple-600" />
-                  Skills
-                </h4>
-                <div className="space-y-3">
-                  {cv.parsedData.skills.technical &&
-                    Array.isArray(cv.parsedData.skills.technical) &&
-                    cv.parsedData.skills.technical.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-2">
-                          Technical Skills
-                        </h5>
-                        <div className="flex flex-wrap gap-2">
-                          {cv.parsedData.skills.technical.map(
-                            (skill, index) => (
+            {cv.parsedData.skills &&
+              cv.parsedData.skills.technical.length > 0 &&
+              cv.parsedData.skills.soft.length > 0 &&
+              cv.parsedData.skills.languages.length > 0 &&
+              cv.parsedData.skills.tools.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Award className="h-5 w-5 text-purple-600" />
+                    Skills
+                  </h4>
+                  <div className="space-y-3">
+                    {cv.parsedData.skills.technical &&
+                      Array.isArray(cv.parsedData.skills.technical) &&
+                      cv.parsedData.skills.technical.length > 0 && (
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            Technical Skills
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
+                            {cv.parsedData.skills.technical.map(
+                              (skill, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                  {skill}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    {cv.parsedData.skills.soft &&
+                      Array.isArray(cv.parsedData.skills.soft) &&
+                      cv.parsedData.skills.soft.length > 0 && (
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            Soft Skills
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
+                            {cv.parsedData.skills.soft.map((skill, index) => (
                               <span
                                 key={index}
-                                className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
                                 {skill}
                               </span>
-                            )
-                          )}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  {cv.parsedData.skills.soft &&
-                    Array.isArray(cv.parsedData.skills.soft) &&
-                    cv.parsedData.skills.soft.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-2">
-                          Soft Skills
-                        </h5>
-                        <div className="flex flex-wrap gap-2">
-                          {cv.parsedData.skills.soft.map((skill, index) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                              {skill}
-                            </span>
-                          ))}
+                      )}
+                    {cv.parsedData.skills.languages &&
+                      Array.isArray(cv.parsedData.skills.languages) &&
+                      cv.parsedData.skills.languages.length > 0 && (
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            Languages
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
+                            {cv.parsedData.skills.languages.map(
+                              (language, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full">
+                                  {language}
+                                </span>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    {cv.parsedData.skills.tools &&
+                      Array.isArray(cv.parsedData.skills.tools) &&
+                      cv.parsedData.skills.tools.length > 0 && (
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            Tools
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
+                            {cv.parsedData.skills.tools.map((tool, index) => (
+                              <span
+                                key={index}
+                                className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full">
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Projects */}
             {cv.parsedData.projects &&

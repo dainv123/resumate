@@ -1,6 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Cv } from './cv.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { JobDescription } from './job-description.entity';
 
 @Entity('cv_matching_analyses')
 export class CvMatchingAnalysis {
@@ -8,21 +16,19 @@ export class CvMatchingAnalysis {
   id: string;
 
   @Column()
-  cvId: string;
+  jobDescriptionId: string;
 
   @Column()
   userId: string;
 
-  @Column('jsonb')
-  jobDescription: {
+  @Column('jsonb', { nullable: true })
+  jobDescriptionSnapshot: {
     title: string;
     company?: string;
-    location?: string;
-    salary?: string;
+    description: string; // Truncated to 500 chars
+    keyRequirements: string[]; // Only top 5 requirements
     experience?: string;
-    description: string;
-    requirements: string[];
-    benefits: string[];
+    createdAt: string; // When snapshot was taken
   };
 
   @Column('int')
@@ -43,17 +49,26 @@ export class CvMatchingAnalysis {
   @Column('text', { nullable: true })
   notes: string;
 
+  @Column({ default: false })
+  isSnapshot: boolean;
+
+  @Column({ nullable: true })
+  snapshotReason: string;
+
+  @Column({ nullable: true })
+  expiresAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => Cv, cv => cv.id)
-  @JoinColumn({ name: 'cvId' })
-  cv: Cv;
+  @ManyToOne(() => JobDescription)
+  @JoinColumn({ name: 'jobDescriptionId' })
+  jobDescription: JobDescription;
 
-  @ManyToOne(() => User, user => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'userId' })
   user: User;
 }

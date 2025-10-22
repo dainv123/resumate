@@ -29,7 +29,8 @@
     "yes": "Yes",
     "no": "No",
     "current": "Current",
-    "new": "New"
+    "new": "New",
+    "creating": "Creating..."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -79,6 +80,8 @@
     "duplicateCvFailed": "Failed to duplicate CV",
     "duplicateCvSuccess": "CV duplicated successfully",
     "duplicateCvConfirm": "Are you sure you want to duplicate this CV?",
+    "createCvSuccess": "CV created successfully!",
+    "createCvFailed": "Failed to create CV. Please try again.",
     "currentMode": "Current Mode",
     "pagination": "Pagination",
     "infiniteScroll": "Infinite Scroll",
@@ -106,7 +109,51 @@
     "sortAsc": "Sort ascending",
     "sortDesc": "Sort descending",
     "upload": "Upload",
-    "recentCvs": "Recent CVs"
+    "export": "Export",
+    "recentCvs": "Recent CVs",
+    "noCvs": "No CVs yet",
+    "noCvsDescription": "Upload your first CV to get started",
+    "createFirstCv": "Create Your First CV",
+    "create": {
+      "title": "Create New CV",
+      "description": "Upload a CV file or create from template",
+      "uploadFile": "Upload CV File",
+      "uploadDescription": "Upload your existing CV in PDF or DOCX format",
+      "fromTemplate": "Create from Template",
+      "templateDescription": "Build your CV from scratch using our templates",
+      "startFromTemplate": "Start from Template",
+      "templateNote": "You can always edit and customize your CV later",
+      "success": "CV created successfully",
+      "error": "Failed to create CV",
+      "features": {
+        "title": "What you can do",
+        "upload": "Upload & Parse",
+        "uploadDesc": "Upload existing CVs and let AI extract the data",
+        "ai": "AI Enhancement",
+        "aiDesc": "AI-powered parsing and data extraction",
+        "template": "Professional Templates",
+        "templateDesc": "Beautiful, ATS-friendly templates"
+      },
+      "template": {
+        "title": "Create CV from Template",
+        "description": "Build your CV step by step using our form editor",
+        "formTitle": "CV Information",
+        "formDescription": "Fill in your information below. You can add or remove sections as needed.",
+        "createCV": "Create CV"
+      }
+    },
+    "edit": {
+      "title": "Edit CV",
+      "description": "Edit CV: {{fileName}}",
+      "success": "CV updated successfully",
+      "error": "Failed to update CV",
+      "unsavedChanges": "You have unsaved changes",
+      "saveReminder": "Don't forget to save your changes",
+      "formTitle": "Edit CV Information",
+      "formDescription": "Make changes to your CV below. Your changes will be saved when you click Save.",
+      "save": "Save Changes",
+      "reset": "Reset"
+    }
   },
   "auth": {
     "login": "Login",
@@ -335,6 +382,14 @@
     "title": "My CVs",
     "subtitle": "Manage and update your CVs with AI-powered features",
     "uploadCV": "Upload CV",
+    "aiCvWizard": "AI CV Wizard",
+    "createNewCV": "Create New CV",
+    "createNewCVSubtitle": "Build your CV from scratch with our intuitive editor",
+    "cvName": "CV Name",
+    "enterCvName": "Enter CV name...",
+    "create": "Create CV",
+    "createTip": "Tip: Hover over fields to see more options",
+    "preview": "Preview",
     "stats": {
       "totalCVs": "Total CVs",
       "parsed": "Parsed",
@@ -403,7 +458,6 @@
     "uploadSuccess": "CV uploaded successfully! AI is analyzing your CV content.",
     "uploadFailed": "Upload failed",
     "edit": "Edit",
-    "preview": "Preview",
     "basicInfo": "Basic Information",
     "personalInfo": "Personal Information",
     "contactInfo": "Contact Information",
@@ -488,7 +542,13 @@
     "updated": "Updated",
     "tailored": "Tailored",
     "relationships": "CV Relationships",
+    "originalCv": "Original CV",
+    "originalCvDescription": "This CV was created from an original CV",
+    "tailoredCvs": "Tailored CVs",
+    "viewOriginal": "View Original",
     "view": "View",
+    "tailoredFor": "Tailored for",
+    "noRelationships": "No CV relationships found",
     "pdf": "PDF",
     "word": "Word",
     "ats": "ATS",
@@ -511,7 +571,12 @@
     "seoFriendly": "SEO Friendly",
     "exportAll": "Export All",
     "createNewCv": "Create New CV",
-    "settings": "Settings"
+    "settings": "Settings",
+    "noCvs": "No CVs yet",
+    "noCvsDescription": "Upload your first CV to get started",
+    "createFirstCv": "Create Your First CV",
+    "detail": "Details",
+    "export": "Export"
   },
   "compare": {
     "title": "Version Comparison",
@@ -704,7 +769,13 @@
       "copy": "Copy to Clipboard",
       "download": "Download",
       "copied": "Copied to clipboard!",
-      "close": "Close"
+      "close": "Close",
+      "tips": "Tips:",
+      "tip1": "Personalize the greeting with the hiring manager's name if known",
+      "tip2": "Adjust the tone to match the company culture",
+      "tip3": "Add specific examples from your experience",
+      "tip4": "Proofread carefully before sending",
+      "desc": "Professional cover letter generated based on your CV and the job description"
     },
     "tailoredCV": {
       "success": "CV tailored successfully!",
@@ -712,6 +783,10 @@
       "download": "Download Tailored CV",
       "viewOriginal": "View Original CV"
     },
+    "analysisGenerated": "Analysis generated successfully!",
+    "analysisReused": "Using existing analysis for this job description",
+    "coverLetterGenerated": "Cover letter generated successfully!",
+    "coverLetterReused": "Using existing cover letter for this job description",
     "description": "Optimize your CV for specific job descriptions using AI",
     "enterJobDescription": "Enter Job Description",
     "pasteJobHere": "Paste the job description here...",
@@ -837,7 +912,8 @@
     },
     "exportTitle": "Export CV",
     "exportDesc": "Export your CV in multiple formats: PDF, Word, or ATS-friendly text format.",
-    "loadingMoreCvs": "Loading more CVs..."
+    "loadingMoreCvs": "Loading more CVs...",
+    "scrollToSeeMore": "Scroll to see more"
   },
   "aiCvWizard": {
     "title": "🤖 AI CV Wizard",

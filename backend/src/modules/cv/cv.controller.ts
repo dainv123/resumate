@@ -24,8 +24,7 @@ export class CvController {
 
   @Post()
   async create(@Body() createCvDto: CreateCvDto, @GetUser() user: User) {
-    // For now, just return the user's CVs since create method doesn't exist
-    return this.cvService.getUserCvs(user.id);
+    return this.cvService.createCv(user.id, createCvDto);
   }
 
   @Get()
@@ -115,21 +114,13 @@ export class CvController {
     @GetUser('id') userId: string,
     @Body() body: { jobDescription: string, jobTitle?: string, company?: string },
   ) {
-    // Save job description first
-    const jobDesc = {
-      title: body.jobTitle || 'Job Position',
-      company: body.company || 'Company',
-      description: body.jobDescription,
-      requirements: [],
-      benefits: []
-    };
-    await this.cvService.saveJobDescription(id, userId, jobDesc);
-    
-    // Generate and save analysis
+    // Generate analysis (will reuse if JobDescription exists)
     const analysis = await this.cvService.analyzeCompatibility(id, userId, body.jobDescription);
-    await this.cvService.saveMatchingAnalysis(id, userId, analysis);
     
-    return analysis;
+    return {
+      ...analysis,
+      reused: (analysis as any).reused || false, // Add flag to indicate if reused
+    };
   }
 
   @Post(':id/generate-cover-letter')
@@ -138,24 +129,13 @@ export class CvController {
     @GetUser('id') userId: string,
     @Body() body: { jobDescription: string, jobTitle?: string, company?: string },
   ) {
-    // Save job description if not exists
-    const existingJobDesc = await this.cvService.getCvById(id, userId);
-    if (!existingJobDesc.jobDescription) {
-      const jobDesc = {
-        title: body.jobTitle || 'Job Position',
-        company: body.company || 'Company',
-        description: body.jobDescription,
-        requirements: [],
-        benefits: []
-      };
-      await this.cvService.saveJobDescription(id, userId, jobDesc);
-    }
-    
-    // Generate and save cover letter
+    // Generate cover letter (will reuse if JobDescription exists)
     const result = await this.cvService.generateCoverLetter(id, userId, body.jobDescription);
-    await this.cvService.saveCoverLetter(id, userId, result.coverLetter);
     
-    return result;
+    return {
+      ...result,
+      reused: (result as any).reused || false, // Add flag to indicate if reused
+    };
   }
 
   @Post('quick-build')
@@ -317,11 +297,67 @@ export class CvController {
   }
 
   /**
+   * Get all analyses for user
+   */
+  @Get('analyses')
+  async getUserAnalyses(@GetUser('id') userId: string) {
+    return this.cvService.getUserAnalyses(userId);
+  }
+
+  /**
+   * Get analysis by JobDescription ID
+   */
+  @Get('analyses/job-description/:jobDescriptionId')
+  async getAnalysisByJobDescription(
+    @Param('jobDescriptionId') jobDescriptionId: string,
+    @GetUser('id') userId: string
+  ) {
+    return this.cvService.getAnalysisByJobDescription(jobDescriptionId, userId);
+  }
+
+  /**
+   * Get all cover letters for user
+   */
+  @Get('cover-letters')
+  async getUserCoverLetters(@GetUser('id') userId: string) {
+    return this.cvService.getUserCoverLetters(userId);
+  }
+
+  /**
+   * Get cover letter by JobDescription ID
+   */
+  @Get('cover-letters/job-description/:jobDescriptionId')
+  async getCoverLetterByJobDescription(
+    @Param('jobDescriptionId') jobDescriptionId: string,
+    @GetUser('id') userId: string
+  ) {
+    return this.cvService.getCoverLetterByJobDescription(jobDescriptionId, userId);
+  }
+
+  /**
    * Get available templates
    */
   @Get('templates/available')
   async getAvailableTemplates(@GetUser() user: User) {
     return this.cvService.getAvailableTemplates();
+  }
+
+  /**
+   * Get cleanup statistics (admin only)
+   */
+  @Get('admin/cleanup/stats')
+  async getCleanupStats(@GetUser() user: User) {
+    // TODO: Add admin role check
+    return this.cvService.getCleanupStats();
+  }
+
+  /**
+   * Trigger manual cleanup (admin only)
+   */
+  @Post('admin/cleanup/manual')
+  async triggerManualCleanup(@GetUser() user: User) {
+    // TODO: Add admin role check
+    return this.cvService.triggerManualCleanup();
   }
 
   /**

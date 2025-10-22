@@ -148,6 +148,13 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setCompatibilityAnalysis(data);
       setShowAnalysisModal(true);
+
+      // Show success message with reuse info
+      if (data.reused) {
+        showSuccess(t("jobTailor.analysisReused"));
+      } else {
+        showSuccess(t("jobTailor.analysisGenerated"));
+      }
     },
   });
 
@@ -162,6 +169,13 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setCoverLetter(data.coverLetter);
       setShowCoverLetterModal(true);
+
+      // Show success message with reuse info
+      if (data.reused) {
+        showSuccess(t("jobTailor.coverLetterReused"));
+      } else {
+        showSuccess(t("jobTailor.coverLetterGenerated"));
+      }
     },
   });
 

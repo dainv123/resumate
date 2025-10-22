@@ -9,6 +9,21 @@ import React, {
 } from "react";
 import en from "@/locales/en.json";
 import vi from "@/locales/vi.json";
+import {
+  STORAGE_KEY,
+  GEO_DETECTION_KEY,
+  LOCATION_CACHE_KEY,
+  CACHE_DURATION,
+  API_TIMEOUT,
+  GPS_TIMEOUT,
+  GPS_MAX_AGE,
+  GPS_HIGH_ACCURACY,
+  IP_API_ENDPOINT,
+  REVERSE_GEOCODE_API_ENDPOINT,
+  SUPPORTED_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  VIETNAM_COUNTRY_CODE,
+} from "@/config/constants";
 
 type Language = "en" | "vi";
 
@@ -37,127 +52,16 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined
 );
 
-const STORAGE_KEY = "app_language";
-const GEO_DETECTION_KEY = "app_geo_detection_enabled";
-const LOCATION_CACHE_KEY = "app_location_cache";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en");
+  const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE);
   const [isDetectingLanguage, setIsDetectingLanguage] =
     useState<boolean>(false);
   const [isGeoDetectionEnabled, setIsGeoDetectionEnabledState] =
     useState<boolean>(true);
 
-  const detectAndSetLanguage = useCallback(async () => {
-    // Check if geolocation detection is enabled
-    const geoDetectionEnabled = localStorage.getItem(GEO_DETECTION_KEY);
-    if (geoDetectionEnabled === "false") {
-      // Skip geolocation detection, use browser language only
-      const browserLang = navigator.language.toLowerCase();
-      if (browserLang.startsWith("vi")) {
-        setLanguageState("vi");
-      } else {
-        setLanguageState("en");
-      }
-      return;
-    }
-
-    setIsDetectingLanguage(true);
-
-    try {
-      // First try geolocation detection
-      const detectedLang = await detectLanguageByLocation();
-      if (detectedLang) {
-        setLanguageState(detectedLang);
-        setIsDetectingLanguage(false);
-        return;
-      }
-    } catch (detectionError) {
-      console.log(
-        "Geolocation detection failed, falling back to browser language"
-      );
-    }
-
-    // Fallback to browser language detection
-    const browserLang = navigator.language.toLowerCase();
-    if (browserLang.startsWith("vi")) {
-      setLanguageState("vi");
-    } else {
-      setLanguageState("en"); // Default to English
-    }
-
-    setIsDetectingLanguage(false);
-  }, []);
-
-  // Load language from localStorage on mount
-  useEffect(() => {
-    // Load geolocation detection preference
-    const geoDetectionPreference = localStorage.getItem(GEO_DETECTION_KEY);
-    if (geoDetectionPreference === "false") {
-      setIsGeoDetectionEnabledState(false);
-    }
-
-    const savedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
-    if (savedLanguage && (savedLanguage === "en" || savedLanguage === "vi")) {
-      setLanguageState(savedLanguage);
-    } else {
-      // Detect language based on browser and geolocation
-      detectAndSetLanguage();
-    }
-  }, [detectAndSetLanguage]);
-
-  const detectLanguageByLocation = async (): Promise<Language | null> => {
-    try {
-      // Check cache first
-      const cachedData = getCachedLocationData();
-      if (cachedData) {
-        console.log("Using cached location data");
-        return cachedData.language;
-      }
-
-      // First try GPS geolocation
-      try {
-        const position = await getCurrentPosition();
-        const { latitude, longitude } = position.coords;
-
-        const response = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          const countryCode = data.countryCode;
-          const detectedLanguage = countryCode === "VN" ? "vi" : "en";
-
-          // Cache the result
-          cacheLocationData(detectedLanguage, countryCode, latitude, longitude);
-          return detectedLanguage;
-        }
-      } catch (gpsError) {
-        console.log("GPS geolocation failed, trying IP-based detection");
-      }
-
-      // Fallback to IP-based geolocation
-      const ipResponse = await fetch("https://ipapi.co/json/", {
-        cache: "no-cache",
-      });
-      if (ipResponse.ok) {
-        const ipData = await ipResponse.json();
-        const countryCode = ipData.country_code;
-        const detectedLanguage = countryCode === "VN" ? "vi" : "en";
-
-        // Cache the result
-        cacheLocationData(detectedLanguage, countryCode);
-        return detectedLanguage;
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Location detection error:", error);
-      return null;
-    }
-  };
+  // Add ref to track if detection is already in progress
+  const detectionInProgressRef = React.useRef(false);
+  const initializationRef = React.useRef(false);
 
   const getCachedLocationData = (): {
     language: Language;
@@ -171,7 +75,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       const data = JSON.parse(cached);
       const now = Date.now();
 
-      // Check if cache is still valid (within 24 hours)
+      // Check if cache is still valid (within 7 days)
       if (now - data.timestamp > CACHE_DURATION) {
         localStorage.removeItem(LOCATION_CACHE_KEY);
         return null;
@@ -212,12 +116,187 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
 
       navigator.geolocation.getCurrentPosition(resolve, reject, {
-        timeout: 5000,
-        enableHighAccuracy: false,
-        maximumAge: 300000, // 5 minutes cache
+        timeout: GPS_TIMEOUT,
+        enableHighAccuracy: GPS_HIGH_ACCURACY,
+        maximumAge: GPS_MAX_AGE,
       });
     });
   };
+
+  const detectLanguageByLocation =
+    useCallback(async (): Promise<Language | null> => {
+      try {
+        // Check cache first
+        const cachedData = getCachedLocationData();
+        if (cachedData) {
+          console.log("Using cached location data");
+          return cachedData.language;
+        }
+
+        // Prevent multiple simultaneous API calls
+        if (detectionInProgressRef.current) {
+          console.log("Detection already in progress, skipping...");
+          return null;
+        }
+        detectionInProgressRef.current = true;
+
+        // First try GPS geolocation
+        try {
+          const position = await getCurrentPosition();
+          const { latitude, longitude } = position.coords;
+
+          const response = await fetch(
+            `${REVERSE_GEOCODE_API_ENDPOINT}?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const countryCode = data.countryCode;
+            const detectedLanguage =
+              countryCode === VIETNAM_COUNTRY_CODE ? "vi" : "en";
+
+            // Cache the result
+            cacheLocationData(
+              detectedLanguage,
+              countryCode,
+              latitude,
+              longitude
+            );
+            return detectedLanguage;
+          }
+        } catch (gpsError) {
+          console.log(
+            "GPS geolocation failed, trying IP-based detection",
+            gpsError
+          );
+        }
+
+        // Fallback to IP-based geolocation
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+        let ipResponse;
+        try {
+          ipResponse = await fetch(IP_API_ENDPOINT, {
+            cache: "no-cache",
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        if (ipResponse.ok) {
+          const ipData = await ipResponse.json();
+          const countryCode = ipData.country_code;
+          const detectedLanguage =
+            countryCode === VIETNAM_COUNTRY_CODE ? "vi" : "en";
+
+          // Cache the result
+          cacheLocationData(detectedLanguage, countryCode);
+          return detectedLanguage;
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Location detection error:", error);
+        return null;
+      } finally {
+        // Reset the flag when detection is complete
+        detectionInProgressRef.current = false;
+      }
+    }, []);
+
+  const detectAndSetLanguage = useCallback(async () => {
+    // Don't detect if user has explicitly set a language
+    const savedLanguage = localStorage.getItem(STORAGE_KEY);
+    if (savedLanguage && SUPPORTED_LANGUAGES.includes(savedLanguage as any)) {
+      return;
+    }
+
+    // Don't detect if we have valid cached data
+    const cachedData = getCachedLocationData();
+    if (cachedData) {
+      return;
+    }
+
+    // Don't detect if geolocation is disabled
+    const geoDetectionEnabled = localStorage.getItem(GEO_DETECTION_KEY);
+    if (geoDetectionEnabled === "false") {
+      // Skip geolocation detection, use browser language only
+      const browserLang = navigator.language.toLowerCase();
+      if (browserLang.startsWith("vi")) {
+        setLanguageState("vi");
+      } else {
+        setLanguageState("en");
+      }
+      return;
+    }
+
+    // Prevent multiple simultaneous detection calls
+    if (detectionInProgressRef.current) {
+      console.log("Language detection already in progress, skipping...");
+      return;
+    }
+
+    setIsDetectingLanguage(true);
+
+    try {
+      // First try geolocation detection
+      const detectedLang = await detectLanguageByLocation();
+      if (detectedLang) {
+        setLanguageState(detectedLang);
+        setIsDetectingLanguage(false);
+        return;
+      }
+    } catch (detectionError) {
+      console.log(
+        "Geolocation detection failed, falling back to browser language",
+        detectionError
+      );
+    }
+
+    // Fallback to browser language detection
+    const browserLang = navigator.language.toLowerCase();
+    if (browserLang.startsWith("vi")) {
+      setLanguageState("vi");
+    } else {
+      setLanguageState(DEFAULT_LANGUAGE); // Default to English
+    }
+
+    setIsDetectingLanguage(false);
+  }, [detectLanguageByLocation]);
+
+  // Load language from localStorage on mount
+  useEffect(() => {
+    // Prevent multiple initializations
+    if (initializationRef.current) {
+      return;
+    }
+    initializationRef.current = true;
+
+    // Load geolocation detection preference
+    const geoDetectionPreference = localStorage.getItem(GEO_DETECTION_KEY);
+    if (geoDetectionPreference === "false") {
+      setIsGeoDetectionEnabledState(false);
+    }
+
+    const savedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
+    if (savedLanguage && SUPPORTED_LANGUAGES.includes(savedLanguage as any)) {
+      // User has already set a language preference, use it directly
+      setLanguageState(savedLanguage);
+      return;
+    }
+
+    // Check if we have valid cached location data first
+    const cachedData = getCachedLocationData();
+    if (cachedData) {
+      console.log("Using cached location data on page load");
+      setLanguageState(cachedData.language);
+      return;
+    }
+
+    // Only detect language if no saved preference and no valid cache
+    detectAndSetLanguage();
+  }, [detectAndSetLanguage]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

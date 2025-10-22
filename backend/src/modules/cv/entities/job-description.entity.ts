@@ -1,6 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Cv } from './cv.entity';
+import { CvMatchingAnalysis } from './cv-matching-analysis.entity';
+import { CvCoverLetter } from './cv-cover-letter.entity';
 
 @Entity('job_descriptions')
 export class JobDescription {
@@ -51,4 +53,10 @@ export class JobDescription {
 
   @OneToMany(() => Cv, cv => cv.jobDescription)
   tailoredCvs: Cv[];
+
+  @OneToMany(() => CvMatchingAnalysis, analysis => analysis.jobDescription)
+  matchingAnalyses: CvMatchingAnalysis[];
+
+  @OneToMany(() => CvCoverLetter, coverLetter => coverLetter.jobDescription)
+  coverLetters: CvCoverLetter[];
 }

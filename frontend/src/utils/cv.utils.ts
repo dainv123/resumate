@@ -40,7 +40,7 @@ export class CVUtils {
       awards: data.awards ? this.normalizeAwards(data.awards) : [],
       publications: data.publications ? this.normalizePublications(data.publications) : [],
       volunteer: data.volunteer ? this.normalizeVolunteer(data.volunteer) : [],
-      languages: data.languages ? this.normalizeLanguages(data.languages) : [],
+      // languages: data.languages ? this.normalizeLanguages(data.languages) : [],
       
       template: data.template || this.getDefaultTemplateConfig()
     };
@@ -339,7 +339,7 @@ export class CVUtils {
       awards: [],
       publications: [],
       volunteer: [],
-      languages: [],
+      // languages: [],
       template: this.getDefaultTemplateConfig()
     };
   }

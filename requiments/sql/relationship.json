@@ -1,0 +1,100 @@
+{
+  "SELECT\n    tc.table_schema AS foreign_table_schema,\n    tc.table_name AS foreign_table,\n    kcu.column_name AS foreign_column,\n    ccu.table_schema AS primary_table_schema,\n    ccu.table_name AS primary_table,\n    ccu.column_name AS primary_column\nFROM information_schema.table_constraints AS tc\nJOIN information_schema.key_column_usage AS kcu\n  ON tc.constraint_name = kcu.constraint_name\nJOIN information_schema.constraint_column_usage AS ccu\n  ON ccu.constraint_name = tc.constraint_name\nWHERE tc.constraint_type = 'FOREIGN KEY'\n": [
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cvs",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "projects",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "user_usage",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "job_descriptions",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cvs",
+      "foreign_column": "jobDescriptionId",
+      "primary_table_schema": "public",
+      "primary_table": "job_descriptions",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cvs",
+      "foreign_column": "originalCvId",
+      "primary_table_schema": "public",
+      "primary_table": "cvs",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "portfolios",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "analytics",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cv_matching_analyses",
+      "foreign_column": "cvId",
+      "primary_table_schema": "public",
+      "primary_table": "cvs",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cv_matching_analyses",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cv_cover_letters",
+      "foreign_column": "cvId",
+      "primary_table_schema": "public",
+      "primary_table": "cvs",
+      "primary_column": "id"
+    },
+    {
+      "foreign_table_schema": "public",
+      "foreign_table": "cv_cover_letters",
+      "foreign_column": "userId",
+      "primary_table_schema": "public",
+      "primary_table": "users",
+      "primary_column": "id"
+    }
+  ]
+}

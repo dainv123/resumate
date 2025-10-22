@@ -1,6 +1,5 @@
 import api from './api';
-import { CVData, TemplateConfig } from '../types/cv.types';
-import { CVUtils } from '../utils/cv.utils';
+import { CVData } from '../types/cv.types';
 
 export interface ImprovementNotes {
   parsingImprovements: string[];
@@ -39,6 +38,10 @@ export interface CV {
   originalCv?: CV;
   jobDescription?: JobDescription;
   tailoredVersions?: CV[];
+  // New fields for relationships
+  tailoredCvs?: CV[];
+  matchingAnalysis?: any;
+  coverLetter?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,6 +100,60 @@ export interface CompatibilityAnalysis {
   missingRequirements: string[];
   suggestions: string[];
   strengths: string[];
+  reused?: boolean; // Flag to indicate if analysis was reused
+}
+
+export interface CvMatchingAnalysis {
+  id: string;
+  jobDescriptionId: string;
+  userId: string;
+  jobDescriptionSnapshot: {
+    title: string;
+    company?: string;
+    description: string;
+    keyRequirements: string[];
+    experience?: string;
+    createdAt: string;
+  };
+  score: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  suggestions: string[];
+  strengths: string[];
+  notes?: string;
+  isSnapshot: boolean;
+  snapshotReason?: string;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  jobDescription?: JobDescription;
+}
+
+export interface CvCoverLetter {
+  id: string;
+  jobDescriptionId: string;
+  userId: string;
+  jobDescriptionSnapshot: {
+    title: string;
+    company?: string;
+    description: string;
+    keyRequirements: string[];
+    experience?: string;
+    createdAt: string;
+  };
+  content: string;
+  personalizedContent?: string;
+  tone: string;
+  format: string;
+  wordCount: number;
+  isCustomized: boolean;
+  notes?: string;
+  isSnapshot: boolean;
+  snapshotReason?: string;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  jobDescription?: JobDescription;
 }
 
 export const cvApi = {
@@ -109,6 +166,21 @@ export const cvApi = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+
+  createCv: async (originalFileName: string, parsedData: CVData, fileUrl?: string): Promise<CV> => {
+    const requestBody: any = {
+      originalFileName,
+      parsedData,
+    };
+    
+    // Only include fileUrl if it's provided
+    if (fileUrl) {
+      requestBody.fileUrl = fileUrl;
+    }
+    
+    const response = await api.post('/cv', requestBody);
     return response.data;
   },
 
@@ -159,13 +231,21 @@ export const cvApi = {
     return response.data;
   },
 
-  analyzeCompatibility: async (id: string, jobDescription: string): Promise<CompatibilityAnalysis> => {
-    const response = await api.post(`/cv/${id}/analyze-compatibility`, { jobDescription });
+  analyzeCompatibility: async (id: string, jobDescription: string, jobTitle?: string, company?: string): Promise<CompatibilityAnalysis> => {
+    const response = await api.post(`/cv/${id}/analyze-compatibility`, { 
+      jobDescription, 
+      jobTitle, 
+      company 
+    });
     return response.data;
   },
 
-  generateCoverLetter: async (id: string, jobDescription: string): Promise<{ coverLetter: string }> => {
-    const response = await api.post(`/cv/${id}/generate-cover-letter`, { jobDescription });
+  generateCoverLetter: async (id: string, jobDescription: string, jobTitle?: string, company?: string): Promise<{ coverLetter: string; reused?: boolean }> => {
+    const response = await api.post(`/cv/${id}/generate-cover-letter`, { 
+      jobDescription, 
+      jobTitle, 
+      company 
+    });
     return response.data;
   },
 
@@ -225,9 +305,56 @@ export const cvApi = {
     const response = await api.put(`/cv/${id}/quick-build`, data);
     return response.data;
   },
+
+  // New APIs for analysis and cover letter management
+  getUserAnalyses: async (): Promise<CvMatchingAnalysis[]> => {
+    const response = await api.get('/cv/analyses');
+    return response.data;
+  },
+
+  getAnalysisByJobDescription: async (jobDescriptionId: string): Promise<CvMatchingAnalysis | null> => {
+    const response = await api.get(`/cv/analyses/job-description/${jobDescriptionId}`);
+    return response.data;
+  },
+
+  getUserCoverLetters: async (): Promise<CvCoverLetter[]> => {
+    const response = await api.get('/cv/cover-letters');
+    return response.data;
+  },
+
+  getCoverLetterByJobDescription: async (jobDescriptionId: string): Promise<CvCoverLetter | null> => {
+    const response = await api.get(`/cv/cover-letters/job-description/${jobDescriptionId}`);
+    return response.data;
+  },
+
+  // Helper method to check if analysis exists for a job description
+  checkExistingAnalysis: async (jobDescription: string): Promise<CvMatchingAnalysis | null> => {
+    try {
+      // This would need to be implemented on backend to search by content
+      // For now, we'll return null and let the analyzeCompatibility handle it
+      return null;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  // Helper method to check if cover letter exists for a job description
+  checkExistingCoverLetter: async (jobDescription: string): Promise<CvCoverLetter | null> => {
+    try {
+      // This would need to be implemented on backend to search by content
+      // For now, we'll return null and let the generateCoverLetter handle it
+      return null;
+    } catch (error) {
+      return null;
+    }
+  },
 };
 
 // Export helper functions for easier imports
 export const getAllCvs = cvApi.getUserCvs;
 export const getCvById = cvApi.getCvById;
 export const uploadCv = cvApi.uploadCv;
+export const analyzeCompatibility = cvApi.analyzeCompatibility;
+export const generateCoverLetter = cvApi.generateCoverLetter;
+export const getUserAnalyses = cvApi.getUserAnalyses;
+export const getUserCoverLetters = cvApi.getUserCoverLetters;

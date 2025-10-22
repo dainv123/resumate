@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner, Table, Index } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateCvAnalysisTables1734567890000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -154,37 +154,21 @@ export class CreateCvAnalysisTables1734567890000 implements MigrationInterface {
     );
 
     // Add indexes for better performance
-    await queryRunner.createIndex(
-      'cv_matching_analyses',
-      new Index({
-        name: 'IDX_cv_matching_analyses_cv_id',
-        columnNames: ['cvId']
-      }),
-    );
+    await queryRunner.query(`
+      CREATE INDEX "IDX_cv_matching_analyses_cv_id" ON "cv_matching_analyses" ("cvId")
+    `);
 
-    await queryRunner.createIndex(
-      'cv_matching_analyses',
-      new Index({
-        name: 'IDX_cv_matching_analyses_user_id',
-        columnNames: ['userId']
-      }),
-    );
+    await queryRunner.query(`
+      CREATE INDEX "IDX_cv_matching_analyses_user_id" ON "cv_matching_analyses" ("userId")
+    `);
 
-    await queryRunner.createIndex(
-      'cv_cover_letters',
-      new Index({
-        name: 'IDX_cv_cover_letters_cv_id',
-        columnNames: ['cvId']
-      }),
-    );
+    await queryRunner.query(`
+      CREATE INDEX "IDX_cv_cover_letters_cv_id" ON "cv_cover_letters" ("cvId")
+    `);
 
-    await queryRunner.createIndex(
-      'cv_cover_letters',
-      new Index({
-        name: 'IDX_cv_cover_letters_user_id',
-        columnNames: ['userId']
-      }),
-    );
+    await queryRunner.query(`
+      CREATE INDEX "IDX_cv_cover_letters_user_id" ON "cv_cover_letters" ("userId")
+    `);
 
     // Add foreign key constraints
     await queryRunner.query(`
