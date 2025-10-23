@@ -14,6 +14,9 @@ interface CVActionsProps {
   cv: any;
   onShowDeleteConfirm: () => void;
   onShowTemplateConfig: (format: "pdf" | "word" | "ats") => void;
+  onShowJobDescription?: () => void;
+  onShowMatchingAnalysis?: () => void;
+  onShowCoverLetter?: () => void;
   onExport: (
     format: "pdf" | "word" | "ats",
     template?: string,
@@ -25,6 +28,9 @@ export default function CVActions({
   cv,
   onShowDeleteConfirm,
   onShowTemplateConfig,
+  onShowJobDescription,
+  onShowMatchingAnalysis,
+  onShowCoverLetter,
   onExport,
 }: CVActionsProps) {
   const router = useRouter();
@@ -93,9 +99,7 @@ export default function CVActions({
           cv.jobDescription.title !== "No job description available" && (
             <Button
               variant="outline"
-              onClick={() => {
-                /* TODO: Add job description modal */
-              }}
+              onClick={onShowJobDescription}
               className="w-full flex items-center justify-center space-x-2">
               <Edit className="h-4 w-4" />
               <span>View Job Description</span>
@@ -106,9 +110,7 @@ export default function CVActions({
         {cv.matchingAnalysis && cv.matchingAnalysis.score > 0 && (
           <Button
             variant="outline"
-            onClick={() => {
-              /* TODO: Add matching analysis modal */
-            }}
+            onClick={onShowMatchingAnalysis}
             className="w-full flex items-center justify-center space-x-2">
             <Share2 className="h-4 w-4" />
             <span>Matching Analysis</span>
@@ -119,9 +121,7 @@ export default function CVActions({
         {cv.coverLetter && cv.coverLetter.trim() !== "" && (
           <Button
             variant="outline"
-            onClick={() => {
-              /* TODO: Add cover letter modal */
-            }}
+            onClick={onShowCoverLetter}
             className="w-full flex items-center justify-center space-x-2">
             <Edit className="h-4 w-4" />
             <span>Cover Letter</span>

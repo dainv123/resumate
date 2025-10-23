@@ -209,6 +209,9 @@ export default function CVDetailPage() {
                 cv={cv}
                 onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
                 onShowTemplateConfig={handleExportWithConfig}
+                onShowJobDescription={() => setShowJobDescription(true)}
+                onShowMatchingAnalysis={() => setShowMatchingAnalysis(true)}
+                onShowCoverLetter={() => setShowCoverLetter(true)}
                 onExport={handleExport}
               />
             </Suspense>
@@ -254,6 +257,8 @@ export default function CVDetailPage() {
           onClose={() => setShowJobDescription(false)}
           jobDescription={
             cv?.jobDescription || {
+              id: "",
+              userId: "",
               title: "No job description available",
               company: "",
               location: "",
@@ -261,10 +266,19 @@ export default function CVDetailPage() {
               experience: "",
               description:
                 "No job description has been associated with this CV.",
-              requirements: [],
-              benefits: [],
+              requirements: {
+                skills: [],
+                education: [],
+                experience: [],
+                certifications: [],
+              },
+              keywords: [],
+              createdAt: "",
+              updatedAt: "",
             }
           }
+          coverLetter={cv?.coverLetter}
+          matchingAnalysis={cv?.matchingAnalysis}
         />
       </Suspense>
 
