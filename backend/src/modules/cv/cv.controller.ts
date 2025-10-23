@@ -307,12 +307,13 @@ export class CvController {
   /**
    * Get analysis by JobDescription ID
    */
-  @Get('analyses/job-description/:jobDescriptionId')
+  @Get('analyses/:cvId/job-description/:jobDescriptionId')
   async getAnalysisByJobDescription(
+    @Param('cvId') cvId: string,
     @Param('jobDescriptionId') jobDescriptionId: string,
     @GetUser('id') userId: string
   ) {
-    return this.cvService.getAnalysisByJobDescription(jobDescriptionId, userId);
+    return this.cvService.getAnalysisByJobDescription(jobDescriptionId, cvId, userId);
   }
 
   /**
@@ -326,12 +327,13 @@ export class CvController {
   /**
    * Get cover letter by JobDescription ID
    */
-  @Get('cover-letters/job-description/:jobDescriptionId')
+  @Get('cover-letters/:cvId/job-description/:jobDescriptionId')
   async getCoverLetterByJobDescription(
+    @Param('cvId') cvId: string,
     @Param('jobDescriptionId') jobDescriptionId: string,
     @GetUser('id') userId: string
   ) {
-    return this.cvService.getCoverLetterByJobDescription(jobDescriptionId, userId);
+    return this.cvService.getCoverLetterByJobDescription(jobDescriptionId, cvId, userId);
   }
 
   /**

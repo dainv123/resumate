@@ -269,8 +269,15 @@ export class CvService {
   }
 
   async getCvVersions(cvId: string, userId: string): Promise<any[]> {
-    const cv = await this.getCvById(cvId, userId);
+    const cv = await this.cvRepository.findOne({
+      where: { id: cvId, userId },
+      relations: ['versionHistory'],
+    });
     
+    if (!cv) {
+      throw new NotFoundException('CV not found');
+    }
+
     // Return version history from versionHistory field
     if (!cv.versionHistory || cv.versionHistory.length === 0) {
       // If no history, return current version only
@@ -585,22 +592,23 @@ export class CvService {
     // Find or create JobDescription
     const jobDesc = await this.findOrCreateJobDescription(userId, jobDescription);
     
-    // Check if analysis already exists for this JobDescription
+    // Check if analysis already exists for this (CV, JobDescription, User) combination
     const existingAnalysis = await this.matchingAnalysisRepository.findOne({
       where: { 
+        cvId,
         jobDescriptionId: jobDesc.id,
         userId 
       }
     });
 
     if (existingAnalysis) {
-      this.logger.log(`Reusing existing analysis for JobDescription ${jobDesc.id}`);
+      this.logger.log(`Reusing existing analysis for CV ${cvId} + JobDescription ${jobDesc.id}`);
       return {
         score: existingAnalysis.score,
         matchedSkills: existingAnalysis.matchedSkills,
         missingSkills: existingAnalysis.missingSkills,
-        matchedExperience: [], // Not stored in current schema
-        missingRequirements: [], // Not stored in current schema
+        matchedExperience: [],
+        missingRequirements: [],
         suggestions: existingAnalysis.suggestions,
         strengths: existingAnalysis.strengths,
         reused: true,
@@ -613,20 +621,32 @@ export class CvService {
       jobDescription
     );
 
-    // Save analysis to database
-    const analysisRecord = this.matchingAnalysisRepository.create({
-      jobDescriptionId: jobDesc.id,
-      userId,
-      jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
-      score: analysis.score,
-      matchedSkills: analysis.matchedSkills,
-      missingSkills: analysis.missingSkills,
-      suggestions: analysis.suggestions,
-      strengths: analysis.strengths,
-      isSnapshot: false,
-    });
+    // TODO: Storage Strategy for Analysis Records
+    // Current Issue: Analysis is tied to (CV, JD, User) tuple
+    // Problem: When tailoring CV, new CV created but analysis not auto-generated
+    // Result: CV detail page shows "No analysis available" when opening tailored CV
+    // 
+    // Solution Options (to be implemented):
+    // 1. Auto-create analysis when tailorCv() is called
+    // 2. Generate on-demand when getCvWithRelatedData() is called
+    // 3. Store analysis differently (decoupled from CV)
+    //
+    // For now: Skip saving analysis - will implement comprehensive storage strategy later
 
-    await this.matchingAnalysisRepository.save(analysisRecord);
+    // COMMENTED OUT - See TODO above
+    // const analysisRecord = this.matchingAnalysisRepository.create({
+    //   cvId,
+    //   jobDescriptionId: jobDesc.id,
+    //   userId,
+    //   jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
+    //   score: analysis.score,
+    //   matchedSkills: analysis.matchedSkills,
+    //   missingSkills: analysis.missingSkills,
+    //   suggestions: analysis.suggestions,
+    //   strengths: analysis.strengths,
+    //   isSnapshot: false,
+    // });
+    // await this.matchingAnalysisRepository.save(analysisRecord);
 
     return {
       ...analysis,
@@ -642,16 +662,17 @@ export class CvService {
     // Find or create JobDescription
     const jobDesc = await this.findOrCreateJobDescription(userId, jobDescription);
     
-    // Check if cover letter already exists for this JobDescription
+    // Check if cover letter already exists for this (CV, JobDescription, User) combination
     const existingCoverLetter = await this.coverLetterRepository.findOne({
       where: { 
+        cvId,
         jobDescriptionId: jobDesc.id,
         userId 
       }
     });
 
     if (existingCoverLetter) {
-      this.logger.log(`Reusing existing cover letter for JobDescription ${jobDesc.id}`);
+      this.logger.log(`Reusing existing cover letter for CV ${cvId} + JobDescription ${jobDesc.id}`);
       return {
         coverLetter: existingCoverLetter.content,
         reused: true,
@@ -664,17 +685,29 @@ export class CvService {
       jobDescription
     );
 
-    // Save cover letter to database
-    const coverLetterRecord = this.coverLetterRepository.create({
-      jobDescriptionId: jobDesc.id,
-      userId,
-      jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
-      content: coverLetter.coverLetter,
-      wordCount: coverLetter.coverLetter.split(' ').length,
-      isSnapshot: false,
-    });
+    // TODO: Storage Strategy for Cover Letter Records
+    // Current Issue: Cover letter is tied to (CV, JD, User) tuple
+    // Problem: When tailoring CV, new CV created but cover letter not auto-generated
+    // Result: CV detail page shows "No cover letter available" when opening tailored CV
+    //
+    // Solution Options (to be implemented):
+    // 1. Auto-create cover letter when tailorCv() is called
+    // 2. Generate on-demand when getCvWithRelatedData() is called
+    // 3. Store cover letter differently (decoupled from CV)
+    //
+    // For now: Skip saving cover letter - will implement comprehensive storage strategy later
 
-    await this.coverLetterRepository.save(coverLetterRecord);
+    // COMMENTED OUT - See TODO above
+    // const coverLetterRecord = this.coverLetterRepository.create({
+    //   cvId,
+    //   jobDescriptionId: jobDesc.id,
+    //   userId,
+    //   jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
+    //   content: coverLetter.coverLetter,
+    //   wordCount: coverLetter.coverLetter.split(' ').length,
+    //   isSnapshot: false,
+    // });
+    // await this.coverLetterRepository.save(coverLetterRecord);
 
     return { 
       coverLetter: coverLetter.coverLetter,
@@ -899,11 +932,12 @@ export class CvService {
   }
 
   /**
-   * Get analysis by JobDescription ID
+   * Get analysis by JobDescription ID and CV ID
    */
-  async getAnalysisByJobDescription(jobDescriptionId: string, userId: string): Promise<CvMatchingAnalysis | null> {
+  async getAnalysisByJobDescription(jobDescriptionId: string, cvId: string, userId: string): Promise<CvMatchingAnalysis | null> {
     return this.matchingAnalysisRepository.findOne({
       where: { 
+        cvId,  // ✅ ADD cvId
         jobDescriptionId,
         userId 
       },
@@ -912,11 +946,12 @@ export class CvService {
   }
 
   /**
-   * Get cover letter by JobDescription ID
+   * Get cover letter by JobDescription ID and CV ID
    */
-  async getCoverLetterByJobDescription(jobDescriptionId: string, userId: string): Promise<CvCoverLetter | null> {
+  async getCoverLetterByJobDescription(jobDescriptionId: string, cvId: string, userId: string): Promise<CvCoverLetter | null> {
     return this.coverLetterRepository.findOne({
       where: { 
+        cvId,  // ✅ ADD cvId
         jobDescriptionId,
         userId 
       },
@@ -965,8 +1000,8 @@ export class CvService {
 
     if (cv.jobDescriptionId) {
       try {
-        matchingAnalysis = await this.getAnalysisByJobDescription(cv.jobDescriptionId, userId);
-        coverLetter = await this.getCoverLetterByJobDescription(cv.jobDescriptionId, userId);
+        matchingAnalysis = await this.getAnalysisByJobDescription(cv.jobDescriptionId, cvId, userId);
+        coverLetter = await this.getCoverLetterByJobDescription(cv.jobDescriptionId, cvId, userId);
       } catch (error) {
         this.logger.warn(`Failed to fetch related data for CV ${cvId}:`, error.message);
       }
@@ -975,11 +1010,14 @@ export class CvService {
     // Get tailored CVs for this CV
     let tailoredCvs = [];
     try {
+      console.log('bbbb',cvId, userId);
       tailoredCvs = await this.cvRepository.find({
         where: { originalCvId: cvId, userId },
         relations: ['jobDescription'],
         order: { createdAt: 'DESC' }
       });
+
+      console.log('tailoredCvs', tailoredCvs);
     } catch (error) {
       this.logger.warn(`Failed to fetch tailored CVs for CV ${cvId}:`, error.message);
     }

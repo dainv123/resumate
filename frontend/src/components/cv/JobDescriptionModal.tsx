@@ -75,9 +75,9 @@ export default function JobDescriptionModal({
               No Job Description Available
             </h4>
             <p className="text-gray-600">
-              This CV hasn&apos;t been associated with a job description yet. Use the
-              Job Tailor feature to analyze this CV against a specific job
-              posting.
+              This CV hasn&apos;t been associated with a job description yet.
+              Use the Job Tailor feature to analyze this CV against a specific
+              job posting.
             </p>
           </div>
         ) : (
@@ -283,7 +283,9 @@ export default function JobDescriptionModal({
                   {/* Score */}
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-700">Match Score:</span>
+                      <span className="font-medium text-gray-700">
+                        Match Score:
+                      </span>
                       <span className="text-2xl font-bold text-purple-600">
                         {matchingAnalysis.score}%
                       </span>
@@ -291,82 +293,93 @@ export default function JobDescriptionModal({
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${matchingAnalysis.score}%` }}
-                      ></div>
+                        style={{ width: `${matchingAnalysis.score}%` }}></div>
                     </div>
                   </div>
 
                   {/* Matched Skills */}
-                  {matchingAnalysis.matchedSkills && matchingAnalysis.matchedSkills.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
-                        Matched Skills ({matchingAnalysis.matchedSkills.length})
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {matchingAnalysis.matchedSkills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                            {skill}
-                          </span>
-                        ))}
+                  {matchingAnalysis.matchedSkills &&
+                    matchingAnalysis.matchedSkills.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                          Matched Skills (
+                          {matchingAnalysis.matchedSkills.length})
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {matchingAnalysis.matchedSkills.map(
+                            (skill, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                {skill}
+                              </span>
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Missing Skills */}
-                  {matchingAnalysis.missingSkills && matchingAnalysis.missingSkills.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                        <XCircle className="h-4 w-4 mr-1 text-red-600" />
-                        Missing Skills ({matchingAnalysis.missingSkills.length})
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {matchingAnalysis.missingSkills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                            {skill}
-                          </span>
-                        ))}
+                  {matchingAnalysis.missingSkills &&
+                    matchingAnalysis.missingSkills.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                          <XCircle className="h-4 w-4 mr-1 text-red-600" />
+                          Missing Skills (
+                          {matchingAnalysis.missingSkills.length})
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {matchingAnalysis.missingSkills.map(
+                            (skill, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                {skill}
+                              </span>
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Strengths */}
-                  {matchingAnalysis.strengths && matchingAnalysis.strengths.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                        <Target className="h-4 w-4 mr-1 text-blue-600" />
-                        Strengths
-                      </h4>
-                      <ul className="list-disc list-inside space-y-1">
-                        {matchingAnalysis.strengths.map((strength, index) => (
-                          <li key={index} className="text-sm text-gray-700">
-                            {strength}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {matchingAnalysis.strengths &&
+                    matchingAnalysis.strengths.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                          <Target className="h-4 w-4 mr-1 text-blue-600" />
+                          Strengths
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {matchingAnalysis.strengths.map((strength, index) => (
+                            <li key={index} className="text-sm text-gray-700">
+                              {strength}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                   {/* Suggestions */}
-                  {matchingAnalysis.suggestions && matchingAnalysis.suggestions.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                        <Lightbulb className="h-4 w-4 mr-1 text-yellow-600" />
-                        Suggestions for Improvement
-                      </h4>
-                      <ul className="list-disc list-inside space-y-1">
-                        {matchingAnalysis.suggestions.map((suggestion, index) => (
-                          <li key={index} className="text-sm text-gray-700">
-                            {suggestion}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {matchingAnalysis.suggestions &&
+                    matchingAnalysis.suggestions.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                          <Lightbulb className="h-4 w-4 mr-1 text-yellow-600" />
+                          Suggestions for Improvement
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {matchingAnalysis.suggestions.map(
+                            (suggestion, index) => (
+                              <li key={index} className="text-sm text-gray-700">
+                                {suggestion}
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
                 </div>
               </div>
             )}

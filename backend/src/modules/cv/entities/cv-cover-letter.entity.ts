@@ -6,14 +6,20 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { JobDescription } from './job-description.entity';
+import { Cv } from './cv.entity';
 
 @Entity('cv_cover_letters')
+@Index(['cvId', 'jobDescriptionId', 'userId'], { unique: true })
 export class CvCoverLetter {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ nullable: true })
+  cvId: string;
 
   @Column()
   jobDescriptionId: string;
@@ -66,6 +72,10 @@ export class CvCoverLetter {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToOne(() => Cv, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'cvId' })
+  cv: Cv;
 
   @ManyToOne(() => JobDescription)
   @JoinColumn({ name: 'jobDescriptionId' })
