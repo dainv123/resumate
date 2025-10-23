@@ -56,9 +56,9 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
   const getProcessingTitle = () => {
     switch (type) {
       case "cover-letter":
-        return "✉️ Generating Cover Letter";
+        return t("jobTailor.generatingCoverLetter");
       case "analyze":
-        return "📊 Analyzing Compatibility";
+        return t("jobTailor.analyzingCompatibility");
       case "tailor":
       default:
         return t("jobTailor.ux.processingTitle");

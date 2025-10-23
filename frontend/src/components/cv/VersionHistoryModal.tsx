@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import { Clock, GitCompare, RotateCcw, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { cvApi, CV } from "@/lib/cv";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VersionHistoryModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function VersionHistoryModal({
   cvId,
   onRestore,
 }: VersionHistoryModalProps) {
+  const { t } = useLanguage();
   const [versions, setVersions] = useState<CV[]>([]);
   const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function VersionHistoryModal({
       const versions = await cvApi.getCvVersions(cvId);
       setVersions(versions);
     } catch (err) {
-      setError("Failed to load version history");
+      setError(t("cv.failedLoadVersionHistory"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -67,7 +69,7 @@ export default function VersionHistoryModal({
   const handleRestore = async (version: CV) => {
     if (
       window.confirm(
-        "Are you sure you want to restore this version? Your current version will be saved automatically."
+        t("cvSections.versionHistory.restoreConfirm")
       )
     ) {
       try {
@@ -77,7 +79,7 @@ export default function VersionHistoryModal({
         // Reload versions to show updated list
         loadVersions();
       } catch (error) {
-        setError("Failed to restore version");
+        setError(t("cvSections.versionHistory.failedRestore"));
         console.error(error);
       }
     }
@@ -87,7 +89,7 @@ export default function VersionHistoryModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="CV Version History"
+      title={t("cvSections.versionHistory.title")}
       size="lg"
       footer={
         <div className="flex justify-between w-full">
@@ -96,15 +98,15 @@ export default function VersionHistoryModal({
             onClick={handleCompare}
             disabled={selectedVersions.length !== 2}>
             <GitCompare className="h-4 w-4 mr-2" />
-            Compare Selected ({selectedVersions.length}/2)
+            {t("cvSections.versionHistory.compareButton", { count: selectedVersions.length })}
           </Button>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>{t("cvSections.versionHistory.closeButton")}</Button>
         </div>
       }>
       <div className="space-y-4">
         {loading && (
           <div className="text-center py-8 text-gray-500">
-            Loading versions...
+            {t("cvSections.versionHistory.loading")}
           </div>
         )}
 
@@ -117,7 +119,7 @@ export default function VersionHistoryModal({
 
         {!loading && !error && versions.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No versions found
+            {t("cvSections.versionHistory.noVersions")}
           </div>
         )}
 
@@ -125,8 +127,7 @@ export default function VersionHistoryModal({
           <>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-900">
-                <strong>Tip:</strong> Select up to 2 versions to compare them
-                side-by-side.
+                <strong>Tip:</strong> {t("cvSections.versionHistory.compareSelectedTip")}
               </p>
             </div>
 
@@ -152,23 +153,23 @@ export default function VersionHistoryModal({
                       <div className="flex items-center space-x-2">
                         <Clock className="h-4 w-4 text-gray-500" />
                         <span className="font-medium">
-                          Version {version.version}
+                          {t("cvSections.versionHistory.versionLabel")} {version.version}
                         </span>
                         {version.isTailored && (
                           <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                            Tailored
+                            {t("cvSections.versionHistory.tailoredBadge")}
                           </span>
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
-                        Created: {formatDate(version.createdAt)}
+                        {t("cvSections.versionHistory.createdLabel")}: {formatDate(version.createdAt)}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Updated: {formatDate(version.updatedAt)}
+                        {t("cvSections.versionHistory.updatedLabel")}: {formatDate(version.updatedAt)}
                       </p>
                       {version.tailoredForJob && (
                         <p className="text-xs text-gray-500 mt-1">
-                          <strong>For:</strong>{" "}
+                          <strong>{t("cvSections.versionHistory.forLabel")}:</strong>{" "}
                           {version.tailoredForJob.substring(0, 50)}
                           {version.tailoredForJob.length > 50 ? "..." : ""}
                         </p>
@@ -184,8 +185,8 @@ export default function VersionHistoryModal({
                     disabled={(version as any).isHistorical === false}>
                     <RotateCcw className="h-4 w-4 mr-1" />
                     {(version as any).isHistorical === false
-                      ? "Current"
-                      : "Restore"}
+                      ? t("cvSections.versionHistory.currentButton")
+                      : t("cvSections.versionHistory.restoreButton")}
                   </Button>
                 </div>
               </div>

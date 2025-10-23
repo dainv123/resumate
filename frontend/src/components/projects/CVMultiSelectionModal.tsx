@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { CV } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
-import { FileText, Search, Sparkles } from "lucide-react";
+import { FileText, Search, Sparkles, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CVUtils } from "@/utils/cv.utils";
 
@@ -173,8 +174,16 @@ export default function CVMultiSelectionModal({
                         {t("cv.tailored")}
                       </span>
                     )}
+                    <Link
+                      href={`/dashboard/cv/${cv.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-blue-600 hover:text-blue-800 transition-colors"
+                      onClick={(e) => e.stopPropagation()}>
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
+                  <p className="text-sm text-gray-600 mb-1 truncate" title={cv.originalFileName}>
                     {cv.originalFileName}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -193,14 +202,14 @@ export default function CVMultiSelectionModal({
         </div>
 
         {/* Stats */}
-        {filteredCvs.length > 0 && (
+        {/* {filteredCvs.length > 0 && (
           <div className="text-xs text-gray-500 text-center">
             {t("projects.showingCVs", {
               count: filteredCvs.length,
               total: cvs.length,
             })}
           </div>
-        )}
+        )} */}
       </div>
     </Modal>
   );

@@ -208,7 +208,7 @@ export class PortfolioService {
     const username = user.email.split('@')[0].toLowerCase();
     
     // Always return the backend URL as primary portfolio URL
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    const baseUrl = process.env.BACKEND_URL;
     return `${baseUrl}/portfolio/${username}`;
   }
 

@@ -66,15 +66,15 @@ export default function TemplateSelector({
 
   const getSectionsList = (sections: TemplateSection): string[] => {
     const sectionNames: { [key in keyof TemplateSection]: string } = {
-      hero: "Hero",
-      about: "About",
-      skills: "Skills",
-      experience: "Experience",
-      education: "Education",
-      projects: "Projects",
-      certifications: "Certifications",
-      awards: "Awards",
-      contact: "Contact",
+      hero: t("portfolioSections.templateSelector.sectionNames.hero"),
+      about: t("portfolioSections.templateSelector.sectionNames.about"),
+      skills: t("portfolioSections.templateSelector.sectionNames.skills"),
+      experience: t("portfolioSections.templateSelector.sectionNames.experience"),
+      education: t("portfolioSections.templateSelector.sectionNames.education"),
+      projects: t("portfolioSections.templateSelector.sectionNames.projects"),
+      certifications: t("portfolioSections.templateSelector.sectionNames.certifications"),
+      awards: t("portfolioSections.templateSelector.sectionNames.awards"),
+      contact: t("portfolioSections.templateSelector.sectionNames.contact"),
     };
 
     return (

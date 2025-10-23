@@ -13,6 +13,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/contexts/ToastContext";
 import ProcessingModal from "@/components/job-tailor/ProcessingModal";
 import CVDisplay from "@/components/cv/CVDisplay";
+import CompatibilityAnalysisModal from "@/components/job-tailor/CompatibilityAnalysisModal";
+import CoverLetterModal from "@/components/job-tailor/CoverLetterModal";
 import {
   Sparkles,
   FileText,
@@ -243,10 +245,6 @@ export default function JobTailorPage() {
       setShowProcessingModal(false);
       setCurrentMutation(null);
     }
-  };
-
-  const handleCopyCoverLetter = () => {
-    navigator.clipboard.writeText(coverLetter);
   };
 
   const handleExport = async (format: "pdf" | "word" | "ats") => {
@@ -481,7 +479,7 @@ export default function JobTailorPage() {
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   <span>
-                                    {t("jobTailor.updated")}
+                                    {t("jobTailor.updated")}{' '}
                                     {new Date(
                                       cv.updatedAt
                                     ).toLocaleDateString()}
@@ -956,220 +954,24 @@ Example:
         )}
 
         {/* Compatibility Analysis Modal */}
-        <Modal
+        <CompatibilityAnalysisModal
           isOpen={showAnalysisModal}
-          onClose={() => setShowAnalysisModal(false)}
-          title="CV-Job Compatibility Analysis"
-          size="xl"
-          footer={
-            <Button onClick={() => setShowAnalysisModal(false)}>Close</Button>
-          }>
-          {compatibilityAnalysis && (
-            <div className="space-y-6">
-              {/* Score */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 text-center">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full shadow-lg mb-4">
-                  <div className="text-4xl font-bold text-blue-600">
-                    {compatibilityAnalysis.score}
-                    <span className="text-lg text-gray-400">/10</span>
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  {t("jobTailor.compatibilityScore")}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {compatibilityAnalysis.score >= 8 &&
-                    t("jobTailor.excellentMatch")}
-                  {compatibilityAnalysis.score >= 6 &&
-                    compatibilityAnalysis.score < 8 &&
-                    t("jobTailor.goodMatch")}
-                  {compatibilityAnalysis.score >= 4 &&
-                    compatibilityAnalysis.score < 6 &&
-                    t("jobTailor.fairMatch")}
-                  {compatibilityAnalysis.score < 4 && t("jobTailor.lowMatch")}
-                </p>
-              </div>
-
-              {/* Strengths */}
-              {compatibilityAnalysis.strengths.length > 0 && (
-                <Collapse
-                  title={t("jobTailor.strengths")}
-                  icon={<Award className="h-4 w-4 text-green-600" />}
-                  badge={compatibilityAnalysis.strengths.length}
-                  defaultOpen={true}>
-                  <ul className="space-y-2">
-                    {compatibilityAnalysis.strengths.map((strength, index) => (
-                      <li
-                        key={index}
-                        className="flex items-start gap-2 text-sm">
-                        <CheckSquare className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{strength}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </Collapse>
-              )}
-
-              {/* Matched Skills */}
-              {compatibilityAnalysis.matchedSkills.length > 0 && (
-                <Collapse
-                  title={t("jobTailor.matchedSkills")}
-                  icon={<CheckSquare className="h-4 w-4 text-green-600" />}
-                  badge={compatibilityAnalysis.matchedSkills.length}
-                  defaultOpen={true}>
-                  <div className="flex flex-wrap gap-2">
-                    {compatibilityAnalysis.matchedSkills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </Collapse>
-              )}
-
-              {/* Missing Skills */}
-              {compatibilityAnalysis.missingSkills.length > 0 && (
-                <Collapse
-                  title={t("jobTailor.missingSkills")}
-                  icon={<XCircle className="h-4 w-4 text-red-600" />}
-                  badge={compatibilityAnalysis.missingSkills.length}
-                  defaultOpen={true}>
-                  <div className="flex flex-wrap gap-2">
-                    {compatibilityAnalysis.missingSkills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </Collapse>
-              )}
-
-              {/* Matched Experience */}
-              {compatibilityAnalysis.matchedExperience.length > 0 && (
-                <Collapse
-                  title={t("jobTailor.relevantExperience")}
-                  icon={<CheckSquare className="h-4 w-4 text-blue-600" />}
-                  badge={compatibilityAnalysis.matchedExperience.length}
-                  defaultOpen={false}>
-                  <ul className="space-y-2">
-                    {compatibilityAnalysis.matchedExperience.map(
-                      (exp, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 text-sm">
-                          <CheckSquare className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{exp}</span>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </Collapse>
-              )}
-
-              {/* Missing Requirements */}
-              {compatibilityAnalysis.missingRequirements.length > 0 && (
-                <Collapse
-                  title={t("jobTailor.missingRequirements")}
-                  icon={<XCircle className="h-4 w-4 text-orange-600" />}
-                  badge={compatibilityAnalysis.missingRequirements.length}
-                  defaultOpen={false}>
-                  <ul className="space-y-2">
-                    {compatibilityAnalysis.missingRequirements.map(
-                      (req, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 text-sm">
-                          <XCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{req}</span>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </Collapse>
-              )}
-
-              {/* Suggestions */}
-              {compatibilityAnalysis.suggestions.length > 0 && (
-                <Collapse
-                  title={t("jobTailor.suggestions")}
-                  icon={<Lightbulb className="h-4 w-4 text-yellow-600" />}
-                  badge={compatibilityAnalysis.suggestions.length}
-                  defaultOpen={true}>
-                  <ul className="space-y-2">
-                    {compatibilityAnalysis.suggestions.map(
-                      (suggestion, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 text-sm">
-                          <Lightbulb className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{suggestion}</span>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </Collapse>
-              )}
-            </div>
-          )}
-        </Modal>
+          onClose={() => {
+            setShowAnalysisModal(false);
+            setCompatibilityAnalysis(null);
+          }}
+          analysis={compatibilityAnalysis}
+        />
 
         {/* Cover Letter Modal */}
-        <Modal
+        <CoverLetterModal
           isOpen={showCoverLetterModal}
-          onClose={() => setShowCoverLetterModal(false)}
-          title={t("jobTailor.coverLetter.title")}
-          size="xl"
-          footer={
-            <>
-              <Button variant="outline" onClick={handleCopyCoverLetter}>
-                <Copy className="h-4 w-4 mr-2" />
-                {t("jobTailor.coverLetter.copy")}
-              </Button>
-              <Button onClick={() => setShowCoverLetterModal(false)}>
-                {t("jobTailor.coverLetter.close")}
-              </Button>
-            </>
-          }>
-          {coverLetter && (
-            <div className="space-y-4">
-              <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-sm text-green-800">
-                  <Mail className="h-4 w-4" />
-                  <span className="font-medium">
-                    {t("jobTailor.coverLetter.desc")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">
-                  {coverLetter}
-                </pre>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start gap-2">
-                  <Lightbulb className="h-4 w-4 text-yellow-600 mt-0.5" />
-                  <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-1">
-                      {t("jobTailor.coverLetter.tips")}
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>{t("jobTailor.coverLetter.tip1")}</li>
-                      <li>{t("jobTailor.coverLetter.tip2")}</li>
-                      <li>{t("jobTailor.coverLetter.tip3")}</li>
-                      <li>{t("jobTailor.coverLetter.tip4")}</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </Modal>
+          onClose={() => {
+            setShowCoverLetterModal(false);
+            setCoverLetter("");
+          }}
+          coverLetter={coverLetter}
+        />
 
         {/* Processing Modal */}
         <ProcessingModal

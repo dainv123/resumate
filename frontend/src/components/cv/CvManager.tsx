@@ -178,7 +178,7 @@ function CvListContent({
       <div
         className={
           viewMode === "grid"
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr"
             : "space-y-4"
         }>
         {cvs.map((cv, index) => (
@@ -188,10 +188,11 @@ function CvListContent({
               mode === "infinite" && index === cvs.length - 1
                 ? lastCvElementRef
                 : null
-            }>
+            }
+            className="h-full">
             <CVCard
               cv={cv}
-              isSelected={selectedCvId === cv.id}
+              // isSelected={selectedCvId === cv.id}
               onSelect={() => onSelectCv?.(cv)}
               onEdit={() => onEditCv?.(cv.id)}
               onDelete={() => onDeleteCv?.(cv.id)}

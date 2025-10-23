@@ -3,6 +3,7 @@
 import React from "react";
 import { CV } from "@/lib/cv";
 import Button from "@/components/ui/Button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Eye,
   Edit,
@@ -39,6 +40,8 @@ export default function CVCard({
   onExport,
   viewMode = "grid",
 }: CVCardProps) {
+  const { t } = useLanguage();
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("vi-VN", {
@@ -54,13 +57,13 @@ export default function CVCard({
   };
 
   const getStatusText = (cv: CV) => {
-    if (cv.isTailored) return "Tailored";
-    return "Original";
+    if (cv.isTailored) return t("cvSections.statusLabels.tailored");
+    return t("cvSections.statusLabels.original");
   };
 
   return (
     <div
-      className={`bg-white rounded-lg border-2 interactive-card ${
+      className={`h-full flex flex-col bg-white rounded-lg border-2 interactive-card ${
         isSelected ? "border-blue-500 shadow-md" : "border-gray-200"
       } ${viewMode === "list" ? "flex items-center p-4" : ""}`}
       onClick={onSelect}
@@ -76,18 +79,18 @@ export default function CVCard({
         <>
           {/* Header */}
           <div className="p-4 border-b border-gray-100">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div className="flex items-start justify-between w-full min-w-0">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <FileText className="h-5 w-5 text-blue-600" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h3
-                    className="font-medium text-gray-900 truncate max-w-[200px]"
+                <div className="min-w-0 flex-1 pr-2">
+                  <h5
+                    className="font-medium text-gray-900 truncate"
                     title={cv.originalFileName}>
                     {cv.originalFileName}
-                  </h3>
-                  <p className="text-sm text-gray-500">Version {cv.version}</p>
+                  </h5>
+                  <p className="text-sm text-gray-500">{t("cv.version")} {cv.version}</p>
                 </div>
               </div>
 
@@ -115,10 +118,10 @@ export default function CVCard({
                 {cv.originalFileName}
               </h3>
               <p className="text-sm text-gray-500">
-                Version {cv.version} • {getStatusText(cv)}
+                {t("cv.version")} {cv.version} • {getStatusText(cv)}
               </p>
               <p className="text-xs text-gray-400">
-                Updated: {formatDate(cv.updatedAt)}
+                {t("cv.updatedAt")}: {formatDate(cv.updatedAt)}
               </p>
             </div>
           </div>
@@ -128,24 +131,24 @@ export default function CVCard({
       {viewMode === "grid" && (
         <>
           {/* Content */}
-          <div className="p-4 space-y-3">
+          <div className="flex-1 p-4 space-y-3">
             {/* Metadata */}
             <div className="space-y-2 text-sm text-gray-600">
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
-                <span>Created: {formatDate(cv.createdAt)}</span>
+                <span>{t("cv.createdAt")}: {formatDate(cv.createdAt)}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
-                <span>Updated: {formatDate(cv.updatedAt)}</span>
+                <span>{t("cv.updatedAt")}: {formatDate(cv.updatedAt)}</span>
               </div>
               {cv.isTailored && cv.tailoredForJob && (
                 <div className="flex items-center space-x-2">
                   <Tag className="h-4 w-4 flex-shrink-0" />
                   <span
-                    className="truncate max-w-[180px]"
+                    className="truncate max-w-full"
                     title={cv.tailoredForJob}>
-                    For: {cv.tailoredForJob}
+                    {t("cv.tailoredForJob")}: {cv.tailoredForJob}
                   </span>
                 </div>
               )}
@@ -159,7 +162,7 @@ export default function CVCard({
                   size="sm"
                   className="flex items-center space-x-1">
                   <Eye className="h-4 w-4" />
-                  <span>View</span>
+                  <span>{t("cv.view")}</span>
                 </Button>
               </Link>
 
@@ -172,7 +175,7 @@ export default function CVCard({
                 }}
                 className="flex items-center space-x-1">
                 <Edit className="h-4 w-4" />
-                <span>Edit</span>
+                <span>{t("cv.edit")}</span>
               </Button>
 
               <Button
@@ -184,7 +187,7 @@ export default function CVCard({
                 }}
                 className="flex items-center space-x-1">
                 <Copy className="h-4 w-4" />
-                <span>Copy</span>
+                <span>{t("cv.copy")}</span>
               </Button>
 
               <Button
@@ -196,7 +199,7 @@ export default function CVCard({
                 }}
                 className="flex items-center space-x-1">
                 <Sparkles className="h-4 w-4" />
-                <span>Tailor</span>
+                <span>{t("cv.tailor")}</span>
               </Button>
 
               <Button
@@ -208,7 +211,7 @@ export default function CVCard({
                 }}
                 className="flex items-center space-x-1">
                 <Download className="h-4 w-4" />
-                <span>Export</span>
+                <span>{t("cv.export")}</span>
               </Button>
             </div>
           </div>
@@ -216,8 +219,8 @@ export default function CVCard({
           {/* Footer */}
           <div className="px-4 py-3 bg-gray-50 rounded-b-lg">
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>ID: {cv.id.slice(0, 8)}...</span>
-              <span>{cv.isTailored ? "Tailored CV" : "Original CV"}</span>
+              <span>{t("cv.id")}: {cv.id.slice(0, 8)}...</span>
+              <span>{cv.isTailored ? t("cvSections.statusLabels.tailored") : t("cvSections.statusLabels.original")}</span>
             </div>
           </div>
         </>
@@ -233,7 +236,7 @@ export default function CVCard({
                 size="sm"
                 className="flex items-center space-x-1">
                 <Eye className="h-4 w-4" />
-                <span>View</span>
+                <span>{t("cv.view")}</span>
               </Button>
             </Link>
             <Button
@@ -245,7 +248,7 @@ export default function CVCard({
               }}
               className="flex items-center space-x-1">
               <Edit className="h-4 w-4" />
-              <span>Edit</span>
+              <span>{t("cv.edit")}</span>
             </Button>
             <Button
               variant="ghost"
@@ -256,7 +259,7 @@ export default function CVCard({
               }}
               className="flex items-center space-x-1">
               <Copy className="h-4 w-4" />
-              <span>Copy</span>
+              <span>{t("cv.copy")}</span>
             </Button>
             <Button
               variant="ghost"
@@ -267,7 +270,7 @@ export default function CVCard({
               }}
               className="flex items-center space-x-1">
               <Sparkles className="h-4 w-4" />
-              <span>Tailor</span>
+              <span>{t("cv.tailor")}</span>
             </Button>
             <Button
               variant="ghost"
@@ -278,7 +281,7 @@ export default function CVCard({
               }}
               className="flex items-center space-x-1">
               <Download className="h-4 w-4" />
-              <span>Export</span>
+              <span>{t("cv.export")}</span>
             </Button>
           </div>
         </>

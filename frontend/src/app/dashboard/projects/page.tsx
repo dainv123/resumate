@@ -175,7 +175,7 @@ export default function ProjectsPage() {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="flex items-center">
           <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-          <p className="text-red-800">Failed to load projects</p>
+          <p className="text-red-800">{t("projects.failedLoadProjects")}</p>
         </div>
       </div>
     );
@@ -198,7 +198,7 @@ export default function ProjectsPage() {
           isOpen={showForm}
           onClose={handleCancel}
           title={editingProject ? t("projects.edit") : t("projects.addNew")}
-          size="xl"
+          size="lg"
           footer={
             <div className="flex justify-end space-x-3 w-full">
               <Button type="button" variant="outline" onClick={handleCancel}>

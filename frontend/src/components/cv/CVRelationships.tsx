@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
+import { ChevronRight, FileText, Zap } from "lucide-react";
 
 interface CVRelationshipsProps {
   cv: any;
@@ -13,84 +14,128 @@ export default function CVRelationships({ cv }: CVRelationshipsProps) {
   const router = useRouter();
   const { t } = useLanguage();
 
+  const hasRelationships =
+    cv.originalCvId || (cv.tailoredCvs && cv.tailoredCvs.length > 0);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 mt-6 border-gray-200">
-      <h4 className="text-lg font-semibold text-gray-900 mb-4">
-        {t("cv.relationships")}
-      </h4>
-
-      {/* Original CV */}
-      {cv.originalCvId && (
-        <div className="mb-4">
-          <h5 className="text-sm font-medium text-gray-700 mb-2">
-            {t("cv.originalCv")}
-          </h5>
-          <div className="bg-gray-50 rounded-lg p-3 border">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-gray-600">
-                  {t("cv.originalCvDescription")}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/dashboard/cv/${cv.originalCvId}`)}
-                className="ml-3">
-                {t("cv.viewOriginal")}
-              </Button>
-            </div>
-          </div>
+    <div className="bg-gradient-to-br from-white via-white to-blue-50/30 rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <FileText className="w-5 h-5 text-blue-600" />
         </div>
-      )}
+        <h4 className="text-lg font-bold text-gray-900">
+          {t("cv.relationships")}
+        </h4>
+      </div>
 
-      {/* Tailored CVs */}
-      {cv.tailoredCvs && cv.tailoredCvs.length > 0 && (
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-2">
-            {t("cv.tailoredCvs")} ({cv.tailoredCvs.length})
-          </h5>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {cv.tailoredCvs.map((tailoredCv: any) => (
-              <div
-                key={tailoredCv.id}
-                className="bg-gray-50 rounded-lg p-3 border hover:bg-gray-100 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                      {tailoredCv.originalFileName}
+      {hasRelationships ? (
+        <div className="space-y-4">
+          {/* Original CV */}
+          {cv.originalCvId && (
+            <div className="group">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-5 bg-gradient-to-b from-amber-400 to-amber-500 rounded-full"></div>
+                <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+                  {t("cv.originalCv")}
+                </span>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-amber-300 hover:shadow-md transition-all duration-200">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {t("cv.originalCvDescription")}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(tailoredCv.createdAt).toLocaleDateString()}
-                    </p>
-                    {tailoredCv.jobDescription && (
-                      <p className="text-xs text-blue-600 mt-1">
-                        {t("cv.tailoredFor")}: {tailoredCv.jobDescription.title}
-                      </p>
-                    )}
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      router.push(`/dashboard/cv/${tailoredCv.id}`)
-                    }
-                    className="ml-3">
-                    {t("cv.view")}
+                    onClick={() => router.push(`/dashboard/cv/${cv.originalCvId}`)}
+                    className="ml-3 flex items-center gap-2 whitespace-nowrap hover:bg-amber-50 hover:border-amber-300">
+                    {t("cv.viewOriginal")}
+                    <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-            ))}
+            </div>
+          )}
+
+          {/* Tailored CVs */}
+          {cv.tailoredCvs && cv.tailoredCvs.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-5 bg-gradient-to-b from-blue-400 to-blue-500 rounded-full"></div>
+                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full">
+                  {t("cv.tailoredCvs")} <span className="ml-1.5 font-bold text-blue-600">({cv.tailoredCvs.length})</span>
+                </span>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                {cv.tailoredCvs.map((tailoredCv: any) => (
+                  <div
+                    key={tailoredCv.id}
+                    className="bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/30 transition-all duration-200 group/card">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Zap className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {tailoredCv.originalFileName}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-2">
+                          {new Date(tailoredCv.createdAt).toLocaleDateString()}
+                        </p>
+                        {tailoredCv.jobDescription && (
+                          <div className="bg-blue-100 text-blue-700 text-xs px-2.5 py-1.5 rounded-md inline-block max-w-[250px] truncate">
+                            <span className="font-medium">{t("cv.tailoredFor")}:</span>{" "}
+                            {tailoredCv.jobDescription.title}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          router.push(`/dashboard/cv/${tailoredCv.id}`)
+                        }
+                        className="ml-3 flex items-center gap-2 whitespace-nowrap hover:bg-blue-50 hover:border-blue-300">
+                        {t("cv.view")}
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* No relationships message */
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="p-3 bg-gray-100 rounded-full mb-4">
+            <FileText className="w-8 h-8 text-gray-400" />
           </div>
+          <p className="text-gray-500 text-sm font-medium">
+            {t("cv.noRelationships")}
+          </p>
         </div>
       )}
 
-      {/* No relationships message */}
-      {!cv.originalCvId && (!cv.tailoredCvs || cv.tailoredCvs.length === 0) && (
-        <div className="text-center py-4">
-          <p className="text-sm text-gray-500">{t("cv.noRelationships")}</p>
-        </div>
-      )}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+      `}</style>
     </div>
   );
 }

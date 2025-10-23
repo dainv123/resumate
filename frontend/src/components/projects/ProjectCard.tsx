@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Project } from "@/lib/projects";
 import { CV } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
@@ -8,6 +9,7 @@ import { Edit, Trash2, ExternalLink, Github, FileText } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CVUtils } from "@/utils/cv.utils";
+import CVBadge from "@/components/cv/CVBadge";
 
 interface ProjectCardProps {
   project: Project;
@@ -47,12 +49,12 @@ export default function ProjectCard({
             <>
               <div className="flex flex-wrap gap-1 justify-end max-w-[200px]">
                 {assignedCvs.slice(0, 2).map((cv) => (
-                  <span
+                  <CVBadge
                     key={cv.id}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <FileText className="h-3 w-3 mr-1" />
-                    {cv.parsedData.contact?.name}
-                  </span>
+                    cv={cv}
+                    variant="blue"
+                    target="_blank"
+                  />
                 ))}
               </div>
               {assignedCvs.length > 2 && (
@@ -86,7 +88,7 @@ export default function ProjectCard({
           ))}
           {project.techStack.length > 6 && (
             <span className="text-xs text-gray-500">
-              +{project.techStack.length - 6} more
+              +{project.techStack.length - 6} {t("common.more")}
             </span>
           )}
         </div>
@@ -96,7 +98,7 @@ export default function ProjectCard({
       {project.results && (
         <div className="mb-4">
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Results:</span> {project.results}
+            <span className="font-medium">{t("projects.resultsLabel")}:</span> {project.results}
           </p>
         </div>
       )}
@@ -110,7 +112,7 @@ export default function ProjectCard({
             rel="noopener noreferrer"
             className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
             <ExternalLink className="h-4 w-4 mr-1" />
-            Demo
+            {t("projects.demo")}
           </a>
         )}
         {project.githubLink && (
@@ -120,7 +122,7 @@ export default function ProjectCard({
             rel="noopener noreferrer"
             className="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
             <Github className="h-4 w-4 mr-1" />
-            Code
+            {t("projects.code")}
           </a>
         )}
       </div>
@@ -128,7 +130,7 @@ export default function ProjectCard({
       {/* CV Bullets Preview */}
       {project.cvBullets.length > 0 && (
         <div className="mb-4 p-3 bg-gray-50 rounded-md">
-          <p className="text-xs font-medium text-gray-700 mb-2">CV Bullets:</p>
+          <p className="text-xs font-medium text-gray-700 mb-2">{t("projects.cvBullets")}:</p>
           <ul className="text-xs text-gray-600 space-y-1">
             {project.cvBullets.slice(0, 2).map((bullet, index) => (
               <li key={index} className="flex items-start">
@@ -138,7 +140,7 @@ export default function ProjectCard({
             ))}
             {project.cvBullets.length > 2 && (
               <li className="text-gray-500">
-                +{project.cvBullets.length - 2} more bullets
+                {t("projects.moreBullets", { count: project.cvBullets.length - 2 })}
               </li>
             )}
           </ul>

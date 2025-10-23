@@ -144,32 +144,31 @@ export class CvService {
     const { page, limit, search, sortBy, sortOrder } = options;
     const skip = (page - 1) * limit;
 
-    // Build query
-    const queryBuilder = this.cvRepository
+    // Build base query (only select needed columns initially)
+    const baseQuery = this.cvRepository
       .createQueryBuilder('cv')
-      .leftJoinAndSelect('cv.originalCv', 'originalCv')
-      .leftJoinAndSelect('cv.jobDescription', 'jobDescription')
-      .leftJoinAndSelect('cv.tailoredVersions', 'tailoredVersions')
       .where('cv.userId = :userId', { userId });
 
-    // Add search filter
+    // Add search filter - only search on indexed fields for performance
     if (search) {
-      queryBuilder.andWhere(
-        '(cv.originalFileName ILIKE :search OR cv.parsedData::text ILIKE :search)',
+      // Search only on originalFileName (indexed) and NOT on parsedData to avoid full scan
+      baseQuery.andWhere(
+        'cv.originalFileName ILIKE :search',
         { search: `%${search}%` }
       );
     }
 
+    // Get total count first (faster without joins)
+    const total = await baseQuery.getCount();
+
     // Add sorting
     const validSortFields = ['createdAt', 'updatedAt', 'originalFileName', 'version'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-    queryBuilder.orderBy(`cv.${sortField}`, sortOrder);
+    baseQuery.orderBy(`cv.${sortField}`, sortOrder);
 
-    // Get total count
-    const total = await queryBuilder.getCount();
-
-    // Get paginated data
-    const data = await queryBuilder
+    // Get paginated data with minimal joins
+    const data = await baseQuery
+      .leftJoinAndSelect('cv.originalCv', 'originalCv')
       .skip(skip)
       .take(limit)
       .getMany();
@@ -519,10 +518,16 @@ export class CvService {
     // Generate improvement notes for tailored CV
     const improvementNotes = this.generateImprovementNotes(tailoredData);
 
+    // Generate clean tailored filename with version suffix
+    const tailoredFileName = this.generateTailoredFileName(
+      originalCv.originalFileName,
+      originalCv.version + 1
+    );
+
     // Create new tailored CV with links
     const tailoredCv = this.cvRepository.create({
       userId,
-      originalFileName: `${originalCv.originalFileName.replace(/\.[^/.]+$/, '')}_tailored${originalCv.originalFileName.match(/\.[^/.]+$/)?.[0] || ''}`,
+      originalFileName: tailoredFileName,
       fileUrl: originalCv.fileUrl, // Same file URL
       parsedData: tailoredData,
       version: originalCv.version + 1,
@@ -538,6 +543,43 @@ export class CvService {
       console.error('Error in tailorCv:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate clean tailored filename without duplicating suffix
+   * Supports multiple suffix formats:
+   * - _tailored (default)
+   * - _v1, _v2, etc (version based)
+   */
+  private generateTailoredFileName(
+    originalFileName: string,
+    version?: number,
+    suffixType: 'tailored' | 'version' = 'version' // Use version by default
+  ): string {
+    const maxLength = 60;
+    const extension = originalFileName.match(/\.[^/.]+$/)?.[0] || '';
+    let baseName = originalFileName.replace(/\.[^/.]+$/, '');
+    
+    // Remove existing suffixes (both _tailored and _v* patterns)
+    baseName = baseName.replace(/(_tailored|_v\d+)+$/i, '');
+    
+    // Generate suffix based on type
+    let suffix = '_tailored';
+    if (suffixType === 'version' && version) {
+      suffix = `_v${version}`;
+    }
+    
+    // Add suffix
+    const newFileName = `${baseName}${suffix}${extension}`;
+    
+    // If too long, truncate base name
+    if (newFileName.length > maxLength) {
+      const maxBaseName = maxLength - extension.length - suffix.length;
+      baseName = baseName.substring(0, Math.max(1, maxBaseName));
+      return `${baseName}${suffix}${extension}`;
+    }
+    
+    return newFileName;
   }
 
   /**

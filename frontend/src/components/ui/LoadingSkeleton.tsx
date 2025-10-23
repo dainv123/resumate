@@ -11,7 +11,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 }) => {
   if (type === "cv") {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
         <div className="animate-pulse">
           {/* Header skeleton */}
           <div className="mb-8">
@@ -72,7 +72,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 
   if (type === "card") {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border p-4 ${className}`}>
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
         <div className="animate-pulse">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
