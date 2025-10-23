@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StructuredDataProps {
   type?: "website" | "software" | "webapp";
@@ -11,6 +12,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({
   type = "software", 
   pageType = "homepage" 
 }) => {
+  const { t } = useLanguage();
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   const getStructuredData = () => {
@@ -18,7 +20,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({
       "@context": "https://schema.org",
       "@type": type === "software" ? "SoftwareApplication" : "WebSite",
       name: "Resumate",
-      description: "AI tạo CV chuyên nghiệp từ Job Description chỉ trong 30 giây. Không cần upload CV cũ, chỉ cần paste JD là có CV hoàn chỉnh!",
+      description: t("seo.schema.mainDescription"),
       url: baseUrl,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web Browser",
@@ -33,7 +35,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({
         ratingValue: "4.8",
         ratingCount: "1250"
       },
-      keywords: "tạo CV nhanh, AI CV, CV 30 giây, tạo CV online, AI tạo CV, CV từ Job Description, CV chuyên nghiệp",
+      keywords: t("seo.schema.keywords"),
       inLanguage: ["vi-VN", "en-US"],
       author: {
         "@type": "Organization",
@@ -56,16 +58,16 @@ const StructuredData: React.FC<StructuredDataProps> = ({
         ...baseData,
         "@type": "SoftwareApplication",
         featureList: [
-          "AI tạo CV từ Job Description",
-          "CV templates chuyên nghiệp", 
-          "Portfolio builder",
-          "Job tailor tự động",
-          "Export đa định dạng (PDF, Word, ATS)",
-          "Analytics và tracking"
+          t("seo.schema.features.aiCvGeneration"),
+          t("seo.schema.features.cvTemplates"),
+          t("seo.schema.features.portfolioBuilder"),
+          t("seo.schema.features.jobTailorAuto"),
+          t("seo.schema.features.exportFormats"),
+          t("seo.schema.features.analyticsTracking")
         ],
         screenshot: `${baseUrl}/screenshot.jpg`,
         softwareVersion: "1.0.0",
-        releaseNotes: "Phiên bản đầu tiên với AI CV Wizard và Template Gallery"
+        releaseNotes: t("seo.schema.releaseNotes")
       };
     }
 
@@ -81,7 +83,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({
         mainEntity: {
           "@type": "SoftwareApplication",
           name: "Resumate CV Builder",
-          description: "AI tạo CV nhanh trong 30 giây"
+          description: t("seo.schema.homepageDescription")
         }
       };
     }

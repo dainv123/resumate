@@ -380,7 +380,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
+    throw new Error(
+      'useLanguage hook must be used within a LanguageProvider component'
+    );
   }
   return context;
 }

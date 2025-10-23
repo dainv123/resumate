@@ -779,8 +779,7 @@
     "tailoredCV": {
       "success": "CV đã được tùy chỉnh thành công!",
       "preview": "Xem CV Đã Tùy Chỉnh",
-      "download": "Tải CV Đã Tùy Chỉnh",
-      "viewOriginal": "Xem CV Gốc"
+      "download": "Tải CV Đã Tùy Chỉnh"
     },
     "analysisGenerated": "Phân tích đã được tạo thành công!",
     "analysisReused": "Sử dụng phân tích hiện có cho mô tả công việc này",
@@ -1294,12 +1293,96 @@
         "portableDocument": "Tài Liệu Có Thể Di Chuyển",
         "microsoftWord": "Microsoft Word",
         "atsFriendlyText": "Văn Bản Thân Thiện ATS"
-      }
+      },
+      "chooseTemplateFormat": "Chọn Mẫu & Định Dạng",
+      "exportFormat": "Định Dạng Xuất",
+      "templateDesign": "Thiết Kế Mẫu",
+      "templatePreview": "Xem Trước Mẫu",
+      "professional": {
+        "name": "Chuyên Nghiệp",
+        "description": "Bố cục một cột sạch sẽ, truyền thống",
+        "preview": "Một cột với tiêu đề, các phần và định dạng tiêu chuẩn"
+      },
+      "twoColumn": {
+        "name": "Hai Cột Hiện Đại",
+        "description": "Thiết kế hai cột chuyên nghiệp với thanh tiến độ kỹ năng",
+        "preview": "Cột trái: Thông tin liên hệ & kỹ năng, Cột phải: Kinh nghiệm & giáo dục"
+      },
+      "professionalPreviewText": "Bố cục một cột truyền thống với kiểu chữ sạch và các phần tiêu chuẩn.",
+      "twoColumnPreviewText": "Bố cục hai cột hiện đại với thanh bên xanh đen, thanh tiến độ kỹ năng và kiểu chuyên nghiệp như hình bạn đã chỉ ra."
     },
     "templateConfig": {
       "selectLayout": "Chọn bố cục",
       "selectFont": "Chọn phông chữ",
-      "selectFontSize": "Chọn kích thước phông chữ"
+      "selectFontSize": "Chọn kích thước phông chữ",
+      "title": "Tùy Chỉnh Mẫu",
+      "buttons": {
+        "cancel": "Hủy",
+        "exportPDF": "Xuất PDF",
+        "exporting": "Đang Xuất..."
+      },
+      "tabs": {
+        "layout": "Bố Cục",
+        "sections": "Các Phần",
+        "styling": "Kiểu Dáng"
+      },
+      "layout": {
+        "title": "Kiểu Bố Cục",
+        "description": "Chọn cách sắp xếp nội dung CV của bạn",
+        "style": "Chọn kiểu bố cục",
+        "singleColumn": "Một Cột",
+        "twoColumn": "Hai Cột",
+        "preview": "Xem Trước"
+      },
+      "sections": {
+        "title": "Các Phần CV",
+        "description": "Chọn những phần nào cần đưa vào CV của bạn",
+        "contact": "Thông Tin Liên Hệ",
+        "summary": "Tóm Tắt Chuyên Nghiệp",
+        "experience": "Kinh Nghiệm Làm Việc",
+        "education": "Giáo Dục",
+        "skills": "Kỹ Năng",
+        "projects": "Dự Án",
+        "certifications": "Chứng Chỉ",
+        "awards": "Giải Thưởng",
+        "publications": "Ấn Phẩm",
+        "volunteer": "Tình Nguyện",
+        "languages": "Ngôn Ngữ",
+        "tips": "Mẹo Để Có Kết Quả Tốt Nhất",
+        "tip1": "Thông tin liên hệ luôn bắt buộc",
+        "tip2": "Điều chỉnh các phần dựa trên mô tả công việc",
+        "tip3": "Xóa các phần trống để cải thiện khả năng đọc"
+      },
+      "styling": {
+        "title": "Kiểu Dáng & Màu Sắc",
+        "description": "Tùy chỉnh giao diện của CV của bạn",
+        "colorPresets": "Cài Đặt Trước Màu Sắc",
+        "primaryColor": "Màu Chính",
+        "secondaryColor": "Màu Phụ",
+        "fontFamily": "Họ Phông Chữ",
+        "fontSize": "Kích Thước Phông Chữ",
+        "small": "Nhỏ",
+        "medium": "Trung Bình",
+        "large": "Lớn",
+        "stylePreview": "Xem Trước Kiểu Dáng",
+        "previewText": "Trình tạo CV chuyên nghiệp với tùy chỉnh do AI cung cấp"
+      },
+      "colorPresets": {
+        "professionalBlue": "Xanh Chuyên Nghiệp",
+        "purple": "Tím",
+        "green": "Xanh Lá",
+        "red": "Đỏ",
+        "orange": "Cam",
+        "gray": "Xám"
+      },
+      "fontOptions": {
+        "inter": "Inter",
+        "roboto": "Roboto",
+        "openSans": "Open Sans",
+        "lato": "Lato",
+        "poppins": "Poppins",
+        "sourceSansPro": "Source Sans Pro"
+      }
     },
     "display": {
       "originalCv": "CV Gốc"
@@ -1307,14 +1390,14 @@
   },
   "seoData": {
     "keywords": {
-      "cvBuilder": "Trình tạo CV",
-      "resumeBuilder": "Trình tạo sơ yếu lý lịch",
-      "portfolioBuilder": "Trình tạo portfolio",
-      "freelancerTools": "Công cụ cho freelancer",
+      "cvBuilder": "Tạo CV",
+      "resumeBuilder": "Tạo CV",
+      "portfolioBuilder": "Tạo portfolio",
+      "freelancerTools": "Công cụ freelancer",
       "aiCvGenerator": "Trình tạo CV AI",
-      "cvMakerOnline": "Trình tạo CV trực tuyến",
+      "cvMakerOnline": "Tạo CV trực tuyến",
       "professionalResume": "Sơ yếu lý lịch chuyên nghiệp",
-      "jobApplication": "Đơn xin việc",
+      "jobApplication": "Ứng tuyển công việc",
       "careerTools": "Công cụ sự nghiệp",
       "cvOptimization": "Tối ưu hóa CV",
       "resumeTemplates": "Mẫu sơ yếu lý lịch",
@@ -1330,6 +1413,22 @@
         "Quản lý portfolio",
         "Tích hợp mô tả công việc"
       ]
+    }
+  },
+  "seo": {
+    "schema": {
+      "mainDescription": "AI-powered CV & Portfolio builder for freelancers. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
+      "keywords": "tạo CV nhanh, AI CV, CV 30 giây, tạo CV online, AI tạo CV, CV từ Job Description, CV chuyên nghiệp",
+      "features": {
+        "aiCvGeneration": "AI tạo CV từ Job Description",
+        "cvTemplates": "CV templates chuyên nghiệp",
+        "portfolioBuilder": "Portfolio builder",
+        "jobTailorAuto": "Job tailor tự động",
+        "exportFormats": "Export đa định dạng (PDF, Word, ATS)",
+        "analyticsTracking": "Analytics và tracking"
+      },
+      "releaseNotes": "Phiên bản đầu tiên với AI CV Wizard và Template Gallery",
+      "homepageDescription": "AI tạo CV nhanh trong 30 giây"
     }
   },
   "systemMessages": {

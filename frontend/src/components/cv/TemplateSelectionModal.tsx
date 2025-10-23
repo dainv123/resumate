@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { Download, FileText, Palette } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TemplateSelectionModalProps {
   isOpen: boolean;
@@ -12,34 +13,49 @@ interface TemplateSelectionModalProps {
   onExport: (cv: any, format: string, template: string) => void;
 }
 
-const templates = [
-  {
-    id: "professional",
-    name: "Professional",
-    description: "Clean, traditional single-column layout",
-    preview: "Single column with header, sections, and standard formatting",
-    color: "#2c3e50",
-  },
-  {
-    id: "two-column",
-    name: "Modern Two-Column",
-    description: "Professional two-column design with skills progress bars",
-    preview:
-      "Left column: Contact info & skills, Right column: Experience & education",
-    color: "#2c5f5f",
-  },
-];
-
 export default function TemplateSelectionModal({
   isOpen,
   onClose,
   cv,
   onExport,
 }: TemplateSelectionModalProps) {
+  const { t } = useLanguage();
   const [selectedTemplate, setSelectedTemplate] = useState("professional");
   const [selectedFormat, setSelectedFormat] = useState<"pdf" | "word" | "ats">(
     "pdf"
   );
+
+  const templates = [
+    {
+      id: "professional",
+      name: t("cv.templates.professional.name"),
+      description: t("cv.templates.professional.description"),
+      preview: t("cv.templates.professional.preview"),
+      color: "#2c3e50",
+    },
+    {
+      id: "two-column",
+      name: t("cv.templates.twoColumn.name"),
+      description: t("cv.templates.twoColumn.description"),
+      preview: t("cv.templates.twoColumn.preview"),
+      color: "#2c5f5f",
+    },
+  ];
+
+  const formatLabels: Record<string, { label: string; description: string }> = {
+    pdf: {
+      label: "PDF",
+      description: t("cv.templates.formats.portableDocument"),
+    },
+    word: {
+      label: "WORD",
+      description: t("cv.templates.formats.microsoftWord"),
+    },
+    ats: {
+      label: "ATS",
+      description: t("cv.templates.formats.atsFriendlyText"),
+    },
+  };
 
   const handleExport = () => {
     onExport(cv, selectedFormat, selectedTemplate);
@@ -51,15 +67,15 @@ export default function TemplateSelectionModal({
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
-      title="Choose Template & Format"
+      title={t("cv.templates.chooseTemplateFormat")}
       footer={
         <div className="flex justify-start space-x-3 w-full">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleExport} className="flex items-center">
             <Download className="h-4 w-4 mr-2" />
-            Export {selectedFormat.toUpperCase()}
+            {t("common.export")} {selectedFormat.toUpperCase()}
           </Button>
         </div>
       }>
@@ -68,7 +84,7 @@ export default function TemplateSelectionModal({
         <div>
           <h3 className="text-lg font-semibold mb-3 flex items-center">
             <FileText className="h-5 w-5 mr-2" />
-            Export Format
+            {t("cv.templates.exportFormat")}
           </h3>
           <div className="grid grid-cols-3 gap-3">
             {(["pdf", "word", "ats"] as const).map((format) => (
@@ -80,11 +96,9 @@ export default function TemplateSelectionModal({
                     ? "border-blue-500 bg-blue-50 text-blue-700"
                     : "border-gray-300 hover:border-gray-400"
                 }`}>
-                <div className="font-medium">{format.toUpperCase()}</div>
+                <div className="font-medium">{formatLabels[format].label}</div>
                 <div className="text-sm text-gray-600">
-                  {format === "pdf" && "Portable Document"}
-                  {format === "word" && "Microsoft Word"}
-                  {format === "ats" && "ATS-Friendly Text"}
+                  {formatLabels[format].description}
                 </div>
               </button>
             ))}
@@ -95,7 +109,7 @@ export default function TemplateSelectionModal({
         <div>
           <h3 className="text-lg font-semibold mb-3 flex items-center">
             <Palette className="h-5 w-5 mr-2" />
-            Template Design
+            {t("cv.templates.templateDesign")}
           </h3>
           <div className="grid grid-cols-1 gap-4">
             {templates.map((template) => (
@@ -143,11 +157,11 @@ export default function TemplateSelectionModal({
               <div className="w-2 h-2 bg-white rounded-full" />
             </div>
             <div>
-              <h4 className="font-medium text-blue-900">Template Preview</h4>
+              <h4 className="font-medium text-blue-900">{t("cv.templates.templatePreview")}</h4>
               <p className="text-sm text-blue-700 mt-1">
                 {selectedTemplate === "two-column"
-                  ? "Modern two-column layout with dark teal sidebar, skills progress bars, and professional styling like the image you showed."
-                  : "Traditional single-column layout with clean typography and standard sections."}
+                  ? t("cv.templates.twoColumnPreviewText")
+                  : t("cv.templates.professionalPreviewText")}
               </p>
             </div>
           </div>
