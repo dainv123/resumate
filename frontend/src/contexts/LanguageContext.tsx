@@ -62,6 +62,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Add ref to track if detection is already in progress
   const detectionInProgressRef = React.useRef(false);
   const initializationRef = React.useRef(false);
+  const lastApiCallRef = React.useRef(0);
 
   const getCachedLocationData = (): {
     language: Language;
@@ -103,6 +104,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         timestamp: Date.now(),
       };
       localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(cacheData));
+      console.log("💾 Cached location data:", { language, countryCode, timestamp: new Date().toLocaleString() });
     } catch (error) {
       console.error("Error caching location data:", error);
     }
@@ -129,7 +131,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         // Check cache first
         const cachedData = getCachedLocationData();
         if (cachedData) {
-          console.log("Using cached location data");
+          console.log("🚀 Using cached location data, skipping API call");
           return cachedData.language;
         }
 
@@ -172,13 +174,24 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Fallback to IP-based geolocation
+        const now = Date.now();
+        const timeSinceLastCall = now - lastApiCallRef.current;
+        
+        // If we called API recently (within 1 minute), skip to avoid rate limiting
+        if (timeSinceLastCall < 60000) {
+          console.log("⏰ API called recently, skipping to avoid rate limit");
+          return null;
+        }
+        
+        console.log("🌐 Making IP API call to:", IP_API_ENDPOINT);
+        lastApiCallRef.current = now;
+        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
         let ipResponse;
         try {
           ipResponse = await fetch(IP_API_ENDPOINT, {
-            cache: "no-cache",
             signal: controller.signal,
           });
         } finally {
@@ -190,9 +203,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
           const detectedLanguage =
             countryCode === VIETNAM_COUNTRY_CODE ? "vi" : "en";
 
+          console.log("✅ IP API response received:", { countryCode, detectedLanguage });
           // Cache the result
           cacheLocationData(detectedLanguage, countryCode);
           return detectedLanguage;
+        } else {
+          console.log("❌ IP API response failed:", ipResponse.status);
+          if (ipResponse.status === 429) {
+            console.log("🚫 Rate limited (429), will retry later");
+            // Don't cache failed requests, but also don't throw error
+            return null;
+          }
         }
 
         return null;
@@ -206,15 +227,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
   const detectAndSetLanguage = useCallback(async () => {
+    console.log("🚀 detectAndSetLanguage called");
+    
     // Don't detect if user has explicitly set a language
     const savedLanguage = localStorage.getItem(STORAGE_KEY);
     if (savedLanguage && SUPPORTED_LANGUAGES.includes(savedLanguage as any)) {
+      console.log("👤 User has saved language preference:", savedLanguage);
       return;
     }
 
     // Don't detect if we have valid cached data
     const cachedData = getCachedLocationData();
     if (cachedData) {
+      console.log("🎯 Found valid cache, skipping detection");
+      setLanguageState(cachedData.language);
       return;
     }
 
@@ -255,10 +281,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Fallback to browser language detection
+    console.log("🌍 Falling back to browser language detection");
     const browserLang = navigator.language.toLowerCase();
     if (browserLang.startsWith("vi")) {
+      console.log("🇻🇳 Detected Vietnamese from browser");
       setLanguageState("vi");
     } else {
+      console.log("🇺🇸 Using default English");
       setLanguageState(DEFAULT_LANGUAGE); // Default to English
     }
 
@@ -267,8 +296,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   // Load language from localStorage on mount
   useEffect(() => {
+    console.log("🔄 useEffect triggered");
+    
     // Prevent multiple initializations
     if (initializationRef.current) {
+      console.log("⚠️ Already initialized, skipping");
       return;
     }
     initializationRef.current = true;
@@ -282,6 +314,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const savedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
     if (savedLanguage && SUPPORTED_LANGUAGES.includes(savedLanguage as any)) {
       // User has already set a language preference, use it directly
+      console.log("👤 Using saved language preference:", savedLanguage);
       setLanguageState(savedLanguage);
       return;
     }
@@ -289,12 +322,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // Check if we have valid cached location data first
     const cachedData = getCachedLocationData();
     if (cachedData) {
-      console.log("Using cached location data on page load");
+      console.log("📦 Using cached location data on page load");
       setLanguageState(cachedData.language);
       return;
     }
 
     // Only detect language if no saved preference and no valid cache
+    console.log("🔍 No cache found, starting detection");
     detectAndSetLanguage();
   }, [detectAndSetLanguage]);
 
@@ -309,10 +343,24 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const redetectLanguage = async () => {
+    console.log("🔄 Manual language redetection requested");
     // Clear saved language and location cache to force detection
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(LOCATION_CACHE_KEY);
+    // Reset API call timer
+    lastApiCallRef.current = 0;
     await detectAndSetLanguage();
+  };
+
+  // Debug function to create fake cache for testing
+  const createTestCache = (language: Language = "vi") => {
+    const testCache = {
+      language,
+      countryCode: "VN",
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(testCache));
+    console.log("🧪 Test cache created:", testCache);
   };
 
   const t = (

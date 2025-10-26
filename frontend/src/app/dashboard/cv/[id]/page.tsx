@@ -212,7 +212,7 @@ export default function CVDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Suspense fallback={<LoadingSkeleton type="cv" />}>
-              <CVDisplay cv={cv} showActions={false} />
+              <CVDisplay cv={cv} showActions={false} mode="full" />
             </Suspense>
           </div>
 

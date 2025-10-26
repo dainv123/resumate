@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
-import { ChevronRight, FileText, Zap } from "lucide-react";
+import { ChevronRight, FileText, Zap, Eye } from "lucide-react";
 
 interface CVRelationshipsProps {
   cv: any;
@@ -52,8 +52,7 @@ export default function CVRelationships({ cv }: CVRelationshipsProps) {
                     size="sm"
                     onClick={() => router.push(`/dashboard/cv/${cv.originalCvId}`)}
                     className="ml-3 flex items-center gap-2 whitespace-nowrap hover:bg-amber-50 hover:border-amber-300">
-                    {t("cv.viewOriginal")}
-                    <ChevronRight className="w-4 h-4" />
+                    <Eye className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -99,8 +98,7 @@ export default function CVRelationships({ cv }: CVRelationshipsProps) {
                           router.push(`/dashboard/cv/${tailoredCv.id}`)
                         }
                         className="ml-3 flex items-center gap-2 whitespace-nowrap hover:bg-blue-50 hover:border-blue-300">
-                        {t("cv.view")}
-                        <ChevronRight className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>

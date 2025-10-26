@@ -113,7 +113,7 @@ export default function CVCard({
             </div>
             <div className="min-w-0 flex-1">
               <h3
-                className="font-medium text-gray-900 truncate max-w-[300px]"
+                className="font-medium text-gray-900 truncate"
                 title={cv.originalFileName}>
                 {cv.originalFileName}
               </h3>

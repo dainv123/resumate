@@ -30,7 +30,8 @@
     "no": "No",
     "current": "Current",
     "new": "New",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "backToDashboard": "Back to Dashboard"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -635,7 +636,10 @@
     "reviewAndCustomizeContent": "Review and customize the content to match your voice",
     "addSpecificExamples": "Add specific examples from your experience",
     "includeHiringManagerName": "Include the hiring manager's name if available",
-    "proofreadGrammarAndSpelling": "Proofread for grammar and spelling"
+    "proofreadGrammarAndSpelling": "Proofread for grammar and spelling",
+    "copy": "Copy",
+    "tailoredForJob": "Tailored for Job",
+    "updatedAt": "Updated at"
   },
   "compare": {
     "title": "Version Comparison",
@@ -799,7 +803,7 @@
     "noCVsMatch": "No CVs match your search",
     "noCVsAvailable": "No CVs available. Upload one first.",
     "jobDescription": "Job Description",
-    "jobDescPlaceholder": "Paste the job description here...",
+    "jobDescPlaceholder": "Paste the job description here...\n\nExample:\n• 3+ years of experience in React development\n• Strong knowledge of TypeScript and Node.js\n• Experience with cloud platforms (AWS, Azure)\n• Excellent communication skills\n• Bachelor's degree in Computer Science or related field",
     "analyzeCompatibility": "Analyze Compatibility",
     "analyzing": "Analyzing...",
     "generateCoverLetter": "Generate Cover Letter",
@@ -880,6 +884,8 @@
     "selectCVOnly": "Select a CV to continue",
     "enterJobOnly": "Enter job description to continue",
     "failedToTailor": "Failed to tailor CV. Please try again.",
+    "failedToAnalyze": "Failed to analyze compatibility. Please try again.",
+    "failedToGenerateCoverLetter": "Failed to generate cover letter. Please try again.",
     "selectCVAndJD": "Please select a CV and enter a job description",
     "success": "CV tailored successfully! Your CV has been optimized for this job.",
     "uploadCVPrompt": "Please upload a CV first to use the job tailoring feature",
@@ -927,6 +933,14 @@
     "wordDesc": "Editable format for further customization",
     "atsOptimized": "ATS Optimized",
     "atsDesc": "Plain text format for ATS systems",
+    "previewCV": "Preview CV",
+    "viewTailoredCV": "View Tailored CV",
+    "viewTailoredCVDesc": "Open CV in full view mode",
+    "exportTitle": "Export Your Tailored CV",
+    "exportDesc": "Download your optimized CV in multiple formats",
+    "pdfTitle": "PDF Format",
+    "wordTitle": "Word Document", 
+    "atsTitle": "ATS Optimized",
     "howItWorks": "How AI Tailoring Works",
     "stepsDescription": "Get your CV optimized in 4 simple steps",
     "step1Title": "Select Your CV",
@@ -969,11 +983,7 @@
       "estimatedTime": "Estimated time: {{time}} seconds",
       "almostDone": "Almost done!",
       "completed": "Completed! 🎉"
-    },
-    "exportTitle": "Export CV",
-    "exportDesc": "Export your CV in multiple formats: PDF, Word, or ATS-friendly text format.",
-    "loadingMoreCvs": "Loading more CVs...",
-    "scrollToSeeMore": "Scroll to see more"
+    }
   },
   "aiCvWizard": {
     "title": "🤖 AI CV Wizard",

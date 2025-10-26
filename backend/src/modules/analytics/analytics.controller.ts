@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AnalyticsService } from './analytics.service';
+import { TrackActivity } from '../../common/decorators/track-activity.decorator';
+import { ActivityType } from '../../common/enums/activity-type.enum';
 
 @Controller('analytics')
 @UseGuards(JwtAuthGuard)
@@ -9,6 +11,12 @@ export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}
 
   @Get('stats')
+  @TrackActivity(ActivityType.ANALYTICS_VIEWED, {
+    getMetadata: (result, context) => ({
+      viewType: 'stats',
+      dataPoints: Object.keys(result?.stats || {}).length
+    })
+  })
   async getStats(@GetUser('id') userId: string) {
     return this.analyticsService.getStats(userId);
   }

@@ -13,6 +13,8 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto, UpdateProjectDto, AddToCvDto } from './dto/project.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { TrackActivity } from '../../common/decorators/track-activity.decorator';
+import { ActivityType } from '../../common/enums/activity-type.enum';
 
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
@@ -20,6 +22,13 @@ export class ProjectsController {
   constructor(private projectsService: ProjectsService) {}
 
   @Post()
+  @TrackActivity(ActivityType.PROJECT_CREATED, {
+    getResourceId: (result) => result?.id,
+    getMetadata: (result, context) => ({
+      title: result?.title || context.body?.title,
+      technologies: result?.technologies || context.body?.technologies
+    })
+  })
   async createProject(
     @GetUser('id') userId: string,
     @Body() createProjectDto: CreateProjectDto,
@@ -46,6 +55,13 @@ export class ProjectsController {
   }
 
   @Put(':id')
+  @TrackActivity(ActivityType.PROJECT_UPDATED, {
+    getResourceId: (result, context) => context.params.id,
+    getMetadata: (result, context) => ({
+      title: result?.title || context.body?.title,
+      technologies: result?.technologies || context.body?.technologies
+    })
+  })
   async updateProject(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -55,6 +71,12 @@ export class ProjectsController {
   }
 
   @Delete(':id')
+  @TrackActivity(ActivityType.PROJECT_DELETED, {
+    getResourceId: (result, context) => context.params.id,
+    getMetadata: (result) => ({
+      title: result?.title
+    })
+  })
   async deleteProject(
     @Param('id') id: string,
     @GetUser('id') userId: string,

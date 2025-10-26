@@ -30,7 +30,8 @@
     "no": "Không",
     "current": "Hiện tại",
     "new": "Mới",
-    "creating": "Đang tạo..."
+    "creating": "Đang tạo...",
+    "backToDashboard": "Quay lại Tổng quan"
   },
   "nav": {
     "dashboard": "Tổng quan",
@@ -744,7 +745,7 @@
     "noCVsMatch": "Không có CV nào phù hợp",
     "noCVsAvailable": "Không có CV. Upload CV trước.",
     "jobDescription": "Mô Tả Công Việc",
-    "jobDescPlaceholder": "Dán mô tả công việc vào đây...",
+    "jobDescPlaceholder": "Dán mô tả công việc vào đây...\n\nVí dụ:\n• 3+ năm kinh nghiệm phát triển React\n• Kiến thức vững về TypeScript và Node.js\n• Kinh nghiệm với nền tảng đám mây (AWS, Azure)\n• Kỹ năng giao tiếp tốt\n• Bằng cử nhân Khoa học Máy tính hoặc ngành liên quan",
     "analyzeCompatibility": "Phân Tích Độ Phù Hợp",
     "analyzing": "Đang phân tích...",
     "generateCoverLetter": "Tạo Cover Letter",
@@ -819,6 +820,8 @@
     "selectCVOnly": "Chọn CV để tiếp tục",
     "enterJobOnly": "Nhập mô tả công việc để tiếp tục",
     "failedToTailor": "Tùy chỉnh CV thất bại. Vui lòng thử lại.",
+    "failedToAnalyze": "Phân tích tương thích thất bại. Vui lòng thử lại.",
+    "failedToGenerateCoverLetter": "Tạo thư xin việc thất bại. Vui lòng thử lại.",
     "selectCVAndJD": "Vui lòng chọn CV và nhập mô tả công việc",
     "success": "CV đã được tùy chỉnh thành công! CV của bạn đã được tối ưu hóa cho công việc này.",
     "uploadCVPrompt": "Vui lòng upload CV trước để sử dụng tính năng tùy chỉnh CV",
@@ -866,6 +869,14 @@
     "wordDesc": "Định dạng có thể chỉnh sửa để tùy chỉnh thêm",
     "atsOptimized": "Tối Ưu ATS",
     "atsDesc": "Định dạng text thuần cho hệ thống ATS",
+    "previewCV": "Xem trước CV",
+    "viewTailoredCV": "Xem CV Đã Tùy Chỉnh",
+    "viewTailoredCVDesc": "Mở CV ở chế độ xem đầy đủ",
+    "exportTitle": "Xuất CV Đã Tùy Chỉnh",
+    "exportDesc": "Tải xuống CV đã tối ưu hóa ở nhiều định dạng",
+    "pdfTitle": "Định Dạng PDF",
+    "wordTitle": "Tài Liệu Word", 
+    "atsTitle": "Tối Ưu ATS",
     "howItWorks": "Cách AI Tùy Chỉnh Hoạt Động",
     "stepsDescription": "CV được tối ưu hóa trong 4 bước đơn giản",
     "step1Title": "Chọn CV",
@@ -908,11 +919,7 @@
       "estimatedTime": "Thời gian ước tính: {{time}} giây",
       "almostDone": "Sắp xong rồi!",
       "completed": "Hoàn thành! 🎉"
-    },
-    "exportTitle": "Xuất CV",
-    "exportDesc": "Xuất CV của bạn theo nhiều định dạng: PDF, Word, hoặc định dạng text phù hợp ATS.",
-    "loadingMoreCvs": "Đang tải thêm CVs...",
-    "scrollToSeeMore": "Cuộn xuống để xem thêm"
+    }
   },
   "aiCvWizard": {
     "title": "🤖 AI CV Wizard",

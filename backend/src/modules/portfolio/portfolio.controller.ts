@@ -63,6 +63,13 @@ export class PortfolioController {
 
   @UseGuards(JwtAuthGuard)
   @Post('save')
+  @TrackActivity(ActivityType.PORTFOLIO_CREATED, {
+    getResourceId: (result) => result?.id,
+    getMetadata: (result, context) => ({
+      template: context.body.template,
+      action: 'save'
+    }),
+  })
   async savePortfolio(
     @GetUser('id') userId: string,
     @Body() createPortfolioDto: CreatePortfolioDto,
