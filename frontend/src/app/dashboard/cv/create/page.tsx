@@ -167,8 +167,8 @@ export default function CVCreatePage() {
                   <div class="education-item">
                     <strong>${edu.degree}</strong> - ${edu.institution}
                     ${
-                      edu.graduationDate
-                        ? `<br><small>${edu.graduationDate}</small>`
+                      edu.endDate
+                        ? `<br><small>${edu.endDate}</small>`
                         : ""
                     }
                     ${edu.gpa ? `<br><small>GPA: ${edu.gpa}</small>` : ""}

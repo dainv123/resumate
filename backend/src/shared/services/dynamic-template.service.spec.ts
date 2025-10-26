@@ -14,7 +14,7 @@ describe('DynamicTemplateService', () => {
         contact: {
           name: 'John Doe',
           email: 'john@example.com',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         summary: 'Experienced developer',
         experience: [
@@ -26,22 +26,22 @@ describe('DynamicTemplateService', () => {
             current: true,
             responsibilities: ['Lead development'],
             achievements: ['Improved performance'],
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         education: [
           {
             institution: 'University',
             degree: 'Computer Science',
             startDate: '2018',
-            endDate: '2020'
-          }
+            endDate: '2020',
+          },
         ],
         skills: {
           technical: ['JavaScript', 'Python'],
           tools: ['Git', 'Docker'],
           languages: ['English'],
-          soft: ['Leadership']
+          soft: ['Leadership'],
         },
         projects: [
           {
@@ -49,29 +49,29 @@ describe('DynamicTemplateService', () => {
             description: 'Full-stack application',
             startDate: '2023',
             endDate: '2023',
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         certifications: [
           {
             name: 'AWS Certified',
             issuer: 'Amazon',
-            date: '2023'
-          }
+            date: '2023',
+          },
         ],
         awards: [
           {
             title: 'Best Developer',
             issuer: 'Company',
-            date: '2023'
-          }
+            date: '2023',
+          },
         ],
         publications: [
           {
             title: 'AI in Web Development',
             authors: ['John Doe'],
-            publicationDate: '2023'
-          }
+            publicationDate: '2023',
+          },
         ],
         volunteer: [
           {
@@ -82,15 +82,15 @@ describe('DynamicTemplateService', () => {
             current: true,
             description: 'Helping non-profits with technology',
             responsibilities: ['Build websites'],
-            achievements: ['Helped 5 organizations']
-          }
-        ]
+            achievements: ['Helped 5 organizations'],
+          },
+        ],
       };
 
       const sections = service.detectAvailableSections(cvData);
 
       expect(sections).toHaveLength(10);
-      expect(sections.map(s => s.title)).toEqual([
+      expect(sections.map((s) => s.title)).toEqual([
         'Contact',
         'Summary',
         'Experience',
@@ -100,10 +100,10 @@ describe('DynamicTemplateService', () => {
         'Certifications',
         'Awards',
         'Publications',
-        'Volunteer Experience'
+        'Volunteer Experience',
       ]);
 
-      sections.forEach(section => {
+      sections.forEach((section) => {
         expect(section.hasData).toBe(true);
         expect(section.content).toBeTruthy();
         expect(section.priority).toBeGreaterThan(0);
@@ -114,7 +114,7 @@ describe('DynamicTemplateService', () => {
       const cvData: CVData = {
         contact: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         summary: 'Developer',
         experience: [],
@@ -123,19 +123,19 @@ describe('DynamicTemplateService', () => {
           technical: ['JavaScript'],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const sections = service.detectAvailableSections(cvData);
 
       expect(sections).toHaveLength(4);
-      expect(sections.map(s => s.title)).toEqual([
+      expect(sections.map((s) => s.title)).toEqual([
         'Contact',
         'Summary',
         'Skills',
-        'Experience'
+        'Experience',
       ]);
     });
 
@@ -143,7 +143,7 @@ describe('DynamicTemplateService', () => {
       const cvData: CVData = {
         contact: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         summary: 'Developer',
         experience: [],
@@ -152,25 +152,33 @@ describe('DynamicTemplateService', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const sections = service.detectAvailableSections(cvData, true);
 
       expect(sections.length).toBeGreaterThan(4);
-      expect(sections.some(s => s.title === 'Certifications' && !s.hasData)).toBe(true);
-      expect(sections.some(s => s.title === 'Awards' && !s.hasData)).toBe(true);
-      expect(sections.some(s => s.title === 'Publications' && !s.hasData)).toBe(true);
-      expect(sections.some(s => s.title === 'Volunteer Experience' && !s.hasData)).toBe(true);
+      expect(
+        sections.some((s) => s.title === 'Certifications' && !s.hasData),
+      ).toBe(true);
+      expect(sections.some((s) => s.title === 'Awards' && !s.hasData)).toBe(
+        true,
+      );
+      expect(
+        sections.some((s) => s.title === 'Publications' && !s.hasData),
+      ).toBe(true);
+      expect(
+        sections.some((s) => s.title === 'Volunteer Experience' && !s.hasData),
+      ).toBe(true);
     });
 
     it('should prioritize sections correctly', () => {
       const cvData: CVData = {
         contact: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         summary: 'Developer',
         experience: [],
@@ -179,9 +187,9 @@ describe('DynamicTemplateService', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const sections = service.detectAvailableSections(cvData);
@@ -199,7 +207,7 @@ describe('DynamicTemplateService', () => {
         contact: {
           name: 'John Doe',
           email: 'john@example.com',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         summary: 'Experienced developer',
         experience: [
@@ -211,22 +219,22 @@ describe('DynamicTemplateService', () => {
             current: true,
             responsibilities: ['Lead development'],
             achievements: ['Improved performance'],
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         education: [
           {
             institution: 'University',
             degree: 'Computer Science',
             startDate: '2018',
-            endDate: '2020'
-          }
+            endDate: '2020',
+          },
         ],
         skills: {
           technical: ['JavaScript', 'Python'],
           tools: ['Git', 'Docker'],
           languages: ['English'],
-          soft: ['Leadership']
+          soft: ['Leadership'],
         },
         projects: [
           {
@@ -234,9 +242,9 @@ describe('DynamicTemplateService', () => {
             description: 'Full-stack application',
             startDate: '2023',
             endDate: '2023',
-            technologies: ['React', 'Node.js']
-          }
-        ]
+            technologies: ['React', 'Node.js'],
+          },
+        ],
       };
 
       const config: TemplateConfig = {
@@ -252,14 +260,14 @@ describe('DynamicTemplateService', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2c3e50',
           secondaryColor: '#34495e',
           fontFamily: 'Arial, sans-serif',
-          fontSize: 'medium'
-        }
+          fontSize: 'medium',
+        },
       };
 
       const html = service.generateDynamicTemplate(cvData, config);
@@ -285,7 +293,7 @@ describe('DynamicTemplateService', () => {
       const cvData: CVData = {
         contact: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         summary: 'Developer',
         experience: [],
@@ -294,9 +302,9 @@ describe('DynamicTemplateService', () => {
           technical: ['JavaScript'],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const config: TemplateConfig = {
@@ -312,14 +320,14 @@ describe('DynamicTemplateService', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2c3e50',
           secondaryColor: '#34495e',
           fontFamily: 'Arial, sans-serif',
-          fontSize: 'medium'
-        }
+          fontSize: 'medium',
+        },
       };
 
       const html = service.generateDynamicTemplate(cvData, config);
@@ -333,7 +341,7 @@ describe('DynamicTemplateService', () => {
       const cvData: CVData = {
         contact: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         summary: 'Developer',
         experience: [],
@@ -342,12 +350,15 @@ describe('DynamicTemplateService', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
-      const html = service.generateDynamicTemplate(cvData, {} as TemplateConfig);
+      const html = service.generateDynamicTemplate(
+        cvData,
+        {} as TemplateConfig,
+      );
 
       expect(html).toContain('<!DOCTYPE html>');
       expect(html).toContain('John Doe');
@@ -425,7 +436,7 @@ describe('DynamicTemplateService', () => {
         phone: '+1234567890',
         linkedin: 'https://linkedin.com/in/johndoe',
         github: 'https://github.com/johndoe',
-        website: 'https://johndoe.com'
+        website: 'https://johndoe.com',
       },
       summary: 'Experienced developer',
       experience: [
@@ -439,8 +450,8 @@ describe('DynamicTemplateService', () => {
           achievements: ['Improved performance'],
           technologies: ['React', 'Node.js'],
           teamSize: 5,
-          companyDescription: 'Leading tech company'
-        }
+          companyDescription: 'Leading tech company',
+        },
       ],
       education: [
         {
@@ -449,14 +460,14 @@ describe('DynamicTemplateService', () => {
           startDate: '2018',
           endDate: '2020',
           gpa: '3.8',
-          description: 'Focus on software engineering'
-        }
+          description: 'Focus on software engineering',
+        },
       ],
       skills: {
         technical: ['JavaScript', 'Python'],
         tools: ['Git', 'Docker'],
         languages: ['English', 'Spanish'],
-        soft: ['Leadership', 'Communication']
+        soft: ['Leadership', 'Communication'],
       },
       projects: [
         {
@@ -466,31 +477,31 @@ describe('DynamicTemplateService', () => {
           endDate: '2023',
           technologies: ['React', 'Node.js'],
           results: ['50% increase in sales'],
-          link: 'https://ecommerce.example.com'
-        }
+          link: 'https://ecommerce.example.com',
+        },
       ],
       certifications: [
         {
           name: 'AWS Certified',
           issuer: 'Amazon',
           date: '2023',
-          credentialUrl: 'https://aws.amazon.com/certification'
-        }
+          credentialUrl: 'https://aws.amazon.com/certification',
+        },
       ],
       awards: [
         {
           title: 'Best Developer',
           issuer: 'Company',
-          date: '2023'
-        }
+          date: '2023',
+        },
       ],
       publications: [
         {
           title: 'AI in Web Development',
           authors: ['John Doe', 'Jane Smith'],
           publicationDate: '2023',
-          journal: 'Tech Journal'
-        }
+          journal: 'Tech Journal',
+        },
       ],
       volunteer: [
         {
@@ -501,13 +512,15 @@ describe('DynamicTemplateService', () => {
           current: true,
           description: 'Helping non-profits with technology',
           responsibilities: ['Build websites'],
-          achievements: ['Helped 5 organizations']
-        }
-      ]
+          achievements: ['Helped 5 organizations'],
+        },
+      ],
     };
 
     it('should generate contact section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Contact');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Contact');
       expect(section?.content).toContain('John Doe');
       expect(section?.content).toContain('john@example.com');
       expect(section?.content).toContain('+1234567890');
@@ -517,7 +530,9 @@ describe('DynamicTemplateService', () => {
     });
 
     it('should generate experience section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Experience');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Experience');
       expect(section?.content).toContain('Senior Developer');
       expect(section?.content).toContain('Tech Corp');
       expect(section?.content).toContain('Lead development');
@@ -529,7 +544,9 @@ describe('DynamicTemplateService', () => {
     });
 
     it('should generate education section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Education');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Education');
       expect(section?.content).toContain('University');
       expect(section?.content).toContain('Computer Science');
       expect(section?.content).toContain('Focus on software engineering');
@@ -537,7 +554,9 @@ describe('DynamicTemplateService', () => {
     });
 
     it('should generate skills section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Skills');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Skills');
       expect(section?.content).toContain('Technical Skills');
       expect(section?.content).toContain('JavaScript');
       expect(section?.content).toContain('Python');
@@ -553,7 +572,9 @@ describe('DynamicTemplateService', () => {
     });
 
     it('should generate projects section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Projects');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Projects');
       expect(section?.content).toContain('E-commerce App');
       expect(section?.content).toContain('Full-stack application');
       expect(section?.content).toContain('React');
@@ -563,27 +584,37 @@ describe('DynamicTemplateService', () => {
     });
 
     it('should generate certifications section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Certifications');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Certifications');
       expect(section?.content).toContain('AWS Certified');
       expect(section?.content).toContain('Amazon');
-      expect(section?.content).toContain('https://aws.amazon.com/certification');
+      expect(section?.content).toContain(
+        'https://aws.amazon.com/certification',
+      );
     });
 
     it('should generate awards section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Awards');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Awards');
       expect(section?.content).toContain('Best Developer');
       expect(section?.content).toContain('Company');
     });
 
     it('should generate publications section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Publications');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Publications');
       expect(section?.content).toContain('AI in Web Development');
       expect(section?.content).toContain('John Doe, Jane Smith');
       expect(section?.content).toContain('Tech Journal');
     });
 
     it('should generate volunteer section', () => {
-      const section = service.detectAvailableSections(cvData).find(s => s.title === 'Volunteer Experience');
+      const section = service
+        .detectAvailableSections(cvData)
+        .find((s) => s.title === 'Volunteer Experience');
       expect(section?.content).toContain('Tech for Good');
       expect(section?.content).toContain('Volunteer Developer');
       expect(section?.content).toContain('Helping non-profits with technology');

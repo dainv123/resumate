@@ -34,7 +34,7 @@ export default function CVPage() {
   const [sortBy, setSortBy] = useState<
     "createdAt" | "updatedAt" | "originalFileName"
   >("updatedAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Handlers
@@ -78,7 +78,7 @@ export default function CVPage() {
   };
 
   const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -99,14 +99,14 @@ export default function CVPage() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Button
-                  variant={mode === "paginated" ? "outline" : "default"}
+                  variant={mode === "paginated" ? "outline" : "primary"}
                   size="sm"
                   onClick={() => setMode("paginated")}
                   className="text-sm">
                   {t("cv.pagination")}
                 </Button>
                 <Button
-                  variant={mode === "infinite" ? "outline" : "default"}
+                  variant={mode === "infinite" ? "outline" : "primary"}
                   size="sm"
                   onClick={() => setMode("infinite")}
                   className="text-sm">
@@ -193,13 +193,13 @@ export default function CVPage() {
                   variant="outline"
                   onClick={toggleSortOrder}
                   className="flex items-center space-x-1">
-                  {sortOrder === "asc" ? (
+                  {sortOrder === "ASC" ? (
                     <SortAsc className="h-4 w-4" />
                   ) : (
                     <SortDesc className="h-4 w-4" />
                   )}
                   <span>
-                    {sortOrder === "asc"
+                    {sortOrder === "ASC"
                       ? t("dashboard.sortAsc")
                       : t("dashboard.sortDesc")}
                   </span>
@@ -209,14 +209,14 @@ export default function CVPage() {
               {/* View Mode Toggle */}
               <div className="flex gap-1 border border-gray-300 rounded-lg p-1">
                 <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  variant={viewMode === "grid" ? "primary" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
                   className="flex items-center space-x-1">
                   <Grid className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
+                  variant={viewMode === "list" ? "primary" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
                   className="flex items-center space-x-1">
@@ -337,7 +337,6 @@ export default function CVPage() {
       <CVSettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
-        title={t("cv.settings")}
       />
     </DashboardLayout>
   );

@@ -18,7 +18,10 @@ export class DynamicTemplateService {
   /**
    * Phát hiện sections có data trong CV
    */
-  detectAvailableSections(cvData: CVData, showEmptySections: boolean = false): SectionData[] {
+  detectAvailableSections(
+    cvData: CVData,
+    showEmptySections: boolean = false,
+  ): SectionData[] {
     const sections: SectionData[] = [];
 
     // Contact Information - Luôn có
@@ -26,7 +29,7 @@ export class DynamicTemplateService {
       hasData: true,
       title: 'Contact',
       content: this.generateContactSection(cvData),
-      priority: 1
+      priority: 1,
     });
 
     // Summary
@@ -35,7 +38,7 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Summary',
         content: this.generateSummarySection(cvData),
-        priority: 2
+        priority: 2,
       });
     }
 
@@ -45,7 +48,7 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Experience',
         content: this.generateExperienceSection(cvData),
-        priority: 3
+        priority: 3,
       });
     }
 
@@ -55,7 +58,7 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Education',
         content: this.generateEducationSection(cvData),
-        priority: 4
+        priority: 4,
       });
     }
 
@@ -70,7 +73,7 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Skills',
         content: this.generateSkillsSection(cvData),
-        priority: 5
+        priority: 5,
       });
     }
 
@@ -80,7 +83,7 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Projects',
         content: this.generateProjectsSection(cvData),
-        priority: 6
+        priority: 6,
       });
     }
 
@@ -90,14 +93,14 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Certifications',
         content: this.generateCertificationsSection(cvData),
-        priority: 7
+        priority: 7,
       });
     } else if (showEmptySections) {
       sections.push({
         hasData: false,
         title: 'Certifications',
         content: '<div class="empty-section">No certifications available</div>',
-        priority: 7
+        priority: 7,
       });
     }
 
@@ -107,14 +110,14 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Awards',
         content: this.generateAwardsSection(cvData),
-        priority: 8
+        priority: 8,
       });
     } else if (showEmptySections) {
       sections.push({
         hasData: false,
         title: 'Awards',
         content: '<div class="empty-section">No awards available</div>',
-        priority: 8
+        priority: 8,
       });
     }
 
@@ -124,14 +127,14 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Publications',
         content: this.generatePublicationsSection(cvData),
-        priority: 9
+        priority: 9,
       });
     } else if (showEmptySections) {
       sections.push({
         hasData: false,
         title: 'Publications',
         content: '<div class="empty-section">No publications available</div>',
-        priority: 9
+        priority: 9,
       });
     }
 
@@ -141,14 +144,15 @@ export class DynamicTemplateService {
         hasData: true,
         title: 'Volunteer Experience',
         content: this.generateVolunteerSection(cvData),
-        priority: 10
+        priority: 10,
       });
     } else if (showEmptySections) {
       sections.push({
         hasData: false,
         title: 'Volunteer Experience',
-        content: '<div class="empty-section">No volunteer experience available</div>',
-        priority: 10
+        content:
+          '<div class="empty-section">No volunteer experience available</div>',
+        priority: 10,
       });
     }
 
@@ -158,36 +162,55 @@ export class DynamicTemplateService {
   /**
    * Tạo template HTML động dựa trên config và sections có data
    */
-  generateDynamicTemplate(cvData: CVData, config: TemplateConfig, showEmptySections: boolean = false): string {
+  generateDynamicTemplate(
+    cvData: CVData,
+    config: TemplateConfig,
+    showEmptySections: boolean = false,
+  ): string {
     // Normalize CV data first
     const normalizedCVData = CVDataUtils.normalizeCVData(cvData);
-    
-    const availableSections = this.detectAvailableSections(normalizedCVData, showEmptySections);
-    
+
+    const availableSections = this.detectAvailableSections(
+      normalizedCVData,
+      showEmptySections,
+    );
+
     // Đảm bảo config có sections property
     if (!config.sections) {
       config = CVDataUtils.getDefaultTemplateConfig();
     }
-    
-    const sectionsToRender = availableSections.filter((section) =>
-      config.sections[
-        section.title
-          .toLowerCase()
-          .replace(' ', '') as keyof typeof config.sections
-      ],
+
+    const sectionsToRender = availableSections.filter(
+      (section) =>
+        config.sections[
+          section.title
+            .toLowerCase()
+            .replace(' ', '') as keyof typeof config.sections
+        ],
     );
 
-    this.logger.log(`Generating dynamic template with ${sectionsToRender.length} sections`);
+    this.logger.log(
+      `Generating dynamic template with ${sectionsToRender.length} sections`,
+    );
 
-    return this.generateHtmlTemplate(normalizedCVData, sectionsToRender, config);
+    return this.generateHtmlTemplate(
+      normalizedCVData,
+      sectionsToRender,
+      config,
+    );
   }
 
   /**
    * Tạo template HTML hoàn chỉnh
    */
-  private generateHtmlTemplate(cvData: CVData, sections: SectionData[], config: TemplateConfig): string {
-    const { primaryColor, secondaryColor, fontFamily, fontSize } = config.styling;
-    
+  private generateHtmlTemplate(
+    cvData: CVData,
+    sections: SectionData[],
+    config: TemplateConfig,
+  ): string {
+    const { primaryColor, secondaryColor, fontFamily, fontSize } =
+      config.styling;
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -215,8 +238,10 @@ export class DynamicTemplateService {
    * Tạo CSS styles động
    */
   private generateStyles(config: TemplateConfig): string {
-    const { primaryColor, secondaryColor, fontFamily, fontSize } = config.styling;
-    const baseFontSize = fontSize === 'small' ? '14px' : fontSize === 'large' ? '16px' : '15px';
+    const { primaryColor, secondaryColor, fontFamily, fontSize } =
+      config.styling;
+    const baseFontSize =
+      fontSize === 'small' ? '14px' : fontSize === 'large' ? '16px' : '15px';
 
     return `
         :root {
@@ -404,18 +429,26 @@ export class DynamicTemplateService {
                     <span>📞</span>
                     <span>${cvData.contact.phone || ''}</span>
                 </div>
-                ${cvData.contact.address ? `
+                ${
+                  cvData.contact.address
+                    ? `
                 <div class="contact-item">
                     <span>📍</span>
                     <span>${cvData.contact.address}</span>
                 </div>
-                ` : ''}
-                ${cvData.contact.linkedin ? `
+                `
+                    : ''
+                }
+                ${
+                  cvData.contact.linkedin
+                    ? `
                 <div class="contact-item">
                     <span>💼</span>
                     <a href="${cvData.contact.linkedin}" target="_blank" style="color: white;">LinkedIn</a>
                 </div>
-                ` : ''}
+                `
+                    : ''
+                }
             </div>
         </div>
     </div>`;
@@ -424,42 +457,76 @@ export class DynamicTemplateService {
   /**
    * Layout single column
    */
-  private generateSingleColumnLayout(sections: SectionData[], config: TemplateConfig): string {
-    return sections.map(section => `
+  private generateSingleColumnLayout(
+    sections: SectionData[],
+    config: TemplateConfig,
+  ): string {
+    return sections
+      .map(
+        (section) => `
       <div class="section">
         <h2 class="section-title">${section.title}</h2>
         ${section.content}
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   /**
    * Layout two column
    */
-  private generateTwoColumnLayout(sections: SectionData[], config: TemplateConfig): string {
+  private generateTwoColumnLayout(
+    sections: SectionData[],
+    config: TemplateConfig,
+  ): string {
     // Phân chia sections cho 2 cột
-    const leftColumnSections = ['Contact', 'Skills', 'Certifications', 'Awards'];
-    const rightColumnSections = ['Summary', 'Experience', 'Education', 'Projects', 'Publications', 'Volunteer Experience'];
+    const leftColumnSections = [
+      'Contact',
+      'Skills',
+      'Certifications',
+      'Awards',
+    ];
+    const rightColumnSections = [
+      'Summary',
+      'Experience',
+      'Education',
+      'Projects',
+      'Publications',
+      'Volunteer Experience',
+    ];
 
-    const leftSections = sections.filter(s => leftColumnSections.includes(s.title));
-    const rightSections = sections.filter(s => rightColumnSections.includes(s.title));
+    const leftSections = sections.filter((s) =>
+      leftColumnSections.includes(s.title),
+    );
+    const rightSections = sections.filter((s) =>
+      rightColumnSections.includes(s.title),
+    );
 
     return `
       <div class="left-column">
-        ${leftSections.map(section => `
+        ${leftSections
+          .map(
+            (section) => `
           <div class="section">
             <h2 class="section-title">${section.title}</h2>
             ${section.content}
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
       <div class="right-column">
-        ${rightSections.map(section => `
+        ${rightSections
+          .map(
+            (section) => `
           <div class="section">
             <h2 class="section-title">${section.title}</h2>
             ${section.content}
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
     `;
   }
@@ -485,7 +552,9 @@ export class DynamicTemplateService {
   }
 
   private generateExperienceSection(cvData: CVData): string {
-    return cvData.experience.map(exp => `
+    return cvData.experience
+      .map(
+        (exp) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${exp.title}</div>
@@ -495,37 +564,53 @@ export class DynamicTemplateService {
         ${exp.teamSize ? `<div class="team-size"><strong>Team Size:</strong> ${exp.teamSize}</div>` : ''}
         ${exp.companyDescription ? `<div class="company-description">${exp.companyDescription}</div>` : ''}
         
-        ${exp.responsibilities && exp.responsibilities.length > 0 ? `
+        ${
+          exp.responsibilities && exp.responsibilities.length > 0
+            ? `
           <div class="responsibilities">
             <strong>Responsibilities:</strong>
             <ul>
-              ${exp.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+              ${exp.responsibilities.map((resp) => `<li>${resp}</li>`).join('')}
             </ul>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${exp.achievements && exp.achievements.length > 0 ? `
+        ${
+          exp.achievements && exp.achievements.length > 0
+            ? `
           <div class="achievements">
             <strong>Achievements:</strong>
             <ul>
-              ${exp.achievements.map(ach => `<li>${ach}</li>`).join('')}
+              ${exp.achievements.map((ach) => `<li>${ach}</li>`).join('')}
             </ul>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${exp.technologies && exp.technologies.length > 0 ? `
+        ${
+          exp.technologies && exp.technologies.length > 0
+            ? `
           <div class="tech-stack">
             <strong>Technologies:</strong> ${exp.technologies.join(', ')}
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         ${exp.description ? `<div class="description">${exp.description}</div>` : ''}
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   private generateEducationSection(cvData: CVData): string {
-    return cvData.education.map(edu => `
+    return cvData.education
+      .map(
+        (edu) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${edu.degree}</div>
@@ -535,70 +620,98 @@ export class DynamicTemplateService {
         ${edu.description ? `<div class="description">${edu.description}</div>` : ''}
         ${edu.gpa ? `<div class="gpa"><strong>GPA:</strong> ${edu.gpa}</div>` : ''}
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   private generateSkillsSection(cvData: CVData): string {
     return `
       <div class="skills-grid">
-        ${cvData.skills.technical && cvData.skills.technical.length > 0 ? `
+        ${
+          cvData.skills.technical && cvData.skills.technical.length > 0
+            ? `
           <div class="skill-category">
             <h4>Technical Skills</h4>
             <div class="skill-tags">
-              ${cvData.skills.technical.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              ${cvData.skills.technical.map((skill) => `<span class="skill-tag">${skill}</span>`).join('')}
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${cvData.skills.soft && cvData.skills.soft.length > 0 ? `
+        ${
+          cvData.skills.soft && cvData.skills.soft.length > 0
+            ? `
           <div class="skill-category">
             <h4>Soft Skills</h4>
             <div class="skill-tags">
-              ${cvData.skills.soft.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              ${cvData.skills.soft.map((skill) => `<span class="skill-tag">${skill}</span>`).join('')}
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${cvData.skills.languages && cvData.skills.languages.length > 0 ? `
+        ${
+          cvData.skills.languages && cvData.skills.languages.length > 0
+            ? `
           <div class="skill-category">
             <h4>Languages</h4>
             <div class="skill-tags">
-              ${cvData.skills.languages.map(lang => `<span class="skill-tag">${lang}</span>`).join('')}
+              ${cvData.skills.languages.map((lang) => `<span class="skill-tag">${lang}</span>`).join('')}
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${cvData.skills.tools && cvData.skills.tools.length > 0 ? `
+        ${
+          cvData.skills.tools && cvData.skills.tools.length > 0
+            ? `
           <div class="skill-category">
             <h4>Tools</h4>
             <div class="skill-tags">
-              ${cvData.skills.tools.map(tool => `<span class="skill-tag">${tool}</span>`).join('')}
+              ${cvData.skills.tools.map((tool) => `<span class="skill-tag">${tool}</span>`).join('')}
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     `;
   }
 
   private generateProjectsSection(cvData: CVData): string {
-    return cvData.projects.map(project => `
+    return cvData.projects
+      .map(
+        (project) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${project.name}</div>
           ${project.duration ? `<div class="item-date">${project.duration}</div>` : ''}
         </div>
         <div class="description">${project.description}</div>
-        ${project.technologies && project.technologies.length > 0 ? `
+        ${
+          project.technologies && project.technologies.length > 0
+            ? `
           <div class="tech-stack"><strong>Tech Stack:</strong> ${project.technologies.join(', ')}</div>
-        ` : ''}
+        `
+            : ''
+        }
         ${project.results ? `<div class="results"><strong>Results:</strong> ${Array.isArray(project.results) ? project.results.join(', ') : project.results}</div>` : ''}
         ${project.link ? `<div class="project-link"><strong>Link:</strong> <a href="${project.link}">${project.link}</a></div>` : ''}
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   private generateCertificationsSection(cvData: CVData): string {
-    return (cvData.certifications || []).map(cert => `
+    return (cvData.certifications || [])
+      .map(
+        (cert) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${cert.name}</div>
@@ -607,11 +720,15 @@ export class DynamicTemplateService {
         <div class="item-company">${cert.issuer}</div>
         ${cert.credentialUrl ? `<div class="cert-link"><strong>Link:</strong> <a href="${cert.credentialUrl}">${cert.credentialUrl}</a></div>` : ''}
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   private generateAwardsSection(cvData: CVData): string {
-    return (cvData.awards || []).map(award => `
+    return (cvData.awards || [])
+      .map(
+        (award) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${award.title}</div>
@@ -619,11 +736,15 @@ export class DynamicTemplateService {
         </div>
         <div class="item-company">${award.issuer}</div>
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   private generatePublicationsSection(cvData: CVData): string {
-    return (cvData.publications || []).map(pub => `
+    return (cvData.publications || [])
+      .map(
+        (pub) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${pub.title}</div>
@@ -632,11 +753,15 @@ export class DynamicTemplateService {
         <div class="item-company">${pub.journal}</div>
         <div class="authors"><strong>Authors:</strong> ${Array.isArray(pub.authors) ? pub.authors.join(', ') : pub.authors}</div>
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   private generateVolunteerSection(cvData: CVData): string {
-    return (cvData.volunteer || []).map(vol => `
+    return (cvData.volunteer || [])
+      .map(
+        (vol) => `
       <div class="item">
         <div class="item-header">
           <div class="item-title">${vol.role}</div>
@@ -645,7 +770,9 @@ export class DynamicTemplateService {
         <div class="item-company">${vol.organization}</div>
         <div class="description">${vol.description}</div>
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   /**
@@ -665,14 +792,14 @@ export class DynamicTemplateService {
         awards: true,
         publications: true,
         volunteer: true,
-        languages: true
+        languages: true,
       },
       styling: {
         primaryColor: '#2c3e50',
         secondaryColor: '#34495e',
         fontFamily: 'Arial, sans-serif',
-        fontSize: 'medium'
-      }
+        fontSize: 'medium',
+      },
     };
   }
 
@@ -685,8 +812,8 @@ export class DynamicTemplateService {
       layout: 'two-column',
       styling: {
         ...this.getDefaultConfig().styling,
-        primaryColor: '#3498db'
-      }
+        primaryColor: '#3498db',
+      },
     };
   }
 
@@ -701,8 +828,8 @@ export class DynamicTemplateService {
         primaryColor: '#e74c3c',
         secondaryColor: '#2c3e50',
         fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 'medium'
-      }
+        fontSize: 'medium',
+      },
     };
   }
 
@@ -723,25 +850,28 @@ export class DynamicTemplateService {
         awards: true,
         publications: true,
         volunteer: true,
-        languages: true
+        languages: true,
       },
       styling: {
         primaryColor: '#2c3e50',
         secondaryColor: '#34495e',
         fontFamily: 'Arial, sans-serif',
-        fontSize: 'medium'
-      }
+        fontSize: 'medium',
+      },
     };
   }
 
   /**
    * Format date range for display
    */
-  private formatDateRange(startDate: string, endDate?: string, current?: boolean): string {
+  private formatDateRange(
+    startDate: string,
+    endDate?: string,
+    current?: boolean,
+  ): string {
     if (current || !endDate) {
       return startDate + ' - Present';
     }
     return startDate + ' - ' + endDate;
   }
-
 }

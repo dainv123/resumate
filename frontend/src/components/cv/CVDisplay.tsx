@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { CV } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
@@ -57,7 +57,6 @@ export default function CVDisplay({
   showActions = true,
   showRelationships = false,
   showVersionHistory = false,
-  showViewButton = true,
   historyLabel,
   tailoredLabel,
   onEdit,
@@ -65,35 +64,14 @@ export default function CVDisplay({
   onDuplicate,
   onTailor,
   onExport,
-  onUpdate,
   className = "",
 }: CVDisplayProps) {
   const { t } = useLanguage();
+  const router = useRouter();
   
   // Use translation keys if provided, otherwise use defaults
   const effectiveHistoryLabel = historyLabel || t("cvSections.statusLabels.history");
   const effectiveTailoredLabel = tailoredLabel || t("cvSections.statusLabels.tailored");
-
-  // Helper to get icon for each section
-  const getSectionIcon = (key: string) => {
-    const iconMap: Record<string, React.ReactNode> = {
-      experience: <Briefcase className="h-4 w-4 text-blue-600" />,
-      education: <GraduationCap className="h-4 w-4 text-green-600" />,
-      skills: <Award className="h-4 w-4 text-purple-600" />,
-      projects: <Code className="h-4 w-4 text-orange-600" />,
-      certifications: <Award className="h-4 w-4 text-yellow-600" />,
-      contact: <User className="h-4 w-4 text-gray-600" />,
-      email: <Mail className="h-4 w-4 text-gray-600" />,
-      phone: <Phone className="h-4 w-4 text-gray-600" />,
-      location: <MapPin className="h-4 w-4 text-gray-600" />,
-      website: <Globe className="h-4 w-4 text-gray-600" />,
-    };
-    return (
-      iconMap[key.toLowerCase()] || (
-        <FileText className="h-4 w-4 text-gray-600" />
-      )
-    );
-  };
 
   // Render short mode - compact view
   const renderShortMode = () => {
@@ -250,7 +228,7 @@ export default function CVDisplay({
               {onExport && (
                 <Button
                   variant="outline"
-                  onClick={() => setShowTemplateSelectionModal(true)}
+                  onClick={() => onExport(cv, "pdf", "default")}
                   className="flex items-center space-x-2">
                   <Download className="h-4 w-4 mr-1" />
                   <span>{t("cv.export")}</span>

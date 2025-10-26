@@ -108,4 +108,3 @@ export function getTemplateConfig(template: PortfolioTemplate): TemplateConfig {
 export function getAllTemplateConfigs(): TemplateConfig[] {
   return Object.values(TEMPLATE_CONFIGS);
 }
-

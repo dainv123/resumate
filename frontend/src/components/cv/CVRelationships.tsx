@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
-import { ChevronRight, FileText, Zap, Eye } from "lucide-react";
+import { FileText, Zap, Eye } from "lucide-react";
 
 interface CVRelationshipsProps {
   cv: any;

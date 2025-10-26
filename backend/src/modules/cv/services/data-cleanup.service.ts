@@ -88,7 +88,9 @@ export class DataCleanupService {
       if (orphanedCoverLetters.length > 0) {
         await this.coverLetterRepository.remove(orphanedCoverLetters);
         deletedOrphanedCoverLetters = orphanedCoverLetters.length;
-        this.logger.log(`Deleted ${deletedOrphanedCoverLetters} orphaned cover letters`);
+        this.logger.log(
+          `Deleted ${deletedOrphanedCoverLetters} orphaned cover letters`,
+        );
       }
 
       this.logger.log('Data cleanup completed successfully');
@@ -195,7 +197,9 @@ export class DataCleanupService {
       if (expiredCoverLetters.length > 0) {
         await this.coverLetterRepository.remove(expiredCoverLetters);
         deletedExpiredCoverLetters = expiredCoverLetters.length;
-        this.logger.log(`Deleted ${deletedExpiredCoverLetters} expired cover letters`);
+        this.logger.log(
+          `Deleted ${deletedExpiredCoverLetters} expired cover letters`,
+        );
       }
 
       return {

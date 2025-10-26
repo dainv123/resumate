@@ -10,7 +10,6 @@ import {
   Bot,
   User,
   Download,
-  RotateCcw,
   Sparkles,
   Edit,
 } from "lucide-react";

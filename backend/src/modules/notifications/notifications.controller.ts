@@ -37,4 +37,3 @@ export class NotificationsController {
     return { message: 'Test email sent' };
   }
 }
-

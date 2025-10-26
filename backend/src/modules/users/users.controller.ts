@@ -20,10 +20,10 @@ export class UsersController {
   @Put('profile')
   @TrackActivity(ActivityType.USER_PROFILE_UPDATED, {
     getResourceId: (result, context) => context.params?.userId || result?.id,
-    getMetadata: (result, context) => ({ 
+    getMetadata: (result, context) => ({
       fieldsUpdated: Object.keys(context.body || {}),
-      email: result?.email 
-    })
+      email: result?.email,
+    }),
   })
   async updateProfile(
     @GetUser('id') userId: string,
@@ -35,9 +35,9 @@ export class UsersController {
   @Put('password')
   @TrackActivity(ActivityType.USER_PASSWORD_CHANGED, {
     getResourceId: (result, context) => context.params?.userId || result?.id,
-    getMetadata: (result) => ({ 
-      email: result?.email 
-    })
+    getMetadata: (result) => ({
+      email: result?.email,
+    }),
   })
   async changePassword(
     @GetUser() user: User,
@@ -59,10 +59,10 @@ export class UsersController {
   @Get('export')
   @TrackActivity(ActivityType.USER_DATA_EXPORTED, {
     getResourceId: (result, context) => context.params?.userId || result?.id,
-    getMetadata: (result) => ({ 
+    getMetadata: (result) => ({
       email: result?.email,
-      exportType: 'user_data'
-    })
+      exportType: 'user_data',
+    }),
   })
   async exportUserData(@GetUser('id') userId: string) {
     return this.usersService.exportUserData(userId);
@@ -71,9 +71,9 @@ export class UsersController {
   @Delete('account')
   @TrackActivity(ActivityType.USER_ACCOUNT_DELETED, {
     getResourceId: (result, context) => context.params?.userId || result?.id,
-    getMetadata: (result) => ({ 
-      email: result?.email 
-    })
+    getMetadata: (result) => ({
+      email: result?.email,
+    }),
   })
   async deleteAccount(@GetUser() user: User) {
     return this.usersService.deleteAccount(user.id);

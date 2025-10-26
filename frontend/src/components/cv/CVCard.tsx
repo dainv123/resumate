@@ -7,7 +7,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Eye,
   Edit,
-  Trash2,
   Copy,
   Sparkles,
   Download,
@@ -34,7 +33,6 @@ export default function CVCard({
   isSelected = false,
   onSelect,
   onEdit,
-  onDelete,
   onDuplicate,
   onTailor,
   onExport,
@@ -169,8 +167,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   onEdit?.();
                 }}
                 className="flex items-center space-x-1">
@@ -181,8 +178,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   onDuplicate?.();
                 }}
                 className="flex items-center space-x-1">
@@ -193,8 +189,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   onTailor?.();
                 }}
                 className="flex items-center space-x-1">
@@ -205,8 +200,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   onExport?.("pdf");
                 }}
                 className="flex items-center space-x-1">
@@ -242,8 +236,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 onEdit?.();
               }}
               className="flex items-center space-x-1">
@@ -253,8 +246,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 onDuplicate?.();
               }}
               className="flex items-center space-x-1">
@@ -264,8 +256,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 onTailor?.();
               }}
               className="flex items-center space-x-1">
@@ -275,8 +266,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 onExport?.("pdf");
               }}
               className="flex items-center space-x-1">

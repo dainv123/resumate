@@ -328,23 +328,23 @@ export const cvApi = {
   },
 
   // Helper method to check if analysis exists for a job description
-  checkExistingAnalysis: async (jobDescription: string): Promise<CvMatchingAnalysis | null> => {
+  checkExistingAnalysis: async (_jobDescription: string): Promise<CvMatchingAnalysis | null> => {
     try {
       // This would need to be implemented on backend to search by content
       // For now, we'll return null and let the analyzeCompatibility handle it
       return null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   },
 
   // Helper method to check if cover letter exists for a job description
-  checkExistingCoverLetter: async (jobDescription: string): Promise<CvCoverLetter | null> => {
+  checkExistingCoverLetter: async (_jobDescription: string): Promise<CvCoverLetter | null> => {
     try {
       // This would need to be implemented on backend to search by content
       // For now, we'll return null and let the generateCoverLetter handle it
       return null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   },

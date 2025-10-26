@@ -71,7 +71,7 @@ const Select: React.FC<SelectProps> = ({ value, onValueChange, children }) => {
             } as any);
           }
           if (child.type === SelectValue) {
-            setPlaceholder(child.props.placeholder || "");
+            setPlaceholder((child as any).props.placeholder || "");
             return null;
           }
         }
@@ -133,8 +133,8 @@ const SelectItem: React.FC<
     if (typeof children === "string") {
       return children;
     }
-    if (React.isValidElement(children) && children.props.children) {
-      return getLabel(children.props.children);
+    if (React.isValidElement(children) && (children as any).props.children) {
+      return getLabel((children as any).props.children);
     }
     return value;
   };

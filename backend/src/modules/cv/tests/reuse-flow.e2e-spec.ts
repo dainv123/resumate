@@ -48,7 +48,8 @@ describe('Reuse Flow E2E Tests', () => {
     isTailored: false,
   };
 
-  const testJobDescription = 'We are looking for a Senior React Developer with 5+ years of experience in JavaScript, React, and Node.js. The ideal candidate should have strong communication skills and leadership experience.';
+  const testJobDescription =
+    'We are looking for a Senior React Developer with 5+ years of experience in JavaScript, React, and Node.js. The ideal candidate should have strong communication skills and leadership experience.';
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -56,7 +57,13 @@ describe('Reuse Flow E2E Tests', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [Cv, JobDescription, CvMatchingAnalysis, CvCoverLetter, User],
+          entities: [
+            Cv,
+            JobDescription,
+            CvMatchingAnalysis,
+            CvCoverLetter,
+            User,
+          ],
           synchronize: true,
         }),
         CvModule,
@@ -67,9 +74,15 @@ describe('Reuse Flow E2E Tests', () => {
     await app.init();
 
     cvRepository = moduleFixture.get<Repository<Cv>>('CvRepository');
-    jobDescriptionRepository = moduleFixture.get<Repository<JobDescription>>('JobDescriptionRepository');
-    analysisRepository = moduleFixture.get<Repository<CvMatchingAnalysis>>('CvMatchingAnalysisRepository');
-    coverLetterRepository = moduleFixture.get<Repository<CvCoverLetter>>('CvCoverLetterRepository');
+    jobDescriptionRepository = moduleFixture.get<Repository<JobDescription>>(
+      'JobDescriptionRepository',
+    );
+    analysisRepository = moduleFixture.get<Repository<CvMatchingAnalysis>>(
+      'CvMatchingAnalysisRepository',
+    );
+    coverLetterRepository = moduleFixture.get<Repository<CvCoverLetter>>(
+      'CvCoverLetterRepository',
+    );
     userRepository = moduleFixture.get<Repository<User>>('UserRepository');
 
     // Create test user
@@ -154,7 +167,8 @@ describe('Reuse Flow E2E Tests', () => {
       // Create test CV
       await cvRepository.save(testCv);
 
-      const differentJobDescription = 'We are looking for a Python Developer with Django experience.';
+      const differentJobDescription =
+        'We are looking for a Python Developer with Django experience.';
 
       // First request
       await request(app.getHttpServer())
@@ -235,7 +249,9 @@ describe('Reuse Flow E2E Tests', () => {
         .expect(201);
 
       expect(secondResponse.body.reused).toBe(true);
-      expect(secondResponse.body.coverLetter).toBe(firstResponse.body.coverLetter);
+      expect(secondResponse.body.coverLetter).toBe(
+        firstResponse.body.coverLetter,
+      );
 
       // Verify only one cover letter exists
       const coverLetters = await coverLetterRepository.find();
@@ -247,7 +263,7 @@ describe('Reuse Flow E2E Tests', () => {
     beforeEach(async () => {
       // Create test data
       await cvRepository.save(testCv);
-      
+
       const jobDesc = await jobDescriptionRepository.save({
         userId: testUser.id,
         title: 'Senior React Developer',
@@ -283,7 +299,8 @@ describe('Reuse Flow E2E Tests', () => {
           keyRequirements: ['JavaScript', 'React'],
           createdAt: new Date().toISOString(),
         },
-        content: 'Dear Hiring Manager, I am excited to apply for the Senior React Developer position...',
+        content:
+          'Dear Hiring Manager, I am excited to apply for the Senior React Developer position...',
         wordCount: 150,
         isSnapshot: false,
       });

@@ -10,8 +10,9 @@ export class GoogleAIService {
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('GOOGLE_AI_API_KEY');
-    const modelName = this.configService.get<string>('GOOGLE_AI_MODEL') || 'gemini-2.0-flash';
-    
+    const modelName =
+      this.configService.get<string>('GOOGLE_AI_MODEL') || 'gemini-2.0-flash';
+
     if (!apiKey) {
       throw new Error('Google AI API key is not configured');
     }
@@ -23,17 +24,17 @@ export class GoogleAIService {
   async generateStructuredData(prompt: string, schema: any): Promise<any> {
     try {
       const fullPrompt = `${prompt}\n\nPlease respond with a valid JSON object that matches this schema: ${JSON.stringify(schema)}`;
-      
+
       const result = await this.model.generateContent(fullPrompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       // Extract JSON from response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in response');
       }
-      
+
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
       this.logger.error('Error generating structured data:', error);
@@ -41,7 +42,11 @@ export class GoogleAIService {
     }
   }
 
-  async generateBulletPoints(description: string, role: string, techStack: string[]): Promise<string[]> {
+  async generateBulletPoints(
+    description: string,
+    role: string,
+    techStack: string[],
+  ): Promise<string[]> {
     try {
       const prompt = `
         Generate 3-5 professional bullet points for a CV based on this project:
@@ -63,18 +68,23 @@ export class GoogleAIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
         // Fallback: split by lines and clean up
-        const lines = responseText.split('\n').filter(line => 
-          line.trim().startsWith('-') || 
-          line.trim().startsWith('•') ||
-          line.trim().match(/^\d+\./)
-        );
-        return lines.map(line => line.replace(/^[-•\d.\s]+/, '').trim()).filter(Boolean);
+        const lines = responseText
+          .split('\n')
+          .filter(
+            (line) =>
+              line.trim().startsWith('-') ||
+              line.trim().startsWith('•') ||
+              line.trim().match(/^\d+\./),
+          );
+        return lines
+          .map((line) => line.replace(/^[-•\d.\s]+/, '').trim())
+          .filter(Boolean);
       }
-      
+
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
       this.logger.error('Error generating bullet points:', error);
@@ -82,7 +92,7 @@ export class GoogleAIService {
       return [
         `Developed ${description.toLowerCase()}`,
         `Utilized ${techStack.slice(0, 3).join(', ')} technologies`,
-        `Collaborated with team to deliver high-quality solutions`
+        `Collaborated with team to deliver high-quality solutions`,
       ];
     }
   }
@@ -116,30 +126,30 @@ export class GoogleAIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       // Debug logging
       this.logger.log('=== AI TAILOR RESPONSE ===');
       this.logger.log(responseText);
       this.logger.log('=== END AI RESPONSE ===');
-      
+
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in tailored response');
       }
-      
+
       const tailoredData = JSON.parse(jsonMatch[0]);
-      
+
       // Debug logging
       this.logger.log('=== PARSED TAILORED DATA ===');
       this.logger.log(JSON.stringify(tailoredData, null, 2));
       this.logger.log('=== END PARSED DATA ===');
-      
+
       // Debug logging before restructure
       this.logger.log('=== BEFORE RESTRUCTURE ===');
       this.logger.log(`Has name: ${!!tailoredData.name}`);
       this.logger.log(`Has contact: ${!!tailoredData.contact}`);
       this.logger.log(`Keys: ${Object.keys(tailoredData).join(', ')}`);
-      
+
       // Ensure the response maintains the standardized CVData structure
       // If AI flattened contact info, restructure it properly
       if (tailoredData.name && !tailoredData.contact) {
@@ -152,9 +162,9 @@ export class GoogleAIService {
           linkedin: tailoredData.linkedin || '',
           github: tailoredData.github || '',
           website: tailoredData.website || '',
-          location: tailoredData.location || ''
+          location: tailoredData.location || '',
         };
-        
+
         // Remove flattened fields
         delete tailoredData.name;
         delete tailoredData.email;
@@ -164,14 +174,16 @@ export class GoogleAIService {
         delete tailoredData.github;
         delete tailoredData.website;
         delete tailoredData.location;
-        
+
         this.logger.log('=== AFTER RESTRUCTURE ===');
         this.logger.log(`Has contact: ${!!tailoredData.contact}`);
-        this.logger.log(`Contact keys: ${tailoredData.contact ? Object.keys(tailoredData.contact).join(', ') : 'none'}`);
+        this.logger.log(
+          `Contact keys: ${tailoredData.contact ? Object.keys(tailoredData.contact).join(', ') : 'none'}`,
+        );
       } else {
         this.logger.log('=== NO RESTRUCTURE NEEDED ===');
       }
-      
+
       return tailoredData;
     } catch (error) {
       this.logger.error('Error tailoring CV content:', error);
@@ -179,7 +191,10 @@ export class GoogleAIService {
     }
   }
 
-  async analyzeCompatibility(cvData: any, jobDescription: string): Promise<{
+  async analyzeCompatibility(
+    cvData: any,
+    jobDescription: string,
+  ): Promise<{
     score: number;
     matchedSkills: string[];
     missingSkills: string[];
@@ -216,12 +231,12 @@ export class GoogleAIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in compatibility analysis');
       }
-      
+
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
       this.logger.error('Error analyzing compatibility:', error);
@@ -229,7 +244,10 @@ export class GoogleAIService {
     }
   }
 
-  async generateCoverLetter(cvData: any, jobDescription: string): Promise<{ coverLetter: string; reused?: boolean }> {
+  async generateCoverLetter(
+    cvData: any,
+    jobDescription: string,
+  ): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
       const prompt = `
         Generate a professional cover letter based on this CV and job description.
@@ -424,32 +442,32 @@ export class GoogleAIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       // Log the raw AI response for debugging
       this.logger.log('=== AI RAW RESPONSE ===');
       this.logger.log(responseText);
       this.logger.log('=== END AI RESPONSE ===');
-      
+
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in CV parsing response');
       }
-      
+
       const parsedData = JSON.parse(jsonMatch[0]);
-      
+
       // Log the parsed data for debugging
       this.logger.log('=== PARSED DATA ===');
       this.logger.log(JSON.stringify(parsedData, null, 2));
       this.logger.log('=== END PARSED DATA ===');
-      
+
       // Clean up and validate the parsed data
       const cleanedData = this.cleanupParsedData(parsedData);
-      
+
       // Log the cleaned data for debugging
       this.logger.log('=== CLEANED DATA ===');
       this.logger.log(JSON.stringify(cleanedData, null, 2));
       this.logger.log('=== END CLEANED DATA ===');
-      
+
       return cleanedData;
     } catch (error) {
       this.logger.error('Error parsing CV content:', error);
@@ -468,72 +486,144 @@ export class GoogleAIService {
         linkedin: data.contact?.linkedin || data.linkedin || '',
         github: data.contact?.github || data.github || '',
         website: data.contact?.website || data.website || '',
-        location: data.contact?.location || data.location || ''
+        location: data.contact?.location || data.location || '',
       },
       dateOfBirth: data.dateOfBirth || '',
       summary: data.summary || '',
-      education: Array.isArray(data.education) ? data.education.map(edu => ({
-        degree: edu.degree || edu.qualification || edu.certificate || '',
-        school: edu.school || edu.university || edu.institution || edu.college || '',
-        year: edu.year || edu.graduationYear || edu.date || '',
-        gpa: edu.gpa || edu.grade || '',
-        location: edu.location || edu.place || '',
-        honors: edu.honors || edu.awards || edu.achievements || ''
-      })) : [],
-      experience: Array.isArray(data.experience) ? data.experience.map(exp => ({
-        title: exp.title || exp.role || exp.position || '',
-        company: exp.company || exp.employer || '',
-        duration: exp.duration || exp.period || exp.timeframe || '',
-        teamSize: exp.teamSize || '',
-        companyDescription: exp.companyDescription || '',
-        responsibilities: Array.isArray(exp.responsibilities) ? exp.responsibilities : [],
-        achievements: Array.isArray(exp.achievements) ? exp.achievements : [],
-        technologies: Array.isArray(exp.technologies) ? exp.technologies : [],
-        subProjects: Array.isArray(exp.subProjects) ? exp.subProjects.map(sub => ({
-          name: sub.name || '',
-          role: sub.role || '',
-          techStack: Array.isArray(sub.techStack) ? sub.techStack : [],
-          responsibilities: Array.isArray(sub.responsibilities) ? sub.responsibilities : [],
-        })) : []
-      })) : [],
+      education: Array.isArray(data.education)
+        ? data.education.map((edu) => ({
+            degree: edu.degree || edu.qualification || edu.certificate || '',
+            school:
+              edu.school ||
+              edu.university ||
+              edu.institution ||
+              edu.college ||
+              '',
+            year: edu.year || edu.graduationYear || edu.date || '',
+            gpa: edu.gpa || edu.grade || '',
+            location: edu.location || edu.place || '',
+            honors: edu.honors || edu.awards || edu.achievements || '',
+          }))
+        : [],
+      experience: Array.isArray(data.experience)
+        ? data.experience.map((exp) => ({
+            title: exp.title || exp.role || exp.position || '',
+            company: exp.company || exp.employer || '',
+            duration: exp.duration || exp.period || exp.timeframe || '',
+            teamSize: exp.teamSize || '',
+            companyDescription: exp.companyDescription || '',
+            responsibilities: Array.isArray(exp.responsibilities)
+              ? exp.responsibilities
+              : [],
+            achievements: Array.isArray(exp.achievements)
+              ? exp.achievements
+              : [],
+            technologies: Array.isArray(exp.technologies)
+              ? exp.technologies
+              : [],
+            subProjects: Array.isArray(exp.subProjects)
+              ? exp.subProjects.map((sub) => ({
+                  name: sub.name || '',
+                  role: sub.role || '',
+                  techStack: Array.isArray(sub.techStack) ? sub.techStack : [],
+                  responsibilities: Array.isArray(sub.responsibilities)
+                    ? sub.responsibilities
+                    : [],
+                }))
+              : [],
+          }))
+        : [],
       skills: {
-        technical: Array.isArray(data.skills?.technical) ? data.skills.technical : [],
+        technical: Array.isArray(data.skills?.technical)
+          ? data.skills.technical
+          : [],
         soft: Array.isArray(data.skills?.soft) ? data.skills.soft : [],
-        languages: Array.isArray(data.skills?.languages) ? data.skills.languages : [],
-        tools: Array.isArray(data.skills?.tools) ? data.skills.tools : []
+        languages: Array.isArray(data.skills?.languages)
+          ? data.skills.languages
+          : [],
+        tools: Array.isArray(data.skills?.tools) ? data.skills.tools : [],
       },
-      projects: Array.isArray(data.projects) ? data.projects.map(project => ({
-        name: project.name || '',
-        duration: project.duration || '',
-        description: project.description || '',
-        techStack: Array.isArray(project.techStack) ? project.techStack : [],
-        results: project.results || '',
-        link: project.link || '',
-      })) : [],
-      certifications: Array.isArray(data.certifications) ? data.certifications.map(cert => ({
-        name: cert.name || '',
-        issuer: cert.issuer || '',
-        date: cert.date || cert.issueDate || '',
-        link: cert.link || cert.certificateLink || '',
-      })) : [],
+      projects: Array.isArray(data.projects)
+        ? data.projects.map((project) => ({
+            name: project.name || '',
+            duration: project.duration || '',
+            description: project.description || '',
+            techStack: Array.isArray(project.techStack)
+              ? project.techStack
+              : [],
+            results: project.results || '',
+            link: project.link || '',
+          }))
+        : [],
+      certifications: Array.isArray(data.certifications)
+        ? data.certifications.map((cert) => ({
+            name: cert.name || '',
+            issuer: cert.issuer || '',
+            date: cert.date || cert.issueDate || '',
+            link: cert.link || cert.certificateLink || '',
+          }))
+        : [],
       awards: Array.isArray(data.awards) ? data.awards : [],
       publications: Array.isArray(data.publications) ? data.publications : [],
-      volunteer: Array.isArray(data.volunteer) ? data.volunteer : []
+      volunteer: Array.isArray(data.volunteer) ? data.volunteer : [],
     };
 
     // Handle skills if it's an array instead of object
     if (Array.isArray(data.skills) && data.skills.length > 0) {
-      const technicalKeywords = ['programming', 'development', 'coding', 'software', 'technical', 'programming', 'database', 'web', 'mobile', 'cloud', 'devops', 'ai', 'ml', 'data', 'analytics'];
-      const softKeywords = ['leadership', 'communication', 'teamwork', 'management', 'problem', 'creative', 'analytical', 'interpersonal', 'presentation', 'negotiation'];
-      const languageKeywords = ['english', 'spanish', 'french', 'german', 'chinese', 'japanese', 'korean', 'arabic', 'portuguese', 'italian', 'russian'];
-      
-      data.skills.forEach(skill => {
+      const technicalKeywords = [
+        'programming',
+        'development',
+        'coding',
+        'software',
+        'technical',
+        'programming',
+        'database',
+        'web',
+        'mobile',
+        'cloud',
+        'devops',
+        'ai',
+        'ml',
+        'data',
+        'analytics',
+      ];
+      const softKeywords = [
+        'leadership',
+        'communication',
+        'teamwork',
+        'management',
+        'problem',
+        'creative',
+        'analytical',
+        'interpersonal',
+        'presentation',
+        'negotiation',
+      ];
+      const languageKeywords = [
+        'english',
+        'spanish',
+        'french',
+        'german',
+        'chinese',
+        'japanese',
+        'korean',
+        'arabic',
+        'portuguese',
+        'italian',
+        'russian',
+      ];
+
+      data.skills.forEach((skill) => {
         const skillLower = skill.toLowerCase();
-        if (technicalKeywords.some(keyword => skillLower.includes(keyword))) {
+        if (technicalKeywords.some((keyword) => skillLower.includes(keyword))) {
           cleanedData.skills.technical.push(skill);
-        } else if (softKeywords.some(keyword => skillLower.includes(keyword))) {
+        } else if (
+          softKeywords.some((keyword) => skillLower.includes(keyword))
+        ) {
           cleanedData.skills.soft.push(skill);
-        } else if (languageKeywords.some(keyword => skillLower.includes(keyword))) {
+        } else if (
+          languageKeywords.some((keyword) => skillLower.includes(keyword))
+        ) {
           cleanedData.skills.languages.push(skill);
         } else {
           cleanedData.skills.technical.push(skill);
@@ -565,7 +655,7 @@ export class GoogleAIService {
       PUBLICATIONS
       "Deep Learning for CV Analysis", Nature, 2022
       "AI in Healthcare", Science, 2021`,
-      
+
       // Technical CV format
       `Jane Smith
       jane.smith@tech.com
@@ -588,7 +678,7 @@ export class GoogleAIService {
       Software Engineer, Microsoft, 2018-2020
       - Developed web applications using React and Node.js
       - Collaborated with cross-functional teams`,
-      
+
       // Creative CV format
       `Alex Johnson
       alex@creative.com
@@ -609,7 +699,7 @@ export class GoogleAIService {
       
       AWARDS
       • Design Excellence Award, 2022
-      • Best UX Design, TechCrunch, 2021`
+      • Best UX Design, TechCrunch, 2021`,
     ];
 
     const results: any[] = [];
@@ -619,17 +709,17 @@ export class GoogleAIService {
         results.push({
           format: 'Test CV',
           success: true,
-          data: parsed
+          data: parsed,
         });
       } catch (error) {
         results.push({
           format: 'Test CV',
           success: false,
-          error: error.message
+          error: error.message,
         });
       }
     }
-    
+
     return results;
   }
 
@@ -654,7 +744,7 @@ export class GoogleAIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
         // Fallback suggestions
@@ -663,17 +753,17 @@ export class GoogleAIService {
           'Include relevant keywords from job descriptions',
           'Optimize your professional summary',
           'Highlight technical skills and certifications',
-          'Ensure consistent formatting throughout'
+          'Ensure consistent formatting throughout',
         ];
       }
-      
+
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
       this.logger.error('Error generating suggestions:', error);
       return [
         'Add quantifiable achievements to your experience',
         'Include relevant keywords from job descriptions',
-        'Optimize your professional summary'
+        'Optimize your professional summary',
       ];
     }
   }
@@ -693,19 +783,27 @@ export class GoogleAIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
-      
+
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
         // Fallback: extract common keywords
         const commonKeywords = [
-          'JavaScript', 'Python', 'React', 'Node.js', 'SQL', 'Git',
-          'Communication', 'Teamwork', 'Problem Solving', 'Leadership'
+          'JavaScript',
+          'Python',
+          'React',
+          'Node.js',
+          'SQL',
+          'Git',
+          'Communication',
+          'Teamwork',
+          'Problem Solving',
+          'Leadership',
         ];
-        return commonKeywords.filter(keyword => 
-          jobDescription.toLowerCase().includes(keyword.toLowerCase())
+        return commonKeywords.filter((keyword) =>
+          jobDescription.toLowerCase().includes(keyword.toLowerCase()),
         );
       }
-      
+
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
       this.logger.error('Error extracting keywords:', error);

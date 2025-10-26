@@ -22,7 +22,7 @@ export default function CvSelector({
     hasNextPage,
     isFetchingNextPage,
     isFetching,
-  } = useCvsInfinite({ limit: 20, sortBy: "updatedAt", sortOrder: "desc" });
+  } = useCvsInfinite({ limit: 20, sortBy: "updatedAt", sortOrder: "DESC" });
   // Handle both infinite and paginated data structures
   const cvs = React.useMemo(() => {
     if (!cvsData) return [];
@@ -33,8 +33,8 @@ export default function CvSelector({
     }
 
     // If it's paginated structure (fallback)
-    if (cvsData.data && Array.isArray(cvsData.data)) {
-      return cvsData.data;
+    if ((cvsData as any).data && Array.isArray((cvsData as any).data)) {
+      return (cvsData as any).data;
     }
 
     return [];
@@ -111,7 +111,7 @@ export default function CvSelector({
       </div>
 
       <div className="space-y-3">
-        {cvs.map((cv) => (
+        {cvs.map((cv: any) => (
           <div
             key={cv.id}
             onClick={() => onSelectCv(cv.id)}

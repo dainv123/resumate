@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Use React Query with caching to prevent duplicate calls
-  const { data: cvsData } = useCvsPaginated({ limit: 50, sortBy: "updatedAt", sortOrder: "desc" });
+  const { data: cvsData } = useCvsPaginated({ limit: 50, sortBy: "updatedAt", sortOrder: "DESC" });
   const cvs = cvsData?.data ?? [];
 
   const { data: projects = [] } = useQuery({

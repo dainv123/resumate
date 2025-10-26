@@ -25,13 +25,17 @@ export class NotificationsService {
       });
       this.logger.log('Email service initialized');
     } else {
-      this.logger.warn('Email service not configured. Notifications will be logged only.');
+      this.logger.warn(
+        'Email service not configured. Notifications will be logged only.',
+      );
     }
   }
 
   async sendEmail(to: string, subject: string, html: string): Promise<void> {
     if (!this.transporter) {
-      this.logger.warn(`Email not sent (service not configured): ${subject} to ${to}`);
+      this.logger.warn(
+        `Email not sent (service not configured): ${subject} to ${to}`,
+      );
       return;
     }
 
@@ -52,33 +56,43 @@ export class NotificationsService {
   async notifyCvParsed(user: User, cv: Cv): Promise<void> {
     const subject = 'Your CV has been parsed successfully!';
     const html = this.getCvParsedTemplate(user.name, cv);
-    
+
     try {
       await this.sendEmail(user.email, subject, html);
     } catch (error) {
-      this.logger.error(`Failed to send CV parsed notification: ${error.message}`);
+      this.logger.error(
+        `Failed to send CV parsed notification: ${error.message}`,
+      );
     }
   }
 
-  async notifyExportReady(user: User, filename: string, format: string): Promise<void> {
+  async notifyExportReady(
+    user: User,
+    filename: string,
+    format: string,
+  ): Promise<void> {
     const subject = `Your CV export is ready (${format.toUpperCase()})`;
     const html = this.getExportReadyTemplate(user.name, filename, format);
-    
+
     try {
       await this.sendEmail(user.email, subject, html);
     } catch (error) {
-      this.logger.error(`Failed to send export ready notification: ${error.message}`);
+      this.logger.error(
+        `Failed to send export ready notification: ${error.message}`,
+      );
     }
   }
 
   async notifyTailorComplete(user: User, jobTitle: string): Promise<void> {
     const subject = 'Your tailored CV is ready!';
     const html = this.getTailorCompleteTemplate(user.name, jobTitle);
-    
+
     try {
       await this.sendEmail(user.email, subject, html);
     } catch (error) {
-      this.logger.error(`Failed to send tailor complete notification: ${error.message}`);
+      this.logger.error(
+        `Failed to send tailor complete notification: ${error.message}`,
+      );
     }
   }
 
@@ -124,7 +138,11 @@ export class NotificationsService {
     `;
   }
 
-  private getExportReadyTemplate(userName: string, filename: string, format: string): string {
+  private getExportReadyTemplate(
+    userName: string,
+    filename: string,
+    format: string,
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -163,7 +181,10 @@ export class NotificationsService {
     `;
   }
 
-  private getTailorCompleteTemplate(userName: string, jobTitle: string): string {
+  private getTailorCompleteTemplate(
+    userName: string,
+    jobTitle: string,
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -204,4 +225,3 @@ export class NotificationsService {
     `;
   }
 }
-

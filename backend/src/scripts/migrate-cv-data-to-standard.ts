@@ -12,7 +12,7 @@ import { CVData } from '../shared/interfaces/cv-data.interface';
 
 async function migrateCVData() {
   console.log('🔄 Starting CV data migration to standard structure...');
-  
+
   try {
     // Create database connection
     const connection = await createConnection({
@@ -24,7 +24,7 @@ async function migrateCVData() {
       database: process.env.DB_DATABASE || 'resumate',
       entities: [Cv],
       synchronize: false,
-      logging: false
+      logging: false,
     });
 
     console.log('✅ Database connected');
@@ -42,7 +42,11 @@ async function migrateCVData() {
     for (const cv of cvs) {
       try {
         // Check if CV data is already in new format
-        if (cv.parsedData && cv.parsedData.contact && typeof cv.parsedData.contact === 'object') {
+        if (
+          cv.parsedData &&
+          cv.parsedData.contact &&
+          typeof cv.parsedData.contact === 'object'
+        ) {
           console.log(`⏭️  CV ${cv.id} already in standard format, skipping`);
           skipped++;
           continue;
@@ -50,15 +54,14 @@ async function migrateCVData() {
 
         // Normalize CV data to standard format
         const normalizedData = CVDataUtils.normalizeCVData(cv.parsedData);
-        
+
         // Update CV with normalized data
         await cvRepository.update(cv.id, {
-          parsedData: normalizedData
+          parsedData: normalizedData,
         });
 
         console.log(`✅ Migrated CV ${cv.id}`);
         migrated++;
-
       } catch (error) {
         console.error(`❌ Error migrating CV ${cv.id}:`, error.message);
         errors++;
@@ -73,7 +76,6 @@ async function migrateCVData() {
 
     await connection.close();
     console.log('🔌 Database connection closed');
-
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);

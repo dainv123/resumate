@@ -28,17 +28,17 @@ describe('CvService - New Features', () => {
         technical: ['React', 'TypeScript', 'Node.js'],
         soft: ['Leadership', 'Communication'],
         languages: ['English', 'Spanish'],
-        tools: ['Git', 'Docker']
+        tools: ['Git', 'Docker'],
       },
       experience: [
         {
           title: 'Senior Developer',
           company: 'Tech Corp',
           duration: '2020-Present',
-          responsibilities: ['Led team', 'Built features']
-        }
+          responsibilities: ['Led team', 'Built features'],
+        },
       ],
-      education: []
+      education: [],
     },
     version: 1,
     isTailored: false,
@@ -53,13 +53,13 @@ describe('CvService - New Features', () => {
     suggestions: [
       'Add AWS certification',
       'Highlight team size',
-      'Include metrics'
+      'Include metrics',
     ],
     strengths: [
       'Strong React skills',
       'Leadership experience',
-      'Modern tech stack'
-    ]
+      'Modern tech stack',
+    ],
   };
 
   const mockCoverLetter = `Dear Hiring Manager,
@@ -81,14 +81,16 @@ John Doe`;
           provide: getRepositoryToken(Cv),
           useValue: {
             findOne: jest.fn().mockResolvedValue(mockCv),
-            save: jest.fn().mockImplementation(cv => Promise.resolve(cv)),
-            create: jest.fn().mockImplementation(dto => dto),
+            save: jest.fn().mockImplementation((cv) => Promise.resolve(cv)),
+            create: jest.fn().mockImplementation((dto) => dto),
           },
         },
         {
           provide: AiService,
           useValue: {
-            analyzeCompatibility: jest.fn().mockResolvedValue(mockCompatibilityAnalysis),
+            analyzeCompatibility: jest
+              .fn()
+              .mockResolvedValue(mockCompatibilityAnalysis),
             generateCoverLetter: jest.fn().mockResolvedValue(mockCoverLetter),
           },
         },
@@ -121,7 +123,7 @@ John Doe`;
       const result = await service.analyzeCompatibility(
         'test-cv-id',
         'test-user-id',
-        'Job description text'
+        'Job description text',
       );
 
       expect(result).toEqual(mockCompatibilityAnalysis);
@@ -132,7 +134,7 @@ John Doe`;
       expect(Array.isArray(result.suggestions)).toBe(true);
       expect(aiService.analyzeCompatibility).toHaveBeenCalledWith(
         mockCv.parsedData,
-        'Job description text'
+        'Job description text',
       );
     });
 
@@ -140,7 +142,7 @@ John Doe`;
       const result = await service.analyzeCompatibility(
         'test-cv-id',
         'test-user-id',
-        'Job description'
+        'Job description',
       );
 
       expect(result).toHaveProperty('score');
@@ -153,14 +155,14 @@ John Doe`;
     });
 
     it('should handle AI service errors gracefully', async () => {
-      jest.spyOn(aiService, 'analyzeCompatibility').mockRejectedValueOnce(
-        new Error('AI service error')
-      );
+      jest
+        .spyOn(aiService, 'analyzeCompatibility')
+        .mockRejectedValueOnce(new Error('AI service error'));
 
       const result = await service.analyzeCompatibility(
         'test-cv-id',
         'test-user-id',
-        'Job description'
+        'Job description',
       );
 
       // Should return fallback analysis
@@ -174,7 +176,7 @@ John Doe`;
       const result = await service.generateCoverLetter(
         'test-cv-id',
         'test-user-id',
-        'Job description text'
+        'Job description text',
       );
 
       expect(result).toHaveProperty('coverLetter');
@@ -182,7 +184,7 @@ John Doe`;
       expect(result.coverLetter.length).toBeGreaterThan(0);
       expect(aiService.generateCoverLetter).toHaveBeenCalledWith(
         mockCv.parsedData,
-        'Job description text'
+        'Job description text',
       );
     });
 
@@ -190,21 +192,21 @@ John Doe`;
       const result = await service.generateCoverLetter(
         'test-cv-id',
         'test-user-id',
-        'Job description'
+        'Job description',
       );
 
       expect(result.coverLetter).toContain('John Doe');
     });
 
     it('should handle AI service errors with fallback', async () => {
-      jest.spyOn(aiService, 'generateCoverLetter').mockRejectedValueOnce(
-        new Error('AI service error')
-      );
+      jest
+        .spyOn(aiService, 'generateCoverLetter')
+        .mockRejectedValueOnce(new Error('AI service error'));
 
       const result = await service.generateCoverLetter(
         'test-cv-id',
         'test-user-id',
-        'Job description'
+        'Job description',
       );
 
       // Should return fallback cover letter
@@ -226,11 +228,13 @@ John Doe`;
       const result = await service.analyzeCompatibility(
         'test-cv-id',
         'test-user-id',
-        jobDesc
+        jobDesc,
       );
 
       expect(result.score).toBeDefined();
-      expect(result.matchedSkills.length + result.missingSkills.length).toBeGreaterThan(0);
+      expect(
+        result.matchedSkills.length + result.missingSkills.length,
+      ).toBeGreaterThan(0);
     });
 
     it('should work end-to-end for cover letter generation', async () => {
@@ -242,7 +246,7 @@ John Doe`;
       const result = await service.generateCoverLetter(
         'test-cv-id',
         'test-user-id',
-        jobDesc
+        jobDesc,
       );
 
       expect(result.coverLetter).toBeTruthy();
@@ -251,4 +255,3 @@ John Doe`;
     });
   });
 });
-

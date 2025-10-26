@@ -11,4 +11,3 @@ import { Template } from './entities/template.entity';
   exports: [TemplatesService],
 })
 export class TemplatesModule {}
-

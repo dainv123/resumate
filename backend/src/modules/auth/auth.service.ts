@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -21,7 +25,9 @@ export class AuthService {
     const { email, name, password } = registerDto;
 
     // Check if user already exists
-    const existingUser = await this.userRepository.findOne({ where: { email } });
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
@@ -79,8 +85,8 @@ export class AuthService {
     const { googleId, email, name, avatar } = googleAuthDto;
 
     // Check if user exists
-    let user = await this.userRepository.findOne({ 
-      where: [{ email }, { googleId }] 
+    let user = await this.userRepository.findOne({
+      where: [{ email }, { googleId }],
     });
 
     if (user) {
@@ -124,10 +130,10 @@ export class AuthService {
   }
 
   private generateToken(user: User): string {
-    const payload = { 
-      sub: user.id, 
-      email: user.email, 
-      plan: user.plan 
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      plan: user.plan,
     };
     return this.jwtService.sign(payload);
   }
@@ -142,7 +148,7 @@ export class AuthService {
 
     // Check if user exists
     let user = await this.userRepository.findOne({ where: { email } });
-    
+
     if (!user) {
       // Create new user
       user = this.userRepository.create({
@@ -153,7 +159,7 @@ export class AuthService {
         plan: UserPlan.FREE,
       });
       user = await this.userRepository.save(user);
-      
+
       // Create usage tracking
       await this.createUserUsage(user.id);
     } else {

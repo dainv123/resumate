@@ -29,7 +29,7 @@ export default function RecentCvsSection({
     page: 1,
     limit: showAll ? 20 : limit,
     sortBy: "updatedAt",
-    sortOrder: "desc",
+    sortOrder: "DESC",
   });
 
   const {

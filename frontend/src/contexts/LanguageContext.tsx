@@ -353,15 +353,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Debug function to create fake cache for testing
-  const createTestCache = (language: Language = "vi") => {
-    const testCache = {
-      language,
-      countryCode: "VN",
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(testCache));
-    console.log("🧪 Test cache created:", testCache);
-  };
+  // const createTestCache = (language: Language = "vi") => {
+  //   const testCache = {
+  //     language,
+  //     countryCode: "VN",
+  //     timestamp: Date.now(),
+  //   };
+  //   localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(testCache));
+  //   console.log("🧪 Test cache created:", testCache);
+  // };
 
   const t = (
     key: TranslationKey,

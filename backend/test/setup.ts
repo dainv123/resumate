@@ -26,7 +26,7 @@ global.testUtils = {
     contact: {
       name: 'Test User',
       email: 'test@example.com',
-      phone: '+1234567890'
+      phone: '+1234567890',
     },
     summary: 'Test summary',
     experience: [],
@@ -35,9 +35,9 @@ global.testUtils = {
       technical: [],
       tools: [],
       languages: [],
-      soft: []
+      soft: [],
     },
-    projects: []
+    projects: [],
   }),
 
   createMockLegacyCVData: () => ({
@@ -51,24 +51,25 @@ global.testUtils = {
       technical: [],
       soft: [],
       languages: [],
-      tools: []
+      tools: [],
     },
-    projects: []
-  })
+    projects: [],
+  }),
 };
 
 // Extend Jest matchers
 expect.extend({
   toBeValidCVData(received) {
-    const pass = received && 
-                 received.contact && 
-                 received.contact.name && 
-                 received.contact.email &&
-                 received.summary !== undefined &&
-                 Array.isArray(received.experience) &&
-                 Array.isArray(received.education) &&
-                 received.skills &&
-                 Array.isArray(received.projects);
+    const pass =
+      received &&
+      received.contact &&
+      received.contact.name &&
+      received.contact.email &&
+      received.summary !== undefined &&
+      Array.isArray(received.experience) &&
+      Array.isArray(received.education) &&
+      received.skills &&
+      Array.isArray(received.projects);
 
     if (pass) {
       return {
@@ -84,14 +85,16 @@ expect.extend({
   },
 
   toHaveValidContact(received) {
-    const pass = received && 
-                 received.contact && 
-                 typeof received.contact.name === 'string' &&
-                 typeof received.contact.email === 'string';
+    const pass =
+      received &&
+      received.contact &&
+      typeof received.contact.name === 'string' &&
+      typeof received.contact.email === 'string';
 
     if (pass) {
       return {
-        message: () => `expected ${received} not to have valid contact information`,
+        message: () =>
+          `expected ${received} not to have valid contact information`,
         pass: true,
       };
     } else {
@@ -100,7 +103,7 @@ expect.extend({
         pass: false,
       };
     }
-  }
+  },
 });
 
 // Type declarations for global test utilities

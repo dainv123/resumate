@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -33,9 +38,12 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async updateProfile(id: string, updateProfileDto: UpdateProfileDto): Promise<User> {
+  async updateProfile(
+    id: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<User> {
     const user = await this.findById(id);
-    
+
     // Only update allowed fields
     if (updateProfileDto.name !== undefined) {
       user.name = updateProfileDto.name;
@@ -43,20 +51,25 @@ export class UsersService {
     if (updateProfileDto.avatar !== undefined) {
       user.avatar = updateProfileDto.avatar;
     }
-    
+
     const updatedUser = await this.userRepository.save(user);
-    
+
     // Remove password from response
     const { password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword as User;
   }
 
-  async changePassword(user: User, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
+  async changePassword(
+    user: User,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
     const { oldPassword, newPassword } = changePasswordDto;
 
     // Check if user has a password (not Google auth only)
     if (!user.password) {
-      throw new BadRequestException('Cannot change password for Google authenticated accounts');
+      throw new BadRequestException(
+        'Cannot change password for Google authenticated accounts',
+      );
     }
 
     // Verify old password
@@ -83,10 +96,21 @@ export class UsersService {
 
     // Count total subProjects from all CVs
     const totalSubProjects = cvs.reduce((count, cv) => {
-      if (cv.parsedData?.experience && Array.isArray(cv.parsedData.experience)) {
-        return count + cv.parsedData.experience.reduce((expCount, exp) => {
-          return expCount + (Array.isArray((exp as any).subProjects) ? (exp as any).subProjects.length : 0);
-        }, 0);
+      if (
+        cv.parsedData?.experience &&
+        Array.isArray(cv.parsedData.experience)
+      ) {
+        return (
+          count +
+          cv.parsedData.experience.reduce((expCount, exp) => {
+            return (
+              expCount +
+              (Array.isArray((exp as any).subProjects)
+                ? (exp as any).subProjects.length
+                : 0)
+            );
+          }, 0)
+        );
       }
       return count;
     }, 0);
@@ -114,7 +138,7 @@ export class UsersService {
 
     return {
       user: userWithoutPassword,
-      cvs: cvs.map(cv => ({
+      cvs: cvs.map((cv) => ({
         id: cv.id,
         originalFileName: cv.originalFileName,
         isTailored: cv.isTailored,
@@ -122,7 +146,7 @@ export class UsersService {
         createdAt: cv.createdAt,
         updatedAt: cv.updatedAt,
       })),
-      projects: projects.map(project => ({
+      projects: projects.map((project) => ({
         id: project.id,
         name: project.name,
         description: project.description,
@@ -153,8 +177,8 @@ export class UsersService {
   }
 
   async getUserUsage(userId: string): Promise<UserUsage> {
-    let usage = await this.userUsageRepository.findOne({ 
-      where: { userId } 
+    let usage = await this.userUsageRepository.findOne({
+      where: { userId },
     });
 
     if (!usage) {
@@ -168,8 +192,11 @@ export class UsersService {
     // Check if usage needs to be reset (monthly)
     const now = new Date();
     const resetDate = new Date(usage.resetDate);
-    
-    if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+
+    if (
+      now.getMonth() !== resetDate.getMonth() ||
+      now.getFullYear() !== resetDate.getFullYear()
+    ) {
       usage.cvUploads = 0;
       usage.projects = 0;
       usage.jobTailors = 0;
@@ -181,7 +208,10 @@ export class UsersService {
     return usage;
   }
 
-  async incrementUsage(userId: string, feature: keyof UserUsage): Promise<void> {
+  async incrementUsage(
+    userId: string,
+    feature: keyof UserUsage,
+  ): Promise<void> {
     const usage = await this.getUserUsage(userId);
     (usage as any)[feature] = ((usage as any)[feature] as number) + 1;
     await this.userUsageRepository.save(usage);
@@ -191,22 +221,22 @@ export class UsersService {
     return true;
     const user = await this.findById(userId);
     const usage = await this.getUserUsage(userId);
-    
+
     const limits = {
-      free: { 
-        cvUploads: 1, 
-        projects: 3, 
-        jobTailors: 5, 
-        exports: 10 
+      free: {
+        cvUploads: 1,
+        projects: 3,
+        jobTailors: 5,
+        exports: 10,
       },
-      pro: { 
-        cvUploads: -1, 
-        projects: -1, 
-        jobTailors: -1, 
-        exports: -1 
-      }
+      pro: {
+        cvUploads: -1,
+        projects: -1,
+        jobTailors: -1,
+        exports: -1,
+      },
     };
-    
+
     const userLimit = limits[user.plan][feature];
     return userLimit === -1 || (usage[feature] as number) < userLimit;
   }

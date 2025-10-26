@@ -1,9 +1,16 @@
-import { MigrationInterface, QueryRunner, TableColumn, TableIndex } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  TableColumn,
+  TableIndex,
+} from 'typeorm';
 
-export class AddCvIdToAnalysisTables1734567890006 implements MigrationInterface {
+export class AddCvIdToAnalysisTables1734567890006
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     // ======================= cv_matching_analyses =======================
-    
+
     // Step 1: Add cvId column as nullable (will be populated by application)
     await queryRunner.addColumn(
       'cv_matching_analyses',
@@ -82,13 +89,19 @@ export class AddCvIdToAnalysisTables1734567890006 implements MigrationInterface 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop indexes
     try {
-      await queryRunner.dropIndex('cv_matching_analyses', 'idx_cv_jd_user_analysis');
+      await queryRunner.dropIndex(
+        'cv_matching_analyses',
+        'idx_cv_jd_user_analysis',
+      );
     } catch (error) {
       console.log('Index not found');
     }
 
     try {
-      await queryRunner.dropIndex('cv_cover_letters', 'idx_cv_jd_user_cover_letter');
+      await queryRunner.dropIndex(
+        'cv_cover_letters',
+        'idx_cv_jd_user_cover_letter',
+      );
     } catch (error) {
       console.log('Index not found');
     }

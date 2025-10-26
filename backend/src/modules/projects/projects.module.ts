@@ -8,11 +8,7 @@ import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Project, Cv]),
-    AiModule,
-    UsersModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Project, Cv]), AiModule, UsersModule],
   controllers: [ProjectsController],
   providers: [ProjectsService],
   exports: [ProjectsService],

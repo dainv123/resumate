@@ -1,12 +1,35 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Res, Req, UseInterceptors, UploadedFile, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Res,
+  Req,
+  UseInterceptors,
+  UploadedFile,
+  Logger,
+} from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { CvService } from './cv.service';
-import { CreateCvDto, UpdateCvDto, TailorCvDto, QuickBuildCvDto } from './dto/cv.dto';
-import type { CVData, TemplateConfig } from '../../shared/interfaces/cv-data.interface';
+import {
+  CreateCvDto,
+  UpdateCvDto,
+  TailorCvDto,
+  QuickBuildCvDto,
+} from './dto/cv.dto';
+import type {
+  CVData,
+  TemplateConfig,
+} from '../../shared/interfaces/cv-data.interface';
 import { CVDataUtils } from '../../shared/utils/cv-data.utils';
 import { ExportService } from '../../shared/services/export.service';
 import { DynamicTemplateService } from '../../shared/services/dynamic-template.service';
@@ -27,10 +50,10 @@ export class CvController {
   @Post()
   @TrackActivity(ActivityType.CV_CREATED, {
     getResourceId: (result) => result?.id,
-    getMetadata: (result) => ({ 
+    getMetadata: (result) => ({
       fileName: result?.originalFileName,
-      isTailored: result?.isTailored || false
-    })
+      isTailored: result?.isTailored || false,
+    }),
   })
   async create(@Body() createCvDto: CreateCvDto, @GetUser() user: User) {
     return this.cvService.createCv(user.id, createCvDto);
@@ -48,17 +71,17 @@ export class CvController {
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
     @Query('sortBy') sortBy: string = 'createdAt',
-    @Query('sortOrder') sortOrder: 'ASC' | 'DESC' = 'DESC'
+    @Query('sortOrder') sortOrder: 'ASC' | 'DESC' = 'DESC',
   ) {
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 10;
-    
+
     return this.cvService.getUserCvsPaginated(user.id, {
       page: pageNum,
       limit: limitNum,
       search,
       sortBy,
-      sortOrder
+      sortOrder,
     });
   }
 
@@ -78,10 +101,10 @@ export class CvController {
   @Put(':id')
   @TrackActivity(ActivityType.CV_UPDATED, {
     getResourceId: (result, context) => context.params.id,
-    getMetadata: (result) => ({ 
+    getMetadata: (result) => ({
       fileName: result?.originalFileName,
-      isTailored: result?.isTailored || false
-    })
+      isTailored: result?.isTailored || false,
+    }),
   })
   async update(
     @Param('id') id: string,
@@ -94,10 +117,10 @@ export class CvController {
   @Delete(':id')
   @TrackActivity(ActivityType.CV_DELETED, {
     getResourceId: (result, context) => context.params.id,
-    getMetadata: (result) => ({ 
+    getMetadata: (result) => ({
       fileName: result?.originalFileName,
-      isTailored: result?.isTailored || false
-    })
+      isTailored: result?.isTailored || false,
+    }),
   })
   async remove(@Param('id') id: string, @GetUser() user: User) {
     return this.cvService.deleteCv(id, user.id);
@@ -113,10 +136,7 @@ export class CvController {
   }
 
   @Post(':id/duplicate')
-  async duplicateCv(
-    @Param('id') id: string,
-    @GetUser('id') userId: string,
-  ) {
+  async duplicateCv(@Param('id') id: string, @GetUser('id') userId: string) {
     const duplicatedCv = await this.cvService.duplicateCv(id, userId);
     return duplicatedCv;
   }
@@ -127,7 +147,11 @@ export class CvController {
     @Param('version') version: string,
     @GetUser('id') userId: string,
   ) {
-    const restoredCv = await this.cvService.restoreVersion(id, userId, parseInt(version));
+    const restoredCv = await this.cvService.restoreVersion(
+      id,
+      userId,
+      parseInt(version),
+    );
     return restoredCv;
   }
 
@@ -135,11 +159,16 @@ export class CvController {
   async analyzeCompatibility(
     @Param('id') id: string,
     @GetUser('id') userId: string,
-    @Body() body: { jobDescription: string, jobTitle?: string, company?: string },
+    @Body()
+    body: { jobDescription: string; jobTitle?: string; company?: string },
   ) {
     // Generate analysis (will reuse if JobDescription exists)
-    const analysis = await this.cvService.analyzeCompatibility(id, userId, body.jobDescription);
-    
+    const analysis = await this.cvService.analyzeCompatibility(
+      id,
+      userId,
+      body.jobDescription,
+    );
+
     return {
       ...analysis,
       reused: (analysis as any).reused || false, // Add flag to indicate if reused
@@ -150,11 +179,16 @@ export class CvController {
   async generateCoverLetter(
     @Param('id') id: string,
     @GetUser('id') userId: string,
-    @Body() body: { jobDescription: string, jobTitle?: string, company?: string },
+    @Body()
+    body: { jobDescription: string; jobTitle?: string; company?: string },
   ) {
     // Generate cover letter (will reuse if JobDescription exists)
-    const result = await this.cvService.generateCoverLetter(id, userId, body.jobDescription);
-    
+    const result = await this.cvService.generateCoverLetter(
+      id,
+      userId,
+      body.jobDescription,
+    );
+
     return {
       ...result,
       reused: (result as any).reused || false, // Add flag to indicate if reused
@@ -175,10 +209,10 @@ export class CvController {
   @Get(':id/export/pdf')
   @TrackActivity(ActivityType.CV_EXPORTED, {
     getResourceId: (result, context) => context.params.id,
-    getMetadata: (result, context) => ({ 
-      format: 'pdf', 
-      template: context.query.template || 'professional' 
-    })
+    getMetadata: (result, context) => ({
+      format: 'pdf',
+      template: context.query.template || 'professional',
+    }),
   })
   async exportToPDF(
     @Param('id') id: string,
@@ -194,8 +228,11 @@ export class CvController {
 
       // Normalize CV data to standardized format
       const normalizedCVData = CVDataUtils.normalizeCVData(cv.parsedData);
-      const pdfBuffer = await this.cvService.exportToPDF(normalizedCVData, template);
-      
+      const pdfBuffer = await this.cvService.exportToPDF(
+        normalizedCVData,
+        template,
+      );
+
       res.set({
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${cv.originalFileName.replace(/\.[^/.]+$/, '')}-${template}.pdf"`,
@@ -205,9 +242,9 @@ export class CvController {
       res.send(pdfBuffer);
     } catch (error) {
       console.error('PDF export error:', error);
-      res.status(500).json({ 
-        message: 'Failed to export PDF', 
-        error: error.message 
+      res.status(500).json({
+        message: 'Failed to export PDF',
+        error: error.message,
       });
     }
   }
@@ -218,11 +255,11 @@ export class CvController {
   @Post(':id/export/pdf/dynamic')
   @TrackActivity(ActivityType.CV_EXPORTED, {
     getResourceId: (result, context) => context.params.id,
-    getMetadata: (result, context) => ({ 
-      format: 'pdf', 
+    getMetadata: (result, context) => ({
+      format: 'pdf',
       template: 'dynamic',
-      config: context.body
-    })
+      config: context.body,
+    }),
   })
   async exportToPDFWithConfig(
     @Param('id') id: string,
@@ -239,13 +276,13 @@ export class CvController {
       // Normalize CV data to standardized format
       const normalizedCVData = CVDataUtils.normalizeCVData(cv.parsedData);
       const normalizedConfig = this.normalizeTemplateConfig(templateConfig);
-      
+
       const pdfBuffer = await this.cvService.exportToPDFWithConfig(
-        normalizedCVData, 
+        normalizedCVData,
         'dynamic',
-        normalizedConfig
+        normalizedConfig,
       );
-      
+
       res.set({
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${cv.originalFileName.replace(/\.[^/.]+$/, '')}-custom.pdf"`,
@@ -255,9 +292,9 @@ export class CvController {
       res.send(pdfBuffer);
     } catch (error) {
       console.error('PDF export error:', error);
-      res.status(500).json({ 
-        message: 'Failed to export PDF', 
-        error: error.message 
+      res.status(500).json({
+        message: 'Failed to export PDF',
+        error: error.message,
       });
     }
   }
@@ -268,9 +305,9 @@ export class CvController {
   @Get(':id/export/word')
   @TrackActivity(ActivityType.CV_EXPORTED, {
     getResourceId: (result, context) => context.params.id,
-    getMetadata: (result, context) => ({ 
-      format: 'word' 
-    })
+    getMetadata: (result, context) => ({
+      format: 'word',
+    }),
   })
   async exportToWord(
     @Param('id') id: string,
@@ -285,11 +322,12 @@ export class CvController {
 
       // Normalize CV data
       const normalizedCVData = CVDataUtils.normalizeCVData(cv.parsedData);
-      
+
       const wordBuffer = await this.cvService.exportToWord(normalizedCVData);
-      
+
       res.set({
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Type':
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${cv.originalFileName.replace(/\.[^/.]+$/, '')}.docx"`,
         'Content-Length': wordBuffer.length.toString(),
       });
@@ -297,9 +335,9 @@ export class CvController {
       res.send(wordBuffer);
     } catch (error) {
       console.error('Word export error:', error);
-      res.status(500).json({ 
-        message: 'Failed to export Word document', 
-        error: error.message 
+      res.status(500).json({
+        message: 'Failed to export Word document',
+        error: error.message,
       });
     }
   }
@@ -310,9 +348,9 @@ export class CvController {
   @Get(':id/export/ats')
   @TrackActivity(ActivityType.CV_EXPORTED, {
     getResourceId: (result, context) => context.params.id,
-    getMetadata: (result, context) => ({ 
-      format: 'ats' 
-    })
+    getMetadata: (result, context) => ({
+      format: 'ats',
+    }),
   })
   async exportToATS(
     @Param('id') id: string,
@@ -327,9 +365,9 @@ export class CvController {
 
       // Normalize CV data
       const normalizedCVData = CVDataUtils.normalizeCVData(cv.parsedData);
-      
+
       const atsBuffer = await this.cvService.exportToATS(normalizedCVData);
-      
+
       res.set({
         'Content-Type': 'text/plain',
         'Content-Disposition': `attachment; filename="${cv.originalFileName.replace(/\.[^/.]+$/, '')}-ats.txt"`,
@@ -339,9 +377,9 @@ export class CvController {
       res.send(atsBuffer);
     } catch (error) {
       console.error('ATS export error:', error);
-      res.status(500).json({ 
-        message: 'Failed to export ATS format', 
-        error: error.message 
+      res.status(500).json({
+        message: 'Failed to export ATS format',
+        error: error.message,
       });
     }
   }
@@ -361,9 +399,13 @@ export class CvController {
   async getAnalysisByJobDescription(
     @Param('cvId') cvId: string,
     @Param('jobDescriptionId') jobDescriptionId: string,
-    @GetUser('id') userId: string
+    @GetUser('id') userId: string,
   ) {
-    return this.cvService.getAnalysisByJobDescription(jobDescriptionId, cvId, userId);
+    return this.cvService.getAnalysisByJobDescription(
+      jobDescriptionId,
+      cvId,
+      userId,
+    );
   }
 
   /**
@@ -381,9 +423,13 @@ export class CvController {
   async getCoverLetterByJobDescription(
     @Param('cvId') cvId: string,
     @Param('jobDescriptionId') jobDescriptionId: string,
-    @GetUser('id') userId: string
+    @GetUser('id') userId: string,
   ) {
-    return this.cvService.getCoverLetterByJobDescription(jobDescriptionId, cvId, userId);
+    return this.cvService.getCoverLetterByJobDescription(
+      jobDescriptionId,
+      cvId,
+      userId,
+    );
   }
 
   /**
@@ -430,13 +476,13 @@ export class CvController {
       // Normalize CV data to standardized format
       const normalizedCVData = CVDataUtils.normalizeCVData(cv.parsedData);
       const normalizedConfig = this.normalizeTemplateConfig(templateConfig);
-      
+
       const htmlPreview = await this.cvService.generateTemplatePreview(
-        normalizedCVData, 
+        normalizedCVData,
         normalizedConfig.template || 'dynamic',
-        normalizedConfig
+        normalizedConfig,
       );
-      
+
       return { html: htmlPreview };
     } catch (error) {
       console.error('Preview error:', error);
@@ -447,7 +493,9 @@ export class CvController {
   /**
    * Normalize template configuration
    */
-  private normalizeTemplateConfig(config: any): TemplateConfig & { template?: string } {
+  private normalizeTemplateConfig(
+    config: any,
+  ): TemplateConfig & { template?: string } {
     if (!config || typeof config !== 'object') {
       return CVDataUtils.getDefaultTemplateConfig();
     }
@@ -479,5 +527,4 @@ export class CvController {
 
     return normalized;
   }
-
 }

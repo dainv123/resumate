@@ -22,4 +22,3 @@ export enum ActivityType {
   NOTIFICATION_VIEWED = 'notification_viewed',
   ANALYTICS_VIEWED = 'analytics_viewed',
 }
-

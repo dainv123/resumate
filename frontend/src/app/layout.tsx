@@ -3,7 +3,6 @@ import "./globals.css";
 import { Providers } from "./providers";
 import PerformanceOptimizer from "@/components/ui/PerformanceOptimizer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
-import LanguageDetectionLoader from "@/components/ui/LanguageDetectionLoader";
 
 // Language-aware metadata
 const getMetadata = (): Metadata => {

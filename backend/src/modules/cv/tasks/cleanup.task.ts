@@ -14,13 +14,13 @@ export class CleanupTask {
   // @Cron(CronExpression.EVERY_WEEK)
   async handleWeeklyCleanup() {
     this.logger.log('Starting weekly data cleanup...');
-    
+
     try {
       const stats = await this.dataCleanupService.getCleanupStats();
       this.logger.log('Cleanup stats:', stats);
 
       const result = await this.dataCleanupService.cleanupOldSnapshots();
-      
+
       this.logger.log('Weekly cleanup completed:', {
         deletedAnalyses: result.deletedAnalyses,
         deletedCoverLetters: result.deletedCoverLetters,
@@ -38,11 +38,14 @@ export class CleanupTask {
   // @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async handleDailyExpiredCleanup() {
     this.logger.log('Starting daily expired snapshots cleanup...');
-    
+
     try {
       const result = await this.dataCleanupService.cleanupExpiredSnapshots();
-      
-      if (result.deletedExpiredAnalyses > 0 || result.deletedExpiredCoverLetters > 0) {
+
+      if (
+        result.deletedExpiredAnalyses > 0 ||
+        result.deletedExpiredCoverLetters > 0
+      ) {
         this.logger.log('Daily expired cleanup completed:', {
           deletedExpiredAnalyses: result.deletedExpiredAnalyses,
           deletedExpiredCoverLetters: result.deletedExpiredCoverLetters,
@@ -63,10 +66,10 @@ export class CleanupTask {
     deletedOrphanedCoverLetters: number;
   }> {
     this.logger.log('Starting manual cleanup...');
-    
+
     try {
       const result = await this.dataCleanupService.cleanupOldSnapshots();
-      
+
       this.logger.log('Manual cleanup completed:', result);
       return result;
     } catch (error) {

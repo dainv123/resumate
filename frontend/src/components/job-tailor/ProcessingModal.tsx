@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Clock, CheckCircle, Zap } from "lucide-react";
+import { CheckCircle, Zap } from "lucide-react";
 
 export type ProcessingType = "tailor" | "cover-letter" | "analyze";
 

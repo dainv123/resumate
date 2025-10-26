@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Template } from './entities/template.entity';
@@ -50,7 +54,10 @@ export class TemplatesService {
     });
   }
 
-  async update(id: string, updateTemplateDto: UpdateTemplateDto): Promise<Template> {
+  async update(
+    id: string,
+    updateTemplateDto: UpdateTemplateDto,
+  ): Promise<Template> {
     const template = await this.findOne(id);
     Object.assign(template, updateTemplateDto);
     return this.templateRepository.save(template);
@@ -78,7 +85,8 @@ export class TemplatesService {
         metadata: {
           category: 'professional' as const,
           color: '#2c3e50',
-          preview: 'Single column with header, sections, and standard formatting',
+          preview:
+            'Single column with header, sections, and standard formatting',
           features: ['ATS-friendly', 'Clean layout', 'Traditional design'],
         },
         isPremium: false,
@@ -90,7 +98,8 @@ export class TemplatesService {
         metadata: {
           category: 'modern' as const,
           color: '#4253D7',
-          preview: 'Left column: Contact info & skills, Right column: Experience & education',
+          preview:
+            'Left column: Contact info & skills, Right column: Experience & education',
           features: ['Modern design', 'Skills sidebar', 'Professional styling'],
         },
         isPremium: false,
@@ -105,4 +114,3 @@ export class TemplatesService {
     }
   }
 }
-

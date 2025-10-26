@@ -12,8 +12,7 @@ import {
   Skills, 
   TemplateConfig,
   CVStats,
-  CVValidationResult,
-  CVFormState
+  CVValidationResult
 } from '../types/cv.types';
 
 export class CVUtils {

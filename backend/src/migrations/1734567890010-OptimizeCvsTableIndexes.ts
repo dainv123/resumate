@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class OptimizeCvsTableIndexes1734567890010 implements MigrationInterface {
+export class OptimizeCvsTableIndexes1734567890010
+  implements MigrationInterface
+{
   name = 'OptimizeCvsTableIndexes1734567890010';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -52,7 +54,9 @@ export class OptimizeCvsTableIndexes1734567890010 implements MigrationInterface 
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_user_id"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_user_created_at"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_user_updated_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_original_file_name"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_cvs_original_file_name"`,
+    );
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_parsed_data_gin"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_is_tailored"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_cvs_user_is_tailored"`);

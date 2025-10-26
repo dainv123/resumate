@@ -24,4 +24,3 @@ export class UpdateEmailDto {
   @IsEmail()
   email: string;
 }
-

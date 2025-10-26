@@ -16,14 +16,14 @@ export class AiController {
     getMetadata: (result, context) => ({
       feature: 'parse_cv',
       success: result?.success || false,
-      textLength: context.body?.text?.length || 0
-    })
+      textLength: context.body?.text?.length || 0,
+    }),
   })
   async parseCv(@Body() body: { text: string }, @GetUser('id') userId: string) {
     try {
       const cvData = await this.aiService.parseCvWithRetry(
         Buffer.from(body.text),
-        'text/plain'
+        'text/plain',
       );
       return { success: true, data: cvData };
     } catch (error) {
@@ -32,12 +32,15 @@ export class AiController {
   }
 
   @Post('generate-bullets')
-  async generateBullets(@Body() body: {
-    name: string;
-    role: string;
-    techStack: string[];
-    results?: string;
-  }) {
+  async generateBullets(
+    @Body()
+    body: {
+      name: string;
+      role: string;
+      techStack: string[];
+      results?: string;
+    },
+  ) {
     try {
       const bullets = await this.aiService.generateProjectBullets(body);
       return { success: true, bullets };
@@ -52,14 +55,17 @@ export class AiController {
     getMetadata: (result, context) => ({
       feature: 'tailor_cv',
       success: result?.success || false,
-      jobDescriptionLength: context.body?.jobDescription?.length || 0
-    })
+      jobDescriptionLength: context.body?.jobDescription?.length || 0,
+    }),
   })
-  async tailorCv(@Body() body: { cvData: CVData; jobDescription: string }, @GetUser('id') userId: string) {
+  async tailorCv(
+    @Body() body: { cvData: CVData; jobDescription: string },
+    @GetUser('id') userId: string,
+  ) {
     try {
       const tailoredCv = await this.aiService.tailorCvForJob(
         body.cvData,
-        body.jobDescription
+        body.jobDescription,
       );
       return { success: true, data: tailoredCv };
     } catch (error) {
@@ -80,7 +86,9 @@ export class AiController {
   @Post('extract-keywords')
   async extractKeywords(@Body() body: { jobDescription: string }) {
     try {
-      const keywords = await this.aiService.extractJobKeywords(body.jobDescription);
+      const keywords = await this.aiService.extractJobKeywords(
+        body.jobDescription,
+      );
       return { success: true, keywords };
     } catch (error) {
       return { success: false, error: error.message };
@@ -89,10 +97,10 @@ export class AiController {
 
   @Get('health')
   async healthCheck() {
-    return { 
-      status: 'healthy', 
+    return {
+      status: 'healthy',
       provider: 'Google AI Studio',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

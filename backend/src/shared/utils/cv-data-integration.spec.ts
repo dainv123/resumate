@@ -20,25 +20,34 @@ describe('CV Data Integration Tests', () => {
         linkedin: 'https://linkedin.com/in/johndoe',
         github: 'https://github.com/johndoe',
         website: 'https://johndoe.com',
-        summary: 'Experienced full-stack developer with 5+ years of experience in building scalable web applications.',
+        summary:
+          'Experienced full-stack developer with 5+ years of experience in building scalable web applications.',
         experience: [
           {
             title: 'Senior Full-Stack Developer',
             company: 'TechCorp Inc.',
             duration: '2021 - Present',
             teamSize: '8',
-            companyDescription: 'Leading technology company specializing in AI solutions',
+            companyDescription:
+              'Leading technology company specializing in AI solutions',
             responsibilities: [
               'Lead development of microservices architecture',
               'Mentor junior developers and conduct code reviews',
-              'Collaborate with product managers and designers'
+              'Collaborate with product managers and designers',
             ],
             achievements: [
               'Improved application performance by 60%',
               'Reduced deployment time by 40%',
-              'Led team of 8 developers successfully'
+              'Led team of 8 developers successfully',
             ],
-            technologies: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'AWS', 'Docker']
+            technologies: [
+              'React',
+              'TypeScript',
+              'Node.js',
+              'PostgreSQL',
+              'AWS',
+              'Docker',
+            ],
           },
           {
             title: 'Full-Stack Developer',
@@ -48,14 +57,14 @@ describe('CV Data Integration Tests', () => {
             responsibilities: [
               'Developed responsive web applications',
               'Implemented RESTful APIs',
-              'Optimized database queries'
+              'Optimized database queries',
             ],
             achievements: [
               'Built MVP in 3 months',
-              'Increased user engagement by 35%'
+              'Increased user engagement by 35%',
             ],
-            technologies: ['Vue.js', 'Express.js', 'MongoDB', 'Redis']
-          }
+            technologies: ['Vue.js', 'Express.js', 'MongoDB', 'Redis'],
+          },
         ],
         education: [
           {
@@ -64,109 +73,154 @@ describe('CV Data Integration Tests', () => {
             year: '2017 - 2019',
             gpa: '3.8',
             location: 'Stanford, CA',
-            description: 'Focus on Artificial Intelligence and Machine Learning'
+            description:
+              'Focus on Artificial Intelligence and Machine Learning',
           },
           {
             degree: 'Bachelor of Science in Software Engineering',
             school: 'UC Berkeley',
             year: '2013 - 2017',
             gpa: '3.6',
-            location: 'Berkeley, CA'
-          }
+            location: 'Berkeley, CA',
+          },
         ],
         skills: {
           technical: [
-            'JavaScript', 'TypeScript', 'Python', 'Java', 'Go',
-            'React', 'Vue.js', 'Angular', 'Node.js', 'Express.js',
-            'PostgreSQL', 'MongoDB', 'Redis', 'GraphQL', 'REST APIs'
+            'JavaScript',
+            'TypeScript',
+            'Python',
+            'Java',
+            'Go',
+            'React',
+            'Vue.js',
+            'Angular',
+            'Node.js',
+            'Express.js',
+            'PostgreSQL',
+            'MongoDB',
+            'Redis',
+            'GraphQL',
+            'REST APIs',
           ],
           tools: [
-            'Git', 'Docker', 'Kubernetes', 'AWS', 'GCP',
-            'Jenkins', 'Jest', 'Cypress', 'Webpack', 'Babel'
+            'Git',
+            'Docker',
+            'Kubernetes',
+            'AWS',
+            'GCP',
+            'Jenkins',
+            'Jest',
+            'Cypress',
+            'Webpack',
+            'Babel',
           ],
-          languages: ['English (Native)', 'Spanish (Fluent)', 'French (Intermediate)'],
+          languages: [
+            'English (Native)',
+            'Spanish (Fluent)',
+            'French (Intermediate)',
+          ],
           soft: [
-            'Leadership', 'Team Management', 'Problem Solving',
-            'Communication', 'Agile/Scrum', 'Mentoring'
-          ]
+            'Leadership',
+            'Team Management',
+            'Problem Solving',
+            'Communication',
+            'Agile/Scrum',
+            'Mentoring',
+          ],
         },
         projects: [
           {
             name: 'E-commerce Platform',
-            description: 'Full-stack e-commerce platform with AI-powered recommendations and real-time inventory management.',
-            techStack: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Redis', 'AWS'],
+            description:
+              'Full-stack e-commerce platform with AI-powered recommendations and real-time inventory management.',
+            techStack: [
+              'React',
+              'TypeScript',
+              'Node.js',
+              'PostgreSQL',
+              'Redis',
+              'AWS',
+            ],
             duration: '8 months',
             results: [
               '50% increase in conversion rate',
               '30% reduction in cart abandonment',
-              '99.9% uptime achieved'
+              '99.9% uptime achieved',
             ],
-            link: 'https://ecommerce.example.com'
+            link: 'https://ecommerce.example.com',
           },
           {
             name: 'AI Chatbot System',
-            description: 'Intelligent customer service chatbot using NLP and machine learning.',
-            techStack: ['Python', 'TensorFlow', 'React', 'FastAPI', 'PostgreSQL'],
+            description:
+              'Intelligent customer service chatbot using NLP and machine learning.',
+            techStack: [
+              'Python',
+              'TensorFlow',
+              'React',
+              'FastAPI',
+              'PostgreSQL',
+            ],
             duration: '6 months',
             results: [
               '95% customer satisfaction rate',
               '60% reduction in support tickets',
-              '24/7 automated customer support'
+              '24/7 automated customer support',
             ],
-            link: 'https://chatbot.example.com'
-          }
+            link: 'https://chatbot.example.com',
+          },
         ],
         certifications: [
           {
             name: 'AWS Certified Solutions Architect',
             issuer: 'Amazon Web Services',
             date: '2023',
-            link: 'https://aws.amazon.com/certification'
+            link: 'https://aws.amazon.com/certification',
           },
           {
             name: 'Google Cloud Professional Developer',
             issuer: 'Google Cloud',
             date: '2022',
-            link: 'https://cloud.google.com/certification'
-          }
+            link: 'https://cloud.google.com/certification',
+          },
         ],
         awards: [
           {
             name: 'Employee of the Year',
             issuer: 'TechCorp Inc.',
-            date: '2023'
+            date: '2023',
           },
           {
             name: 'Innovation Award',
             issuer: 'StartupXYZ',
-            date: '2021'
-          }
+            date: '2021',
+          },
         ],
         publications: [
           {
             title: 'Building Scalable Microservices with Node.js',
             journal: 'IEEE Software',
             date: '2023',
-            authors: 'John Doe, Jane Smith'
-          }
+            authors: 'John Doe, Jane Smith',
+          },
         ],
         volunteer: [
           {
             role: 'Technical Mentor',
             organization: 'Code for Good',
             duration: '2022 - Present',
-            description: 'Mentoring aspiring developers from underrepresented communities',
+            description:
+              'Mentoring aspiring developers from underrepresented communities',
             responsibilities: [
               'Conduct weekly coding sessions',
               'Review student projects',
-              'Provide career guidance'
+              'Provide career guidance',
             ],
             achievements: [
               'Mentored 15+ students',
-              'Helped 8 students land their first tech jobs'
-            ]
-          }
-        ]
+              'Helped 8 students land their first tech jobs',
+            ],
+          },
+        ],
       };
 
       // Step 2: Normalize to standard structure
@@ -181,7 +235,7 @@ describe('CV Data Integration Tests', () => {
         linkedin: 'https://linkedin.com/in/johndoe',
         github: 'https://github.com/johndoe',
         website: 'https://johndoe.com',
-        location: ''
+        location: '',
       });
 
       expect(normalizedData.experience).toHaveLength(2);
@@ -197,16 +251,24 @@ describe('CV Data Integration Tests', () => {
         responsibilities: [
           'Lead development of microservices architecture',
           'Mentor junior developers and conduct code reviews',
-          'Collaborate with product managers and designers'
+          'Collaborate with product managers and designers',
         ],
         achievements: [
           'Improved application performance by 60%',
           'Reduced deployment time by 40%',
-          'Led team of 8 developers successfully'
+          'Led team of 8 developers successfully',
         ],
-        technologies: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'AWS', 'Docker'],
+        technologies: [
+          'React',
+          'TypeScript',
+          'Node.js',
+          'PostgreSQL',
+          'AWS',
+          'Docker',
+        ],
         teamSize: 8,
-        companyDescription: 'Leading technology company specializing in AI solutions'
+        companyDescription:
+          'Leading technology company specializing in AI solutions',
       });
 
       expect(normalizedData.education).toHaveLength(2);
@@ -219,7 +281,7 @@ describe('CV Data Integration Tests', () => {
         endDate: '2019',
         gpa: '3.8',
         description: 'Focus on Artificial Intelligence and Machine Learning',
-        location: 'Stanford, CA'
+        location: 'Stanford, CA',
       });
 
       // Step 3: Validate data
@@ -228,13 +290,14 @@ describe('CV Data Integration Tests', () => {
       expect(validation.errors).toHaveLength(0);
 
       // Step 4: Calculate completeness score
-      const completenessScore = CVDataUtils.calculateCompletenessScore(normalizedData);
+      const completenessScore =
+        CVDataUtils.calculateCompletenessScore(normalizedData);
       expect(completenessScore).toBeGreaterThan(90);
 
       // Step 5: Detect available sections
       const sections = templateService.detectAvailableSections(normalizedData);
       expect(sections).toHaveLength(10);
-      expect(sections.map(s => s.title)).toEqual([
+      expect(sections.map((s) => s.title)).toEqual([
         'Contact',
         'Summary',
         'Experience',
@@ -244,7 +307,7 @@ describe('CV Data Integration Tests', () => {
         'Certifications',
         'Awards',
         'Publications',
-        'Volunteer Experience'
+        'Volunteer Experience',
       ]);
 
       // Step 6: Generate template with different configurations
@@ -252,12 +315,21 @@ describe('CV Data Integration Tests', () => {
       const twoColumnConfig = templateService.getTwoColumnConfig();
       const modernConfig = templateService.getModernConfig();
 
-      const singleColumnHtml = templateService.generateDynamicTemplate(normalizedData, singleColumnConfig);
-      const twoColumnHtml = templateService.generateDynamicTemplate(normalizedData, twoColumnConfig);
-      const modernHtml = templateService.generateDynamicTemplate(normalizedData, modernConfig);
+      const singleColumnHtml = templateService.generateDynamicTemplate(
+        normalizedData,
+        singleColumnConfig,
+      );
+      const twoColumnHtml = templateService.generateDynamicTemplate(
+        normalizedData,
+        twoColumnConfig,
+      );
+      const modernHtml = templateService.generateDynamicTemplate(
+        normalizedData,
+        modernConfig,
+      );
 
       // Verify all templates contain essential information
-      [singleColumnHtml, twoColumnHtml, modernHtml].forEach(html => {
+      [singleColumnHtml, twoColumnHtml, modernHtml].forEach((html) => {
         expect(html).toContain('John Doe');
         expect(html).toContain('john@example.com');
         expect(html).toContain('Experienced full-stack developer');
@@ -288,7 +360,7 @@ describe('CV Data Integration Tests', () => {
       const minimalData = {
         name: 'Jane Doe',
         email: 'jane@example.com',
-        summary: 'Developer'
+        summary: 'Developer',
       };
 
       const normalizedData = CVDataUtils.normalizeCVData(minimalData);
@@ -302,7 +374,7 @@ describe('CV Data Integration Tests', () => {
         technical: [],
         tools: [],
         languages: [],
-        soft: []
+        soft: [],
       });
       expect(normalizedData.projects).toEqual([]);
 
@@ -310,14 +382,22 @@ describe('CV Data Integration Tests', () => {
       expect(validation.isValid).toBe(false);
       expect(validation.errors.length).toBeGreaterThan(0);
 
-      const completenessScore = CVDataUtils.calculateCompletenessScore(normalizedData);
+      const completenessScore =
+        CVDataUtils.calculateCompletenessScore(normalizedData);
       expect(completenessScore).toBeLessThan(30);
 
       const sections = templateService.detectAvailableSections(normalizedData);
       expect(sections).toHaveLength(3); // Contact, Summary, Experience (empty but included)
-      expect(sections.map(s => s.title)).toEqual(['Contact', 'Summary', 'Experience']);
+      expect(sections.map((s) => s.title)).toEqual([
+        'Contact',
+        'Summary',
+        'Experience',
+      ]);
 
-      const html = templateService.generateDynamicTemplate(normalizedData, templateService.getDefaultConfig());
+      const html = templateService.generateDynamicTemplate(
+        normalizedData,
+        templateService.getDefaultConfig(),
+      );
       expect(html).toContain('Jane Doe');
       expect(html).toContain('jane@example.com');
       expect(html).toContain('Developer');
@@ -332,7 +412,7 @@ describe('CV Data Integration Tests', () => {
         // Some fields already in standard format
         contact: {
           linkedin: 'https://linkedin.com/in/bobsmith',
-          github: 'https://github.com/bobsmith'
+          github: 'https://github.com/bobsmith',
         },
         summary: 'Full-stack developer',
         experience: [
@@ -346,24 +426,24 @@ describe('CV Data Integration Tests', () => {
             current: true, // Standard
             responsibilities: ['Code'],
             achievements: ['Success'],
-            technologies: ['React']
-          }
+            technologies: ['React'],
+          },
         ],
         education: [
           {
             // Legacy format
             degree: 'Computer Science',
             school: 'University',
-            year: '2018 - 2020'
-          }
+            year: '2018 - 2020',
+          },
         ],
         skills: {
           technical: ['JavaScript'],
           soft: ['Communication'],
           languages: ['English'],
-          tools: ['Git']
+          tools: ['Git'],
         },
-        projects: []
+        projects: [],
       };
 
       const normalizedData = CVDataUtils.normalizeCVData(mixedData);
@@ -377,7 +457,7 @@ describe('CV Data Integration Tests', () => {
         linkedin: 'https://linkedin.com/in/bobsmith',
         github: 'https://github.com/bobsmith',
         website: '',
-        location: ''
+        location: '',
       });
 
       // Should handle mixed experience format
@@ -394,7 +474,7 @@ describe('CV Data Integration Tests', () => {
         achievements: ['Success'],
         technologies: ['React'],
         teamSize: undefined,
-        companyDescription: ''
+        companyDescription: '',
       });
 
       // Should handle legacy education format
@@ -407,7 +487,7 @@ describe('CV Data Integration Tests', () => {
         endDate: '2020',
         gpa: '',
         description: '',
-        location: ''
+        location: '',
       });
 
       const validation = CVDataUtils.validateCVData(normalizedData);
@@ -416,7 +496,10 @@ describe('CV Data Integration Tests', () => {
       const sections = templateService.detectAvailableSections(normalizedData);
       expect(sections.length).toBeGreaterThan(3);
 
-      const html = templateService.generateDynamicTemplate(normalizedData, templateService.getDefaultConfig());
+      const html = templateService.generateDynamicTemplate(
+        normalizedData,
+        templateService.getDefaultConfig(),
+      );
       expect(html).toContain('Bob Smith');
       expect(html).toContain('bob@example.com');
       expect(html).toContain('Developer');
@@ -431,7 +514,7 @@ describe('CV Data Integration Tests', () => {
       const cvData: CVData = {
         contact: {
           name: 'Test User',
-          email: 'test@example.com'
+          email: 'test@example.com',
         },
         summary: 'Test summary',
         experience: [],
@@ -440,21 +523,21 @@ describe('CV Data Integration Tests', () => {
           technical: ['JavaScript'],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const configs = [
         { name: 'default', config: templateService.getDefaultConfig() },
         { name: 'two-column', config: templateService.getTwoColumnConfig() },
         { name: 'modern', config: templateService.getModernConfig() },
-        { name: 'show-all', config: templateService.getShowAllConfig() }
+        { name: 'show-all', config: templateService.getShowAllConfig() },
       ];
 
       configs.forEach(({ name, config }) => {
         const html = templateService.generateDynamicTemplate(cvData, config);
-        
+
         expect(html).toContain('Test User');
         expect(html).toContain('test@example.com');
         expect(html).toContain('Test summary');
@@ -483,7 +566,7 @@ describe('CV Data Integration Tests', () => {
         email: undefined,
         experience: 'not an array',
         skills: null,
-        projects: { not: 'an array' }
+        projects: { not: 'an array' },
       };
 
       const normalizedData = CVDataUtils.normalizeCVData(malformedData);
@@ -495,7 +578,7 @@ describe('CV Data Integration Tests', () => {
         technical: [],
         tools: [],
         languages: [],
-        soft: []
+        soft: [],
       });
       expect(normalizedData.projects).toEqual([]);
 
@@ -505,7 +588,10 @@ describe('CV Data Integration Tests', () => {
       const sections = templateService.detectAvailableSections(normalizedData);
       expect(sections.length).toBeGreaterThan(0);
 
-      const html = templateService.generateDynamicTemplate(normalizedData, templateService.getDefaultConfig());
+      const html = templateService.generateDynamicTemplate(
+        normalizedData,
+        templateService.getDefaultConfig(),
+      );
       expect(html).toContain('<!DOCTYPE html>');
     });
   });

@@ -33,7 +33,7 @@ describe('Portfolio Integration Tests (e2e)', () => {
         .expect((res) => {
           expect(res.body.templates).toBeInstanceOf(Array);
           expect(res.body.templates.length).toBeGreaterThan(0);
-          
+
           // Check first template structure
           const template = res.body.templates[0];
           expect(template).toHaveProperty('id');
@@ -272,4 +272,3 @@ describe('Portfolio Integration Tests (e2e)', () => {
     });
   });
 });
-

@@ -18,7 +18,7 @@ describe('CV Data Migration Script', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockRepository = {
       find: jest.fn(),
       update: jest.fn(),
@@ -56,32 +56,32 @@ describe('CV Data Migration Script', () => {
                 teamSize: '5',
                 responsibilities: ['Lead development'],
                 achievements: ['Improved performance'],
-                technologies: ['React', 'Node.js']
-              }
+                technologies: ['React', 'Node.js'],
+              },
             ],
             education: [
               {
                 degree: 'Computer Science',
                 school: 'University',
                 year: '2018 - 2020',
-                gpa: '3.8'
-              }
+                gpa: '3.8',
+              },
             ],
             skills: {
               technical: ['JavaScript', 'Python'],
               soft: ['Leadership'],
               languages: ['English'],
-              tools: ['Git']
+              tools: ['Git'],
             },
             projects: [
               {
                 name: 'E-commerce App',
                 description: 'Full-stack application',
                 techStack: ['React', 'Node.js'],
-                duration: '6 months'
-              }
-            ]
-          }
+                duration: '6 months',
+              },
+            ],
+          },
         },
         {
           id: 'cv-2',
@@ -96,11 +96,11 @@ describe('CV Data Migration Script', () => {
               technical: [],
               soft: [],
               languages: [],
-              tools: []
+              tools: [],
             },
-            projects: []
-          }
-        }
+            projects: [],
+          },
+        },
       ];
 
       mockRepository.find.mockResolvedValue(legacyCVs);
@@ -115,7 +115,7 @@ describe('CV Data Migration Script', () => {
       // Check that first CV was migrated with proper structure
       const firstUpdateCall = mockRepository.update.mock.calls[0];
       expect(firstUpdateCall[0]).toBe('cv-1');
-      
+
       const migratedData = firstUpdateCall[1].parsedData;
       expect(migratedData.contact).toEqual({
         name: 'John Doe',
@@ -125,7 +125,7 @@ describe('CV Data Migration Script', () => {
         linkedin: '',
         github: '',
         website: '',
-        location: ''
+        location: '',
       });
 
       expect(migratedData.experience[0]).toEqual({
@@ -141,7 +141,7 @@ describe('CV Data Migration Script', () => {
         achievements: ['Improved performance'],
         technologies: ['React', 'Node.js'],
         teamSize: 5,
-        companyDescription: ''
+        companyDescription: '',
       });
 
       expect(migratedData.education[0]).toEqual({
@@ -153,14 +153,14 @@ describe('CV Data Migration Script', () => {
         endDate: '2020',
         gpa: '3.8',
         description: '',
-        location: ''
+        location: '',
       });
 
       expect(migratedData.skills).toEqual({
         technical: ['JavaScript', 'Python'],
         tools: ['Git'],
         languages: ['English'],
-        soft: ['Leadership']
+        soft: ['Leadership'],
       });
 
       expect(migratedData.projects[0]).toEqual({
@@ -175,7 +175,7 @@ describe('CV Data Migration Script', () => {
         results: [],
         link: '',
         repository: '',
-        duration: '6 months'
+        duration: '6 months',
       });
 
       expect(migratedData.template).toBeDefined();
@@ -190,7 +190,7 @@ describe('CV Data Migration Script', () => {
             contact: {
               name: 'John Doe',
               email: 'john@example.com',
-              phone: '+1234567890'
+              phone: '+1234567890',
             },
             summary: 'Experienced developer',
             experience: [],
@@ -199,11 +199,11 @@ describe('CV Data Migration Script', () => {
               technical: [],
               tools: [],
               languages: [],
-              soft: []
+              soft: [],
             },
-            projects: []
-          }
-        }
+            projects: [],
+          },
+        },
       ];
 
       mockRepository.find.mockResolvedValue(standardCVs);
@@ -229,12 +229,12 @@ describe('CV Data Migration Script', () => {
       const cvsWithNullData = [
         {
           id: 'cv-1',
-          parsedData: null
+          parsedData: null,
         },
         {
           id: 'cv-2',
-          parsedData: undefined
-        }
+          parsedData: undefined,
+        },
       ];
 
       mockRepository.find.mockResolvedValue(cvsWithNullData);
@@ -252,16 +252,16 @@ describe('CV Data Migration Script', () => {
           id: 'cv-1',
           parsedData: {
             name: 'John Doe',
-            email: 'john@example.com'
-          }
+            email: 'john@example.com',
+          },
         },
         {
           id: 'cv-2',
           parsedData: {
             name: 'Jane Doe',
-            email: 'jane@example.com'
-          }
-        }
+            email: 'jane@example.com',
+          },
+        },
       ];
 
       mockRepository.find.mockResolvedValue(legacyCVs);
@@ -278,12 +278,14 @@ describe('CV Data Migration Script', () => {
       // Should log error for failed CV
       expect(mockConsoleError).toHaveBeenCalledWith(
         '❌ Error migrating CV cv-2:',
-        'Database error'
+        'Database error',
       );
     });
 
     it('should handle database connection errors', async () => {
-      (createConnection as jest.Mock).mockRejectedValue(new Error('Connection failed'));
+      (createConnection as jest.Mock).mockRejectedValue(
+        new Error('Connection failed'),
+      );
 
       await expect(migrateCVData()).rejects.toThrow('Connection failed');
     });
@@ -296,7 +298,7 @@ describe('CV Data Migration Script', () => {
         DB_PORT: '5433',
         DB_USERNAME: 'test-user',
         DB_PASSWORD: 'test-password',
-        DB_DATABASE: 'test-db'
+        DB_DATABASE: 'test-db',
       };
 
       mockRepository.find.mockResolvedValue([]);
@@ -312,7 +314,7 @@ describe('CV Data Migration Script', () => {
         database: 'test-db',
         entities: [Cv],
         synchronize: false,
-        logging: false
+        logging: false,
       });
 
       process.env = originalEnv;
@@ -335,7 +337,7 @@ describe('CV Data Migration Script', () => {
         database: 'resumate',
         entities: [Cv],
         synchronize: false,
-        logging: false
+        logging: false,
       });
 
       process.env = originalEnv;
@@ -347,39 +349,43 @@ describe('CV Data Migration Script', () => {
           id: 'cv-1',
           parsedData: {
             name: 'John Doe',
-            email: 'john@example.com'
-          }
+            email: 'john@example.com',
+          },
         },
         {
           id: 'cv-2',
           parsedData: {
             contact: {
               name: 'Jane Doe',
-              email: 'jane@example.com'
-            }
-          }
+              email: 'jane@example.com',
+            },
+          },
         },
         {
           id: 'cv-3',
           parsedData: {
             name: 'Bob Smith',
-            email: 'bob@example.com'
-          }
-        }
+            email: 'bob@example.com',
+          },
+        },
       ];
 
       mockRepository.find.mockResolvedValue(legacyCVs);
       mockRepository.update
         .mockResolvedValueOnce({ affected: 1 }) // cv-1 succeeds
-        .mockResolvedValueOnce({ affected: 1 }) // cv-3 succeeds
-        // cv-2 is skipped (already in standard format)
+        .mockResolvedValueOnce({ affected: 1 }); // cv-3 succeeds
+      // cv-2 is skipped (already in standard format)
 
       await migrateCVData();
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('🔄 Starting CV data migration to standard structure...');
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        '🔄 Starting CV data migration to standard structure...',
+      );
       expect(mockConsoleLog).toHaveBeenCalledWith('✅ Database connected');
       expect(mockConsoleLog).toHaveBeenCalledWith('📊 Found 3 CVs to migrate');
-      expect(mockConsoleLog).toHaveBeenCalledWith('⏭️  CV cv-2 already in standard format, skipping');
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        '⏭️  CV cv-2 already in standard format, skipping',
+      );
       expect(mockConsoleLog).toHaveBeenCalledWith('✅ Migrated CV cv-1');
       expect(mockConsoleLog).toHaveBeenCalledWith('✅ Migrated CV cv-3');
       expect(mockConsoleLog).toHaveBeenCalledWith('\n🎉 Migration completed!');
@@ -387,7 +393,9 @@ describe('CV Data Migration Script', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith('⏭️  Skipped: 1 CVs');
       expect(mockConsoleLog).toHaveBeenCalledWith('❌ Errors: 0 CVs');
       expect(mockConsoleLog).toHaveBeenCalledWith('📊 Total: 3 CVs');
-      expect(mockConsoleLog).toHaveBeenCalledWith('🔌 Database connection closed');
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        '🔌 Database connection closed',
+      );
     });
   });
 });

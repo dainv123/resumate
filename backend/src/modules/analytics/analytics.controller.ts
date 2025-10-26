@@ -14,8 +14,8 @@ export class AnalyticsController {
   @TrackActivity(ActivityType.ANALYTICS_VIEWED, {
     getMetadata: (result, context) => ({
       viewType: 'stats',
-      dataPoints: Object.keys(result?.stats || {}).length
-    })
+      dataPoints: Object.keys(result?.stats || {}).length,
+    }),
   })
   async getStats(@GetUser('id') userId: string) {
     return this.analyticsService.getStats(userId);
@@ -72,4 +72,3 @@ export class AnalyticsController {
     return { success: true };
   }
 }
-

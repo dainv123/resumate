@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { Cv } from '../cv/entities/cv.entity';
 import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
-import { CreateProjectDto, UpdateProjectDto, AddToCvDto } from './dto/project.dto';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  AddToCvDto,
+} from './dto/project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -18,9 +26,15 @@ export class ProjectsService {
     private usersService: UsersService,
   ) {}
 
-  async createProject(userId: string, createProjectDto: CreateProjectDto): Promise<Project> {
+  async createProject(
+    userId: string,
+    createProjectDto: CreateProjectDto,
+  ): Promise<Project> {
     // Check user limits
-    const canAddProject = await this.usersService.checkUserLimit(userId, 'projects');
+    const canAddProject = await this.usersService.checkUserLimit(
+      userId,
+      'projects',
+    );
     if (!canAddProject) {
       throw new BadRequestException('Project limit reached for your plan');
     }
@@ -66,7 +80,11 @@ export class ProjectsService {
     return project;
   }
 
-  async updateProject(id: string, userId: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
+  async updateProject(
+    id: string,
+    userId: string,
+    updateProjectDto: UpdateProjectDto,
+  ): Promise<Project> {
     const project = await this.getProjectById(id, userId);
 
     // If tech stack or results changed, regenerate bullets
@@ -89,7 +107,11 @@ export class ProjectsService {
     await this.projectRepository.remove(project);
   }
 
-  async addProjectToCv(projectId: string, userId: string, addToCvDto: AddToCvDto): Promise<Cv> {
+  async addProjectToCv(
+    projectId: string,
+    userId: string,
+    addToCvDto: AddToCvDto,
+  ): Promise<Cv> {
     const project = await this.getProjectById(projectId, userId);
     const cv = await this.cvRepository.findOne({
       where: { id: addToCvDto.cvId, userId },
@@ -121,7 +143,11 @@ export class ProjectsService {
     return this.cvRepository.save(cv);
   }
 
-  async removeProjectFromCv(projectId: string, userId: string, cvId: string): Promise<Cv> {
+  async removeProjectFromCv(
+    projectId: string,
+    userId: string,
+    cvId: string,
+  ): Promise<Cv> {
     const project = await this.getProjectById(projectId, userId);
     const cv = await this.cvRepository.findOne({
       where: { id: cvId, userId },
@@ -133,18 +159,21 @@ export class ProjectsService {
 
     // Remove project from CV
     cv.parsedData.projects = cv.parsedData.projects.filter(
-      p => p.name !== project.name
+      (p) => p.name !== project.name,
     );
     cv.version += 1;
 
     // Remove CV ID from project's cvIds array
-    project.cvIds = project.cvIds.filter(id => id !== cvId);
+    project.cvIds = project.cvIds.filter((id) => id !== cvId);
     await this.projectRepository.save(project);
 
     return this.cvRepository.save(cv);
   }
 
-  async regenerateProjectBullets(projectId: string, userId: string): Promise<Project> {
+  async regenerateProjectBullets(
+    projectId: string,
+    userId: string,
+  ): Promise<Project> {
     const project = await this.getProjectById(projectId, userId);
 
     const cvBullets = await this.aiService.generateProjectBullets({
@@ -161,7 +190,15 @@ export class ProjectsService {
   async getProjectsForPortfolio(userId: string): Promise<Project[]> {
     return this.projectRepository.find({
       where: { userId },
-      select: ['id', 'name', 'description', 'techStack', 'demoLink', 'githubLink', 'imageUrl'],
+      select: [
+        'id',
+        'name',
+        'description',
+        'techStack',
+        'demoLink',
+        'githubLink',
+        'imageUrl',
+      ],
       order: { createdAt: 'DESC' },
     });
   }

@@ -18,7 +18,7 @@ interface CvManagerProps {
   limit?: number;
   search?: string;
   sortBy?: "createdAt" | "updatedAt" | "originalFileName";
-  sortOrder?: "asc" | "desc";
+  sortOrder?: "ASC" | "DESC";
   viewMode?: "grid" | "list";
 }
 
@@ -29,7 +29,7 @@ interface CvListContentProps {
   limit: number;
   search?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: "ASC" | "DESC";
   viewMode?: "grid" | "list";
   onEditCv?: (cvId: string) => void;
   onDeleteCv?: (cvId: string) => void;
@@ -86,21 +86,21 @@ function CvListContent({
     console.log("CvManager Debug:", {
       mode,
       data,
-      paginatedData: data?.data,
-      infiniteData: data?.pages,
+      paginatedData: mode === "paginated" ? (data as any)?.data : undefined,
+      infiniteData: mode === "infinite" ? (data as any)?.pages : undefined,
       paginationInfo: {
-        totalPages: data?.totalPages,
-        total: data?.total,
-        page: data?.page,
-        limit: data?.limit,
+        totalPages: mode === "paginated" ? (data as any)?.totalPages : undefined,
+        total: mode === "paginated" ? (data as any)?.total : undefined,
+        page: mode === "paginated" ? (data as any)?.page : undefined,
+        limit: mode === "paginated" ? (data as any)?.limit : undefined,
       },
     });
 
     if (mode === "paginated") {
-      return data?.data || [];
+      return (data as any)?.data || [];
     } else {
       // Infinite scroll mode
-      return data?.pages?.flatMap((page) => page.data) || [];
+      return (data as any)?.pages?.flatMap((page: any) => page.data) || [];
     }
   }, [mode, data]);
 
@@ -158,8 +158,8 @@ function CvListContent({
   if (
     !data ||
     (mode === "paginated"
-      ? data.data.length === 0
-      : data.pages[0]?.data.length === 0)
+      ? (data as any).data.length === 0
+      : (data as any).pages[0]?.data.length === 0)
   ) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
@@ -181,7 +181,7 @@ function CvListContent({
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr"
             : "space-y-4"
         }>
-        {cvs.map((cv, index) => (
+        {cvs.map((cv: any, index: number) => (
           <div
             key={cv.id}
             ref={
@@ -216,12 +216,12 @@ function CvListContent({
             Total items: {data?.total || 0} | Items per page: {limit}
           </div> */}
 
-          {data?.totalPages && data.totalPages > 1 && (
+          {mode === "paginated" && (data as any)?.totalPages && (data as any).totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
                 Showing {(currentPage - 1) * limit + 1} to{" "}
-                {Math.min(currentPage * limit, data?.total || 0)} of{" "}
-                {data?.total || 0} CVs
+                {Math.min(currentPage * limit, (data as any)?.total || 0)} of{" "}
+                {(data as any)?.total || 0} CVs
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -234,17 +234,17 @@ function CvListContent({
                   Previous
                 </Button>
                 <span className="text-sm text-gray-600">
-                  Page {currentPage} of {data?.totalPages || 0}
+                  Page {currentPage} of {(data as any)?.totalPages || 0}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() =>
                     setCurrentPage((prev) =>
-                      Math.min(data?.totalPages || 1, prev + 1)
+                      Math.min((data as any)?.totalPages || 1, prev + 1)
                     )
                   }
-                  disabled={currentPage === (data?.totalPages || 1)}>
+                  disabled={currentPage === ((data as any)?.totalPages || 1)}>
                   Next
                 </Button>
               </div>
@@ -317,8 +317,8 @@ export default function CvManager({
   const [sortBy, setSortBy] = useState<
     "createdAt" | "updatedAt" | "originalFileName"
   >(externalSortBy || "updatedAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
-    externalSortOrder || "desc"
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">(
+    externalSortOrder || "DESC"
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">(
     externalViewMode || "grid"
@@ -335,7 +335,9 @@ export default function CvManager({
   }, [externalSortBy]);
 
   React.useEffect(() => {
-    if (externalSortOrder !== undefined) setSortOrder(externalSortOrder);
+    if (externalSortOrder !== undefined) {
+      setSortOrder((externalSortOrder as any) === "asc" ? "ASC" : "DESC");
+    }
   }, [externalSortOrder]);
 
   React.useEffect(() => {
@@ -348,7 +350,7 @@ export default function CvManager({
   };
 
   const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
   const handleSelectCv = (cv: any) => {
@@ -461,13 +463,13 @@ export default function CvManager({
                 variant="outline"
                 onClick={toggleSortOrder}
                 className="flex items-center space-x-1">
-                {sortOrder === "asc" ? (
+                {sortOrder === "ASC" ? (
                   <SortAsc className="h-4 w-4" />
                 ) : (
                   <SortDesc className="h-4 w-4" />
                 )}
                 <span>
-                  {sortOrder === "asc" ? t("cv.sortAsc") : t("cv.sortDesc")}
+                  {sortOrder === "ASC" ? t("cv.sortAsc") : t("cv.sortDesc")}
                 </span>
               </Button>
             </div>
@@ -475,14 +477,14 @@ export default function CvManager({
             {/* View Mode Toggle */}
             <div className="flex gap-1 border border-gray-300 rounded-lg p-1">
               <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
+                variant={viewMode === "grid" ? "primary" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("grid")}
                 className="flex items-center space-x-1">
                 <Grid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
+                variant={viewMode === "list" ? "primary" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
                 className="flex items-center space-x-1">

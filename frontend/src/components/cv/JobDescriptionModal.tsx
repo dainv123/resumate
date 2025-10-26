@@ -3,10 +3,6 @@
 import React from "react";
 import {
   Briefcase,
-  Building,
-  MapPin,
-  DollarSign,
-  Clock,
   Target,
   FileText,
   BarChart3,

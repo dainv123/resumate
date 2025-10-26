@@ -195,7 +195,7 @@ export default function MatchingAnalysisModal({
                 No Analysis Available
               </h3>
               <p className="text-gray-600">
-                This CV hasn't been analyzed against a job description yet. Use
+                This CV hasn&apos;t been analyzed against a job description yet. Use
                 the Job Tailor feature to get detailed matching analysis.
               </p>
             </div>

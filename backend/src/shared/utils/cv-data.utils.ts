@@ -1,4 +1,12 @@
-import { CVData, ContactInfo, Experience, Education, Project, Skills, TemplateConfig } from '../interfaces/cv-data.interface';
+import {
+  CVData,
+  ContactInfo,
+  Experience,
+  Education,
+  Project,
+  Skills,
+  TemplateConfig,
+} from '../interfaces/cv-data.interface';
 
 /**
  * CV Data Utility Functions
@@ -16,31 +24,37 @@ export class CVDataUtils {
       createdAt: data.createdAt || new Date().toISOString(),
       updatedAt: data.updatedAt || new Date().toISOString(),
       lastModified: data.lastModified || new Date().toISOString(),
-      
-      contact: this.normalizeContactInfo(data.contact || {
-        name: data.name || '',
-        email: data.email || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        linkedin: data.linkedin || '',
-        github: data.github || '',
-        website: data.website || '',
-        location: data.location || ''
-      }),
+
+      contact: this.normalizeContactInfo(
+        data.contact || {
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          linkedin: data.linkedin || '',
+          github: data.github || '',
+          website: data.website || '',
+          location: data.location || '',
+        },
+      ),
       summary: data.summary || '',
-      
+
       experience: this.normalizeExperience(data.experience || []),
       education: this.normalizeEducation(data.education || []),
       skills: this.normalizeSkills(data.skills || {}),
       projects: this.normalizeProjects(data.projects || []),
-      
-      certifications: data.certifications ? this.normalizeCertifications(data.certifications) : [],
+
+      certifications: data.certifications
+        ? this.normalizeCertifications(data.certifications)
+        : [],
       awards: data.awards ? this.normalizeAwards(data.awards) : [],
-      publications: data.publications ? this.normalizePublications(data.publications) : [],
+      publications: data.publications
+        ? this.normalizePublications(data.publications)
+        : [],
       volunteer: data.volunteer ? this.normalizeVolunteer(data.volunteer) : [],
       languages: data.languages ? this.normalizeLanguages(data.languages) : [],
-      
-      template: data.template || this.getDefaultTemplateConfig()
+
+      template: data.template || this.getDefaultTemplateConfig(),
     };
   }
 
@@ -56,7 +70,7 @@ export class CVDataUtils {
       linkedin: contact.linkedin || '',
       github: contact.github || '',
       website: contact.website || '',
-      location: contact.location || ''
+      location: contact.location || '',
     };
   }
 
@@ -77,7 +91,7 @@ export class CVDataUtils {
       achievements: exp.achievements || [],
       technologies: exp.technologies || [],
       teamSize: exp.teamSize || undefined,
-      companyDescription: exp.companyDescription || ''
+      companyDescription: exp.companyDescription || '',
     }));
   }
 
@@ -94,7 +108,7 @@ export class CVDataUtils {
       endDate: edu.endDate || '',
       gpa: edu.gpa || '',
       description: edu.description || '',
-      location: edu.location || ''
+      location: edu.location || '',
     }));
   }
 
@@ -114,7 +128,7 @@ export class CVDataUtils {
       results: project.results || [],
       link: project.link || '',
       repository: project.repository || '',
-      duration: project.duration || ''
+      duration: project.duration || '',
     }));
   }
 
@@ -126,7 +140,7 @@ export class CVDataUtils {
       technical: skills.technical || [],
       tools: skills.tools || [],
       languages: skills.languages || [],
-      soft: skills.soft || []
+      soft: skills.soft || [],
     };
   }
 
@@ -142,7 +156,7 @@ export class CVDataUtils {
       expirationDate: cert.expirationDate || '',
       credentialId: cert.credentialId || '',
       credentialUrl: cert.credentialUrl || '',
-      description: cert.description || ''
+      description: cert.description || '',
     }));
   }
 
@@ -156,7 +170,7 @@ export class CVDataUtils {
       issuer: award.issuer || '',
       date: award.date || '',
       description: award.description || '',
-      category: award.category || ''
+      category: award.category || '',
     }));
   }
 
@@ -173,7 +187,7 @@ export class CVDataUtils {
       conference: pub.conference || '',
       doi: pub.doi || '',
       url: pub.url || '',
-      description: pub.description || ''
+      description: pub.description || '',
     }));
   }
 
@@ -191,7 +205,7 @@ export class CVDataUtils {
       description: vol.description || '',
       responsibilities: vol.responsibilities || [],
       achievements: vol.achievements || [],
-      location: vol.location || ''
+      location: vol.location || '',
     }));
   }
 
@@ -203,7 +217,7 @@ export class CVDataUtils {
       id: lang.id || `lang_${index}`,
       name: lang.name || '',
       proficiency: lang.proficiency || 'Intermediate',
-      certifications: lang.certifications || []
+      certifications: lang.certifications || [],
     }));
   }
 
@@ -224,14 +238,14 @@ export class CVDataUtils {
         awards: true,
         publications: true,
         volunteer: true,
-        languages: true
+        languages: true,
       },
       styling: {
         primaryColor: '#2c3e50',
         secondaryColor: '#34495e',
         fontFamily: 'Arial, sans-serif',
-        fontSize: 'medium'
-      }
+        fontSize: 'medium',
+      },
     };
   }
 
@@ -247,8 +261,10 @@ export class CVDataUtils {
     if (!data.summary) errors.push('Summary is required');
 
     // Array validations
-    if (!Array.isArray(data.experience)) errors.push('Experience must be an array');
-    if (!Array.isArray(data.education)) errors.push('Education must be an array');
+    if (!Array.isArray(data.experience))
+      errors.push('Experience must be an array');
+    if (!Array.isArray(data.education))
+      errors.push('Education must be an array');
     if (!Array.isArray(data.projects)) errors.push('Projects must be an array');
     if (!data.skills) errors.push('Skills object is required');
 
@@ -259,7 +275,7 @@ export class CVDataUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -274,7 +290,7 @@ export class CVDataUtils {
       lastModified: new Date().toISOString(),
       contact: { ...existing.contact, ...updates.contact },
       skills: { ...existing.skills, ...updates.skills },
-      template: { ...existing.template, ...updates.template } as TemplateConfig
+      template: { ...existing.template, ...updates.template } as TemplateConfig,
     };
   }
 
@@ -288,7 +304,7 @@ export class CVDataUtils {
         email: legacyData.email,
         phone: legacyData.phone,
         address: legacyData.address,
-        linkedin: legacyData.linkedin
+        linkedin: legacyData.linkedin,
       },
       summary: legacyData.summary,
       experience: legacyData.experience,
@@ -298,7 +314,7 @@ export class CVDataUtils {
       certifications: legacyData.certifications,
       awards: legacyData.awards,
       publications: legacyData.publications,
-      volunteer: legacyData.volunteer
+      volunteer: legacyData.volunteer,
     });
   }
 
@@ -309,7 +325,7 @@ export class CVDataUtils {
     const filledSections = this.countNonEmptySections(data);
     const totalSections = 8; // Total possible sections
     const completionRate = Math.round((filledSections / totalSections) * 100);
-    
+
     return {
       totalSections: totalSections,
       filledSections: filledSections,
@@ -323,7 +339,7 @@ export class CVDataUtils {
       awardCount: data.awards?.length || 0,
       publicationCount: data.publications?.length || 0,
       volunteerCount: data.volunteer?.length || 0,
-      completenessScore: this.calculateCompleteness(data)
+      completenessScore: this.calculateCompleteness(data),
     };
   }
 
@@ -343,10 +359,12 @@ export class CVDataUtils {
   }
 
   private static getTotalSkillCount(skills: Skills): number {
-    return (skills.technical?.length || 0) + 
-           (skills.tools?.length || 0) + 
-           (skills.languages?.length || 0) + 
-           (skills.soft?.length || 0);
+    return (
+      (skills.technical?.length || 0) +
+      (skills.tools?.length || 0) +
+      (skills.languages?.length || 0) +
+      (skills.soft?.length || 0)
+    );
   }
 
   private static calculateCompleteness(data: CVData): number {

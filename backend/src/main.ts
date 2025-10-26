@@ -5,17 +5,19 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
-  
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
-  
+
   // Enable CORS
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:5000',
@@ -23,15 +25,15 @@ async function bootstrap() {
     'http://2r4p3zcg-5000.asse.devtunnels.ms',
     'https://2r4p3zcg-5000.asse.devtunnels.ms',
     'http://localhost:5000',
-    'https://appearance-lectures-achieve-recommended.trycloudflare.com'
+    'https://appearance-lectures-achieve-recommended.trycloudflare.com',
   ];
-  
+
   // Add domain from environment if available
   if (process.env.DOMAIN_NAME) {
     allowedOrigins.push(`http://${process.env.DOMAIN_NAME}:5000`);
     allowedOrigins.push(`https://${process.env.DOMAIN_NAME}:5000`);
   }
-  
+
   app.enableCors({
     origin: true,
     credentials: true,
@@ -48,7 +50,7 @@ async function bootstrap() {
       next();
     }
   });
-  
+
   const port = process.env.PORT || 5001;
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}`);

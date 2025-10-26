@@ -1,16 +1,20 @@
-import { 
-  Controller, 
-  Post, 
-  Get, 
-  Put, 
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
   Delete,
-  Body, 
-  Param, 
+  Body,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectsService } from './projects.service';
-import { CreateProjectDto, UpdateProjectDto, AddToCvDto } from './dto/project.dto';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  AddToCvDto,
+} from './dto/project.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { TrackActivity } from '../../common/decorators/track-activity.decorator';
@@ -26,8 +30,8 @@ export class ProjectsController {
     getResourceId: (result) => result?.id,
     getMetadata: (result, context) => ({
       title: result?.title || context.body?.title,
-      technologies: result?.technologies || context.body?.technologies
-    })
+      technologies: result?.technologies || context.body?.technologies,
+    }),
   })
   async createProject(
     @GetUser('id') userId: string,
@@ -47,10 +51,7 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  async getProject(
-    @Param('id') id: string,
-    @GetUser('id') userId: string,
-  ) {
+  async getProject(@Param('id') id: string, @GetUser('id') userId: string) {
     return this.projectsService.getProjectById(id, userId);
   }
 
@@ -59,8 +60,8 @@ export class ProjectsController {
     getResourceId: (result, context) => context.params.id,
     getMetadata: (result, context) => ({
       title: result?.title || context.body?.title,
-      technologies: result?.technologies || context.body?.technologies
-    })
+      technologies: result?.technologies || context.body?.technologies,
+    }),
   })
   async updateProject(
     @Param('id') id: string,
@@ -74,13 +75,10 @@ export class ProjectsController {
   @TrackActivity(ActivityType.PROJECT_DELETED, {
     getResourceId: (result, context) => context.params.id,
     getMetadata: (result) => ({
-      title: result?.title
-    })
+      title: result?.title,
+    }),
   })
-  async deleteProject(
-    @Param('id') id: string,
-    @GetUser('id') userId: string,
-  ) {
+  async deleteProject(@Param('id') id: string, @GetUser('id') userId: string) {
     await this.projectsService.deleteProject(id, userId);
     return { message: 'Project deleted successfully' };
   }
