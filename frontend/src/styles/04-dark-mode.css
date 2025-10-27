@@ -1,0 +1,288 @@
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+/* System Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #e2e8f0;
+    --color-primary-dark: #f8fafc;
+    --color-accent: #fbbf24;
+    --color-secondary: #60a5fa;
+    --color-white: #1e293b;
+  }
+}
+
+/* Manual Dark Mode Variables */
+.dark {
+  --color-primary: #e2e8f0;
+  --color-primary-dark: #f8fafc;
+  --color-accent: #fbbf24;
+  --color-secondary: #60a5fa;
+  --color-white: #1e293b;
+
+  /* Background colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-quaternary: #475569;
+
+  /* Text colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-disabled: #64748b;
+
+  /* Border colors */
+  --border-color: #334155;
+  --border-color-light: #475569;
+  --border-color-hover: #64748b;
+
+  /* Surface colors */
+  --surface-primary: #1e293b;
+  --surface-secondary: #334155;
+  --surface-tertiary: #475569;
+
+  /* Shadow colors */
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-color-light: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark Mode Global Styles */
+.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: var(--text-primary);
+}
+
+.dark a {
+  color: var(--color-secondary);
+}
+
+.dark a:hover {
+  color: var(--color-accent);
+}
+
+/* Dark Mode Components */
+.dark .bg-white {
+  background-color: var(--surface-primary) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--surface-secondary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--surface-tertiary) !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: var(--bg-quaternary) !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--text-tertiary) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.dark .text-gray-400 {
+  color: var(--text-disabled) !important;
+}
+
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border-color-light) !important;
+}
+
+.dark .border-gray-400 {
+  border-color: var(--border-color-hover) !important;
+}
+
+/* Dark Mode Interactive States */
+.dark .hover\:bg-gray-50:hover {
+  background-color: var(--surface-secondary) !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--surface-tertiary) !important;
+}
+
+.dark .hover\:border-gray-400:hover {
+  border-color: var(--border-color-hover) !important;
+}
+
+.dark .focus\:border-blue-500:focus {
+  border-color: var(--color-secondary) !important;
+}
+
+/* Dark Mode Form Elements */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  background-color: var(--surface-primary);
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.dark .input-base {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark .input-base:hover {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-color-hover);
+}
+
+.dark .input-base:focus {
+  background-color: var(--surface-primary);
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.dark .textarea-base {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark .textarea-base:hover {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-color-hover);
+}
+
+.dark .textarea-base:focus {
+  background-color: var(--surface-primary);
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+/* Dark Mode Cards */
+.dark .portfolio-card,
+.dark .card {
+  background-color: var(--surface-primary);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-color-light) 0 10px 15px -3px,
+    var(--shadow-color) 0 4px 6px -2px;
+}
+
+.dark .portfolio-card:hover,
+.dark .card:hover {
+  box-shadow: var(--shadow-color) 0 20px 25px -5px,
+    var(--shadow-color-light) 0 10px 10px -5px;
+  border-color: var(--border-color-light);
+}
+
+/* Dark Mode Buttons */
+.dark .elisc_tm_button a {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--bg-primary);
+}
+
+.dark .elisc_tm_button a:hover {
+  background-color: transparent;
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+.dark .elisc_tm_button[data-style="border"] a {
+  background-color: transparent;
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+.dark .elisc_tm_button[data-style="border"] a:hover {
+  background-color: var(--color-secondary);
+  color: var(--bg-primary);
+}
+
+.dark .btn-primary {
+  background-color: var(--color-secondary);
+  color: var(--bg-primary);
+  border-color: var(--color-secondary);
+}
+
+.dark .btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Dark Mode Section Backgrounds */
+.dark .section-bg-light {
+  background-color: var(--surface-secondary);
+}
+
+.dark .section-bg-blue {
+  background-color: rgba(96, 165, 250, 0.05);
+}
+
+.dark .section-bg-pink {
+  background-color: rgba(251, 191, 36, 0.05);
+}
+
+.dark .section-bg-green {
+  background-color: rgba(96, 165, 250, 0.05);
+}
+
+/* Dark Mode Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--surface-secondary);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--border-color-hover);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Dark Mode Focus Indicators */
+.dark *:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
