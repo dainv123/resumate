@@ -88,7 +88,7 @@ export default function CVActions({
               onClick={onShowJobDescription}
               className="w-full flex items-center justify-center space-x-2">
               <Edit className="h-4 w-4" />
-              <span>View Job Description</span>
+              <span>{t("cv.viewJobDescription")}</span>
             </Button>
           )}
 
@@ -99,7 +99,7 @@ export default function CVActions({
             onClick={onShowMatchingAnalysis}
             className="w-full flex items-center justify-center space-x-2">
             <Share2 className="h-4 w-4" />
-            <span>Matching Analysis</span>
+            <span>{t("cv.matchingAnalysis")}</span>
           </Button>
         )}
 
@@ -110,7 +110,7 @@ export default function CVActions({
             onClick={onShowCoverLetter}
             className="w-full flex items-center justify-center space-x-2">
             <Edit className="h-4 w-4" />
-            <span>Cover Letter</span>
+            <span>{t("cv.coverLetter")}</span>
           </Button>
         )}
 

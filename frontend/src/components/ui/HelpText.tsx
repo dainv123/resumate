@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HelpTextProps {
   children: React.ReactNode;
@@ -34,26 +35,27 @@ export function HelpText({ children }: HelpTextProps) {
 }
 
 export function CustomDomainHelp() {
+  const { t } = useLanguage();
+  
   return (
     <HelpText>
       <div className="space-y-2">
-        <p className="font-semibold">Custom Domain (Optional)</p>
+        <p className="font-semibold">{t("cv.customDomainOptional")}</p>
         <p>
-          Enter your own domain if you own one (e.g.,{" "}
-          <code className="px-1 bg-gray-100 rounded">myportfolio.com</code>)
+          {t("cv.customDomainHelp")}
         </p>
         <div className="pt-2 border-t border-gray-200">
           <p className="text-xs font-semibold text-amber-600">
-            ⚠️ Requirements:
+            {t("cv.requirements")}
           </p>
           <ul className="mt-1 ml-4 text-xs list-disc space-y-1">
-            <li>You must own the domain</li>
-            <li>Configure DNS A record to point to our server</li>
-            <li>Contact support for server IP</li>
+            <li>{t("cv.mustOwnDomain")}</li>
+            <li>{t("cv.configureDNS")}</li>
+            <li>{t("cv.contactSupport")}</li>
           </ul>
         </div>
         <p className="text-xs text-gray-500 italic">
-          Leave empty to use the default URL provided by the system.
+          {t("cv.customDomainNote")}
         </p>
       </div>
     </HelpText>

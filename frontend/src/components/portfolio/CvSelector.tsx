@@ -32,6 +32,11 @@ export default function CvSelector({
       return cvsData.pages.flatMap((page) => page.data || []);
     }
 
+    // If it's paginated structure (fallback)
+    if ((cvsData as any).data && Array.isArray((cvsData as any).data)) {
+      return (cvsData as any).data;
+    }
+
     return [];
   }, [cvsData]);
 
@@ -106,7 +111,7 @@ export default function CvSelector({
       </div>
 
       <div className="space-y-3">
-        {cvs.map((cv) => (
+        {cvs.map((cv: any) => (
           <div
             key={cv.id}
             onClick={() => onSelectCv(cv.id)}

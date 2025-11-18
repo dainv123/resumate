@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class BackfillJobDescriptionsFromSnapshots1734567890005 implements MigrationInterface {
+export class BackfillJobDescriptionsFromSnapshots1734567890005
+  implements MigrationInterface
+{
   name = 'BackfillJobDescriptionsFromSnapshots1734567890005';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -18,7 +20,9 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
         AND "jobDescriptionId" IS NULL
     `);
 
-    console.log(`📊 Found ${analysesWithoutJobDescription.length} analyses with snapshots but no JobDescription`);
+    console.log(
+      `📊 Found ${analysesWithoutJobDescription.length} analyses with snapshots but no JobDescription`,
+    );
 
     // Step 2: Find all cover letters with jobDescriptionSnapshot but no jobDescriptionId
     const coverLettersWithoutJobDescription = await queryRunner.query(`
@@ -32,7 +36,9 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
         AND "jobDescriptionId" IS NULL
     `);
 
-    console.log(`📊 Found ${coverLettersWithoutJobDescription.length} cover letters with snapshots but no JobDescription`);
+    console.log(
+      `📊 Found ${coverLettersWithoutJobDescription.length} cover letters with snapshots but no JobDescription`,
+    );
 
     // Step 3: Create JobDescriptions from snapshots
     const createdJobDescriptions = new Map<string, string>(); // snapshot hash -> jobDescriptionId
@@ -47,12 +53,13 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
 
       // Create a hash of the snapshot for deduplication
       const snapshotHash = this.createSnapshotHash(snapshot);
-      
+
       let jobDescriptionId = createdJobDescriptions.get(snapshotHash);
-      
+
       if (!jobDescriptionId) {
         // Create new JobDescription
-        const jobDescriptionResult = await queryRunner.query(`
+        const jobDescriptionResult = await queryRunner.query(
+          `
           INSERT INTO job_descriptions (
             id,
             userId,
@@ -80,60 +87,72 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
             $10,
             $10
           ) RETURNING id
-        `, [
-          analysis.userId,
-          snapshot.title,
-          snapshot.description,
-          snapshot.company || null,
-          null, // location not in snapshot
-          null, // salary not in snapshot
-          snapshot.experience || null,
-          JSON.stringify({
-            skills: snapshot.keyRequirements || [],
-            education: [],
-            experience: [],
-            certifications: []
-          }),
-          JSON.stringify(snapshot.keyRequirements || []),
-          analysis.createdAt
-        ]);
+        `,
+          [
+            analysis.userId,
+            snapshot.title,
+            snapshot.description,
+            snapshot.company || null,
+            null, // location not in snapshot
+            null, // salary not in snapshot
+            snapshot.experience || null,
+            JSON.stringify({
+              skills: snapshot.keyRequirements || [],
+              education: [],
+              experience: [],
+              certifications: [],
+            }),
+            JSON.stringify(snapshot.keyRequirements || []),
+            analysis.createdAt,
+          ],
+        );
 
         jobDescriptionId = jobDescriptionResult[0].id;
         if (jobDescriptionId) {
           createdJobDescriptions.set(snapshotHash, jobDescriptionId);
         }
-        
-        console.log(`✅ Created JobDescription ${jobDescriptionId} for analysis ${analysis.id}`);
+
+        console.log(
+          `✅ Created JobDescription ${jobDescriptionId} for analysis ${analysis.id}`,
+        );
       } else {
-        console.log(`♻️ Reusing JobDescription ${jobDescriptionId} for analysis ${analysis.id}`);
+        console.log(
+          `♻️ Reusing JobDescription ${jobDescriptionId} for analysis ${analysis.id}`,
+        );
       }
 
       // Update analysis with jobDescriptionId
-      await queryRunner.query(`
+      await queryRunner.query(
+        `
         UPDATE cv_matching_analyses 
         SET jobDescriptionId = $1,
             isSnapshot = true,
             snapshotReason = 'Backfilled from embedded snapshot'
         WHERE id = $2
-      `, [jobDescriptionId, analysis.id]);
+      `,
+        [jobDescriptionId, analysis.id],
+      );
     }
 
     // Process cover letters
     for (const coverLetter of coverLettersWithoutJobDescription) {
       const snapshot = coverLetter.jobDescriptionSnapshot;
       if (!snapshot || !snapshot.title || !snapshot.description) {
-        console.log(`⚠️ Skipping cover letter ${coverLetter.id} - invalid snapshot`);
+        console.log(
+          `⚠️ Skipping cover letter ${coverLetter.id} - invalid snapshot`,
+        );
         continue;
       }
 
       // Create a hash of the snapshot for deduplication
       const snapshotHash = this.createSnapshotHash(snapshot);
-      
+
       let jobDescriptionId = createdJobDescriptions.get(snapshotHash);
-      
+
       if (!jobDescriptionId) {
         // Create new JobDescription
-        const jobDescriptionResult = await queryRunner.query(`
+        const jobDescriptionResult = await queryRunner.query(
+          `
           INSERT INTO job_descriptions (
             id,
             userId,
@@ -161,42 +180,51 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
             $10,
             $10
           ) RETURNING id
-        `, [
-          coverLetter.userId,
-          snapshot.title,
-          snapshot.description,
-          snapshot.company || null,
-          null, // location not in snapshot
-          null, // salary not in snapshot
-          snapshot.experience || null,
-          JSON.stringify({
-            skills: snapshot.keyRequirements || [],
-            education: [],
-            experience: [],
-            certifications: []
-          }),
-          JSON.stringify(snapshot.keyRequirements || []),
-          coverLetter.createdAt
-        ]);
+        `,
+          [
+            coverLetter.userId,
+            snapshot.title,
+            snapshot.description,
+            snapshot.company || null,
+            null, // location not in snapshot
+            null, // salary not in snapshot
+            snapshot.experience || null,
+            JSON.stringify({
+              skills: snapshot.keyRequirements || [],
+              education: [],
+              experience: [],
+              certifications: [],
+            }),
+            JSON.stringify(snapshot.keyRequirements || []),
+            coverLetter.createdAt,
+          ],
+        );
 
         jobDescriptionId = jobDescriptionResult[0].id;
         if (jobDescriptionId) {
           createdJobDescriptions.set(snapshotHash, jobDescriptionId);
         }
-        
-        console.log(`✅ Created JobDescription ${jobDescriptionId} for cover letter ${coverLetter.id}`);
+
+        console.log(
+          `✅ Created JobDescription ${jobDescriptionId} for cover letter ${coverLetter.id}`,
+        );
       } else {
-        console.log(`♻️ Reusing JobDescription ${jobDescriptionId} for cover letter ${coverLetter.id}`);
+        console.log(
+          `♻️ Reusing JobDescription ${jobDescriptionId} for cover letter ${coverLetter.id}`,
+        );
       }
 
       // Update cover letter with jobDescriptionId
-      await queryRunner.query(`
+      await queryRunner.query(
+        `
         UPDATE cv_cover_letters 
         SET jobDescriptionId = $1,
             isSnapshot = true,
             snapshotReason = 'Backfilled from embedded snapshot'
         WHERE id = $2
-      `, [jobDescriptionId, coverLetter.id]);
+      `,
+        [jobDescriptionId, coverLetter.id],
+      );
     }
 
     // Step 4: Verify the backfill
@@ -218,14 +246,22 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
     `);
 
     console.log(`📊 Backfill completed:`);
-    console.log(`   - Analyses with JobDescription: ${finalAnalysisCount[0].count}`);
-    console.log(`   - Cover Letters with JobDescription: ${finalCoverLetterCount[0].count}`);
-    console.log(`   - Total JobDescriptions: ${finalJobDescriptionCount[0].count}`);
-    console.log(`   - Unique JobDescriptions created: ${createdJobDescriptions.size}`);
+    console.log(
+      `   - Analyses with JobDescription: ${finalAnalysisCount[0].count}`,
+    );
+    console.log(
+      `   - Cover Letters with JobDescription: ${finalCoverLetterCount[0].count}`,
+    );
+    console.log(
+      `   - Total JobDescriptions: ${finalJobDescriptionCount[0].count}`,
+    );
+    console.log(
+      `   - Unique JobDescriptions created: ${createdJobDescriptions.size}`,
+    );
 
     // Step 5: Add foreign key constraints
     console.log('🔗 Adding foreign key constraints...');
-    
+
     await queryRunner.query(`
       ALTER TABLE cv_matching_analyses 
       ADD CONSTRAINT fk_cv_matching_analyses_job_description 
@@ -295,9 +331,9 @@ export class BackfillJobDescriptionsFromSnapshots1734567890005 implements Migrat
       title: snapshot.title,
       description: snapshot.description,
       company: snapshot.company,
-      keyRequirements: snapshot.keyRequirements
+      keyRequirements: snapshot.keyRequirements,
     };
-    
+
     return Buffer.from(JSON.stringify(keyFields)).toString('base64');
   }
 }

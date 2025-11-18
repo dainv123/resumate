@@ -6,13 +6,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cvApi, CV, CompatibilityAnalysis } from "@/lib/cv";
 import { useCvsPaginated } from "@/hooks/useCvs";
 import Button from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
-import { Collapse } from "@/components/ui/Collapse";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/contexts/ToastContext";
 import ProcessingModal from "@/components/job-tailor/ProcessingModal";
 import CVDisplay from "@/components/cv/CVDisplay";
+import CompatibilityAnalysisModal from "@/components/job-tailor/CompatibilityAnalysisModal";
+import CoverLetterModal from "@/components/job-tailor/CoverLetterModal";
 import {
   Sparkles,
   FileText,
@@ -28,10 +28,6 @@ import {
   TrendingUp,
   BarChart3,
   Mail,
-  CheckSquare,
-  XCircle,
-  Lightbulb,
-  Award,
 } from "lucide-react";
 
 export default function JobTailorPage() {
@@ -60,6 +56,7 @@ export default function JobTailorPage() {
   const { data: cvsData, isLoading } = useCvsPaginated({
     limit: 100,
     sortBy: "updatedAt",
+    sortOrder: "DESC",
     sortOrder: "DESC",
   });
   const cvs = React.useMemo(() => cvsData?.data ?? [], [cvsData]);
@@ -135,6 +132,10 @@ export default function JobTailorPage() {
       console.error("Tailoring failed:", error);
       showError(t("jobTailor.failedToTailor"));
     },
+    onSettled: () => {
+      setShowProcessingModal(false);
+      setCurrentMutation(null);
+    },
   });
 
   const analyzeMutation = useMutation({
@@ -155,6 +156,15 @@ export default function JobTailorPage() {
       } else {
         showSuccess(t("jobTailor.analysisGenerated"));
       }
+    },
+    onError: (error) => {
+      console.error("Analysis failed:", error);
+      showError(t("jobTailor.failedToAnalyze"));
+    },
+    onSettled: () => {
+      // This runs after success or error
+      setShowProcessingModal(false);
+      setCurrentMutation(null);
     },
   });
 
@@ -177,6 +187,14 @@ export default function JobTailorPage() {
         showSuccess(t("jobTailor.coverLetterGenerated"));
       }
     },
+    onError: (error) => {
+      console.error("Cover letter generation failed:", error);
+      showError(t("jobTailor.failedToGenerateCoverLetter"));
+    },
+    onSettled: () => {
+      setShowProcessingModal(false);
+      setCurrentMutation(null);
+    },
   });
 
   const handleTailor = async () => {
@@ -185,20 +203,18 @@ export default function JobTailorPage() {
       return;
     }
 
+    // Reset mutation state before starting
+    tailorMutation.reset();
+
     setProcessingType("tailor");
     setCurrentMutation(tailorMutation);
     setShowProcessingModal(true);
 
-    // Call API immediately
-    try {
-      await tailorMutation.mutateAsync({
-        cvId: selectedCv.id,
-        jobDescription: jobDescription.trim(),
-      });
-    } finally {
-      setShowProcessingModal(false);
-      setCurrentMutation(null);
-    }
+    // Use mutate instead of mutateAsync
+    tailorMutation.mutate({
+      cvId: selectedCv.id,
+      jobDescription: jobDescription.trim(),
+    });
   };
 
   const handleAnalyzeCompatibility = async () => {
@@ -207,20 +223,18 @@ export default function JobTailorPage() {
       return;
     }
 
+    // Reset mutation state before starting
+    analyzeMutation.reset();
+    
     setProcessingType("analyze");
     setCurrentMutation(analyzeMutation);
     setShowProcessingModal(true);
-
-    // Call API immediately
-    try {
-      await analyzeMutation.mutateAsync({
-        cvId: selectedCv.id,
-        jobDescription: jobDescription.trim(),
-      });
-    } finally {
-      setShowProcessingModal(false);
-      setCurrentMutation(null);
-    }
+   
+    // Use mutate instead of mutateAsync
+    analyzeMutation.mutate({
+      cvId: selectedCv.id,
+      jobDescription: jobDescription.trim(),
+    });
   };
 
   const handleGenerateCoverLetter = async () => {
@@ -229,24 +243,18 @@ export default function JobTailorPage() {
       return;
     }
 
+    // Reset mutation state before starting
+    coverLetterMutation.reset();
+
     setProcessingType("cover-letter");
     setCurrentMutation(coverLetterMutation);
     setShowProcessingModal(true);
-
-    // Call API immediately
-    try {
-      await coverLetterMutation.mutateAsync({
-        cvId: selectedCv.id,
-        jobDescription: jobDescription.trim(),
-      });
-    } finally {
-      setShowProcessingModal(false);
-      setCurrentMutation(null);
-    }
-  };
-
-  const handleCopyCoverLetter = () => {
-    navigator.clipboard.writeText(coverLetter);
+   
+    // Use mutate instead of mutateAsync
+    coverLetterMutation.mutate({
+      cvId: selectedCv.id,
+      jobDescription: jobDescription.trim(),
+    });
   };
 
   const handleExport = async (format: "pdf" | "word" | "ats") => {
@@ -481,7 +489,7 @@ export default function JobTailorPage() {
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   <span>
-                                    {t("jobTailor.updated")}
+                                    {t("jobTailor.updated")}{' '}
                                     {new Date(
                                       cv.updatedAt
                                     ).toLocaleDateString()}
@@ -602,14 +610,8 @@ export default function JobTailorPage() {
                     onChange={(e) => setJobDescription(e.target.value)}
                     rows={12}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-main/20 focus:border-main transition-all duration-200 resize-none"
-                    placeholder="Paste the job description here...
+                    placeholder={t("jobTailor.jobDescPlaceholder")}
 
-Example:
-• 3+ years of experience in React development
-• Strong knowledge of TypeScript and Node.js
-• Experience with cloud platforms (AWS, Azure)
-• Excellent communication skills
-• Bachelor's degree in Computer Science or related field"
                   />
 
                   {/* Character count and analysis */}
@@ -782,6 +784,7 @@ Example:
                 <div className="space-y-4">
                   {/* Tailored CV Display */}
                   <CVDisplay
+                    mode="full"
                     cv={tailoredCv}
                     showActions={false}
                     showVersionHistory={false}
@@ -804,6 +807,25 @@ Example:
                     </div>
 
                     <div className="grid grid-cols-1 gap-3">
+                      {/* View CV Button */}
+                      <button
+                        onClick={() => window.open(`/dashboard/cv/${tailoredCv.id}`, '_blank')}
+                        className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Eye className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-medium text-gray-900">
+                              {t("jobTailor.viewTailoredCV")}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {t("jobTailor.viewTailoredCVDesc")}
+                            </p>
+                          </div>
+                        </div>
+                        <Eye className="h-4 w-4 text-gray-400 group-hover:text-blue-600" />
+                      </button>
                       <button
                         onClick={() => handleExport("pdf")}
                         className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-main hover:shadow-md transition-all duration-200 group">
@@ -956,7 +978,7 @@ Example:
         )}
 
         {/* Compatibility Analysis Modal */}
-        <Modal
+        <CompatibilityAnalysisModal
           isOpen={showAnalysisModal}
           onClose={() => setShowAnalysisModal(false)}
           title="CV-Job Compatibility Analysis"
@@ -1120,7 +1142,7 @@ Example:
         </Modal>
 
         {/* Cover Letter Modal */}
-        <Modal
+        <CoverLetterModal
           isOpen={showCoverLetterModal}
           onClose={() => setShowCoverLetterModal(false)}
           title={t("jobTailor.coverLetter.title")}

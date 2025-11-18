@@ -8,6 +8,7 @@ import CvManager from "@/components/cv/CvManager";
 import CVUpload from "@/components/cv/CVUpload";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import CVSettingsModal from "@/components/cv/CVSettingsModal";
 import {
   Plus,
   Settings,
@@ -33,7 +34,7 @@ export default function CVPage() {
   const [sortBy, setSortBy] = useState<
     "createdAt" | "updatedAt" | "originalFileName"
   >("updatedAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Handlers
@@ -77,7 +78,7 @@ export default function CVPage() {
   };
 
   const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -192,13 +193,13 @@ export default function CVPage() {
                   variant="outline"
                   onClick={toggleSortOrder}
                   className="flex items-center space-x-1">
-                  {sortOrder === "asc" ? (
+                  {sortOrder === "ASC" ? (
                     <SortAsc className="h-4 w-4" />
                   ) : (
                     <SortDesc className="h-4 w-4" />
                   )}
                   <span>
-                    {sortOrder === "asc"
+                    {sortOrder === "ASC"
                       ? t("dashboard.sortAsc")
                       : t("dashboard.sortDesc")}
                   </span>
@@ -243,9 +244,9 @@ export default function CVPage() {
         {/* {selectedCv && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h3 className="font-medium text-gray-900 mb-2">
+              <h4 className="font-medium text-gray-900 mb-2">
                 {t("cv.cvDetails")}
-              </h3>
+              </h4>
               <div className="space-y-1 text-sm text-gray-600">
                 <p>
                   <strong>{t("cv.file")}:</strong> {selectedCv.originalFileName}
@@ -265,9 +266,9 @@ export default function CVPage() {
             </div>
 
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h3 className="font-medium text-gray-900 mb-2">
+              <h4 className="font-medium text-gray-900 mb-2">
                 {t("cv.actions")}
-              </h3>
+              </h4>
               <div className="space-y-2">
                 <Button variant="outline" size="sm" className="w-full">
                   {t("cv.viewCV")}
@@ -282,7 +283,7 @@ export default function CVPage() {
             </div>
 
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h3 className="font-medium text-gray-900 mb-2">Export</h3>
+              <h4 className="font-medium text-gray-900 mb-2">Export</h4>
               <div className="space-y-2">
                 <Button variant="outline" size="sm" className="w-full">
                   {t("cv.exportPDF")}
@@ -300,7 +301,7 @@ export default function CVPage() {
 
         {/* Help Section */}
         {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-medium text-blue-900 mb-3">CV Management Tips</h3>
+          <h4 className="font-medium text-blue-900 mb-3">CV Management Tips</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
               <h4 className="font-medium mb-2">Pagination Mode:</h4>
@@ -328,58 +329,15 @@ export default function CVPage() {
       <Modal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
-        title="Upload CV">
+        title={t("cv.uploadCV")}>
         <CVUpload onSuccess={handleUploadSuccess} onError={handleUploadError} />
       </Modal>
 
       {/* Settings Modal */}
-      <Modal
+      <CVSettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
-        title="CV Settings">
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-medium text-gray-900 mb-2">Display Settings</h3>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" defaultChecked />
-                Show version history
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" defaultChecked />
-                Show tailored CVs separately
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                Auto-save changes
-              </label>
-            </div>
-          </div>
-          <div>
-            <h3 className="font-medium text-gray-900 mb-2">Export Settings</h3>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" defaultChecked />
-                Include metadata in exports
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                Auto-download after export
-              </label>
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowSettingsModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setShowSettingsModal(false)}>
-              Save Settings
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      />
     </DashboardLayout>
   );
 }

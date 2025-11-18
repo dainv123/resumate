@@ -4,7 +4,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import TemplateGallery from "@/components/template-gallery/TemplateGallery";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { ArrowLeft, Palette } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 

@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MigrateDataFromCvToAnalysisTables1734567890002 implements MigrationInterface {
+export class MigrateDataFromCvToAnalysisTables1734567890002
+  implements MigrationInterface
+{
   name = 'MigrateDataFromCvToAnalysisTables1734567890002';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

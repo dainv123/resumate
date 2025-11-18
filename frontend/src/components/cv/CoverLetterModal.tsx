@@ -5,6 +5,7 @@ import { Mail, Copy, Download, CheckCircle, Lightbulb } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/contexts/ToastContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CoverLetterModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export default function CoverLetterModal({
   isLoading = false,
 }: CoverLetterModalProps) {
   const { showSuccess, showError } = useToast();
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const handleCopyToClipboard = async () => {
@@ -32,11 +34,11 @@ export default function CoverLetterModal({
     try {
       await navigator.clipboard.writeText(coverLetter);
       setCopied(true);
-      showSuccess("Cover letter copied to clipboard!");
+      showSuccess(t("cv.coverLetterCopied"));
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error("Failed to copy:", error);
-      showError("Failed to copy cover letter");
+      showError(t("cv.failedCopyCoverLetter"));
     }
   };
 
@@ -52,14 +54,16 @@ export default function CoverLetterModal({
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    showSuccess("Cover letter downloaded!");
+    showSuccess(t("cv.coverLetterDownloaded"));
   };
 
   const modalTitle = (
     <div className="flex items-center">
       <Mail className="h-6 w-6 text-blue-600 mr-3" />
       <div>
-        <h3 className="text-xl font-semibold text-gray-900">Cover Letter</h3>
+        <h3 className="text-xl font-semibold text-gray-900">
+          {t("cv.coverLetter")}
+        </h3>
         <p className="text-sm text-gray-600">
           {jobTitle} at {company}
         </p>
@@ -94,7 +98,7 @@ export default function CoverLetterModal({
         <span>Download</span>
       </Button>
       <Button onClick={onClose} variant="outline">
-        Close
+        {t("common.close")}
       </Button>
     </div>
   );
@@ -112,19 +116,16 @@ export default function CoverLetterModal({
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Generating your cover letter...</p>
+              <p className="text-gray-600">{t("cv.generatingCoverLetter")}</p>
             </div>
           </div>
         ) : !coverLetter ? (
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
             <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Cover Letter Available
+              {t("cv.noCoverLetterAvailable")}
             </h3>
-            <p className="text-gray-600">
-              Generate a cover letter using the Job Tailor feature to create a
-              personalized letter for this position.
-            </p>
+            <p className="text-gray-600">{t("cv.generateCoverLetterText")}</p>
           </div>
         ) : (
           <>
@@ -141,18 +142,16 @@ export default function CoverLetterModal({
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
               <h3 className="text-lg font-medium text-yellow-900 mb-3 flex items-center">
                 <Lightbulb className="h-5 w-5 mr-2" />
-                Personalization Tips
+                {t("cv.personalizationTips")}
               </h3>
               <ul className="space-y-2 text-yellow-800">
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span>
-                    Review and customize the content to match your voice
-                  </span>
+                  <span>{t("cv.reviewAndCustomizeContent")}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span>Add specific examples from your experience</span>
+                  <span>{t("cv.addSpecificExamples")}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
@@ -162,7 +161,7 @@ export default function CoverLetterModal({
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span>Proofread for grammar and spelling</span>
+                  <span>{t("cv.proofreadGrammarAndSpelling")}</span>
                 </li>
               </ul>
             </div>

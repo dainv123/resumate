@@ -12,30 +12,40 @@ export class AiService {
     private documentParserService: DocumentParserService,
   ) {}
 
-  async parseCvWithRetry(fileBuffer: Buffer, mimeType: string, maxRetries = 3): Promise<CVData> {
+  async parseCvWithRetry(
+    fileBuffer: Buffer,
+    mimeType: string,
+    maxRetries = 3,
+  ): Promise<CVData> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         // Extract text from file
-        const text = await this.documentParserService.extractTextFromFile(fileBuffer, mimeType);
-        
+        const text = await this.documentParserService.extractTextFromFile(
+          fileBuffer,
+          mimeType,
+        );
+
         // Parse with AI
         const cvData = await this.googleAIService.parseCvContent(text);
-        
+
         this.logger.log(`CV parsed successfully on attempt ${attempt}`);
         return cvData;
       } catch (error) {
-        this.logger.warn(`CV parsing attempt ${attempt} failed:`, error.message);
-        
+        this.logger.warn(
+          `CV parsing attempt ${attempt} failed:`,
+          error.message,
+        );
+
         if (attempt === maxRetries) {
           this.logger.error('All CV parsing attempts failed, using fallback');
           return this.fallbackParsing(fileBuffer, mimeType);
         }
-        
+
         // Exponential backoff
         await this.delay(1000 * attempt);
       }
     }
-    
+
     // This should never be reached, but TypeScript requires it
     return this.fallbackParsing(fileBuffer, mimeType);
   }
@@ -50,7 +60,7 @@ export class AiService {
       return await this.googleAIService.generateBulletPoints(
         project.name,
         project.role,
-        project.techStack
+        project.techStack,
       );
     } catch (error) {
       this.logger.error('Error generating project bullets:', error);
@@ -58,7 +68,10 @@ export class AiService {
     }
   }
 
-  async tailorCvForJob(cvData: CVData, jobDescription: string): Promise<CVData> {
+  async tailorCvForJob(
+    cvData: CVData,
+    jobDescription: string,
+  ): Promise<CVData> {
     try {
       return await this.googleAIService.tailorCvContent(cvData, jobDescription);
     } catch (error) {
@@ -82,7 +95,8 @@ export class AiService {
     keywords: string[];
   }> {
     try {
-      const keywords = await this.googleAIService.extractKeywords(jobDescription);
+      const keywords =
+        await this.googleAIService.extractKeywords(jobDescription);
       return {
         skills: keywords,
         requirements: keywords,
@@ -94,7 +108,10 @@ export class AiService {
     }
   }
 
-  async analyzeCompatibility(cvData: CVData, jobDescription: string): Promise<{
+  async analyzeCompatibility(
+    cvData: CVData,
+    jobDescription: string,
+  ): Promise<{
     score: number;
     matchedSkills: string[];
     missingSkills: string[];
@@ -105,7 +122,10 @@ export class AiService {
     reused?: boolean;
   }> {
     try {
-      return await this.googleAIService.analyzeCompatibility(cvData, jobDescription);
+      return await this.googleAIService.analyzeCompatibility(
+        cvData,
+        jobDescription,
+      );
     } catch (error) {
       this.logger.error('Error analyzing compatibility:', error);
       // Return fallback analysis
@@ -121,9 +141,15 @@ export class AiService {
     }
   }
 
-  async generateCoverLetter(cvData: CVData, jobDescription: string): Promise<{ coverLetter: string; reused?: boolean }> {
+  async generateCoverLetter(
+    cvData: CVData,
+    jobDescription: string,
+  ): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
-      return await this.googleAIService.generateCoverLetter(cvData, jobDescription);
+      return await this.googleAIService.generateCoverLetter(
+        cvData,
+        jobDescription,
+      );
     } catch (error) {
       this.logger.error('Error generating cover letter:', error);
       // Return fallback cover letter
@@ -144,15 +170,25 @@ Sincerely,
 ${cvData.contact?.name || 'Candidate'}`;
   }
 
-  private async fallbackParsing(fileBuffer: Buffer, mimeType: string): Promise<CVData> {
+  private async fallbackParsing(
+    fileBuffer: Buffer,
+    mimeType: string,
+  ): Promise<CVData> {
     try {
       // Try to extract text without AI
-      const text = await this.documentParserService.extractTextFromFile(fileBuffer, mimeType);
-      
+      const text = await this.documentParserService.extractTextFromFile(
+        fileBuffer,
+        mimeType,
+      );
+
       // Basic regex-based parsing
-      const emailMatch = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
-      const phoneMatch = text.match(/(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/);
-      
+      const emailMatch = text.match(
+        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+      );
+      const phoneMatch = text.match(
+        /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/,
+      );
+
       return {
         contact: {
           name: 'Unknown',
@@ -167,7 +203,7 @@ ${cvData.contact?.name || 'Candidate'}`;
           technical: [],
           soft: [],
           languages: [],
-          tools: []
+          tools: [],
         },
         projects: [],
         certifications: [],
@@ -191,7 +227,7 @@ ${cvData.contact?.name || 'Candidate'}`;
           technical: [],
           soft: [],
           languages: [],
-          tools: []
+          tools: [],
         },
         projects: [],
         certifications: [],
@@ -211,7 +247,9 @@ ${cvData.contact?.name || 'Candidate'}`;
     return [
       `Developed ${project.name} using ${project.techStack.join(', ')}`,
       `Collaborated with team to deliver high-quality solutions`,
-      project.results ? `Achieved ${project.results}` : 'Delivered project on time and within budget',
+      project.results
+        ? `Achieved ${project.results}`
+        : 'Delivered project on time and within budget',
     ];
   }
 
@@ -231,9 +269,17 @@ ${cvData.contact?.name || 'Candidate'}`;
     keywords: string[];
   } {
     // Basic keyword extraction using common patterns
-    const commonSkills = ['JavaScript', 'Python', 'React', 'Node.js', 'SQL', 'AWS', 'Docker'];
-    const foundSkills = commonSkills.filter(skill => 
-      jobDescription.toLowerCase().includes(skill.toLowerCase())
+    const commonSkills = [
+      'JavaScript',
+      'Python',
+      'React',
+      'Node.js',
+      'SQL',
+      'AWS',
+      'Docker',
+    ];
+    const foundSkills = commonSkills.filter((skill) =>
+      jobDescription.toLowerCase().includes(skill.toLowerCase()),
     );
 
     return {
@@ -246,7 +292,10 @@ ${cvData.contact?.name || 'Candidate'}`;
   async tailorCvContent(cvData: any, jobDescription: string): Promise<any> {
     try {
       // Use Google AI service to tailor CV content
-      const tailoredData = await this.googleAIService.tailorCvContent(cvData, jobDescription);
+      const tailoredData = await this.googleAIService.tailorCvContent(
+        cvData,
+        jobDescription,
+      );
       return tailoredData;
     } catch (error) {
       this.logger.error('Error tailoring CV content:', error);
@@ -256,6 +305,6 @@ ${cvData.contact?.name || 'Candidate'}`;
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

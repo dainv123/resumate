@@ -19,11 +19,13 @@ export class TemplateLoaderService {
    */
   async loadTemplateFile(fileName: string): Promise<string> {
     const templateFile = path.join(this.templatesPath, fileName);
-    
+
     try {
       return fs.readFileSync(templateFile, 'utf-8');
     } catch (error) {
-      throw new Error(`Template file not found: ${fileName} at ${templateFile}`);
+      throw new Error(
+        `Template file not found: ${fileName} at ${templateFile}`,
+      );
     }
   }
 
@@ -54,8 +56,8 @@ export class TemplateLoaderService {
     try {
       const files = fs.readdirSync(this.templatesPath);
       return files
-        .filter(file => file.endsWith('.template.html'))
-        .map(file => file.replace('.template.html', ''));
+        .filter((file) => file.endsWith('.template.html'))
+        .map((file) => file.replace('.template.html', ''));
     } catch (error) {
       return [];
     }
@@ -124,7 +126,8 @@ export class TemplateLoaderService {
         metadata: {
           category: 'creative' as const,
           color: '#e74c3c',
-          preview: 'Modern design with focus on visual projects and creative work',
+          preview:
+            'Modern design with focus on visual projects and creative work',
           features: ['Project showcase', 'Modern design', 'Customizable'],
           sections: {
             hero: true,
@@ -149,7 +152,8 @@ export class TemplateLoaderService {
         metadata: {
           category: 'modern' as const,
           color: '#3498db',
-          preview: 'Contemporary design with smooth animations and modern styling',
+          preview:
+            'Contemporary design with smooth animations and modern styling',
           features: ['Modern UI', 'Smooth animations', 'Customizable'],
           sections: {
             hero: true,
@@ -174,8 +178,14 @@ export class TemplateLoaderService {
         metadata: {
           category: 'developer' as const,
           color: '#9b59b6',
-          preview: 'Complete professional portfolio with all sections and details',
-          features: ['Complete sections', 'Professional', 'Certifications', 'Awards'],
+          preview:
+            'Complete professional portfolio with all sections and details',
+          features: [
+            'Complete sections',
+            'Professional',
+            'Certifications',
+            'Awards',
+          ],
           sections: {
             hero: true,
             about: true,

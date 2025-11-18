@@ -1,0 +1,195 @@
+================================================================================
+                    HARDCODE AUDIT - FINAL SUMMARY
+================================================================================
+
+SCAN COMPLETED: Full Frontend Verification
+Total Files Scanned: 104 (.tsx / .ts files)
+Total Files with Hardcodes: 45
+Total Hardcoded Strings Found: 207
+
+================================================================================
+                              BREAKDOWN
+================================================================================
+
+PRIORITY BREAKDOWN:
+  🔴 CRITICAL (7 files, 60+ strings) - MUST FIX IMMEDIATELY
+  🟠 HIGH (6 files, 50+ strings) - MUST FIX 
+  🟡 MEDIUM (15 files, 70+ strings) - SHOULD FIX
+  🟢 LOW (2 files, 27+ strings) - NICE TO HAVE
+
+TOP OFFENDERS:
+  1. /app/layout.tsx                    - 33 hardcodes (SEO/Metadata)
+  2. /components/portfolio/SectionCustomizer.tsx - 18 hardcodes (UI Labels)
+  3. /components/template-gallery/TemplateGallery.tsx - 16 hardcodes (Features)
+  4. /components/seo/StructuredData.tsx - 15 hardcodes (Schema + VI text)
+  5. /components/cv/TemplateSelectionModal.tsx - 11 hardcodes (Templates)
+  6. /components/cv/TemplateConfigModal.tsx - 10 hardcodes (Config)
+  7. /contexts/LanguageContext.tsx - 12 hardcodes (Debug/Messages)
+
+================================================================================
+                          IMPACT ANALYSIS
+================================================================================
+
+VIETNAMESE USERS AFFECTED:
+  ✗ Portfolio customization UI - ALL IN ENGLISH
+  ✗ Template selection - ALL IN ENGLISH
+  ✗ Error messages - ALL IN ENGLISH
+  ✗ Modal titles and labels - ALL IN ENGLISH
+  ✗ 200+ string literals not translated
+
+ENGLISH USERS:
+  ✓ No impact, everything works
+
+FUTURE LANGUAGES (Chinese, Japanese, etc):
+  ✗ BLOCKED - Cannot add without code changes
+  ✗ Cannot support multi-language properly
+
+================================================================================
+                         FILES REQUIRING FIXES
+================================================================================
+
+[CRITICAL] DO FIRST (7 files - 60+ strings):
+  ✗ /app/layout.tsx (33 hardcodes)
+  ✗ /components/portfolio/SectionCustomizer.tsx (18 hardcodes)
+  ✗ /components/seo/StructuredData.tsx (15 hardcodes)
+  ✗ /components/template-gallery/TemplateGallery.tsx (16 hardcodes)
+  ✗ /components/cv/TemplateSelectionModal.tsx (11 hardcodes)
+  ✗ /components/cv/TemplateConfigModal.tsx (10 hardcodes)
+  ✗ /contexts/LanguageContext.tsx (12 hardcodes)
+
+[HIGH] DO NEXT (6 files - 50+ strings):
+  ✗ /components/portfolio/TemplateSelector.tsx (8 hardcodes)
+  ✗ /app/dashboard/cv/[id]/page.tsx (6 hardcodes)
+  ✗ /components/cv/CvManager.tsx (6 hardcodes)
+  ✗ /components/cv/MatchingAnalysisModal.tsx (6 hardcodes)
+  ✗ /components/ai-cv-wizard/AiCvWizard.tsx (5 hardcodes)
+  ✗ /components/cv/CVDisplay.tsx (5 hardcodes)
+
+[MEDIUM] DO AFTER (15 files - 70+ strings):
+  - /components/cv/CVCard.tsx (4)
+  - /components/cv/VersionHistoryModal.tsx (4)
+  - /components/projects/ProjectForm.tsx (4)
+  - /app/dashboard/cv/page.tsx (3)
+  - /app/dashboard/settings/page.tsx (3)
+  - /components/cv/CoverLetterModal.tsx (3)
+  - ... and 9 more files
+
+[LOW] OPTIONAL (2 files - 27+ strings):
+  - Files with 1-2 hardcodes each
+
+================================================================================
+                        CONVERSION REQUIREMENTS
+================================================================================
+
+PHASE 1: ADD TRANSLATIONS
+  Location: /frontend/src/locales/
+  Files to modify:
+    - en.json (add 200+ new keys)
+    - vi.json (add 200+ Vietnamese translations)
+  Time: 2 hours
+
+PHASE 2: UPDATE COMPONENTS
+  Tasks:
+    - Import useLanguage hook in 45 files
+    - Replace hardcoded strings with t() calls
+    - Test each component
+  Time: 4-5 hours
+
+PHASE 3: VERIFY & TEST
+  Tasks:
+    - Run verification scripts
+    - Test with Vietnamese language
+    - Check for console errors
+    - Performance verification
+  Time: 1-2 hours
+
+TOTAL TIME: 6-8 hours
+
+================================================================================
+                        TRANSLATION STRUCTURE
+================================================================================
+
+KEYS TO ADD IN LOCALES:
+
+portfolio.sectionCustomizer.*
+  - sections.hero.label
+  - sections.hero.description
+  - sections.about.label
+  - sections.about.description
+  ... (9 sections total)
+
+portfolio.templateSelector.*
+  - sectionNames.hero
+  - sectionNames.about
+  ... (9 names total)
+
+cv.statusLabels.*
+  - tailored
+  - original
+  - present
+
+cv.errors.*
+  - exportFailed
+  - noJobDescription
+  - loadError
+  - restoreError
+
+seo.keywords.*
+  (33 SEO keywords from layout.tsx)
+
+================================================================================
+                    VERIFICATION COMMANDS
+================================================================================
+
+# Count remaining hardcoded strings AFTER fixes:
+grep -r "\"[A-Z][a-zA-Z\s\-\.,:?!()]*\"" frontend/src/components \
+  --include="*.tsx" | grep -v 't("' | wc -l
+
+# List files still with hardcodes (target: 0):
+grep -r "\"[A-Z][a-zA-Z\s\-\.,:?!()]*\"" frontend/src/components \
+  --include="*.tsx" | grep -v 't("' | cut -d: -f1 | sort -u
+
+# Count total translations used (should increase from ~500 to 700+):
+grep -r 't("' frontend/src/components --include="*.tsx" | wc -l
+
+================================================================================
+                          RECOMMENDATIONS
+================================================================================
+
+1. START WITH CRITICAL FILES FIRST
+   - These block full i18n support
+   - Highest user impact
+
+2. ADD ALL TRANSLATIONS AT ONCE
+   - Easier than doing file-by-file
+   - Prevents multiple translation file edits
+
+3. TEST WITH VIETNAMESE AFTER EACH PHASE
+   - Set: localStorage.setItem('language', 'vi')
+   - Verify all text appears translated
+
+4. DOCUMENT NEW TRANSLATION KEYS
+   - Update translation key documentation
+   - Keep track of what was added
+
+5. CONSIDER AUTOMATION FOR SIMILAR FILES
+   - Many files have same patterns
+   - Could write script to auto-convert some
+
+================================================================================
+                       FILES READY FOR CONVERSION
+================================================================================
+
+Detailed conversion plan: /Users/dainguyen/Documents/projects/resumate/CONVERSION_PLAN.md
+Scan report (JSON): /tmp/detailed_hardcode_report.json
+This summary: /Users/dainguyen/Documents/projects/resumate/HARDCODE_AUDIT_SUMMARY.txt
+
+================================================================================
+
+STATUS: ✅ AUDIT COMPLETE - READY FOR CONVERSION
+TOTAL EFFORT: 6-8 hours
+BLOCKER: YES - Prevents full multi-language support
+
+Next Step: Begin Phase 1 (Add Translations) - 2 hours
+
+================================================================================

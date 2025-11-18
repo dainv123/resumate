@@ -600,7 +600,7 @@ export default function DynamicFormEditor({
                               const newData = {
                                 ...(value as Record<string, unknown>),
                               };
-                              delete newData[fieldKey];
+                              delete (newData as any)[fieldKey];
                               updateField(path, newData);
                             }}
                             className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-all">

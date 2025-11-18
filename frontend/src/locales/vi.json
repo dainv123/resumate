@@ -30,7 +30,8 @@
     "no": "Không",
     "current": "Hiện tại",
     "new": "Mới",
-    "creating": "Đang tạo..."
+    "creating": "Đang tạo...",
+    "backToDashboard": "Quay lại Tổng quan"
   },
   "nav": {
     "dashboard": "Tổng quan",
@@ -249,7 +250,37 @@
     "achievementsPlaceholder": "Nhập mỗi thành tựu trên một dòng",
     "metrics": "Chỉ số & Tác động",
     "metricsPlaceholder": "VD: Tăng hiệu suất 40%",
-    "createdAt": "Ngày tạo"
+    "createdAt": "Ngày tạo",
+    "techStack": "Tech Stack",
+    "techStackLabel": "Công nghệ sử dụng",
+    "addTechnology": "Thêm công nghệ (Nhấn Enter)",
+    "addTechButton": "Thêm",
+    "descriptionAndResults": "Mô tả & Kết quả",
+    "descriptionLabel": "Mô tả",
+    "descriptionPlaceholder": "Mô tả những gì bạn đã xây dựng và những đóng góp của bạn",
+    "resultsLabel": "Kết quả/Thành tựu",
+    "resultsPlaceholder": "VD: Tăng hiệu suất 50%, Tăng sự tham gia của người dùng 30%",
+    "linksAndMedia": "Liên kết & Phương tiện",
+    "demoLink": "Liên kết Demo",
+    "demoLinkPlaceholder": "https://demo.example.com",
+    "githubLink": "Liên kết GitHub",
+    "githubLinkPlaceholder": "https://github.com/username/repo",
+    "imageUrl": "URL ảnh dự án",
+    "imageUrlPlaceholder": "https://example.com/project-image.jpg",
+    "errors": {
+      "projectNameRequired": "Tên dự án là bắt buộc",
+      "roleRequired": "Vai trò là bắt buộc",
+      "techStackRequired": "Cần ít nhất một công nghệ",
+      "descriptionMinLength": "Mô tả phải có ít nhất 10 ký tự",
+      "invalidDemoLink": "Vui lòng nhập URL demo hợp lệ",
+      "invalidGithubLink": "Vui lòng nhập URL GitHub hợp lệ",
+      "invalidImageUrl": "Vui lòng nhập URL ảnh hợp lệ"
+    },
+    "demo": "Demo",
+    "code": "Mã",
+    "moreBullets": "+{{count}} viên đạn khác",
+    "cvBullets": "Viên đạn CV",
+    "failedLoadProjects": "Không thể tải các dự án"
   },
   "settings": {
     "title": "Cài đặt",
@@ -520,7 +551,37 @@
     "noCvsDescription": "Tải CV đầu tiên để bắt đầu",
     "createFirstCv": "Tạo CV đầu tiên",
     "detail": "Chi tiết",
-    "export": "Xuất bản"
+    "export": "Xuất bản",
+    "displaySettings": "Cài đặt Hiển Thị",
+    "showVersionHistory": "Hiện lịch sử phiên bản",
+    "showTailoredCvsSeparately": "Hiển thị CVs được tailored riêng biệt",
+    "autoSaveChanges": "Tự động lưu thay đổi",
+    "exportSettings": "Cài đặt xuất",
+    "includeMetadataInExports": "Bao gồm siêu dữ liệu trong xuất",
+    "autoDownloadAfterExport": "Tự động tải xuống sau khi xuất",
+    "matchingAnalysis": "Phân tích phù hợp",
+    "coverLetterCopied": "Cover letter được sao chép vào clipboard!",
+    "failedCopyCoverLetter": "Không thể sao chép cover letter",
+    "coverLetterDownloaded": "Cover letter đã được tải xuống!",
+    "copied": "Đã sao chép!",
+    "copyToClipboard": "Sao chép vào Clipboard",
+    "download": "Tải xuống",
+    "generatingCoverLetter": "Đang tạo cover letter của bạn...",
+    "noCoverLetterAvailable": "Không có Cover Letter",
+    "generateCoverLetterText": "Tạo cover letter bằng cách sử dụng tính năng Job Tailor để tạo một lá thư được cá nhân hóa cho vị trí này.",
+    "failedLoadVersionHistory": "Không thể tải lịch sử phiên bản",
+    "customDomainOptional": "Tên miền tùy chỉnh (Tùy chọn)",
+    "customDomainHelp": "Nhập tên miền của riêng bạn nếu bạn sở hữu (ví dụ: myportfolio.com)",
+    "requirements": "⚠️ Yêu cầu:",
+    "mustOwnDomain": "Bạn phải sở hữu tên miền",
+    "configureDNS": "Định cấu hình bản ghi DNS A để trỏ đến máy chủ của chúng tôi",
+    "contactSupport": "Liên hệ hỗ trợ để lấy IP máy chủ",
+    "customDomainNote": "Để trống để sử dụng URL mặc định được cung cấp bởi hệ thống.",
+    "personalizationTips": "Mẹo cá nhân hóa",
+    "reviewAndCustomizeContent": "Xem xét và tùy chỉnh nội dung để phù hợp với tiếng nói của bạn",
+    "addSpecificExamples": "Thêm các ví dụ cụ thể từ kinh nghiệm của bạn",
+    "includeHiringManagerName": "Bao gồm tên của người quản lý tuyển dụng nếu có sẵn",
+    "proofreadGrammarAndSpelling": "Kiểm tra lại ngữ pháp và chính tả"
   },
   "compare": {
     "title": "So Sánh Phiên Bản",
@@ -684,7 +745,7 @@
     "noCVsMatch": "Không có CV nào phù hợp",
     "noCVsAvailable": "Không có CV. Upload CV trước.",
     "jobDescription": "Mô Tả Công Việc",
-    "jobDescPlaceholder": "Dán mô tả công việc vào đây...",
+    "jobDescPlaceholder": "Dán mô tả công việc vào đây...\n\nVí dụ:\n• 3+ năm kinh nghiệm phát triển React\n• Kiến thức vững về TypeScript và Node.js\n• Kinh nghiệm với nền tảng đám mây (AWS, Azure)\n• Kỹ năng giao tiếp tốt\n• Bằng cử nhân Khoa học Máy tính hoặc ngành liên quan",
     "analyzeCompatibility": "Phân Tích Độ Phù Hợp",
     "analyzing": "Đang phân tích...",
     "generateCoverLetter": "Tạo Cover Letter",
@@ -719,8 +780,7 @@
     "tailoredCV": {
       "success": "CV đã được tùy chỉnh thành công!",
       "preview": "Xem CV Đã Tùy Chỉnh",
-      "download": "Tải CV Đã Tùy Chỉnh",
-      "viewOriginal": "Xem CV Gốc"
+      "download": "Tải CV Đã Tùy Chỉnh"
     },
     "analysisGenerated": "Phân tích đã được tạo thành công!",
     "analysisReused": "Sử dụng phân tích hiện có cho mô tả công việc này",
@@ -760,6 +820,8 @@
     "selectCVOnly": "Chọn CV để tiếp tục",
     "enterJobOnly": "Nhập mô tả công việc để tiếp tục",
     "failedToTailor": "Tùy chỉnh CV thất bại. Vui lòng thử lại.",
+    "failedToAnalyze": "Phân tích tương thích thất bại. Vui lòng thử lại.",
+    "failedToGenerateCoverLetter": "Tạo thư xin việc thất bại. Vui lòng thử lại.",
     "selectCVAndJD": "Vui lòng chọn CV và nhập mô tả công việc",
     "success": "CV đã được tùy chỉnh thành công! CV của bạn đã được tối ưu hóa cho công việc này.",
     "uploadCVPrompt": "Vui lòng upload CV trước để sử dụng tính năng tùy chỉnh CV",
@@ -807,6 +869,14 @@
     "wordDesc": "Định dạng có thể chỉnh sửa để tùy chỉnh thêm",
     "atsOptimized": "Tối Ưu ATS",
     "atsDesc": "Định dạng text thuần cho hệ thống ATS",
+    "previewCV": "Xem trước CV",
+    "viewTailoredCV": "Xem CV Đã Tùy Chỉnh",
+    "viewTailoredCVDesc": "Mở CV ở chế độ xem đầy đủ",
+    "exportTitle": "Xuất CV Đã Tùy Chỉnh",
+    "exportDesc": "Tải xuống CV đã tối ưu hóa ở nhiều định dạng",
+    "pdfTitle": "Định Dạng PDF",
+    "wordTitle": "Tài Liệu Word", 
+    "atsTitle": "Tối Ưu ATS",
     "howItWorks": "Cách AI Tùy Chỉnh Hoạt Động",
     "stepsDescription": "CV được tối ưu hóa trong 4 bước đơn giản",
     "step1Title": "Chọn CV",
@@ -823,6 +893,7 @@
     "analyzingCompatibility": "📊 Đang Phân Tích Độ Phù Hợp",
     "generatingCoverLetter": "✉️ Đang Tạo Cover Letter",
     "failedToTailorError": "Không thể tùy chỉnh CV. Vui lòng thử lại.",
+    "analysisTitle": "Phân Tích Độ Phù Hợp CV-Công Việc",
     "closeModal": "Đóng",
     "copyClipboard": "Sao Chép Vào Clipboard",
     "coverLetterInfo": "Thư xin việc chuyên nghiệp được tạo dựa trên CV và mô tả công việc",
@@ -848,11 +919,7 @@
       "estimatedTime": "Thời gian ước tính: {{time}} giây",
       "almostDone": "Sắp xong rồi!",
       "completed": "Hoàn thành! 🎉"
-    },
-    "exportTitle": "Xuất CV",
-    "exportDesc": "Xuất CV của bạn theo nhiều định dạng: PDF, Word, hoặc định dạng text phù hợp ATS.",
-    "loadingMoreCvs": "Đang tải thêm CVs...",
-    "scrollToSeeMore": "Cuộn xuống để xem thêm"
+    }
   },
   "aiCvWizard": {
     "title": "🤖 AI CV Wizard",
@@ -1094,5 +1161,285 @@
       "poppins": "Poppins",
       "sourceSansPro": "Source Sans Pro"
     }
+  },
+  "portfolioSections": {
+    "sectionCustomizer": {
+      "title": "Tùy chỉnh Phần",
+      "fixedTemplate": "Mẫu Cố định",
+      "fixedTemplateDesc": "Mẫu \"{{name}}\" có bố cục cố định và không thể tùy chỉnh được. Tất cả các phần sẽ được hiển thị dựa trên dữ liệu sẵn có của bạn.",
+      "subtitle": "Chọn những phần nào sẽ hiển thị trong hồ sơ của bạn. Các phần bị bỏ chọn sẽ bị ẩn.",
+      "tip": "Các phần chỉ xuất hiện nếu bạn có dữ liệu cho chúng. Ví dụ: nếu bạn không có chứng chỉ nào, phần đó sẽ không được hiển thị ngay cả khi được bật.",
+      "addedBadge": "Đã thêm",
+      "sections": {
+        "hero": {
+          "label": "Phần Hero",
+          "description": "Tiêu đề chính với tên và tiểu sử"
+        },
+        "about": {
+          "label": "Về Tôi",
+          "description": "Tóm tắt chuyên nghiệp/tiểu sử"
+        },
+        "skills": {
+          "label": "Kỹ Năng",
+          "description": "Kỹ năng kỹ thuật và mềm"
+        },
+        "experience": {
+          "label": "Kinh Nghiệm Làm Việc",
+          "description": "Lịch sử việc làm"
+        },
+        "education": {
+          "label": "Giáo Dục",
+          "description": "Nền tảng học vấn"
+        },
+        "projects": {
+          "label": "Dự Án",
+          "description": "Trưng bày các dự án portfolio"
+        },
+        "certifications": {
+          "label": "Chứng Chỉ",
+          "description": "Chứng chỉ chuyên nghiệp"
+        },
+        "awards": {
+          "label": "Giải Thưởng",
+          "description": "Những công nhân được công nhân"
+        },
+        "contact": {
+          "label": "Liên Kết Liên Hệ",
+          "description": "Thông tin mạng xã hội và liên hệ"
+        }
+      }
+    },
+    "templateSelector": {
+      "sectionNames": {
+        "hero": "Hero",
+        "about": "Về",
+        "skills": "Kỹ Năng",
+        "experience": "Kinh Nghiệm",
+        "education": "Giáo Dục",
+        "projects": "Dự Án",
+        "certifications": "Chứng Chỉ",
+        "awards": "Giải Thưởng",
+        "contact": "Liên Hệ"
+      }
+    },
+    "templateGallery": {
+      "features": {
+        "cleanModern": "Sạch & Hiện Đại",
+        "atsFriendly": "Thân thiện với ATS",
+        "corporateStyle": "Phong cách công ty",
+        "colorfulDesign": "Thiết kế đầy màu sắc",
+        "visualElements": "Các phần tử hình ảnh",
+        "creativeLayout": "Bố cục sáng tạo",
+        "portfolioShowcase": "Trưng bày portfolio",
+        "codeFriendly": "Thân thiện với mã",
+        "skillsFocus": "Tập trung vào kỹ năng",
+        "projectEmphasis": "Nhấn mạnh dự án",
+        "techStackDisplay": "Hiển thị Stack công nghệ"
+      }
+    },
+    "templateSelection": {
+      "professional": "Chuyên Nghiệp",
+      "cleanTraditional": "Bố cục truyền thống đơn cột sạch sẽ",
+      "singleColumnDesc": "Một cột với tiêu đề, phần và định dạng tiêu chuẩn",
+      "modernTwoColumn": "Hai Cột Hiện Đại",
+      "twoColumnDesign": "Thiết kế hai cột chuyên nghiệp với thanh tiến trình kỹ năng",
+      "twoColumnDesc": "Cột trái: Thông tin liên hệ & kỹ năng, Cột phải: Kinh nghiệm & giáo dục",
+      "chooseTemplate": "Chọn Mẫu & Định Dạng",
+      "portableDocument": "Tài Liệu Có Thể Di Chuyển",
+      "microsoftWord": "Microsoft Word",
+      "atsFriendlyText": "Văn Bản Thân Thiện ATS",
+      "singleColumnLayout": "Bố cục đơn cột truyền thống với kiểu chữ sạch và phần tiêu chuẩn."
+    }
+  },
+  "cvSections": {
+    "statusLabels": {
+      "tailored": "Đã tùy chỉnh",
+      "original": "Gốc",
+      "present": "Hiện tại",
+      "history": "Lịch sử"
+    },
+    "errors": {
+      "exportFailed": "Xuất thất bại:",
+      "noJobDescription": "Không có mô tả công việc",
+      "noJobTitle": "Không có chức danh công việc",
+      "noCompany": "Không có công ty",
+      "noAnalysis": "Không có phân tích nào cho CV này.",
+      "deleteFailed": "Xóa CV thất bại:",
+      "duplicateFailed": "Nhân bản CV thất bại:",
+      "failedCopy": "Sao chép thất bại:",
+      "cvGenerationTimeout": "Hết thời gian tạo CV",
+      "unknownError": "Lỗi không xác định",
+      "failedLoadHistory": "Không thể tải lịch sử phiên bản",
+      "failedRestore": "Không thể khôi phục phiên bản"
+    },
+    "versionHistory": {
+      "title": "Lịch Sử Phiên Bản CV",
+      "loading": "Đang tải phiên bản...",
+      "noVersions": "Không tìm thấy phiên bản nào",
+      "compareButton": "So sánh Được chọn ({{count}}/2)",
+      "closeButton": "Đóng",
+      "restoreButton": "Khôi phục",
+      "currentButton": "Hiện tại",
+      "tailoredBadge": "Đã tùy chỉnh",
+      "createdLabel": "Được tạo",
+      "updatedLabel": "Cập nhật",
+      "forLabel": "Cho",
+      "versionLabel": "Phiên bản",
+      "compareSelectedTip": "Chọn tối đa 2 phiên bản để so sánh chúng cạnh nhau.",
+      "restoreConfirm": "Bạn có chắc chắn muốn khôi phục phiên bản này không? Phiên bản hiện tại của bạn sẽ được lưu tự động."
+    },
+    "matching": {
+      "scoreLabels": {
+        "excellent": "Khớp Xuất Sắc",
+        "good": "Khớp Tốt",
+        "needsImprovement": "Cần Cải Thiện"
+      }
+    },
+    "templates": {
+      "formats": {
+        "portableDocument": "Tài Liệu Có Thể Di Chuyển",
+        "microsoftWord": "Microsoft Word",
+        "atsFriendlyText": "Văn Bản Thân Thiện ATS"
+      },
+      "chooseTemplateFormat": "Chọn Mẫu & Định Dạng",
+      "exportFormat": "Định Dạng Xuất",
+      "templateDesign": "Thiết Kế Mẫu",
+      "templatePreview": "Xem Trước Mẫu",
+      "professional": {
+        "name": "Chuyên Nghiệp",
+        "description": "Bố cục một cột sạch sẽ, truyền thống",
+        "preview": "Một cột với tiêu đề, các phần và định dạng tiêu chuẩn"
+      },
+      "twoColumn": {
+        "name": "Hai Cột Hiện Đại",
+        "description": "Thiết kế hai cột chuyên nghiệp với thanh tiến độ kỹ năng",
+        "preview": "Cột trái: Thông tin liên hệ & kỹ năng, Cột phải: Kinh nghiệm & giáo dục"
+      },
+      "professionalPreviewText": "Bố cục một cột truyền thống với kiểu chữ sạch và các phần tiêu chuẩn.",
+      "twoColumnPreviewText": "Bố cục hai cột hiện đại với thanh bên xanh đen, thanh tiến độ kỹ năng và kiểu chuyên nghiệp như hình bạn đã chỉ ra."
+    },
+    "templateConfig": {
+      "selectLayout": "Chọn bố cục",
+      "selectFont": "Chọn phông chữ",
+      "selectFontSize": "Chọn kích thước phông chữ",
+      "title": "Tùy Chỉnh Mẫu",
+      "buttons": {
+        "cancel": "Hủy",
+        "exportPDF": "Xuất PDF",
+        "exporting": "Đang Xuất..."
+      },
+      "tabs": {
+        "layout": "Bố Cục",
+        "sections": "Các Phần",
+        "styling": "Kiểu Dáng"
+      },
+      "layout": {
+        "title": "Kiểu Bố Cục",
+        "description": "Chọn cách sắp xếp nội dung CV của bạn",
+        "style": "Chọn kiểu bố cục",
+        "singleColumn": "Một Cột",
+        "twoColumn": "Hai Cột",
+        "preview": "Xem Trước"
+      },
+      "sections": {
+        "title": "Các Phần CV",
+        "description": "Chọn những phần nào cần đưa vào CV của bạn",
+        "contact": "Thông Tin Liên Hệ",
+        "summary": "Tóm Tắt Chuyên Nghiệp",
+        "experience": "Kinh Nghiệm Làm Việc",
+        "education": "Giáo Dục",
+        "skills": "Kỹ Năng",
+        "projects": "Dự Án",
+        "certifications": "Chứng Chỉ",
+        "awards": "Giải Thưởng",
+        "publications": "Ấn Phẩm",
+        "volunteer": "Tình Nguyện",
+        "languages": "Ngôn Ngữ",
+        "tips": "Mẹo Để Có Kết Quả Tốt Nhất",
+        "tip1": "Thông tin liên hệ luôn bắt buộc",
+        "tip2": "Điều chỉnh các phần dựa trên mô tả công việc",
+        "tip3": "Xóa các phần trống để cải thiện khả năng đọc"
+      },
+      "styling": {
+        "title": "Kiểu Dáng & Màu Sắc",
+        "description": "Tùy chỉnh giao diện của CV của bạn",
+        "colorPresets": "Cài Đặt Trước Màu Sắc",
+        "primaryColor": "Màu Chính",
+        "secondaryColor": "Màu Phụ",
+        "fontFamily": "Họ Phông Chữ",
+        "fontSize": "Kích Thước Phông Chữ",
+        "small": "Nhỏ",
+        "medium": "Trung Bình",
+        "large": "Lớn",
+        "stylePreview": "Xem Trước Kiểu Dáng",
+        "previewText": "Trình tạo CV chuyên nghiệp với tùy chỉnh do AI cung cấp"
+      },
+      "colorPresets": {
+        "professionalBlue": "Xanh Chuyên Nghiệp",
+        "purple": "Tím",
+        "green": "Xanh Lá",
+        "red": "Đỏ",
+        "orange": "Cam",
+        "gray": "Xám"
+      },
+      "fontOptions": {
+        "inter": "Inter",
+        "roboto": "Roboto",
+        "openSans": "Open Sans",
+        "lato": "Lato",
+        "poppins": "Poppins",
+        "sourceSansPro": "Source Sans Pro"
+      }
+    },
+    "display": {
+      "originalCv": "CV Gốc"
+    }
+  },
+  "seoData": {
+    "keywords": {
+      "cvBuilder": "Tạo CV",
+      "resumeBuilder": "Tạo CV",
+      "portfolioBuilder": "Tạo portfolio",
+      "freelancerTools": "Công cụ freelancer",
+      "aiCvGenerator": "Trình tạo CV AI",
+      "cvMakerOnline": "Tạo CV trực tuyến",
+      "professionalResume": "Sơ yếu lý lịch chuyên nghiệp",
+      "jobApplication": "Ứng tuyển công việc",
+      "careerTools": "Công cụ sự nghiệp",
+      "cvOptimization": "Tối ưu hóa CV",
+      "resumeTemplates": "Mẫu sơ yếu lý lịch",
+      "portfolioWebsite": "Trang web portfolio",
+      "cvOnline": "CV trực tuyến",
+      "aiCv": "AI CV",
+      "portfolioOnline": "Portfolio trực tuyến"
+    },
+    "schema": {
+      "features": [
+        "Tạo CV do AI hỗ trợ",
+        "Tối ưu hóa CV tự động",
+        "Quản lý portfolio",
+        "Tích hợp mô tả công việc"
+      ]
+    }
+  },
+  "seo": {
+    "schema": {
+      "mainDescription": "AI-powered CV & Portfolio builder for freelancers. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
+      "keywords": "tạo CV nhanh, AI CV, CV 30 giây, tạo CV online, AI tạo CV, CV từ Job Description, CV chuyên nghiệp",
+      "features": {
+        "aiCvGeneration": "AI tạo CV từ Job Description",
+        "cvTemplates": "CV templates chuyên nghiệp",
+        "portfolioBuilder": "Portfolio builder",
+        "jobTailorAuto": "Job tailor tự động",
+        "exportFormats": "Export đa định dạng (PDF, Word, ATS)",
+        "analyticsTracking": "Analytics và tracking"
+      },
+      "releaseNotes": "Phiên bản đầu tiên với AI CV Wizard và Template Gallery",
+      "homepageDescription": "AI tạo CV nhanh trong 30 giây"
+    }
+  },
+  "systemMessages": {
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
   }
 }

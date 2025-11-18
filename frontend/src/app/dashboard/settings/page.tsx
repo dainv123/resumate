@@ -16,7 +16,6 @@ import {
   BarChart3,
   Shield,
   Trash2,
-  Upload,
   Download,
   Calendar,
   CheckCircle,
@@ -179,7 +178,7 @@ export default function SettingsPage() {
       a.click();
       URL.revokeObjectURL(url);
       showSuccess(t("settings.dataExported"));
-    } catch (error: any) {
+    } catch (_error: any) {
       showError(t("settings.dataExported"));
     } finally {
       setLoading(false);

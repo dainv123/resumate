@@ -26,36 +26,54 @@ async function seedCVTemplates() {
       {
         name: 'dynamic',
         displayName: 'Dynamic Template',
-        description: 'Smart template that adapts to your CV content automatically',
+        description:
+          'Smart template that adapts to your CV content automatically',
         metadata: {
           category: 'professional' as const,
           color: '#2563eb',
           preview: 'Automatically adjusts sections based on available data',
-          features: ['Auto-layout', 'Content-aware', 'Modern design', 'Responsive'],
+          features: [
+            'Auto-layout',
+            'Content-aware',
+            'Modern design',
+            'Responsive',
+          ],
         },
         isPremium: false,
       },
       {
         name: 'show-all',
         displayName: 'Show All Template',
-        description: 'Displays all sections even when empty for comprehensive view',
+        description:
+          'Displays all sections even when empty for comprehensive view',
         metadata: {
           category: 'professional' as const,
           color: '#059669',
           preview: 'Shows all CV sections for comprehensive view',
-          features: ['Complete sections', 'Comprehensive view', 'ATS-friendly', 'No hidden content'],
+          features: [
+            'Complete sections',
+            'Comprehensive view',
+            'ATS-friendly',
+            'No hidden content',
+          ],
         },
         isPremium: false,
       },
       {
         name: 'modern',
         displayName: 'Modern Template',
-        description: 'Contemporary design with clean layout and modern typography',
+        description:
+          'Contemporary design with clean layout and modern typography',
         metadata: {
           category: 'modern' as const,
           color: '#7c3aed',
           preview: 'Modern design with clean typography and spacing',
-          features: ['Modern design', 'Clean layout', 'Professional styling', 'Contemporary'],
+          features: [
+            'Modern design',
+            'Clean layout',
+            'Professional styling',
+            'Contemporary',
+          ],
         },
         isPremium: false,
       },
@@ -67,7 +85,12 @@ async function seedCVTemplates() {
           category: 'creative' as const,
           color: '#dc2626',
           preview: 'Bold design with creative elements and visual hierarchy',
-          features: ['Creative design', 'Visual hierarchy', 'Bold colors', 'Unique layout'],
+          features: [
+            'Creative design',
+            'Visual hierarchy',
+            'Bold colors',
+            'Unique layout',
+          ],
         },
         isPremium: true,
       },
@@ -79,7 +102,12 @@ async function seedCVTemplates() {
           category: 'professional' as const,
           color: '#374151',
           preview: 'Minimal design with focus on content readability',
-          features: ['Minimal design', 'Content-focused', 'Clean typography', 'Simple layout'],
+          features: [
+            'Minimal design',
+            'Content-focused',
+            'Clean typography',
+            'Simple layout',
+          ],
         },
         isPremium: false,
       },
@@ -90,8 +118,14 @@ async function seedCVTemplates() {
         metadata: {
           category: 'professional' as const,
           color: '#1f2937',
-          preview: 'Executive-focused design with emphasis on leadership and achievements',
-          features: ['Executive design', 'Leadership focus', 'Professional styling', 'High-level positioning'],
+          preview:
+            'Executive-focused design with emphasis on leadership and achievements',
+          features: [
+            'Executive design',
+            'Leadership focus',
+            'Professional styling',
+            'High-level positioning',
+          ],
         },
         isPremium: true,
       },
@@ -108,11 +142,16 @@ async function seedCVTemplates() {
           console.log(`✅ Seeded template: ${templateData.displayName}`);
           seededCount++;
         } else {
-          console.log(`⏭️  Template already exists: ${templateData.displayName}`);
+          console.log(
+            `⏭️  Template already exists: ${templateData.displayName}`,
+          );
           skippedCount++;
         }
       } catch (error) {
-        console.error(`❌ Failed to seed template ${templateData.name}:`, error.message);
+        console.error(
+          `❌ Failed to seed template ${templateData.name}:`,
+          error.message,
+        );
       }
     }
 
@@ -120,11 +159,12 @@ async function seedCVTemplates() {
     console.log(`📊 Summary:`);
     console.log(`   • New templates seeded: ${seededCount}`);
     console.log(`   • Templates skipped: ${skippedCount}`);
-    console.log(`   • Total templates in database: ${(await templatesService.findAll()).length}`);
+    console.log(
+      `   • Total templates in database: ${(await templatesService.findAll()).length}`,
+    );
 
     // Close the application
     await app.close();
-
   } catch (error) {
     console.error('❌ Error seeding CV templates:', error);
     process.exit(1);

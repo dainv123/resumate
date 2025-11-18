@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddForeignKeysAndCleanup1734567890003 implements MigrationInterface {
+export class AddForeignKeysAndCleanup1734567890003
+  implements MigrationInterface
+{
   name = 'AddForeignKeysAndCleanup1734567890003';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -8,7 +8,10 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AnalyticsService } from '../../modules/analytics/analytics.service';
-import { TRACK_ACTIVITY_KEY, TrackActivityOptions } from '../decorators/track-activity.decorator';
+import {
+  TRACK_ACTIVITY_KEY,
+  TrackActivityOptions,
+} from '../decorators/track-activity.decorator';
 
 @Injectable()
 export class ActivityTrackingInterceptor implements NestInterceptor {
@@ -47,7 +50,10 @@ export class ActivityTrackingInterceptor implements NestInterceptor {
             body: request.body,
           };
 
-          const resourceId = trackOptions.getResourceId?.(result, callbackContext);
+          const resourceId = trackOptions.getResourceId?.(
+            result,
+            callbackContext,
+          );
           const metadata = trackOptions.getMetadata?.(result, callbackContext);
 
           await this.analyticsService.trackActivity(
@@ -64,4 +70,3 @@ export class ActivityTrackingInterceptor implements NestInterceptor {
     );
   }
 }
-

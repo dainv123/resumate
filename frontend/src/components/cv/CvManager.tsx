@@ -19,7 +19,7 @@ interface CvManagerProps {
   limit?: number;
   search?: string;
   sortBy?: "createdAt" | "updatedAt" | "originalFileName";
-  sortOrder?: "asc" | "desc";
+  sortOrder?: "ASC" | "DESC";
   viewMode?: "grid" | "list";
 }
 
@@ -30,7 +30,7 @@ interface CvListContentProps {
   limit: number;
   search?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: "ASC" | "DESC";
   viewMode?: "grid" | "list";
   onEditCv?: (cvId: string) => void;
   onDeleteCv?: (cvId: string) => void;
@@ -85,6 +85,21 @@ function CvListContent({
 
   // Get CVs based on mode - MUST be before early returns
   const cvs = React.useMemo(() => {
+    // Debug logging
+    console.log("CvManager Debug:", {
+      mode,
+      data,
+      paginatedData: mode === "paginated" ? (data as any)?.data : undefined,
+      infiniteData: mode === "infinite" ? (data as any)?.pages : undefined,
+      paginationInfo: {
+        totalPages:
+          mode === "paginated" ? (data as any)?.totalPages : undefined,
+        total: mode === "paginated" ? (data as any)?.total : undefined,
+        page: mode === "paginated" ? (data as any)?.page : undefined,
+        limit: mode === "paginated" ? (data as any)?.limit : undefined,
+      },
+    });
+
     if (mode === "paginated") {
       const paginatedData = data as PaginatedResult<CV>;
       return paginatedData?.data || [];
@@ -169,20 +184,21 @@ function CvListContent({
       <div
         className={
           viewMode === "grid"
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr"
             : "space-y-4"
         }>
-        {cvs.map((cv, index) => (
+        {cvs.map((cv: any, index: number) => (
           <div
             key={cv.id}
             ref={
               mode === "infinite" && index === cvs.length - 1
                 ? lastCvElementRef
                 : null
-            }>
+            }
+            className="h-full">
             <CVCard
               cv={cv}
-              isSelected={selectedCvId === cv.id}
+              // isSelected={selectedCvId === cv.id}
               onSelect={() => onSelectCv?.(cv)}
               onEdit={() => onEditCv?.(cv.id)}
               onDelete={() => onDeleteCv?.(cv.id)}
@@ -318,8 +334,8 @@ export default function CvManager({
   const [sortBy, setSortBy] = useState<
     "createdAt" | "updatedAt" | "originalFileName"
   >(externalSortBy || "updatedAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
-    externalSortOrder || "desc"
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">(
+    externalSortOrder || "DESC"
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">(
     externalViewMode || "grid"
@@ -336,7 +352,9 @@ export default function CvManager({
   }, [externalSortBy]);
 
   React.useEffect(() => {
-    if (externalSortOrder !== undefined) setSortOrder(externalSortOrder);
+    if (externalSortOrder !== undefined) {
+      setSortOrder((externalSortOrder as any) === "asc" ? "ASC" : "DESC");
+    }
   }, [externalSortOrder]);
 
   React.useEffect(() => {
@@ -349,7 +367,7 @@ export default function CvManager({
   };
 
   const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
   const handleSelectCv = (cv: any) => {
@@ -462,13 +480,13 @@ export default function CvManager({
                 variant="outline"
                 onClick={toggleSortOrder}
                 className="flex items-center space-x-1">
-                {sortOrder === "asc" ? (
+                {sortOrder === "ASC" ? (
                   <SortAsc className="h-4 w-4" />
                 ) : (
                   <SortDesc className="h-4 w-4" />
                 )}
                 <span>
-                  {sortOrder === "asc" ? t("cv.sortAsc") : t("cv.sortDesc")}
+                  {sortOrder === "ASC" ? t("cv.sortAsc") : t("cv.sortDesc")}
                 </span>
               </Button>
             </div>

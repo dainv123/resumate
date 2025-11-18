@@ -3,17 +3,11 @@ import "./globals.css";
 import { Providers } from "./providers";
 import PerformanceOptimizer from "@/components/ui/PerformanceOptimizer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
-import LanguageDetectionLoader from "@/components/ui/LanguageDetectionLoader";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Resumate - Update CV in 1 Minute | Cập nhật CV trong 1 phút",
-    template: "%s | Resumate",
-  },
-  description:
-    "AI-powered CV & Portfolio builder for freelancers. Update your CV automatically from new projects or job descriptions. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
-  keywords: [
-    // English keywords
+// Language-aware metadata
+const getMetadata = (): Metadata => {
+  // English keywords
+  const enKeywords = [
     "CV builder",
     "Resume builder",
     "Portfolio builder",
@@ -26,7 +20,10 @@ export const metadata: Metadata = {
     "CV optimization",
     "Resume templates",
     "Portfolio website",
-    // Vietnamese keywords
+  ];
+
+  // Vietnamese keywords
+  const viKeywords = [
     "Tạo CV",
     "CV online",
     "AI CV",
@@ -37,66 +34,104 @@ export const metadata: Metadata = {
     "Ứng tuyển",
     "CV đẹp",
     "Mẫu CV",
-  ],
-  authors: [{ name: "Resumate Team" }],
-  creator: "Resumate",
-  publisher: "Resumate",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  ),
-  alternates: {
-    canonical: "/",
-    languages: {
-      "vi-VN": "/vi",
-      "en-US": "/en",
+  ];
+
+  const allKeywords = [...enKeywords, ...viKeywords];
+
+  // Schema.org features
+  const schemaFeatures = [
+    "AI-powered CV generation",
+    "Automatic CV optimization",
+    "Portfolio management",
+    "Job description integration",
+    "Tạo CV tự động với AI",
+    "Tối ưu hóa CV cho từ khóa công việc",
+    "Quản lý Portfolio",
+    "Tích hợp với Job Description",
+  ];
+
+  return {
+    title: {
+      default: "Resumate - Update CV in 1 Minute | Cập nhật CV trong 1 phút",
+      template: "%s | Resumate",
     },
-  },
-  openGraph: {
-    title: "Resumate - AI CV Builder | Tạo CV với AI",
     description:
-      "AI-powered CV & Portfolio builder. Create professional resumes automatically. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
-    url: "/",
-    siteName: "Resumate",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Resumate - AI CV Builder | Tạo CV với AI",
+      "AI-powered CV & Portfolio builder for freelancers. Update your CV automatically from new projects or job descriptions. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
+    keywords: allKeywords,
+    authors: [{ name: "Resumate Team" }],
+    creator: "Resumate",
+    publisher: "Resumate",
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    ),
+    alternates: {
+      canonical: "/",
+      languages: {
+        "vi-VN": "/vi",
+        "en-US": "/en",
       },
-    ],
-    locale: "en_US",
-    type: "website",
-    alternateLocale: ["vi_VN"],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Resumate - AI CV Builder | Tạo CV với AI",
-    description:
-      "AI-powered CV & Portfolio builder. Create professional resumes automatically. Tạo CV chuyên nghiệp với AI.",
-    images: ["/og-image.jpg"],
-    creator: "@resumate",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    },
+    openGraph: {
+      title: "Resumate - AI CV Builder | Tạo CV với AI",
+      description:
+        "AI-powered CV & Portfolio builder. Create professional resumes automatically. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
+      url: "/",
+      siteName: "Resumate",
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Resumate - AI CV Builder | Tạo CV với AI",
+        },
+      ],
+      locale: "en_US",
+      type: "website",
+      alternateLocale: ["vi_VN"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Resumate - AI CV Builder | Tạo CV với AI",
+      description:
+        "AI-powered CV & Portfolio builder. Create professional resumes automatically. Tạo CV chuyên nghiệp với AI.",
+      images: ["/og-image.jpg"],
+      creator: "@resumate",
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-  verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
-  },
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION,
+    },
+  };
 };
+
+export const metadata = getMetadata();
+
+// Schema features for structured data
+const schemaFeatures = [
+  "AI-powered CV generation",
+  "Automatic CV optimization",
+  "Portfolio management",
+  "Job description integration",
+  "Tạo CV tự động với AI",
+  "Tối ưu hóa CV cho từ khóa công việc",
+  "Quản lý Portfolio",
+  "Tích hợp với Job Description",
+];
 
 export default function RootLayout({
   children,
@@ -140,16 +175,7 @@ export default function RootLayout({
                 name: "Resumate Team",
                 url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
               },
-              featureList: [
-                "AI-powered CV generation",
-                "Automatic CV optimization",
-                "Portfolio management",
-                "Job description integration",
-                "Tạo CV tự động với AI",
-                "Tối ưu hóa CV cho từ khóa công việc",
-                "Quản lý Portfolio",
-                "Tích hợp với Job Description",
-              ],
+              featureList: schemaFeatures,
               audience: {
                 "@type": "Audience",
                 audienceType: "Freelancers, Job Seekers, Professionals",

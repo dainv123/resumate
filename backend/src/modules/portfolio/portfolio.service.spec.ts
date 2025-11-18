@@ -155,7 +155,9 @@ describe('PortfolioService', () => {
     usersService = module.get<UsersService>(UsersService);
     cvService = module.get<CvService>(CvService);
     projectsService = module.get<ProjectsService>(ProjectsService);
-    templateLoaderService = module.get<TemplateLoaderService>(TemplateLoaderService);
+    templateLoaderService = module.get<TemplateLoaderService>(
+      TemplateLoaderService,
+    );
   });
 
   describe('generatePortfolio', () => {
@@ -165,28 +167,40 @@ describe('PortfolioService', () => {
         bio: 'Software Engineer',
       };
 
-      const result = await service.generatePortfolio('user-1', createPortfolioDto);
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
 
       expect(result).toBeDefined();
       expect(result.user.name).toBe('John Doe');
       expect(result.user.bio).toBe('Software Engineer');
       expect(result.cv.summary).toBe('Experienced developer');
       expect(result.cv.skills).toBeDefined();
-      expect(result.cv.skills.technical).toEqual(['JavaScript', 'TypeScript', 'React']);
+      expect(result.cv.skills.technical).toEqual([
+        'JavaScript',
+        'TypeScript',
+        'React',
+      ]);
       expect(result.projects).toEqual(mockProjects);
       expect(result.sections).toBeDefined();
     });
 
     it('should use selected CV when selectedCvId is provided', async () => {
       const anotherCv = { ...mockCv, id: 'cv-2' };
-      jest.spyOn(cvService, 'getUserCvs').mockResolvedValue([mockCv, anotherCv]);
+      jest
+        .spyOn(cvService, 'getUserCvs')
+        .mockResolvedValue([mockCv, anotherCv]);
 
       const createPortfolioDto = {
         template: PortfolioTemplate.BASIC,
         selectedCvId: 'cv-2',
       };
 
-      const result = await service.generatePortfolio('user-1', createPortfolioDto);
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
 
       expect(result).toBeDefined();
       expect(result.selectedCvId).toBe('cv-2');
@@ -201,7 +215,10 @@ describe('PortfolioService', () => {
         },
       };
 
-      const result = await service.generatePortfolio('user-1', createPortfolioDto);
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
 
       expect(result.sections.experience).toBe(true);
       expect(result.sections.education).toBe(true);
@@ -212,7 +229,10 @@ describe('PortfolioService', () => {
         template: PortfolioTemplate.CREATIVE, // Has experience=false
       };
 
-      const result = await service.generatePortfolio('user-1', createPortfolioDto);
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
 
       expect(result.cv.experience).toBeUndefined();
     });
@@ -222,7 +242,10 @@ describe('PortfolioService', () => {
         template: PortfolioTemplate.MUHAMMAD_ISMAIL,
       };
 
-      const result = await service.generatePortfolio('user-1', createPortfolioDto);
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
 
       expect(result.cv.certifications).toBeDefined();
       expect(result.cv.awards).toBeDefined();
@@ -233,7 +256,10 @@ describe('PortfolioService', () => {
         template: PortfolioTemplate.BASIC,
       };
 
-      const result = await service.generatePortfolio('user-1', createPortfolioDto);
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
 
       expect(result.cv.certifications).toBeUndefined();
       expect(result.cv.awards).toBeUndefined();
@@ -338,4 +364,3 @@ describe('PortfolioService', () => {
     });
   });
 });
-

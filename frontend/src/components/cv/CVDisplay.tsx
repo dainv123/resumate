@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { CV } from "@/lib/cv";
 import { formatDate } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Download,
   Edit,
@@ -52,43 +53,27 @@ interface CVDisplayProps {
 
 export default function CVDisplay({
   cv,
-  mode = "full",
+  mode = "short",
   showActions = true,
   showRelationships = false,
   showVersionHistory = false,
-  // showViewButton = true,
-  historyLabel = "History",
-  tailoredLabel = "Tailored",
+  historyLabel,
+  tailoredLabel,
   onEdit,
   onDelete,
   onDuplicate,
   onTailor,
   onExport,
-  onUpdate,
   className = "",
 }: CVDisplayProps) {
+  const { t } = useLanguage();
   const router = useRouter();
 
-  // Helper to get icon for each section
-  const getSectionIcon = (key: string) => {
-    const iconMap: Record<string, React.ReactNode> = {
-      experience: <Briefcase className="h-4 w-4 text-blue-600" />,
-      education: <GraduationCap className="h-4 w-4 text-green-600" />,
-      skills: <Award className="h-4 w-4 text-purple-600" />,
-      projects: <Code className="h-4 w-4 text-orange-600" />,
-      certifications: <Award className="h-4 w-4 text-yellow-600" />,
-      contact: <User className="h-4 w-4 text-gray-600" />,
-      email: <Mail className="h-4 w-4 text-gray-600" />,
-      phone: <Phone className="h-4 w-4 text-gray-600" />,
-      location: <MapPin className="h-4 w-4 text-gray-600" />,
-      website: <Globe className="h-4 w-4 text-gray-600" />,
-    };
-    return (
-      iconMap[key.toLowerCase()] || (
-        <FileText className="h-4 w-4 text-gray-600" />
-      )
-    );
-  };
+  // Use translation keys if provided, otherwise use defaults
+  const effectiveHistoryLabel =
+    historyLabel || t("cvSections.statusLabels.history");
+  const effectiveTailoredLabel =
+    tailoredLabel || t("cvSections.statusLabels.tailored");
 
   // Render short mode - compact view
   const renderShortMode = () => {
@@ -106,15 +91,16 @@ export default function CVDisplay({
               {cv.isTailored && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
                   <Sparkles className="h-3 w-3 mr-1" />
-                  {tailoredLabel}
+                  {effectiveTailoredLabel}
                 </span>
               )}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-              {cv.parsedData?.contact?.email || "No email"}
+              {cv.parsedData?.contact?.email || t("cv.noEmail")}
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              Version {cv.version} • Updated {formatDate(cv.updatedAt)}
+              {t("cv.version")} {cv.version} • {t("cv.updatedAt")}{" "}
+              {formatDate(cv.updatedAt)}
             </p>
           </div>
 
@@ -147,7 +133,7 @@ export default function CVDisplay({
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-blue-600" />
                 <span className="text-gray-600">
-                  {cv.parsedData.experience.length} Experience
+                  {cv.parsedData.experience.length} {t("cv.experience")}
                 </span>
               </div>
             )}
@@ -156,7 +142,7 @@ export default function CVDisplay({
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-green-600" />
                 <span className="text-gray-600">
-                  {cv.parsedData.education.length} Education
+                  {cv.parsedData.education.length} {t("cv.education")}
                 </span>
               </div>
             )}
@@ -165,7 +151,7 @@ export default function CVDisplay({
               <div className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-purple-600" />
                 <span className="text-gray-600">
-                  {cv.parsedData.skills.technical.length} Skills
+                  {cv.parsedData.skills.technical.length} {t("cv.skills")}
                 </span>
               </div>
             )}
@@ -173,7 +159,7 @@ export default function CVDisplay({
             <div className="flex items-center gap-2">
               <Code className="h-4 w-4 text-orange-600" />
               <span className="text-gray-600">
-                {cv.parsedData.projects.length} Projects
+                {cv.parsedData.projects.length} {t("cv.projects")}
               </span>
             </div>
           )}
@@ -198,18 +184,19 @@ export default function CVDisplay({
               {cv.isTailored && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                   <Sparkles className="h-3 w-3 mr-1" />
-                  {tailoredLabel}
+                  {effectiveTailoredLabel}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-gray-400">
-                Version {cv.version} • Updated {formatDate(cv.updatedAt)}
+                {t("cv.version")} {cv.version} • {t("cv.updatedAt")}{" "}
+                {formatDate(cv.updatedAt)}
               </p>
               {showVersionHistory && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-purple-600 bg-purple-50 rounded">
                   <Clock className="h-3 w-3" />
-                  <span>{historyLabel}</span>
+                  <span>{effectiveHistoryLabel}</span>
                 </span>
               )}
             </div>
@@ -222,7 +209,7 @@ export default function CVDisplay({
                 onClick={() => router.push(`/dashboard/cv/${cv.id}`)}
                 className="flex items-center space-x-2">
                 <Eye className="h-4 w-4 mr-1" />
-                <span>View</span>
+                <span>{t("cv.view")}</span>
               </Button>
               {onEdit && (
                 <Button
@@ -230,7 +217,7 @@ export default function CVDisplay({
                   onClick={() => onEdit(cv)}
                   className="flex items-center space-x-2">
                   <Edit className="h-4 w-4 mr-1" />
-                  <span>Edit</span>
+                  <span>{t("cv.edit")}</span>
                 </Button>
               )}
               {onTailor && (
@@ -239,7 +226,7 @@ export default function CVDisplay({
                   onClick={() => onTailor(cv)}
                   className="flex items-center space-x-2">
                   <Sparkles className="h-4 w-4 mr-1" />
-                  <span>Tailor</span>
+                  <span>{t("cv.tailor")}</span>
                 </Button>
               )}
               {onExport && (
@@ -248,7 +235,7 @@ export default function CVDisplay({
                   onClick={() => onExport(cv, "pdf")}
                   className="flex items-center space-x-2">
                   <Download className="h-4 w-4 mr-1" />
-                  <span>Export</span>
+                  <span>{t("cv.export")}</span>
                 </Button>
               )}
               {onDuplicate && (
@@ -257,7 +244,7 @@ export default function CVDisplay({
                   onClick={() => onDuplicate(cv)}
                   className="flex items-center space-x-2">
                   <Copy className="h-4 w-4 mr-1" />
-                  <span>Duplicate</span>
+                  <span>{t("cv.duplicate")}</span>
                 </Button>
               )}
               {onDelete && (
@@ -275,7 +262,7 @@ export default function CVDisplay({
         {/* CV Relationships */}
         {showRelationships && (
           <Collapse
-            title="CV Relationships"
+            title={t("cv.relationships.title")}
             icon={<Sparkles className="h-4 w-4 text-green-600" />}
             defaultOpen={false}
             className="mb-6 border-green-200"
@@ -284,7 +271,7 @@ export default function CVDisplay({
             <div className="space-y-2">
               {cv.originalCv && (
                 <div className="text-xs text-green-700">
-                  <span className="font-medium">📄 Original CV:</span>{" "}
+                  <span className="font-medium">{t("cv.originalCv")}:</span>{" "}
                   <span className="text-blue-600 flex items-center max-w-full">
                     <FileText className="h-3 w-3 mr-1 flex-shrink-0" />
                     <span className="truncate">
@@ -295,7 +282,7 @@ export default function CVDisplay({
               )}
               {cv.jobDescription && (
                 <div className="text-xs text-green-700">
-                  <span className="font-medium">🎯 Tailored for:</span>{" "}
+                  <span className="font-medium">{t("cv.tailoredFor")}:</span>{" "}
                   <span className="text-blue-600 flex items-center max-w-full">
                     <Briefcase className="h-3 w-3 mr-1 flex-shrink-0" />
                     <span className="truncate">{cv.jobDescription.title}</span>
@@ -304,9 +291,11 @@ export default function CVDisplay({
               )}
               {cv.tailoredVersions && cv.tailoredVersions.length > 0 && (
                 <div className="text-xs text-green-700">
-                  <span className="font-medium">🔄 Tailored Versions:</span>{" "}
+                  <span className="font-medium">
+                    {t("cv.tailoredVersions")}:
+                  </span>{" "}
                   <span className="text-blue-600">
-                    {cv.tailoredVersions.length} versions
+                    {cv.tailoredVersions.length} {t("cv.versions")}
                   </span>
                 </div>
               )}
@@ -322,7 +311,7 @@ export default function CVDisplay({
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <User className="h-5 w-5 text-blue-600" />
-                  Contact Information
+                  {t("cv.contactInfo")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {cv.parsedData.contact.email && (
@@ -369,7 +358,7 @@ export default function CVDisplay({
             {cv.parsedData.summary && (
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Summary
+                  {t("cv.summary")}
                 </h4>
                 <p className="text-gray-700 leading-relaxed">
                   {cv.parsedData.summary}
@@ -384,7 +373,7 @@ export default function CVDisplay({
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Briefcase className="h-5 w-5 text-blue-600" />
-                    Experience
+                    {t("cv.experience")}
                   </h4>
                   <div className="space-y-4">
                     {cv.parsedData.experience.map((exp, index) => (
@@ -396,7 +385,7 @@ export default function CVDisplay({
                         </h5>
                         <p className="text-sm text-gray-600">{exp.company}</p>
                         <p className="text-xs text-gray-500">
-                          {exp.startDate} - {exp.endDate || "Present"}
+                          {exp.startDate} - {exp.endDate || t("cv.present")}
                         </p>
                         {exp.description && (
                           <p className="text-sm text-gray-700 mt-2">
@@ -416,7 +405,7 @@ export default function CVDisplay({
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-green-600" />
-                    Education
+                    {t("cv.education")}
                   </h4>
                   <div className="space-y-3">
                     {cv.parsedData.education.map((edu, index) => (
@@ -430,7 +419,7 @@ export default function CVDisplay({
                           {edu.institution}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {edu.startDate} - {edu.endDate || "Present"}
+                          {edu.startDate} - {edu.endDate || t("cv.present")}
                         </p>
                       </div>
                     ))}
@@ -447,7 +436,7 @@ export default function CVDisplay({
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Award className="h-5 w-5 text-purple-600" />
-                    Skills
+                    {t("cv.skills")}
                   </h4>
                   <div className="space-y-3">
                     {cv.parsedData.skills.technical &&
@@ -455,7 +444,7 @@ export default function CVDisplay({
                       cv.parsedData.skills.technical.length > 0 && (
                         <div className="border-l-4 border-purple-200 pl-4">
                           <h5 className="text-sm font-medium text-gray-700 mb-2">
-                            Technical Skills
+                            {t("cv.technicalSkills")}
                           </h5>
                           <div className="flex flex-wrap gap-2">
                             {cv.parsedData.skills.technical.map(
@@ -475,7 +464,7 @@ export default function CVDisplay({
                       cv.parsedData.skills.soft.length > 0 && (
                         <div className="border-l-4 border-purple-200 pl-4">
                           <h5 className="text-sm font-medium text-gray-700 mb-2">
-                            Soft Skills
+                            {t("cv.softSkills")}
                           </h5>
                           <div className="flex flex-wrap gap-2">
                             {cv.parsedData.skills.soft.map((skill, index) => (
@@ -493,7 +482,7 @@ export default function CVDisplay({
                       cv.parsedData.skills.languages.length > 0 && (
                         <div className="border-l-4 border-purple-200 pl-4">
                           <h5 className="text-sm font-medium text-gray-700 mb-2">
-                            Languages
+                            {t("cv.languages")}
                           </h5>
                           <div className="flex flex-wrap gap-2">
                             {cv.parsedData.skills.languages.map(
@@ -513,7 +502,7 @@ export default function CVDisplay({
                       cv.parsedData.skills.tools.length > 0 && (
                         <div className="border-l-4 border-purple-200 pl-4">
                           <h5 className="text-sm font-medium text-gray-700 mb-2">
-                            Tools
+                            {t("cv.tools")}
                           </h5>
                           <div className="flex flex-wrap gap-2">
                             {cv.parsedData.skills.tools.map((tool, index) => (
@@ -537,7 +526,7 @@ export default function CVDisplay({
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Code className="h-5 w-5 text-orange-600" />
-                    Projects
+                    {t("cv.projects")}
                   </h4>
                   <div className="space-y-3">
                     {cv.parsedData.projects.map((project, index) => (
@@ -573,7 +562,7 @@ export default function CVDisplay({
         ) : (
           <div className="text-center py-8">
             <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-500">CV has not been parsed yet</p>
+            <p className="text-gray-500">{t("cv.notParsed")}</p>
           </div>
         )}
       </div>

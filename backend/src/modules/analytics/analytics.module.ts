@@ -12,4 +12,3 @@ import { Cv } from '../cv/entities/cv.entity';
   exports: [AnalyticsService],
 })
 export class AnalyticsModule {}
-

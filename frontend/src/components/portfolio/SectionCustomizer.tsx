@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { TemplateSection, TemplateConfig } from "./TemplateSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SectionCustomizerProps {
   templateConfig: TemplateConfig;
@@ -14,6 +15,7 @@ export default function SectionCustomizer({
   customSections = {},
   onCustomSectionsChange,
 }: SectionCustomizerProps) {
+  const { t } = useLanguage();
   const [sections, setSections] = useState<Partial<TemplateSection>>(() => {
     // Initialize with template defaults merged with custom sections
     return { ...templateConfig.sections, ...customSections };
@@ -41,59 +43,61 @@ export default function SectionCustomizer({
     onCustomSectionsChange(changedSections);
   };
 
-  const sectionInfo: {
+  const getSectionInfo = (): {
     [key in keyof TemplateSection]: {
       label: string;
       description: string;
       icon: string;
     };
-  } = {
+  } => ({
     hero: {
-      label: "Hero Section",
-      description: "Main header with name and bio",
+      label: t("portfolioSections.sectionCustomizer.sections.hero.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.hero.description"),
       icon: "🎯",
     },
     about: {
-      label: "About Me",
-      description: "Professional summary/bio",
+      label: t("portfolioSections.sectionCustomizer.sections.about.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.about.description"),
       icon: "📝",
     },
     skills: {
-      label: "Skills",
-      description: "Technical and soft skills",
+      label: t("portfolioSections.sectionCustomizer.sections.skills.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.skills.description"),
       icon: "💡",
     },
     experience: {
-      label: "Work Experience",
-      description: "Employment history",
+      label: t("portfolioSections.sectionCustomizer.sections.experience.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.experience.description"),
       icon: "💼",
     },
     education: {
-      label: "Education",
-      description: "Academic background",
+      label: t("portfolioSections.sectionCustomizer.sections.education.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.education.description"),
       icon: "🎓",
     },
     projects: {
-      label: "Projects",
-      description: "Portfolio projects showcase",
+      label: t("portfolioSections.sectionCustomizer.sections.projects.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.projects.description"),
       icon: "🚀",
     },
     certifications: {
-      label: "Certifications",
-      description: "Professional certifications",
+      label: t("portfolioSections.sectionCustomizer.sections.certifications.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.certifications.description"),
       icon: "📜",
     },
     awards: {
-      label: "Awards",
-      description: "Recognition and achievements",
+      label: t("portfolioSections.sectionCustomizer.sections.awards.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.awards.description"),
       icon: "🏆",
     },
     contact: {
-      label: "Contact Links",
-      description: "Social media and contact info",
+      label: t("portfolioSections.sectionCustomizer.sections.contact.label"),
+      description: t("portfolioSections.sectionCustomizer.sections.contact.description"),
       icon: "📧",
     },
-  };
+  });
+
+  const sectionInfo = getSectionInfo();
 
   if (!templateConfig.allowCustomization) {
     return (
@@ -101,11 +105,9 @@ export default function SectionCustomizer({
         <div className="flex items-start gap-3">
           <div className="text-2xl">ℹ️</div>
           <div>
-            <h4 className="font-medium text-yellow-900">Fixed Template</h4>
+            <h4 className="font-medium text-yellow-900">{t("portfolioSections.sectionCustomizer.fixedTemplate")}</h4>
             <p className="text-sm text-yellow-700 mt-1">
-              The &ldquo;{templateConfig.name}&rdquo; template has a fixed
-              layout and cannot be customized. All sections will be displayed
-              based on your available data.
+              {t("portfolioSections.sectionCustomizer.fixedTemplateDesc", { name: templateConfig.name })}
             </p>
           </div>
         </div>
@@ -116,18 +118,15 @@ export default function SectionCustomizer({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-semibold mb-2">Customize Sections</h3>
+        <h3 className="text-xl font-semibold mb-2">{t("portfolioSections.sectionCustomizer.title")}</h3>
         <p className="text-gray-600">
-          Choose which sections to display in your portfolio. Deselected
-          sections will be hidden.
+          {t("portfolioSections.sectionCustomizer.subtitle")}
         </p>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-900">
-          <strong>Tip:</strong> Sections will only appear if you have data for
-          them. For example, if you don&apos;t have any certifications, that
-          section won&apos;t be shown even if enabled.
+          <strong>Tip:</strong> {t("portfolioSections.sectionCustomizer.tip")}
         </p>
       </div>
 
@@ -163,7 +162,7 @@ export default function SectionCustomizer({
                       </h4>
                       {!isTemplateDefault && isEnabled && (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          Added
+                          {t("portfolioSections.sectionCustomizer.addedBadge")}
                         </span>
                       )}
                     </div>

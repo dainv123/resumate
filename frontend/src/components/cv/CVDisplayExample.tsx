@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { CV } from "@/lib/cv";
 import CVDisplay, { CVDisplayMode } from "./CVDisplay";
-import Button from "@/components/ui/Button";
 import { Eye, List, Grid } from "lucide-react";
 
 interface CVDisplayExampleProps {

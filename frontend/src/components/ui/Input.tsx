@@ -27,7 +27,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     return (
-      <div className="w-full">
+      <div className="w-full space-y-2">
         {label && (
           <label className="block text-sm font-medium text-gray-700">
             {label}
@@ -90,7 +90,7 @@ export interface TextareaProps
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, helperText, ...props }, ref) => {
     return (
-      <div className="w-full">
+      <div className="w-full space-y-2">
         {label && (
           <label className="block text-sm font-medium text-gray-700">
             {label}

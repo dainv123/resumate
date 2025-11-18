@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { Collapse } from "@/components/ui/Collapse";
 import Input, { Textarea } from "@/components/ui/Input";
 import { X, FileText, Code2, FileType, Link2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -38,6 +39,7 @@ export default function ProjectForm({
   isLoading = false,
   showActions = true,
 }: ProjectFormProps) {
+  const { t } = useLanguage();
   const [techStack, setTechStack] = React.useState<string[]>(
     project?.techStack || []
   );
@@ -104,24 +106,24 @@ export default function ProjectForm({
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <FileText className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-medium text-gray-900">
-              Basic Information
-            </h3>
+            <h4 className="text-lg font-medium text-gray-900">
+              {t("projects.basicInfo")}
+            </h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               {...register("name")}
-              label="Project Name"
+              label={t("projects.projectName")}
               className="input-base mt-1"
-              placeholder="Enter project name"
+              placeholder={t("projects.projectNamePlaceholder")}
               error={errors.name?.message}
               required
             />
 
             <Input
               {...register("role")}
-              label="Your Role"
-              placeholder="e.g., Frontend Developer, Full Stack Developer"
+              label={t("projects.role")}
+              placeholder={t("projects.rolePlaceholder")}
               error={errors.role?.message}
               required
             />
@@ -130,7 +132,7 @@ export default function ProjectForm({
 
         {/* Section 2: Tech Stack */}
         <Collapse
-          title="Tech Stack"
+          title={t("projects.techStack")}
           icon={<Code2 className="h-4 w-4 text-purple-600" />}
           badge={techStack.length}
           defaultOpen={true}>
@@ -158,7 +160,7 @@ export default function ProjectForm({
                 onKeyPress={(e) =>
                   e.key === "Enter" && (e.preventDefault(), addTech())
                 }
-                placeholder="Add technology (Press Enter)"
+                placeholder={t("projects.addTechnology")}
                 className="flex-1"
               />
               <Button
@@ -166,7 +168,7 @@ export default function ProjectForm({
                 onClick={addTech}
                 variant="outline"
                 size="sm">
-                Add
+                {t("projects.addTechButton")}
               </Button>
             </div>
             {errors.techStack && (
@@ -179,24 +181,24 @@ export default function ProjectForm({
 
         {/* Section 3: Description & Results */}
         <Collapse
-          title="Description & Results"
+          title={t("projects.descriptionAndResults")}
           icon={<FileType className="h-4 w-4 text-green-600" />}
           defaultOpen={true}>
           <div className="space-y-4">
             <Textarea
               {...register("description")}
-              label="Description"
+              label={t("projects.descriptionLabel")}
               rows={4}
-              placeholder="Describe what you built and your contributions"
+              placeholder={t("projects.descriptionPlaceholder")}
               error={errors.description?.message}
               required
             />
 
             <Textarea
               {...register("results")}
-              label="Results/Achievements"
+              label={t("projects.resultsLabel")}
               rows={3}
-              placeholder="e.g., Improved performance by 50%, Increased user engagement by 30%"
+              placeholder={t("projects.resultsPlaceholder")}
               error={errors.results?.message}
             />
           </div>
@@ -204,7 +206,7 @@ export default function ProjectForm({
 
         {/* Section 4: Links & Media */}
         <Collapse
-          title="Links & Media"
+          title={t("projects.linksAndMedia")}
           icon={<Link2 className="h-4 w-4 text-orange-600" />}
           defaultOpen={false}>
           <div className="space-y-4">
@@ -212,16 +214,16 @@ export default function ProjectForm({
               <Input
                 {...register("demoLink")}
                 type="url"
-                label="Demo Link"
-                placeholder="https://demo.example.com"
+                label={t("projects.demoLink")}
+                placeholder={t("projects.demoLinkPlaceholder")}
                 error={errors.demoLink?.message}
               />
 
               <Input
                 {...register("githubLink")}
                 type="url"
-                label="GitHub Link"
-                placeholder="https://github.com/username/repo"
+                label={t("projects.githubLink")}
+                placeholder={t("projects.githubLinkPlaceholder")}
                 error={errors.githubLink?.message}
               />
             </div>
@@ -229,8 +231,8 @@ export default function ProjectForm({
             <Input
               {...register("imageUrl")}
               type="url"
-              label="Project Image URL"
-              placeholder="https://example.com/project-image.jpg"
+              label={t("projects.imageUrl")}
+              placeholder={t("projects.imageUrlPlaceholder")}
               error={errors.imageUrl?.message}
             />
           </div>
@@ -240,10 +242,10 @@ export default function ProjectForm({
         {showActions && (
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" loading={isLoading}>
-              {project ? "Update Project" : "Create Project"}
+              {project ? t("projects.update") : t("projects.create")}
             </Button>
           </div>
         )}

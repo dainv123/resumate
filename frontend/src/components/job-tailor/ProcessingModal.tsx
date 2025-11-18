@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Clock, CheckCircle, Zap } from "lucide-react";
+import { CheckCircle, Zap } from "lucide-react";
 
 export type ProcessingType = "tailor" | "cover-letter" | "analyze";
 
@@ -56,9 +56,9 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
   const getProcessingTitle = () => {
     switch (type) {
       case "cover-letter":
-        return "✉️ Generating Cover Letter";
+        return t("jobTailor.generatingCoverLetter");
       case "analyze":
-        return "📊 Analyzing Compatibility";
+        return t("jobTailor.analyzingCompatibility");
       case "tailor":
       default:
         return t("jobTailor.ux.processingTitle");

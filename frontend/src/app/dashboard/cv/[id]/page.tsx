@@ -143,12 +143,26 @@ export default function CVDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t("common.loading")}</p>
+      <DashboardLayout
+        title={t("cv.viewDetail")}
+        subtitle={t("common.loading")}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Skeleton */}
+            <div className="lg:col-span-2">
+              <LoadingSkeleton type="cv" />
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="lg:col-span-1 space-y-6">
+              <LoadingSkeleton type="card" />
+              <LoadingSkeleton type="card" />
+              <LoadingSkeleton type="card" />
+            </div>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -216,118 +230,111 @@ export default function CVDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Suspense fallback={<LoadingSkeleton type="cv" />}>
-              <CVDisplay cv={cv} showActions={false} />
+              <CVDisplay cv={cv} showActions={false} mode="full" />
             </Suspense>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <Suspense fallback={<LoadingSkeleton type="card" />}>
-              <CVActions
-                cv={cv}
-                onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
-                onShowTemplateConfig={handleExportWithConfig}
-                onShowJobDescription={() => setShowJobDescription(true)}
-                onShowMatchingAnalysis={() => setShowMatchingAnalysis(true)}
-                onShowCoverLetter={() => setShowCoverLetter(true)}
-                onExport={handleExport}
-              />
-            </Suspense>
+              <div className="space-y-6">
+                <CVActions
+                  cv={cv}
+                  onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
+                  onShowTemplateConfig={handleExportWithConfig}
+                  onShowJobDescription={() => setShowJobDescription(true)}
+                  onShowMatchingAnalysis={() => setShowMatchingAnalysis(true)}
+                  onShowCoverLetter={() => setShowCoverLetter(true)}
+                  onExport={handleExport}
+                />
 
-            <Suspense fallback={<LoadingSkeleton type="card" />}>
-              <CVRelationships cv={cv} />
-            </Suspense>
+                <CVRelationships cv={cv} />
 
-            <Suspense fallback={<LoadingSkeleton type="card" />}>
-              <CVMetadata cv={cv} />
+                <CVMetadata cv={cv} />
+              </div>
             </Suspense>
           </div>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <Suspense fallback={<LoadingSkeleton type="modal" />}>
-        <DeleteConfirmationModal
-          isOpen={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={handleDelete}
-          isLoading={deleteMutation.isPending}
-        />
-      </Suspense>
+      {/* Modals */}
+      <Suspense fallback={null}>
+        <div>
+          {/* Delete Confirmation Modal */}
+          <DeleteConfirmationModal
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={handleDelete}
+            isLoading={deleteMutation.isPending}
+          />
 
-      {/* Template Config Modal */}
-      <Suspense fallback={<LoadingSkeleton type="modal" />}>
-        <TemplateConfigModal
-          isOpen={showTemplateConfig}
-          onClose={() => setShowTemplateConfig(false)}
-          onExport={async (templateConfig) => {
-            await handleExport(exportFormat, "professional", templateConfig);
-          }}
-          currentTemplate="professional"
-          cvId={cv?.id || ""}
-        />
-      </Suspense>
+          {/* Template Config Modal */}
+          <TemplateConfigModal
+            isOpen={showTemplateConfig}
+            onClose={() => setShowTemplateConfig(false)}
+            onExport={async (templateConfig) => {
+              await handleExport(exportFormat, "professional", templateConfig);
+            }}
+            currentTemplate="professional"
+            cvId={cv?.id || ""}
+          />
 
-      {/* Job Description Modal */}
-      <Suspense fallback={<LoadingSkeleton type="modal" />}>
-        <JobDescriptionModal
-          isOpen={showJobDescription}
-          onClose={() => setShowJobDescription(false)}
-          jobDescription={
-            cv?.jobDescription || {
-              id: "",
-              userId: "",
-              title: "No job description available",
-              company: "",
-              location: "",
-              salary: "",
-              experience: "",
-              description:
-                "No job description has been associated with this CV.",
-              requirements: {
-                skills: [],
-                education: [],
-                experience: [],
-                certifications: [],
-              },
-              keywords: [],
-              createdAt: "",
-              updatedAt: "",
+          {/* Job Description Modal */}
+          <JobDescriptionModal
+            isOpen={showJobDescription}
+            onClose={() => setShowJobDescription(false)}
+            jobDescription={
+              cv?.jobDescription || {
+                id: "",
+                userId: "",
+                title: "No job description available",
+                company: "",
+                location: "",
+                salary: "",
+                experience: "",
+                description:
+                  "No job description has been associated with this CV.",
+                requirements: {
+                  skills: [],
+                  education: [],
+                  experience: [],
+                  certifications: [],
+                },
+                keywords: [],
+                createdAt: "",
+                updatedAt: "",
+              }
             }
-          }
-          coverLetter={cv?.coverLetter}
-          matchingAnalysis={cv?.matchingAnalysis}
-        />
-      </Suspense>
+            coverLetter={cv?.coverLetter}
+            matchingAnalysis={cv?.matchingAnalysis}
+          />
 
-      {/* Matching Analysis Modal */}
-      <Suspense fallback={<LoadingSkeleton type="modal" />}>
-        <MatchingAnalysisModal
-          isOpen={showMatchingAnalysis}
-          onClose={() => setShowMatchingAnalysis(false)}
-          jobTitle={cv?.jobDescription?.title || "No job title"}
-          company={cv?.jobDescription?.company || "No company"}
-          analysis={
-            cv?.matchingAnalysis || {
-              score: 0,
-              matchedSkills: [],
-              missingSkills: [],
-              suggestions: ["No analysis available for this CV."],
-              strengths: [],
+          {/* Matching Analysis Modal */}
+          <MatchingAnalysisModal
+            isOpen={showMatchingAnalysis}
+            onClose={() => setShowMatchingAnalysis(false)}
+            jobTitle={cv?.jobDescription?.title || "No job title"}
+            company={cv?.jobDescription?.company || "No company"}
+            analysis={
+              cv?.matchingAnalysis || {
+                score: 0,
+                matchedSkills: [],
+                missingSkills: [],
+                suggestions: ["No analysis available for this CV."],
+                strengths: [],
+              }
             }
-          }
-        />
-      </Suspense>
+          />
 
-      {/* Cover Letter Modal */}
-      <Suspense fallback={<LoadingSkeleton type="modal" />}>
-        <CoverLetterModal
-          isOpen={showCoverLetter}
-          onClose={() => setShowCoverLetter(false)}
-          coverLetter={cv?.coverLetter}
-          jobTitle={cv?.jobDescription?.title || "No job title"}
-          company={cv?.jobDescription?.company || "No company"}
-        />
+          {/* Cover Letter Modal */}
+          <CoverLetterModal
+            isOpen={showCoverLetter}
+            onClose={() => setShowCoverLetter(false)}
+            coverLetter={cv?.coverLetter}
+            jobTitle={cv?.jobDescription?.title || "No job title"}
+            company={cv?.jobDescription?.company || "No company"}
+          />
+        </div>
       </Suspense>
     </DashboardLayout>
   );

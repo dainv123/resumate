@@ -33,7 +33,12 @@ export class AnalyticsService {
     return analytics;
   }
 
-  async trackActivity(userId: string, action: string, resourceId?: string, metadata?: any): Promise<void> {
+  async trackActivity(
+    userId: string,
+    action: string,
+    resourceId?: string,
+    metadata?: any,
+  ): Promise<void> {
     const analytics = await this.getOrCreateAnalytics(userId);
 
     const activityEvent: ActivityEvent = {
@@ -58,45 +63,57 @@ export class AnalyticsService {
     const analytics = await this.getOrCreateAnalytics(userId);
 
     this.logger.debug(`[getStats] userId: ${userId}`);
-    this.logger.debug(`[getStats] activityLog length: ${analytics.activityLog.length}`);
-    this.logger.debug(`[getStats] activityLog: ${JSON.stringify(analytics.activityLog.slice(0, 5))}`);
+    this.logger.debug(
+      `[getStats] activityLog length: ${analytics.activityLog.length}`,
+    );
+    this.logger.debug(
+      `[getStats] activityLog: ${JSON.stringify(analytics.activityLog.slice(0, 5))}`,
+    );
 
     // Aggregate export data from activityLog
     let totalExports = 0;
-    let pdfCount = 0, wordCount = 0, atsCount = 0;
+    let pdfCount = 0,
+      wordCount = 0,
+      atsCount = 0;
     let lastExportDate: string | null = null;
 
-    analytics.activityLog.forEach(activity => {
+    analytics.activityLog.forEach((activity) => {
       if (activity.action === 'cv_exported') {
         totalExports++;
-        
+
         if (activity.metadata?.format === 'pdf') pdfCount++;
         else if (activity.metadata?.format === 'word') wordCount++;
         else if (activity.metadata?.format === 'ats') atsCount++;
-        
+
         // Track latest export
-        if (!lastExportDate || new Date(activity.date) > new Date(lastExportDate)) {
+        if (
+          !lastExportDate ||
+          new Date(activity.date) > new Date(lastExportDate)
+        ) {
           lastExportDate = activity.date;
         }
       }
     });
 
-    this.logger.debug(`[getStats] totalExports: ${totalExports}, pdf: ${pdfCount}, word: ${wordCount}, ats: ${atsCount}`);
+    this.logger.debug(
+      `[getStats] totalExports: ${totalExports}, pdf: ${pdfCount}, word: ${wordCount}, ats: ${atsCount}`,
+    );
 
     // Count total activities from activityLog
     const totalActivities = analytics.activityLog.length;
-    
+
     // Find last activity
-    const lastActivity = analytics.activityLog.length > 0
-      ? analytics.activityLog[analytics.activityLog.length - 1].date
-      : null;
+    const lastActivity =
+      analytics.activityLog.length > 0
+        ? analytics.activityLog[analytics.activityLog.length - 1].date
+        : null;
 
     return {
       stats: {
         cvViews: 0, // Not tracked yet
         cvDownloads: totalExports,
         cvUploads: cvs.length,
-        tailoringCount: cvs.filter(cv => cv.isTailored).length,
+        tailoringCount: cvs.filter((cv) => cv.isTailored).length,
         portfolioCreated: 0, // Not tracked yet
         exportsByFormat: {
           pdf: pdfCount,
@@ -112,18 +129,18 @@ export class AnalyticsService {
 
   async getExportHistory(userId: string, limit: number = 50) {
     const analytics = await this.getOrCreateAnalytics(userId);
-    
+
     // Get all CVs to map ID to name
     const cvs = await this.cvRepository.find({
       where: { userId },
       select: ['id', 'originalFileName'],
     });
-    const cvMap = new Map(cvs.map(cv => [cv.id, cv.originalFileName]));
+    const cvMap = new Map(cvs.map((cv) => [cv.id, cv.originalFileName]));
 
     // Filter export activities from activityLog
     const exportActivities = analytics.activityLog
-      .filter(activity => activity.action === 'cv_exported')
-      .map(activity => ({
+      .filter((activity) => activity.action === 'cv_exported')
+      .map((activity) => ({
         date: activity.date,
         format: activity.metadata?.format || 'unknown',
         template: activity.metadata?.template || 'default',
@@ -149,26 +166,26 @@ export class AnalyticsService {
 
   async getActivitiesByType(userId: string) {
     const analytics = await this.getOrCreateAnalytics(userId);
-    
+
     // Group activities by action type
     const breakdown: Record<string, number> = {};
-    
-    analytics.activityLog.forEach(activity => {
+
+    analytics.activityLog.forEach((activity) => {
       breakdown[activity.action] = (breakdown[activity.action] || 0) + 1;
     });
-    
+
     return breakdown;
   }
 
   async getTimelineData(userId: string, days: number = 30) {
     const analytics = await this.getOrCreateAnalytics(userId);
-    
+
     // Group activities by date
     const timeline = new Map<string, number>();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    analytics.activityLog.forEach(activity => {
+    analytics.activityLog.forEach((activity) => {
       const activityDate = new Date(activity.date);
       if (activityDate >= cutoffDate) {
         const dateKey = activityDate.toISOString().split('T')[0];
@@ -185,4 +202,3 @@ export class AnalyticsService {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 }
-

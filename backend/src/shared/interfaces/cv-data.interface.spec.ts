@@ -1,4 +1,12 @@
-import { CVData, ContactInfo, Experience, Education, Project, Skills, TemplateConfig } from './cv-data.interface';
+import {
+  CVData,
+  ContactInfo,
+  Experience,
+  Education,
+  Project,
+  Skills,
+  TemplateConfig,
+} from './cv-data.interface';
 
 describe('CV Data Interfaces', () => {
   describe('ContactInfo', () => {
@@ -11,7 +19,7 @@ describe('CV Data Interfaces', () => {
         linkedin: 'https://linkedin.com/in/johndoe',
         github: 'https://github.com/johndoe',
         website: 'https://johndoe.com',
-        location: 'San Francisco, CA'
+        location: 'San Francisco, CA',
       };
 
       expect(contact.name).toBe('John Doe');
@@ -27,7 +35,7 @@ describe('CV Data Interfaces', () => {
     it('should allow optional fields to be undefined', () => {
       const contact: ContactInfo = {
         name: 'John Doe',
-        email: 'john@example.com'
+        email: 'john@example.com',
       };
 
       expect(contact.phone).toBeUndefined();
@@ -45,7 +53,7 @@ describe('CV Data Interfaces', () => {
         technical: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
         tools: ['Git', 'Docker', 'AWS', 'Kubernetes'],
         languages: ['English', 'Spanish', 'French'],
-        soft: ['Leadership', 'Communication', 'Problem Solving']
+        soft: ['Leadership', 'Communication', 'Problem Solving'],
       };
 
       expect(skills.technical).toHaveLength(4);
@@ -59,7 +67,7 @@ describe('CV Data Interfaces', () => {
         technical: [],
         tools: [],
         languages: [],
-        soft: []
+        soft: [],
       };
 
       expect(skills.technical).toEqual([]);
@@ -80,11 +88,15 @@ describe('CV Data Interfaces', () => {
         endDate: '2023-12',
         current: false,
         description: 'Led development of web applications',
-        responsibilities: ['Architecture design', 'Code review', 'Team mentoring'],
+        responsibilities: [
+          'Architecture design',
+          'Code review',
+          'Team mentoring',
+        ],
         achievements: ['Improved performance by 50%', 'Reduced bugs by 70%'],
         technologies: ['React', 'TypeScript', 'Node.js', 'AWS'],
         teamSize: 8,
-        companyDescription: 'Leading technology company'
+        companyDescription: 'Leading technology company',
       };
 
       expect(experience.id).toBe('exp_1');
@@ -94,7 +106,9 @@ describe('CV Data Interfaces', () => {
       expect(experience.startDate).toBe('2020-01');
       expect(experience.endDate).toBe('2023-12');
       expect(experience.current).toBe(false);
-      expect(experience.description).toBe('Led development of web applications');
+      expect(experience.description).toBe(
+        'Led development of web applications',
+      );
       expect(experience.responsibilities).toHaveLength(3);
       expect(experience.achievements).toHaveLength(2);
       expect(experience.technologies).toHaveLength(4);
@@ -111,7 +125,7 @@ describe('CV Data Interfaces', () => {
         current: true,
         responsibilities: [],
         achievements: [],
-        technologies: []
+        technologies: [],
       };
 
       expect(experience.id).toBeUndefined();
@@ -133,7 +147,7 @@ describe('CV Data Interfaces', () => {
         endDate: '2020-06',
         gpa: '3.9',
         description: 'Focus on AI and Machine Learning',
-        location: 'Stanford, CA'
+        location: 'Stanford, CA',
       };
 
       expect(education.id).toBe('edu_1');
@@ -152,7 +166,7 @@ describe('CV Data Interfaces', () => {
         institution: 'University',
         degree: 'Bachelor of Science',
         startDate: '2014-09',
-        endDate: '2018-06'
+        endDate: '2018-06',
       };
 
       expect(education.id).toBeUndefined();
@@ -168,7 +182,8 @@ describe('CV Data Interfaces', () => {
       const project: Project = {
         id: 'proj_1',
         name: 'E-commerce Platform',
-        description: 'Full-stack e-commerce application with AI recommendations',
+        description:
+          'Full-stack e-commerce application with AI recommendations',
         startDate: '2023-01',
         endDate: '2023-06',
         technologies: ['React', 'Node.js', 'MongoDB', 'AWS'],
@@ -177,12 +192,14 @@ describe('CV Data Interfaces', () => {
         results: ['50% increase in sales', '30% reduction in cart abandonment'],
         link: 'https://ecommerce.example.com',
         repository: 'https://github.com/company/ecommerce',
-        duration: '6 months'
+        duration: '6 months',
       };
 
       expect(project.id).toBe('proj_1');
       expect(project.name).toBe('E-commerce Platform');
-      expect(project.description).toBe('Full-stack e-commerce application with AI recommendations');
+      expect(project.description).toBe(
+        'Full-stack e-commerce application with AI recommendations',
+      );
       expect(project.startDate).toBe('2023-01');
       expect(project.endDate).toBe('2023-06');
       expect(project.technologies).toHaveLength(4);
@@ -200,7 +217,7 @@ describe('CV Data Interfaces', () => {
         description: 'Basic application',
         startDate: '2023-01',
         endDate: '2023-03',
-        technologies: ['React']
+        technologies: ['React'],
       };
 
       expect(project.id).toBeUndefined();
@@ -228,14 +245,14 @@ describe('CV Data Interfaces', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2563eb',
           secondaryColor: '#1e40af',
           fontFamily: 'Inter, sans-serif',
-          fontSize: 'large'
-        }
+          fontSize: 'large',
+        },
       };
 
       expect(config.layout).toBe('two-column');
@@ -271,14 +288,14 @@ describe('CV Data Interfaces', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2c3e50',
           secondaryColor: '#34495e',
           fontFamily: 'Arial, sans-serif',
-          fontSize: 'medium'
-        }
+          fontSize: 'medium',
+        },
       };
 
       const modern: TemplateConfig = {
@@ -294,14 +311,14 @@ describe('CV Data Interfaces', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#e74c3c',
           secondaryColor: '#2c3e50',
           fontFamily: 'Helvetica, Arial, sans-serif',
-          fontSize: 'small'
-        }
+          fontSize: 'small',
+        },
       };
 
       expect(singleColumn.layout).toBe('single-column');
@@ -322,14 +339,14 @@ describe('CV Data Interfaces', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2c3e50',
           secondaryColor: '#34495e',
           fontFamily: 'Arial, sans-serif',
-          fontSize: 'small'
-        }
+          fontSize: 'small',
+        },
       };
 
       const largeFont: TemplateConfig = {
@@ -345,14 +362,14 @@ describe('CV Data Interfaces', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2c3e50',
           secondaryColor: '#34495e',
           fontFamily: 'Arial, sans-serif',
-          fontSize: 'large'
-        }
+          fontSize: 'large',
+        },
       };
 
       expect(smallFont.styling.fontSize).toBe('small');
@@ -371,7 +388,7 @@ describe('CV Data Interfaces', () => {
         contact: {
           name: 'John Doe',
           email: 'john@example.com',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         summary: 'Experienced full-stack developer',
         experience: [
@@ -383,22 +400,22 @@ describe('CV Data Interfaces', () => {
             current: true,
             responsibilities: ['Lead development'],
             achievements: ['Improved performance'],
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         education: [
           {
             institution: 'University',
             degree: 'Computer Science',
             startDate: '2018-09',
-            endDate: '2020-06'
-          }
+            endDate: '2020-06',
+          },
         ],
         skills: {
           technical: ['JavaScript', 'Python'],
           tools: ['Git', 'Docker'],
           languages: ['English'],
-          soft: ['Leadership']
+          soft: ['Leadership'],
         },
         projects: [
           {
@@ -406,8 +423,8 @@ describe('CV Data Interfaces', () => {
             description: 'Full-stack application',
             startDate: '2023-01',
             endDate: '2023-06',
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         template: {
           layout: 'single-column',
@@ -422,15 +439,15 @@ describe('CV Data Interfaces', () => {
             awards: true,
             publications: true,
             volunteer: true,
-            languages: true
+            languages: true,
           },
           styling: {
             primaryColor: '#2c3e50',
             secondaryColor: '#34495e',
             fontFamily: 'Arial, sans-serif',
-            fontSize: 'medium'
-          }
-        }
+            fontSize: 'medium',
+          },
+        },
       };
 
       expect(cvData.id).toBe('cv_1');
@@ -451,7 +468,7 @@ describe('CV Data Interfaces', () => {
       const cvData: CVData = {
         contact: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         summary: 'Developer',
         experience: [],
@@ -460,9 +477,9 @@ describe('CV Data Interfaces', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       expect(cvData.id).toBeUndefined();

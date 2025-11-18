@@ -28,13 +28,19 @@ interface MigrationStats {
 
 async function verifyMigration() {
   console.log('🔍 Starting migration verification...');
-  
+
   const app = await NestFactory.createApplicationContext(AppModule);
-  
+
   const cvRepository = app.get<Repository<Cv>>(getRepositoryToken(Cv));
-  const jobDescriptionRepository = app.get<Repository<JobDescription>>(getRepositoryToken(JobDescription));
-  const analysisRepository = app.get<Repository<CvMatchingAnalysis>>(getRepositoryToken(CvMatchingAnalysis));
-  const coverLetterRepository = app.get<Repository<CvCoverLetter>>(getRepositoryToken(CvCoverLetter));
+  const jobDescriptionRepository = app.get<Repository<JobDescription>>(
+    getRepositoryToken(JobDescription),
+  );
+  const analysisRepository = app.get<Repository<CvMatchingAnalysis>>(
+    getRepositoryToken(CvMatchingAnalysis),
+  );
+  const coverLetterRepository = app.get<Repository<CvCoverLetter>>(
+    getRepositoryToken(CvCoverLetter),
+  );
 
   try {
     // Get current stats
@@ -54,7 +60,7 @@ async function verifyMigration() {
         coverLettersWithJobDescription: 0,
         orphanedAnalyses: 0,
         orphanedCoverLetters: 0,
-      }
+      },
     };
 
     // Count CVs
@@ -63,7 +69,9 @@ async function verifyMigration() {
 
     // Count Job Descriptions
     stats.after.totalJobDescriptions = await jobDescriptionRepository.count();
-    console.log(`📊 Total Job Descriptions: ${stats.after.totalJobDescriptions}`);
+    console.log(
+      `📊 Total Job Descriptions: ${stats.after.totalJobDescriptions}`,
+    );
 
     // Count Analyses
     stats.after.totalAnalyses = await analysisRepository.count();
@@ -78,14 +86,18 @@ async function verifyMigration() {
       .createQueryBuilder('analysis')
       .where('analysis.jobDescriptionId IS NOT NULL')
       .getCount();
-    console.log(`📊 Analyses with JobDescription: ${stats.after.analysesWithJobDescription}`);
+    console.log(
+      `📊 Analyses with JobDescription: ${stats.after.analysesWithJobDescription}`,
+    );
 
     // Check cover letters with JobDescription
     stats.after.coverLettersWithJobDescription = await coverLetterRepository
       .createQueryBuilder('coverLetter')
       .where('coverLetter.jobDescriptionId IS NOT NULL')
       .getCount();
-    console.log(`📊 Cover Letters with JobDescription: ${stats.after.coverLettersWithJobDescription}`);
+    console.log(
+      `📊 Cover Letters with JobDescription: ${stats.after.coverLettersWithJobDescription}`,
+    );
 
     // Check for orphaned records
     stats.after.orphanedAnalyses = await analysisRepository
@@ -100,11 +112,13 @@ async function verifyMigration() {
       .leftJoin('coverLetter.jobDescription', 'jd')
       .where('jd.id IS NULL')
       .getCount();
-    console.log(`📊 Orphaned Cover Letters: ${stats.after.orphanedCoverLetters}`);
+    console.log(
+      `📊 Orphaned Cover Letters: ${stats.after.orphanedCoverLetters}`,
+    );
 
     // Verify data integrity
     console.log('\n🔍 Verifying data integrity...');
-    
+
     // Check foreign key constraints
     const invalidAnalyses = await analysisRepository
       .createQueryBuilder('analysis')
@@ -119,13 +133,17 @@ async function verifyMigration() {
       .getMany();
 
     if (invalidAnalyses.length > 0) {
-      console.error(`❌ Found ${invalidAnalyses.length} analyses with invalid JobDescription references`);
+      console.error(
+        `❌ Found ${invalidAnalyses.length} analyses with invalid JobDescription references`,
+      );
     } else {
       console.log('✅ All analyses have valid JobDescription references');
     }
 
     if (invalidCoverLetters.length > 0) {
-      console.error(`❌ Found ${invalidCoverLetters.length} cover letters with invalid JobDescription references`);
+      console.error(
+        `❌ Found ${invalidCoverLetters.length} cover letters with invalid JobDescription references`,
+      );
     } else {
       console.log('✅ All cover letters have valid JobDescription references');
     }
@@ -141,15 +159,17 @@ async function verifyMigration() {
       .createQueryBuilder('coverLetter')
       .where('coverLetter.jobDescriptionSnapshot IS NOT NULL')
       .getCount();
-    console.log(`📊 Cover Letters with snapshots: ${coverLettersWithSnapshots}`);
+    console.log(
+      `📊 Cover Letters with snapshots: ${coverLettersWithSnapshots}`,
+    );
 
     // Performance check
     console.log('\n⚡ Performance verification...');
-    
+
     const startTime = Date.now();
     await analysisRepository.find({
       relations: ['jobDescription'],
-      take: 10
+      take: 10,
     });
     const analysisQueryTime = Date.now() - startTime;
     console.log(`📊 Analysis query time: ${analysisQueryTime}ms`);
@@ -157,7 +177,7 @@ async function verifyMigration() {
     const startTime2 = Date.now();
     await coverLetterRepository.find({
       relations: ['jobDescription'],
-      take: 10
+      take: 10,
     });
     const coverLetterQueryTime = Date.now() - startTime2;
     console.log(`📊 Cover Letter query time: ${coverLetterQueryTime}ms`);
@@ -165,22 +185,36 @@ async function verifyMigration() {
     // Summary
     console.log('\n📋 Migration Verification Summary:');
     console.log(`✅ Total CVs: ${stats.after.totalCvs}`);
-    console.log(`✅ Total Job Descriptions: ${stats.after.totalJobDescriptions}`);
+    console.log(
+      `✅ Total Job Descriptions: ${stats.after.totalJobDescriptions}`,
+    );
     console.log(`✅ Total Analyses: ${stats.after.totalAnalyses}`);
     console.log(`✅ Total Cover Letters: ${stats.after.totalCoverLetters}`);
-    console.log(`✅ Analyses with JobDescription: ${stats.after.analysesWithJobDescription}`);
-    console.log(`✅ Cover Letters with JobDescription: ${stats.after.coverLettersWithJobDescription}`);
+    console.log(
+      `✅ Analyses with JobDescription: ${stats.after.analysesWithJobDescription}`,
+    );
+    console.log(
+      `✅ Cover Letters with JobDescription: ${stats.after.coverLettersWithJobDescription}`,
+    );
     console.log(`⚠️  Orphaned Analyses: ${stats.after.orphanedAnalyses}`);
-    console.log(`⚠️  Orphaned Cover Letters: ${stats.after.orphanedCoverLetters}`);
+    console.log(
+      `⚠️  Orphaned Cover Letters: ${stats.after.orphanedCoverLetters}`,
+    );
     console.log(`⚡ Analysis query performance: ${analysisQueryTime}ms`);
     console.log(`⚡ Cover Letter query performance: ${coverLetterQueryTime}ms`);
 
-    if (stats.after.orphanedAnalyses === 0 && stats.after.orphanedCoverLetters === 0) {
-      console.log('\n🎉 Migration verification PASSED! All data integrity checks passed.');
+    if (
+      stats.after.orphanedAnalyses === 0 &&
+      stats.after.orphanedCoverLetters === 0
+    ) {
+      console.log(
+        '\n🎉 Migration verification PASSED! All data integrity checks passed.',
+      );
     } else {
-      console.log('\n⚠️  Migration verification completed with warnings. Some orphaned records found.');
+      console.log(
+        '\n⚠️  Migration verification completed with warnings. Some orphaned records found.',
+      );
     }
-
   } catch (error) {
     console.error('❌ Migration verification failed:', error);
     throw error;

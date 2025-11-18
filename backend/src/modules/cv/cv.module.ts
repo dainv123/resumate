@@ -21,7 +21,13 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Cv, JobDescription, CvMatchingAnalysis, CvCoverLetter, User]),
+    TypeOrmModule.forFeature([
+      Cv,
+      JobDescription,
+      CvMatchingAnalysis,
+      CvCoverLetter,
+      User,
+    ]),
     AiModule,
     UsersModule,
     AnalyticsModule,
@@ -33,7 +39,15 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
     }),
   ],
   controllers: [CvController],
-  providers: [CvService, JobDescriptionService, ExportService, HtmlTemplateService, DynamicTemplateService, DocumentParserService, FileUploadService],
+  providers: [
+    CvService,
+    JobDescriptionService,
+    ExportService,
+    HtmlTemplateService,
+    DynamicTemplateService,
+    DocumentParserService,
+    FileUploadService,
+  ],
   exports: [CvService, TypeOrmModule],
 })
 export class CvModule {}

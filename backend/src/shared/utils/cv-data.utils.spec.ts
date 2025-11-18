@@ -1,5 +1,13 @@
 import { CVDataUtils } from './cv-data.utils';
-import { CVData, ContactInfo, Experience, Education, Project, Skills, TemplateConfig } from '../interfaces/cv-data.interface';
+import {
+  CVData,
+  ContactInfo,
+  Experience,
+  Education,
+  Project,
+  Skills,
+  TemplateConfig,
+} from '../interfaces/cv-data.interface';
 
 describe('CVDataUtils', () => {
   describe('normalizeCVData', () => {
@@ -19,31 +27,31 @@ describe('CVDataUtils', () => {
             teamSize: '5',
             responsibilities: ['Lead development', 'Mentor team'],
             achievements: ['Improved performance by 50%'],
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         education: [
           {
             degree: 'Computer Science',
             school: 'University',
             year: '2018 - 2020',
-            gpa: '3.8'
-          }
+            gpa: '3.8',
+          },
         ],
         skills: {
           technical: ['JavaScript', 'Python'],
           soft: ['Leadership', 'Communication'],
           languages: ['English', 'Spanish'],
-          tools: ['Git', 'Docker']
+          tools: ['Git', 'Docker'],
         },
         projects: [
           {
             name: 'E-commerce App',
             description: 'Full-stack e-commerce application',
             techStack: ['React', 'Node.js', 'MongoDB'],
-            duration: '6 months'
-          }
-        ]
+            duration: '6 months',
+          },
+        ],
       };
 
       const result = CVDataUtils.normalizeCVData(legacyData);
@@ -56,7 +64,7 @@ describe('CVDataUtils', () => {
         linkedin: 'https://linkedin.com/in/johndoe',
         github: '',
         website: '',
-        location: ''
+        location: '',
       });
 
       expect(result.summary).toBe('Experienced developer');
@@ -78,7 +86,7 @@ describe('CVDataUtils', () => {
         linkedin: '',
         github: '',
         website: '',
-        location: ''
+        location: '',
       });
 
       expect(result.summary).toBe('');
@@ -88,7 +96,7 @@ describe('CVDataUtils', () => {
         technical: [],
         tools: [],
         languages: [],
-        soft: []
+        soft: [],
       });
       expect(result.projects).toEqual([]);
     });
@@ -103,7 +111,7 @@ describe('CVDataUtils', () => {
           linkedin: 'https://linkedin.com/in/janedoe',
           github: 'https://github.com/janedoe',
           website: 'https://janedoe.com',
-          location: 'San Francisco, CA'
+          location: 'San Francisco, CA',
         },
         summary: 'Full-stack developer with 5 years experience',
         experience: [
@@ -120,8 +128,8 @@ describe('CVDataUtils', () => {
             achievements: ['Reduced bugs by 70%'],
             technologies: ['TypeScript', 'React', 'AWS'],
             teamSize: 8,
-            companyDescription: 'Fast-growing startup'
-          }
+            companyDescription: 'Fast-growing startup',
+          },
         ],
         education: [
           {
@@ -133,14 +141,14 @@ describe('CVDataUtils', () => {
             endDate: '2021',
             gpa: '3.9',
             description: 'Focus on AI and Machine Learning',
-            location: 'Cambridge, MA'
-          }
+            location: 'Cambridge, MA',
+          },
         ],
         skills: {
           technical: ['TypeScript', 'React', 'Node.js', 'Python'],
           tools: ['Git', 'Docker', 'AWS', 'Kubernetes'],
           languages: ['English', 'French'],
-          soft: ['Leadership', 'Problem Solving', 'Communication']
+          soft: ['Leadership', 'Problem Solving', 'Communication'],
         },
         projects: [
           {
@@ -152,11 +160,14 @@ describe('CVDataUtils', () => {
             technologies: ['Python', 'TensorFlow', 'React'],
             role: 'Lead Developer',
             teamSize: 3,
-            results: ['95% customer satisfaction', '50% reduction in support tickets'],
+            results: [
+              '95% customer satisfaction',
+              '50% reduction in support tickets',
+            ],
             link: 'https://chatbot.example.com',
             repository: 'https://github.com/company/chatbot',
-            duration: '3 months'
-          }
+            duration: '3 months',
+          },
         ],
         template: {
           layout: 'two-column',
@@ -171,15 +182,15 @@ describe('CVDataUtils', () => {
             awards: true,
             publications: true,
             volunteer: true,
-            languages: true
+            languages: true,
           },
           styling: {
             primaryColor: '#2563eb',
             secondaryColor: '#1e40af',
             fontFamily: 'Inter, sans-serif',
-            fontSize: 'medium'
-          }
-        }
+            fontSize: 'medium',
+          },
+        },
       };
 
       const result = CVDataUtils.normalizeCVData(standardData);
@@ -193,7 +204,7 @@ describe('CVDataUtils', () => {
       const contact = {
         name: 'John Doe',
         email: 'john@example.com',
-        phone: '+1234567890'
+        phone: '+1234567890',
       };
 
       const result = CVDataUtils.normalizeContactInfo(contact);
@@ -206,7 +217,7 @@ describe('CVDataUtils', () => {
         linkedin: '',
         github: '',
         website: '',
-        location: ''
+        location: '',
       });
     });
 
@@ -222,7 +233,7 @@ describe('CVDataUtils', () => {
         linkedin: '',
         github: '',
         website: '',
-        location: ''
+        location: '',
       });
     });
   });
@@ -237,8 +248,8 @@ describe('CVDataUtils', () => {
           teamSize: '5',
           responsibilities: ['Code', 'Review'],
           achievements: ['Success'],
-          technologies: ['React']
-        }
+          technologies: ['React'],
+        },
       ];
 
       const result = CVDataUtils.normalizeExperience(experience);
@@ -257,7 +268,7 @@ describe('CVDataUtils', () => {
         achievements: ['Success'],
         technologies: ['React'],
         teamSize: 5,
-        companyDescription: ''
+        companyDescription: '',
       });
     });
 
@@ -272,8 +283,8 @@ describe('CVDataUtils', () => {
           title: 'Developer',
           company: 'Tech Corp',
           duration: '2018 - 2020',
-          current: false
-        }
+          current: false,
+        },
       ];
 
       const result = CVDataUtils.normalizeExperience(experience);
@@ -291,8 +302,8 @@ describe('CVDataUtils', () => {
           degree: 'Computer Science',
           school: 'University',
           year: '2018 - 2020',
-          gpa: '3.8'
-        }
+          gpa: '3.8',
+        },
       ];
 
       const result = CVDataUtils.normalizeEducation(education);
@@ -307,7 +318,7 @@ describe('CVDataUtils', () => {
         endDate: '2020',
         gpa: '3.8',
         description: '',
-        location: ''
+        location: '',
       });
     });
 
@@ -316,8 +327,8 @@ describe('CVDataUtils', () => {
         {
           institution: 'MIT',
           degree: 'MS',
-          year: '2019 - 2021'
-        }
+          year: '2019 - 2021',
+        },
       ];
 
       const result = CVDataUtils.normalizeEducation(education);
@@ -332,7 +343,7 @@ describe('CVDataUtils', () => {
         technical: ['JavaScript', 'Python'],
         soft: ['Leadership'],
         languages: ['English'],
-        tools: ['Git']
+        tools: ['Git'],
       };
 
       const result = CVDataUtils.normalizeSkills(skills);
@@ -341,13 +352,13 @@ describe('CVDataUtils', () => {
         technical: ['JavaScript', 'Python'],
         tools: ['Git'],
         languages: ['English'],
-        soft: ['Leadership']
+        soft: ['Leadership'],
       });
     });
 
     it('should handle missing skill categories', () => {
       const skills = {
-        technical: ['JavaScript']
+        technical: ['JavaScript'],
       };
 
       const result = CVDataUtils.normalizeSkills(skills);
@@ -356,7 +367,7 @@ describe('CVDataUtils', () => {
         technical: ['JavaScript'],
         tools: [],
         languages: [],
-        soft: []
+        soft: [],
       });
     });
   });
@@ -368,8 +379,8 @@ describe('CVDataUtils', () => {
           name: 'E-commerce App',
           description: 'Full-stack application',
           techStack: ['React', 'Node.js'],
-          duration: '6 months'
-        }
+          duration: '6 months',
+        },
       ];
 
       const result = CVDataUtils.normalizeProjects(projects);
@@ -387,7 +398,7 @@ describe('CVDataUtils', () => {
         results: [],
         link: '',
         repository: '',
-        duration: '6 months'
+        duration: '6 months',
       });
     });
   });
@@ -409,14 +420,14 @@ describe('CVDataUtils', () => {
           awards: true,
           publications: true,
           volunteer: true,
-          languages: true
+          languages: true,
         },
         styling: {
           primaryColor: '#2c3e50',
           secondaryColor: '#34495e',
           fontFamily: 'Arial, sans-serif',
-          fontSize: 'medium'
-        }
+          fontSize: 'medium',
+        },
       });
     });
   });
@@ -427,7 +438,7 @@ describe('CVDataUtils', () => {
         contact: {
           name: 'John Doe',
           email: 'john@example.com',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         summary: 'Experienced developer',
         experience: [],
@@ -436,9 +447,9 @@ describe('CVDataUtils', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const result = CVDataUtils.validateCVData(validData);
@@ -452,7 +463,7 @@ describe('CVDataUtils', () => {
         contact: {
           name: '',
           email: '',
-          phone: ''
+          phone: '',
         },
         summary: '',
         experience: [],
@@ -461,9 +472,9 @@ describe('CVDataUtils', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const result = CVDataUtils.validateCVData(invalidData);
@@ -480,7 +491,7 @@ describe('CVDataUtils', () => {
           name: 'John Doe',
           email: 'john@example.com',
           phone: '+1234567890',
-          linkedin: 'https://linkedin.com/in/johndoe'
+          linkedin: 'https://linkedin.com/in/johndoe',
         },
         summary: 'Experienced developer with 5 years of experience',
         experience: [
@@ -492,22 +503,22 @@ describe('CVDataUtils', () => {
             current: true,
             responsibilities: ['Lead development'],
             achievements: ['Improved performance'],
-            technologies: ['React', 'Node.js']
-          }
+            technologies: ['React', 'Node.js'],
+          },
         ],
         education: [
           {
             institution: 'University',
             degree: 'Computer Science',
             startDate: '2018',
-            endDate: '2020'
-          }
+            endDate: '2020',
+          },
         ],
         skills: {
           technical: ['JavaScript', 'Python'],
           tools: ['Git', 'Docker'],
           languages: ['English'],
-          soft: ['Leadership']
+          soft: ['Leadership'],
         },
         projects: [
           {
@@ -515,9 +526,9 @@ describe('CVDataUtils', () => {
             description: 'Full-stack application',
             startDate: '2023',
             endDate: '2023',
-            technologies: ['React', 'Node.js']
-          }
-        ]
+            technologies: ['React', 'Node.js'],
+          },
+        ],
       };
 
       const score = CVDataUtils.calculateCompletenessScore(completeData);
@@ -535,7 +546,7 @@ describe('CVDataUtils', () => {
           linkedin: '',
           github: '',
           website: '',
-          location: ''
+          location: '',
         },
         summary: '',
         experience: [],
@@ -544,9 +555,9 @@ describe('CVDataUtils', () => {
           technical: [],
           tools: [],
           languages: [],
-          soft: []
+          soft: [],
         },
-        projects: []
+        projects: [],
       };
 
       const score = CVDataUtils.calculateCompletenessScore(incompleteData);

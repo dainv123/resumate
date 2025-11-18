@@ -30,7 +30,8 @@
     "no": "No",
     "current": "Current",
     "new": "New",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "backToDashboard": "Back to Dashboard"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -250,7 +251,37 @@
     "achievementsPlaceholder": "Enter each achievement on a new line",
     "metrics": "Metrics & Impact",
     "metricsPlaceholder": "e.g., Increased performance by 40%",
-    "createdAt": "Created at"
+    "createdAt": "Created at",
+    "techStack": "Tech Stack",
+    "techStackLabel": "Tech Stack",
+    "addTechnology": "Add technology (Press Enter)",
+    "addTechButton": "Add",
+    "descriptionAndResults": "Description & Results",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe what you built and your contributions",
+    "resultsLabel": "Results/Achievements",
+    "resultsPlaceholder": "e.g., Improved performance by 50%, Increased user engagement by 30%",
+    "linksAndMedia": "Links & Media",
+    "demoLink": "Demo Link",
+    "demoLinkPlaceholder": "https://demo.example.com",
+    "githubLink": "GitHub Link",
+    "githubLinkPlaceholder": "https://github.com/username/repo",
+    "imageUrl": "Project Image URL",
+    "imageUrlPlaceholder": "https://example.com/project-image.jpg",
+    "errors": {
+      "projectNameRequired": "Project name is required",
+      "roleRequired": "Role is required",
+      "techStackRequired": "At least one technology is required",
+      "descriptionMinLength": "Description must be at least 10 characters",
+      "invalidDemoLink": "Please enter a valid demo link URL",
+      "invalidGithubLink": "Please enter a valid GitHub link URL",
+      "invalidImageUrl": "Please enter a valid image URL"
+    },
+    "demo": "Demo",
+    "code": "Code",
+    "moreBullets": "+{{count}} more bullets",
+    "cvBullets": "CV Bullets",
+    "failedLoadProjects": "Failed to load projects"
   },
   "settings": {
     "title": "Settings",
@@ -492,7 +523,7 @@
     "linkedin": "LinkedIn",
     "github": "GitHub",
     "website": "Website",
-    "customDomain": "Custom Domain",
+    "customDomain": "Custom Domain (Optional)",
     "avatar": "Avatar URL (Optional)",
     "avatarPlaceholder": "https://example.com/your-photo.jpg",
     "linkedinUrl": "LinkedIn URL",
@@ -545,7 +576,6 @@
     "originalCv": "Original CV",
     "originalCvDescription": "This CV was created from an original CV",
     "tailoredCvs": "Tailored CVs",
-    "viewOriginal": "View Original",
     "view": "View",
     "tailoredFor": "Tailored for",
     "noRelationships": "No CV relationships found",
@@ -576,7 +606,40 @@
     "noCvsDescription": "Upload your first CV to get started",
     "createFirstCv": "Create Your First CV",
     "detail": "Details",
-    "export": "Export"
+    "export": "Export",
+    "displaySettings": "Display Settings",
+    "showVersionHistory": "Show version history",
+    "showTailoredCvsSeparately": "Show tailored CVs separately",
+    "autoSaveChanges": "Auto-save changes",
+    "exportSettings": "Export Settings",
+    "includeMetadataInExports": "Include metadata in exports",
+    "autoDownloadAfterExport": "Auto-download after export",
+    "matchingAnalysis": "Matching Analysis",
+    "coverLetterCopied": "Cover letter copied to clipboard!",
+    "failedCopyCoverLetter": "Failed to copy cover letter",
+    "coverLetterDownloaded": "Cover letter downloaded!",
+    "copied": "Copied!",
+    "copyToClipboard": "Copy to Clipboard",
+    "download": "Download",
+    "generatingCoverLetter": "Generating your cover letter...",
+    "noCoverLetterAvailable": "No Cover Letter Available",
+    "generateCoverLetterText": "Generate a cover letter using the Job Tailor feature to create a personalized letter for this position.",
+    "failedLoadVersionHistory": "Failed to load version history",
+    "customDomainOptional": "Custom Domain (Optional)",
+    "customDomainHelp": "Enter your own domain if you own one (e.g., myportfolio.com)",
+    "requirements": "⚠️ Requirements:",
+    "mustOwnDomain": "You must own the domain",
+    "configureDNS": "Configure DNS A record to point to our server",
+    "contactSupport": "Contact support for server IP",
+    "customDomainNote": "Leave empty to use the default URL provided by the system.",
+    "personalizationTips": "Personalization Tips",
+    "reviewAndCustomizeContent": "Review and customize the content to match your voice",
+    "addSpecificExamples": "Add specific examples from your experience",
+    "includeHiringManagerName": "Include the hiring manager's name if available",
+    "proofreadGrammarAndSpelling": "Proofread for grammar and spelling",
+    "copy": "Copy",
+    "tailoredForJob": "Tailored for Job",
+    "updatedAt": "Updated at"
   },
   "compare": {
     "title": "Version Comparison",
@@ -740,7 +803,7 @@
     "noCVsMatch": "No CVs match your search",
     "noCVsAvailable": "No CVs available. Upload one first.",
     "jobDescription": "Job Description",
-    "jobDescPlaceholder": "Paste the job description here...",
+    "jobDescPlaceholder": "Paste the job description here...\n\nExample:\n• 3+ years of experience in React development\n• Strong knowledge of TypeScript and Node.js\n• Experience with cloud platforms (AWS, Azure)\n• Excellent communication skills\n• Bachelor's degree in Computer Science or related field",
     "analyzeCompatibility": "Analyze Compatibility",
     "analyzing": "Analyzing...",
     "generateCoverLetter": "Generate Cover Letter",
@@ -821,6 +884,8 @@
     "selectCVOnly": "Select a CV to continue",
     "enterJobOnly": "Enter job description to continue",
     "failedToTailor": "Failed to tailor CV. Please try again.",
+    "failedToAnalyze": "Failed to analyze compatibility. Please try again.",
+    "failedToGenerateCoverLetter": "Failed to generate cover letter. Please try again.",
     "selectCVAndJD": "Please select a CV and enter a job description",
     "success": "CV tailored successfully! Your CV has been optimized for this job.",
     "uploadCVPrompt": "Please upload a CV first to use the job tailoring feature",
@@ -868,6 +933,14 @@
     "wordDesc": "Editable format for further customization",
     "atsOptimized": "ATS Optimized",
     "atsDesc": "Plain text format for ATS systems",
+    "previewCV": "Preview CV",
+    "viewTailoredCV": "View Tailored CV",
+    "viewTailoredCVDesc": "Open CV in full view mode",
+    "exportTitle": "Export Your Tailored CV",
+    "exportDesc": "Download your optimized CV in multiple formats",
+    "pdfTitle": "PDF Format",
+    "wordTitle": "Word Document", 
+    "atsTitle": "ATS Optimized",
     "howItWorks": "How AI Tailoring Works",
     "stepsDescription": "Get your CV optimized in 4 simple steps",
     "step1Title": "Select Your CV",
@@ -884,6 +957,7 @@
     "analyzingCompatibility": "📊 Analyzing Compatibility",
     "generatingCoverLetter": "✉️ Generating Cover Letter",
     "failedToTailorError": "Failed to tailor CV. Please try again.",
+    "analysisTitle": "CV-Job Compatibility Analysis",
     "closeModal": "Close",
     "copyClipboard": "Copy to Clipboard",
     "coverLetterInfo": "Professional cover letter generated based on your CV and the job description",
@@ -909,11 +983,7 @@
       "estimatedTime": "Estimated time: {{time}} seconds",
       "almostDone": "Almost done!",
       "completed": "Completed! 🎉"
-    },
-    "exportTitle": "Export CV",
-    "exportDesc": "Export your CV in multiple formats: PDF, Word, or ATS-friendly text format.",
-    "loadingMoreCvs": "Loading more CVs...",
-    "scrollToSeeMore": "Scroll to see more"
+    }
   },
   "aiCvWizard": {
     "title": "🤖 AI CV Wizard",
@@ -1056,74 +1126,284 @@
       "noActivityYet": "No activity yet"
     }
   },
-  "templateConfig": {
-    "title": "Custom Template Configuration",
-    "layout": {
-      "title": "Layout Options",
-      "description": "Choose how your CV content is organized",
-      "style": "Layout Style",
-      "singleColumn": "Single Column",
-      "twoColumn": "Two Column",
-      "preview": "Preview"
+  "portfolioSections": {
+    "sectionCustomizer": {
+      "title": "Customize Sections",
+      "fixedTemplate": "Fixed Template",
+      "fixedTemplateDesc": "The \"{{name}}\" template has a fixed layout and cannot be customized. All sections will be displayed based on your available data.",
+      "subtitle": "Choose which sections to display in your portfolio. Deselected sections will be hidden.",
+      "tip": "Sections will only appear if you have data for them. For example, if you don't have any certifications, that section won't be shown even if enabled.",
+      "addedBadge": "Added",
+      "sections": {
+        "hero": {
+          "label": "Hero Section",
+          "description": "Main header with name and bio"
+        },
+        "about": {
+          "label": "About Me",
+          "description": "Professional summary/bio"
+        },
+        "skills": {
+          "label": "Skills",
+          "description": "Technical and soft skills"
+        },
+        "experience": {
+          "label": "Work Experience",
+          "description": "Employment history"
+        },
+        "education": {
+          "label": "Education",
+          "description": "Academic background"
+        },
+        "projects": {
+          "label": "Projects",
+          "description": "Portfolio projects showcase"
+        },
+        "certifications": {
+          "label": "Certifications",
+          "description": "Professional certifications"
+        },
+        "awards": {
+          "label": "Awards",
+          "description": "Recognition and achievements"
+        },
+        "contact": {
+          "label": "Contact Links",
+          "description": "Social media and contact info"
+        }
+      }
     },
-    "sections": {
-      "title": "Section Visibility",
-      "description": "Choose which sections to include in your CV",
-      "contact": "Contact Information",
-      "summary": "Professional Summary",
-      "experience": "Work Experience",
-      "education": "Education",
-      "skills": "Skills",
-      "projects": "Projects",
-      "certifications": "Certifications",
-      "awards": "Awards",
-      "publications": "Publications",
-      "volunteer": "Volunteer Work",
-      "languages": "Languages",
-      "tips": "Section Tips",
-      "tip1": "Contact information is always included",
-      "tip2": "Hide sections you don't want to emphasize",
-      "tip3": "Show all sections for comprehensive CVs"
+    "templateSelector": {
+      "sectionNames": {
+        "hero": "Hero",
+        "about": "About",
+        "skills": "Skills",
+        "experience": "Experience",
+        "education": "Education",
+        "projects": "Projects",
+        "certifications": "Certifications",
+        "awards": "Awards",
+        "contact": "Contact"
+      }
     },
-    "styling": {
-      "title": "Styling Options",
-      "description": "Customize colors and typography",
-      "colorPresets": "Color Presets",
-      "primaryColor": "Primary Color",
-      "secondaryColor": "Secondary Color",
-      "fontFamily": "Font Family",
-      "fontSize": "Font Size",
-      "small": "Small",
-      "medium": "Medium",
-      "large": "Large",
-      "stylePreview": "Style Preview",
-      "previewText": "This is how your CV text will look with the selected styling."
+    "templateGallery": {
+      "features": {
+        "cleanModern": "Clean & Modern",
+        "atsFriendly": "ATS-friendly",
+        "corporateStyle": "Corporate style",
+        "colorfulDesign": "Colorful design",
+        "visualElements": "Visual elements",
+        "creativeLayout": "Creative layout",
+        "portfolioShowcase": "Portfolio showcase",
+        "codeFriendly": "Code-friendly",
+        "skillsFocus": "Skills focus",
+        "projectEmphasis": "Project emphasis",
+        "techStackDisplay": "Tech stack display"
+      }
     },
-    "tabs": {
-      "layout": "Layout",
-      "sections": "Sections",
-      "styling": "Styling"
-    },
-    "buttons": {
-      "cancel": "Cancel",
-      "exporting": "Exporting...",
-      "exportPDF": "Export PDF"
-    },
-    "colorPresets": {
-      "professionalBlue": "Professional Blue",
-      "purple": "Purple",
-      "green": "Green",
-      "red": "Red",
-      "orange": "Orange",
-      "gray": "Gray"
-    },
-    "fontOptions": {
-      "inter": "Inter",
-      "roboto": "Roboto",
-      "openSans": "Open Sans",
-      "lato": "Lato",
-      "poppins": "Poppins",
-      "sourceSansPro": "Source Sans Pro"
+    "templateSelection": {
+      "professional": "Professional",
+      "cleanTraditional": "Clean, traditional single-column layout",
+      "singleColumnDesc": "Single column with header, sections, and standard formatting",
+      "modernTwoColumn": "Modern Two-Column",
+      "twoColumnDesign": "Professional two-column design with skills progress bars",
+      "twoColumnDesc": "Left column: Contact info & skills, Right column: Experience & education",
+      "chooseTemplate": "Choose Template & Format",
+      "portableDocument": "Portable Document",
+      "microsoftWord": "Microsoft Word",
+      "atsFriendlyText": "ATS-Friendly Text",
+      "singleColumnLayout": "Traditional single-column layout with clean typography and standard sections."
     }
+  },
+  "cvSections": {
+    "statusLabels": {
+      "tailored": "Tailored",
+      "original": "Original",
+      "present": "Present",
+      "history": "History"
+    },
+    "errors": {
+      "exportFailed": "Export failed:",
+      "noJobDescription": "No job description available",
+      "noJobTitle": "No job title",
+      "noCompany": "No company",
+      "noAnalysis": "No analysis available for this CV.",
+      "deleteFailed": "Delete CV failed:",
+      "duplicateFailed": "Duplicate CV failed:",
+      "failedCopy": "Failed to copy:",
+      "cvGenerationTimeout": "CV generation timeout",
+      "unknownError": "Unknown error",
+      "failedLoadHistory": "Failed to load version history",
+      "failedRestore": "Failed to restore version"
+    },
+    "versionHistory": {
+      "title": "CV Version History",
+      "loading": "Loading versions...",
+      "noVersions": "No versions found",
+      "compareButton": "Compare Selected ({{count}}/2)",
+      "closeButton": "Close",
+      "restoreButton": "Restore",
+      "currentButton": "Current",
+      "tailoredBadge": "Tailored",
+      "createdLabel": "Created",
+      "updatedLabel": "Updated",
+      "forLabel": "For",
+      "versionLabel": "Version",
+      "compareSelectedTip": "Select up to 2 versions to compare them side-by-side.",
+      "restoreConfirm": "Are you sure you want to restore this version? Your current version will be saved automatically."
+    },
+    "matching": {
+      "scoreLabels": {
+        "excellent": "Excellent Match",
+        "good": "Good Match",
+        "needsImprovement": "Needs Improvement"
+      }
+    },
+    "templates": {
+      "formats": {
+        "portableDocument": "Portable Document",
+        "microsoftWord": "Microsoft Word",
+        "atsFriendlyText": "ATS-Friendly Text"
+      },
+      "chooseTemplateFormat": "Choose Template & Format",
+      "exportFormat": "Export Format",
+      "templateDesign": "Template Design",
+      "templatePreview": "Template Preview",
+      "professional": {
+        "name": "Professional",
+        "description": "Clean, traditional single-column layout",
+        "preview": "Single column with header, sections, and standard formatting"
+      },
+      "twoColumn": {
+        "name": "Modern Two-Column",
+        "description": "Professional two-column design with skills progress bars",
+        "preview": "Left column: Contact info & skills, Right column: Experience & education"
+      },
+      "professionalPreviewText": "Traditional single-column layout with clean typography and standard sections.",
+      "twoColumnPreviewText": "Modern two-column layout with dark teal sidebar, skills progress bars, and professional styling like the image you showed."
+    },
+    "templateConfig": {
+      "selectLayout": "Select layout",
+      "selectFont": "Select font",
+      "selectFontSize": "Select font size",
+      "title": "Customize Template",
+      "buttons": {
+        "cancel": "Cancel",
+        "exportPDF": "Export PDF",
+        "exporting": "Exporting..."
+      },
+      "tabs": {
+        "layout": "Layout",
+        "sections": "Sections",
+        "styling": "Styling"
+      },
+      "layout": {
+        "title": "Layout Style",
+        "description": "Choose how to organize your CV content",
+        "style": "Select layout style",
+        "singleColumn": "Single Column",
+        "twoColumn": "Two Column",
+        "preview": "Preview"
+      },
+      "sections": {
+        "title": "CV Sections",
+        "description": "Choose which sections to include in your CV",
+        "contact": "Contact Information",
+        "summary": "Professional Summary",
+        "experience": "Work Experience",
+        "education": "Education",
+        "skills": "Skills",
+        "projects": "Projects",
+        "certifications": "Certifications",
+        "awards": "Awards",
+        "publications": "Publications",
+        "volunteer": "Volunteer",
+        "languages": "Languages",
+        "tips": "Tips for Best Results",
+        "tip1": "Contact information is always required",
+        "tip2": "Tailor sections based on the job description",
+        "tip3": "Remove empty sections to improve readability"
+      },
+      "styling": {
+        "title": "Styling & Colors",
+        "description": "Customize the appearance of your CV",
+        "colorPresets": "Color Presets",
+        "primaryColor": "Primary Color",
+        "secondaryColor": "Secondary Color",
+        "fontFamily": "Font Family",
+        "fontSize": "Font Size",
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large",
+        "stylePreview": "Style Preview",
+        "previewText": "Professional CV builder with AI-powered customization"
+      },
+      "colorPresets": {
+        "professionalBlue": "Professional Blue",
+        "purple": "Purple",
+        "green": "Green",
+        "red": "Red",
+        "orange": "Orange",
+        "gray": "Gray"
+      },
+      "fontOptions": {
+        "inter": "Inter",
+        "roboto": "Roboto",
+        "openSans": "Open Sans",
+        "lato": "Lato",
+        "poppins": "Poppins",
+        "sourceSansPro": "Source Sans Pro"
+      }
+    },
+    "display": {
+      "originalCv": "Original CV"
+    }
+  },
+  "seoData": {
+    "keywords": {
+      "cvBuilder": "CV builder",
+      "resumeBuilder": "Resume builder",
+      "portfolioBuilder": "Portfolio builder",
+      "freelancerTools": "Freelancer tools",
+      "aiCvGenerator": "AI CV generator",
+      "cvMakerOnline": "CV maker online",
+      "professionalResume": "Professional resume",
+      "jobApplication": "Job application",
+      "careerTools": "Career tools",
+      "cvOptimization": "CV optimization",
+      "resumeTemplates": "Resume templates",
+      "portfolioWebsite": "Portfolio website",
+      "cvOnline": "CV online",
+      "aiCv": "AI CV",
+      "portfolioOnline": "Portfolio online"
+    },
+    "schema": {
+      "features": [
+        "AI-powered CV generation",
+        "Automatic CV optimization",
+        "Portfolio management",
+        "Job description integration"
+      ]
+    }
+  },
+  "seo": {
+    "schema": {
+      "mainDescription": "AI-powered CV & Portfolio builder for freelancers. Tạo CV chuyên nghiệp với AI, tối ưu hóa cho từ khóa công việc.",
+      "keywords": "CV builder, Resume builder, AI CV, Portfolio, Freelancer tools, Tạo CV, CV online, CV chuyên nghiệp",
+      "features": {
+        "aiCvGeneration": "AI-powered CV generation",
+        "cvTemplates": "Professional CV templates",
+        "portfolioBuilder": "Portfolio builder",
+        "jobTailorAuto": "Automatic job tailoring",
+        "exportFormats": "Export in multiple formats (PDF, Word, ATS)",
+        "analyticsTracking": "Analytics and tracking"
+      },
+      "releaseNotes": "First version with AI CV Wizard and Template Gallery",
+      "homepageDescription": "Create professional CV in 30 seconds with AI"
+    }
+  },
+  "systemMessages": {
+    "english": "English",
+    "vietnamese": "Vietnamese"
   }
 }

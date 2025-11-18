@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export interface TemplateMetadata {
   category: 'professional' | 'creative' | 'modern';
@@ -40,4 +46,3 @@ export class Template {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-
