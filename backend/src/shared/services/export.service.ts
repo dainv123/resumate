@@ -143,6 +143,7 @@ export class ExportService {
    */
   private getDefaultConfigForTemplate(template: string): TemplateConfig {
     const configMap = {
+      'professional': () => CVDataUtils.getDefaultTemplateConfig(), // professional uses default config
       'two-column': () => this.dynamicTemplateService.getTwoColumnConfig(),
       'modern': () => this.dynamicTemplateService.getModernConfig(),
       'show-all': () => this.dynamicTemplateService.getShowAllConfig(),
@@ -165,18 +166,33 @@ export class ExportService {
    */
   private async convertHtmlToPDF(htmlContent: string): Promise<Buffer> {
     try {
+      this.logger.log('Launching Puppeteer browser...');
       const browser = await this.launchPuppeteerBrowser();
+      this.logger.log('Browser launched successfully');
+
       const page = await this.createPuppeteerPage(browser);
-      
+      this.logger.log('Page created successfully');
+
+      this.logger.log('Setting page content...');
       await this.setPageContent(page, htmlContent);
+      this.logger.log('Page content set successfully');
+
+      this.logger.log('Generating PDF...');
       const pdfBuffer = await this.generatePDFFromPage(page);
-      
+      this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+
       await browser.close();
-      
+      this.logger.log('Browser closed');
+
       return Buffer.from(pdfBuffer);
-      
+
     } catch (error) {
       this.logger.error('Error converting HTML to PDF:', error);
+      this.logger.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       return this.handlePDFGenerationError(htmlContent);
     }
   }
@@ -239,11 +255,17 @@ export class ExportService {
   }
 
   /**
-   * Handle PDF generation errors with fallback
+   * Handle PDF generation errors - NO fallback to HTML!
+   * Why? Because:
+   * 1. Response has Content-Type: application/pdf header
+   * 2. Client expects PDF binary data, not HTML text
+   * 3. HTML fallback creates corrupted "PDF" files that can't be viewed
+   * 4. Better to fail fast and let client handle error properly
    */
-  private handlePDFGenerationError(htmlContent: string): Buffer {
-    this.logger.warn('Falling back to HTML output for debugging');
-    return Buffer.from(htmlContent, 'utf-8');
+  private handlePDFGenerationError(htmlContent: string): never {
+    this.logger.error('PDF generation failed - NOT falling back to HTML!');
+    this.logger.error('Reason: Client expects PDF binary, not HTML text');
+    throw new Error('Failed to generate PDF from HTML content');
   }
 
   async exportToWord(cvData: CVData): Promise<Buffer> {

@@ -245,7 +245,7 @@ export default function CVDisplay({
               {onExport && (
                 <Button
                   variant="outline"
-                  onClick={() => setShowTemplateSelectionModal(true)}
+                  onClick={() => onExport(cv, "pdf")}
                   className="flex items-center space-x-2">
                   <Download className="h-4 w-4 mr-1" />
                   <span>Export</span>

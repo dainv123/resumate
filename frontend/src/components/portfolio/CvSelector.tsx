@@ -22,19 +22,14 @@ export default function CvSelector({
     hasNextPage,
     isFetchingNextPage,
     isFetching,
-  } = useCvsInfinite({ limit: 20, sortBy: "updatedAt", sortOrder: "desc" });
-  // Handle both infinite and paginated data structures
+  } = useCvsInfinite({ limit: 20, sortBy: "updatedAt", sortOrder: "DESC" });
+  // Handle infinite query data structure
   const cvs = React.useMemo(() => {
     if (!cvsData) return [];
 
     // If it's infinite query structure
     if (cvsData.pages && Array.isArray(cvsData.pages)) {
       return cvsData.pages.flatMap((page) => page.data || []);
-    }
-
-    // If it's paginated structure (fallback)
-    if (cvsData.data && Array.isArray(cvsData.data)) {
-      return cvsData.data;
     }
 
     return [];

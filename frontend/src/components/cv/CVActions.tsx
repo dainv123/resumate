@@ -41,21 +41,7 @@ export default function CVActions({
   const duplicateMutation = useMutation({
     mutationFn: cvApi.duplicateCv,
     onSuccess: (newCv) => {
-      showSuccess(
-        <>
-          {t("dashboard.duplicateCvSuccess")}
-          {"."}
-          {newCv?.id && (
-            <a
-              href={`/dashboard/cv/${newCv.id}`}
-              className="inline-block text-blue-600 underline ml-2"
-              target="_blank"
-              rel="noopener noreferrer">
-              {t("common.view")}
-            </a>
-          )}
-        </>
-      );
+      showSuccess(t("dashboard.duplicateCvSuccess"));
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
     },
   });

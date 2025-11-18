@@ -68,34 +68,31 @@ export default function CoverLetterModal({
   );
 
   const modalFooter = (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex space-x-2">
-        <Button
-          onClick={handleCopyToClipboard}
-          disabled={!coverLetter || copied}
-          variant="outline"
-          className="flex items-center space-x-2">
-          {copied ? (
-            <>
-              <CheckCircle className="h-4 w-4" />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4" />
-              <span>Copy to Clipboard</span>
-            </>
-          )}
-        </Button>
-        <Button
-          onClick={handleDownload}
-          disabled={!coverLetter}
-          variant="outline"
-          className="flex items-center space-x-2">
-          <Download className="h-4 w-4" />
-          <span>Download</span>
-        </Button>
-      </div>
+    <div className="flex justify-end space-x-3 w-full">
+      <Button
+        onClick={handleCopyToClipboard}
+        disabled={!coverLetter || copied}
+        variant="outline"
+        className="flex items-center space-x-2">
+        {copied ? (
+          <>
+            <CheckCircle className="h-4 w-4" />
+            <span>Copied</span>
+          </>
+        ) : (
+          <>
+            <Copy className="h-4 w-4" />
+            <span>Copy</span>
+          </>
+        )}
+      </Button>
+      <Button
+        onClick={handleDownload}
+        disabled={!coverLetter}
+        className="flex items-center space-x-2">
+        <Download className="h-4 w-4" />
+        <span>Download</span>
+      </Button>
       <Button onClick={onClose} variant="outline">
         Close
       </Button>
@@ -159,7 +156,9 @@ export default function CoverLetterModal({
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span>Include the hiring manager's name if available</span>
+                  <span>
+                    Include the hiring manager&apos;s name if available
+                  </span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />

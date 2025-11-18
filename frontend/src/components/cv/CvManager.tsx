@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
+import { InfiniteData } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useCvsPaginated, useCvsInfinite } from "@/hooks/useCvs";
-import { cvApi } from "@/lib/cv";
+import { cvApi, PaginatedResult, CV } from "@/lib/cv";
 import CVCard from "./CVCard";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/contexts/ToastContext";
@@ -67,14 +68,16 @@ function CvListContent({
     limit,
     search,
     sortBy,
-    sortOrder,
+    sortOrder:
+      sortOrder === "desc" ? "DESC" : sortOrder === "asc" ? "ASC" : sortOrder,
   });
 
   const infiniteQuery = useCvsInfinite({
     limit,
     search,
     sortBy,
-    sortOrder,
+    sortOrder:
+      sortOrder === "desc" ? "DESC" : sortOrder === "asc" ? "ASC" : sortOrder,
   });
 
   const { data, isLoading, error, refetch } =
@@ -82,25 +85,13 @@ function CvListContent({
 
   // Get CVs based on mode - MUST be before early returns
   const cvs = React.useMemo(() => {
-    // Debug logging
-    console.log("CvManager Debug:", {
-      mode,
-      data,
-      paginatedData: data?.data,
-      infiniteData: data?.pages,
-      paginationInfo: {
-        totalPages: data?.totalPages,
-        total: data?.total,
-        page: data?.page,
-        limit: data?.limit,
-      },
-    });
-
     if (mode === "paginated") {
-      return data?.data || [];
+      const paginatedData = data as PaginatedResult<CV>;
+      return paginatedData?.data || [];
     } else {
       // Infinite scroll mode
-      return data?.pages?.flatMap((page) => page.data) || [];
+      const infiniteData = data as InfiniteData<PaginatedResult<CV>>;
+      return infiniteData?.pages?.flatMap((page) => page.data) || [];
     }
   }, [mode, data]);
 
@@ -158,8 +149,8 @@ function CvListContent({
   if (
     !data ||
     (mode === "paginated"
-      ? data.data.length === 0
-      : data.pages[0]?.data.length === 0)
+      ? (data as PaginatedResult<CV>).data.length === 0
+      : (data as InfiniteData<PaginatedResult<CV>>).pages[0]?.data.length === 0)
   ) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
@@ -215,40 +206,51 @@ function CvListContent({
             Total items: {data?.total || 0} | Items per page: {limit}
           </div> */}
 
-          {data?.totalPages && data.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing {(currentPage - 1) * limit + 1} to{" "}
-                {Math.min(currentPage * limit, data?.total || 0)} of{" "}
-                {data?.total || 0} CVs
+          {(data as PaginatedResult<CV>)?.totalPages &&
+            (data as PaginatedResult<CV>).totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {(currentPage - 1) * limit + 1} to{" "}
+                  {Math.min(
+                    currentPage * limit,
+                    (data as PaginatedResult<CV>)?.total || 0
+                  )}{" "}
+                  of {(data as PaginatedResult<CV>)?.total || 0} CVs
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={currentPage === 1}>
+                    Previous
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Page {currentPage} of{" "}
+                    {(data as PaginatedResult<CV>)?.totalPages || 0}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) =>
+                        Math.min(
+                          (data as PaginatedResult<CV>)?.totalPages || 1,
+                          prev + 1
+                        )
+                      )
+                    }
+                    disabled={
+                      currentPage ===
+                      ((data as PaginatedResult<CV>)?.totalPages || 1)
+                    }>
+                    Next
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}>
-                  Previous
-                </Button>
-                <span className="text-sm text-gray-600">
-                  Page {currentPage} of {data?.totalPages || 0}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(data?.totalPages || 1, prev + 1)
-                    )
-                  }
-                  disabled={currentPage === (data?.totalPages || 1)}>
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
         </div>
       )}
 
@@ -474,14 +476,14 @@ export default function CvManager({
             {/* View Mode Toggle */}
             <div className="flex gap-1 border border-gray-300 rounded-lg p-1">
               <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
+                variant={viewMode === "grid" ? "primary" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("grid")}
                 className="flex items-center space-x-1">
                 <Grid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
+                variant={viewMode === "list" ? "primary" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
                 className="flex items-center space-x-1">

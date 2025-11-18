@@ -60,7 +60,7 @@ export default function JobTailorPage() {
   const { data: cvsData, isLoading } = useCvsPaginated({
     limit: 100,
     sortBy: "updatedAt",
-    sortOrder: "desc",
+    sortOrder: "DESC",
   });
   const cvs = React.useMemo(() => cvsData?.data ?? [], [cvsData]);
 
@@ -962,7 +962,9 @@ Example:
           title="CV-Job Compatibility Analysis"
           size="xl"
           footer={
-            <Button onClick={() => setShowAnalysisModal(false)}>Close</Button>
+            <div className="flex justify-end w-full">
+              <Button onClick={() => setShowAnalysisModal(false)}>Close</Button>
+            </div>
           }>
           {compatibilityAnalysis && (
             <div className="space-y-6">
@@ -1124,7 +1126,7 @@ Example:
           title={t("jobTailor.coverLetter.title")}
           size="xl"
           footer={
-            <>
+            <div className="flex justify-end space-x-3 w-full">
               <Button variant="outline" onClick={handleCopyCoverLetter}>
                 <Copy className="h-4 w-4 mr-2" />
                 {t("jobTailor.coverLetter.copy")}
@@ -1132,7 +1134,7 @@ Example:
               <Button onClick={() => setShowCoverLetterModal(false)}>
                 {t("jobTailor.coverLetter.close")}
               </Button>
-            </>
+            </div>
           }>
           {coverLetter && (
             <div className="space-y-4">

@@ -40,7 +40,7 @@ export default function ProjectsPage() {
   const { data: cvsData } = useCvsPaginated({
     limit: 100,
     sortBy: "updatedAt",
-    sortOrder: "desc",
+    sortOrder: "DESC",
   });
   const cvs = cvsData?.data ?? [];
 

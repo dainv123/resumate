@@ -74,9 +74,11 @@ export default function MatchingAnalysisModal({
         </div>
       }
       footer={
-        <Button onClick={onClose} variant="outline">
-          Close
-        </Button>
+        <div className="flex justify-end w-full">
+          <Button onClick={onClose} variant="outline">
+            Close
+          </Button>
+        </div>
       }>
       <div className="space-y-6">
         {/* Overall Score */}
@@ -195,8 +197,8 @@ export default function MatchingAnalysisModal({
                 No Analysis Available
               </h3>
               <p className="text-gray-600">
-                This CV hasn't been analyzed against a job description yet. Use
-                the Job Tailor feature to get detailed matching analysis.
+                This CV hasn&apos;t been analyzed against a job description yet.
+                Use the Job Tailor feature to get detailed matching analysis.
               </p>
             </div>
           )}

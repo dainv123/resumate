@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Res, Req, UseInterceptors, UploadedFile, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Res, Req, UseInterceptors, UploadedFile, Logger, BadRequestException } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -10,6 +10,8 @@ import type { CVData, TemplateConfig } from '../../shared/interfaces/cv-data.int
 import { CVDataUtils } from '../../shared/utils/cv-data.utils';
 import { ExportService } from '../../shared/services/export.service';
 import { DynamicTemplateService } from '../../shared/services/dynamic-template.service';
+import { TrackActivity } from 'src/common/decorators/track-activity.decorator';
+import { ActivityType } from 'src/common/enums/activity-type.enum';
 
 @Controller('cv')
 @UseGuards(JwtAuthGuard)
@@ -23,8 +25,28 @@ export class CvController {
   ) {}
 
   @Post()
+  @TrackActivity(ActivityType.CV_CREATED, {
+    getMetadata: (cv) => ({
+      fileName: cv.originalFileName,
+    }),
+  })
   async create(@Body() createCvDto: CreateCvDto, @GetUser() user: User) {
     return this.cvService.createCv(user.id, createCvDto);
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @TrackActivity(ActivityType.CV_UPLOADED, {
+    getMetadata: (cv) => ({
+      fileName: cv.originalFileName,
+      fileSize: cv.fileSize,
+    }),
+  })
+  async uploadCv(
+    @GetUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.cvService.uploadCv(userId, file);
   }
 
   @Get()
@@ -54,6 +76,12 @@ export class CvController {
   }
 
   @Get(':id')
+  @TrackActivity(ActivityType.CV_VIEWED, {
+    getResourceId: (_result, context) => context.params.id,
+    getMetadata: (result) => ({
+      fileName: result?.originalFileName,
+    }),
+  })
   async findOne(@Param('id') id: string, @GetUser() user: User) {
     return this.cvService.getCvById(id, user.id);
   }
@@ -67,6 +95,11 @@ export class CvController {
   }
 
   @Put(':id')
+  @TrackActivity(ActivityType.CV_UPDATED, {
+    getMetadata: (cv) => ({
+      fileName: cv.originalFileName,
+    }),
+  })
   async update(
     @Param('id') id: string,
     @Body() updateCvDto: UpdateCvDto,
@@ -81,6 +114,12 @@ export class CvController {
   }
 
   @Post(':id/tailor')
+  @TrackActivity(ActivityType.CV_TAILORED, {
+    getMetadata: (cv) => ({
+      fileName: cv.originalFileName,
+      isTailored: cv.isTailored,
+    }),
+  })
   async tailorCv(
     @Param('id') id: string,
     @Body() tailorCvDto: TailorCvDto,
@@ -90,6 +129,12 @@ export class CvController {
   }
 
   @Post(':id/duplicate')
+  @TrackActivity(ActivityType.CV_CREATED, {
+    getMetadata: (cv) => ({
+      fileName: cv.originalFileName,
+      duplicatedFrom: cv.originalCvId,
+    }),
+  })
   async duplicateCv(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -99,6 +144,12 @@ export class CvController {
   }
 
   @Post(':id/restore/:version')
+  @TrackActivity(ActivityType.CV_UPDATED, {
+    getMetadata: (cv, context) => ({
+      fileName: cv.originalFileName,
+      restoredVersion: context.params.version,
+    }),
+  })
   async restoreVersion(
     @Param('id') id: string,
     @Param('version') version: string,
@@ -139,6 +190,12 @@ export class CvController {
   }
 
   @Post('quick-build')
+  @TrackActivity(ActivityType.CV_CREATED, {
+    getMetadata: (cv) => ({
+      fileName: cv.originalFileName,
+      template: cv.parsedData?.template,
+    }),
+  })
   async quickBuildCv(
     @Body() quickBuildCvDto: QuickBuildCvDto,
     @GetUser() user: User,
@@ -150,6 +207,13 @@ export class CvController {
    * Export CV to PDF with template support
    */
   @Get(':id/export/pdf')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (_result, context) => context.params.id,
+    getMetadata: (_result, context) => ({
+      format: 'pdf',
+      template: context.query.template || 'professional',
+    }),
+  })
   async exportToPDF(
     @Param('id') id: string,
     @Query('template') template: string = 'professional',
@@ -186,6 +250,14 @@ export class CvController {
    * Export CV to PDF with custom configuration
    */
   @Post(':id/export/pdf/dynamic')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (_result, context) => context.params.id,
+    getMetadata: () => ({
+      format: 'pdf',
+      template: 'dynamic',
+      hasCustomConfig: true,
+    }),
+  })
   async exportToPDFWithConfig(
     @Param('id') id: string,
     @Body() templateConfig: TemplateConfig,
@@ -228,6 +300,12 @@ export class CvController {
    * Export CV to Word document
    */
   @Get(':id/export/word')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (_result, context) => context.params.id,
+    getMetadata: () => ({
+      format: 'word',
+    }),
+  })
   async exportToWord(
     @Param('id') id: string,
     @GetUser() user: User,
@@ -264,6 +342,12 @@ export class CvController {
    * Export CV to ATS-friendly format
    */
   @Get(':id/export/ats')
+  @TrackActivity(ActivityType.CV_EXPORTED, {
+    getResourceId: (_result, context) => context.params.id,
+    getMetadata: () => ({
+      format: 'ats',
+    }),
+  })
   async exportToATS(
     @Param('id') id: string,
     @GetUser() user: User,

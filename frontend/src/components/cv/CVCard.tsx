@@ -166,10 +166,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit?.();
-                }}
+                onClick={() => onEdit?.()}
                 className="flex items-center space-x-1">
                 <Edit className="h-4 w-4" />
                 <span>Edit</span>
@@ -178,10 +175,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDuplicate?.();
-                }}
+                onClick={() => onDuplicate?.()}
                 className="flex items-center space-x-1">
                 <Copy className="h-4 w-4" />
                 <span>Copy</span>
@@ -190,10 +184,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTailor?.();
-                }}
+                onClick={() => onTailor?.()}
                 className="flex items-center space-x-1">
                 <Sparkles className="h-4 w-4" />
                 <span>Tailor</span>
@@ -202,10 +193,7 @@ export default function CVCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onExport?.("pdf");
-                }}
+                onClick={() => onExport?.("pdf")}
                 className="flex items-center space-x-1">
                 <Download className="h-4 w-4" />
                 <span>Export</span>
@@ -239,10 +227,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.();
-              }}
+              onClick={() => onEdit?.()}
               className="flex items-center space-x-1">
               <Edit className="h-4 w-4" />
               <span>Edit</span>
@@ -250,10 +235,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicate?.();
-              }}
+              onClick={() => onDuplicate?.()}
               className="flex items-center space-x-1">
               <Copy className="h-4 w-4" />
               <span>Copy</span>
@@ -261,10 +243,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onTailor?.();
-              }}
+              onClick={() => onTailor?.()}
               className="flex items-center space-x-1">
               <Sparkles className="h-4 w-4" />
               <span>Tailor</span>
@@ -272,10 +251,7 @@ export default function CVCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onExport?.("pdf");
-              }}
+              onClick={() => onExport?.("pdf")}
               className="flex items-center space-x-1">
               <Download className="h-4 w-4" />
               <span>Export</span>

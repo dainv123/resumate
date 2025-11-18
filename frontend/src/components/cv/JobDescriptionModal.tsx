@@ -61,9 +61,11 @@ export default function JobDescriptionModal({
         </div>
       }
       footer={
-        <Button onClick={onClose} variant="outline">
-          Close
-        </Button>
+        <div className="flex justify-end w-full">
+          <Button onClick={onClose} variant="outline">
+            Close
+          </Button>
+        </div>
       }>
       {/* Content */}
       <div className="space-y-6">

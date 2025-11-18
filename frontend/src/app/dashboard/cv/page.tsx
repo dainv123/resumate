@@ -98,14 +98,14 @@ export default function CVPage() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Button
-                  variant={mode === "paginated" ? "outline" : "default"}
+                  variant={mode === "paginated" ? "outline" : "primary"}
                   size="sm"
                   onClick={() => setMode("paginated")}
                   className="text-sm">
                   {t("cv.pagination")}
                 </Button>
                 <Button
-                  variant={mode === "infinite" ? "outline" : "default"}
+                  variant={mode === "infinite" ? "outline" : "primary"}
                   size="sm"
                   onClick={() => setMode("infinite")}
                   className="text-sm">
@@ -208,14 +208,14 @@ export default function CVPage() {
               {/* View Mode Toggle */}
               <div className="flex gap-1 border border-gray-300 rounded-lg p-1">
                 <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  variant={viewMode === "grid" ? "primary" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
                   className="flex items-center space-x-1">
                   <Grid className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
+                  variant={viewMode === "list" ? "primary" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
                   className="flex items-center space-x-1">

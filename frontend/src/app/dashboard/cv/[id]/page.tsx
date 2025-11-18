@@ -78,19 +78,30 @@ export default function CVDetailPage() {
     if (!cv) return;
 
     try {
+      console.log("Starting export with:", {
+        format,
+        template,
+        templateConfig,
+      });
+      console.log("CV data:", cv);
+
       let blob: Blob;
       let filename: string;
 
       switch (format) {
         case "pdf":
+          console.log("Generating PDF...");
           if (templateConfig) {
+            console.log("Using template config:", templateConfig);
             blob = await cvApi.exportToPDFWithConfig(cv.id, {
               template,
               ...templateConfig,
             });
           } else {
+            console.log("Using standard template");
             blob = await cvApi.exportToPDF(cv.id, template);
           }
+          console.log("PDF blob received, size:", blob.size);
           filename = `${cv.originalFileName.replace(/\.[^/.]+$/, "")}.pdf`;
           break;
         case "word":
@@ -112,8 +123,15 @@ export default function CVDetailPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+
+      console.log("Export completed successfully");
     } catch (error) {
       console.error("Export failed:", error);
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        response: (error as any)?.response?.data,
+        status: (error as any)?.response?.status,
+      });
       showError(t("dashboard.exportCvFailed"));
     }
   };

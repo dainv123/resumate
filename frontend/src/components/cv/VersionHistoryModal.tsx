@@ -90,7 +90,7 @@ export default function VersionHistoryModal({
       title="CV Version History"
       size="lg"
       footer={
-        <div className="flex justify-between w-full">
+        <div className="flex justify-end gap-3 w-full">
           <Button
             variant="outline"
             onClick={handleCompare}
@@ -178,9 +178,9 @@ export default function VersionHistoryModal({
                   <Button
                     size="sm"
                     variant="outline"
-                     onClick={() => {
-                       handleRestore(version);
-                     }}
+                    onClick={() => {
+                      handleRestore(version);
+                    }}
                     disabled={(version as any).isHistorical === false}>
                     <RotateCcw className="h-4 w-4 mr-1" />
                     {(version as any).isHistorical === false
