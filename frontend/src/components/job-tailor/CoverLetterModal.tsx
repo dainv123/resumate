@@ -10,26 +10,51 @@ import { Copy, Mail, Lightbulb } from "lucide-react";
 interface CoverLetterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  coverLetter: string;
+  coverLetter?: string;
+  title?: string;
+  size?: string;
+  footer?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function CoverLetterModal({
   isOpen,
   onClose,
   coverLetter,
+  title,
+  size = "xl",
+  footer,
+  children,
 }: CoverLetterModalProps) {
   const { t } = useLanguage();
   const { showSuccess } = useToast();
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(coverLetter);
-    showSuccess(t("jobTailor.coverLetter.copied") || "Copied to clipboard!");
+    if (coverLetter) {
+      navigator.clipboard.writeText(coverLetter);
+      showSuccess(t("jobTailor.coverLetter.copied") || "Copied to clipboard!");
+    }
   };
 
   const handleClose = () => {
     onClose();
   };
 
+  // If children are provided, use custom implementation
+  if (children) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title={title || t("jobTailor.coverLetter.title")}
+        size={size}
+        footer={footer}>
+        {children}
+      </Modal>
+    );
+  }
+
+  // Default implementation
   return (
     <Modal
       isOpen={isOpen}

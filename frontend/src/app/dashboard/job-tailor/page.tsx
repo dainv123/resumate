@@ -13,6 +13,7 @@ import ProcessingModal from "@/components/job-tailor/ProcessingModal";
 import CVDisplay from "@/components/cv/CVDisplay";
 import CompatibilityAnalysisModal from "@/components/job-tailor/CompatibilityAnalysisModal";
 import CoverLetterModal from "@/components/job-tailor/CoverLetterModal";
+import { Collapse } from "@/components/ui/Collapse";
 import {
   Sparkles,
   FileText,
@@ -28,6 +29,10 @@ import {
   TrendingUp,
   BarChart3,
   Mail,
+  Award,
+  CheckSquare,
+  XCircle,
+  Lightbulb,
 } from "lucide-react";
 
 export default function JobTailorPage() {
@@ -56,7 +61,6 @@ export default function JobTailorPage() {
   const { data: cvsData, isLoading } = useCvsPaginated({
     limit: 100,
     sortBy: "updatedAt",
-    sortOrder: "DESC",
     sortOrder: "DESC",
   });
   const cvs = React.useMemo(() => cvsData?.data ?? [], [cvsData]);
@@ -249,12 +253,19 @@ export default function JobTailorPage() {
     setProcessingType("cover-letter");
     setCurrentMutation(coverLetterMutation);
     setShowProcessingModal(true);
-   
+
     // Use mutate instead of mutateAsync
     coverLetterMutation.mutate({
       cvId: selectedCv.id,
       jobDescription: jobDescription.trim(),
     });
+  };
+
+  const handleCopyCoverLetter = () => {
+    if (coverLetter) {
+      navigator.clipboard.writeText(coverLetter);
+      showSuccess(t("jobTailor.coverLetter.copied") || "Copied to clipboard!");
+    }
   };
 
   const handleExport = async (format: "pdf" | "word" | "ats") => {

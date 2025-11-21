@@ -16,13 +16,21 @@ import { CompatibilityAnalysis } from "@/lib/cv";
 interface CompatibilityAnalysisModalProps {
   isOpen: boolean;
   onClose: () => void;
-  analysis: CompatibilityAnalysis | null;
+  analysis?: CompatibilityAnalysis | null;
+  title?: string;
+  size?: string;
+  footer?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function CompatibilityAnalysisModal({
   isOpen,
   onClose,
   analysis,
+  title,
+  size = "xl",
+  footer,
+  children,
 }: CompatibilityAnalysisModalProps) {
   const { t } = useLanguage();
 
@@ -30,6 +38,21 @@ export default function CompatibilityAnalysisModal({
     onClose();
   };
 
+  // If children are provided, use custom implementation
+  if (children) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title={title || t("jobTailor.analysisTitle")}
+        size={size}
+        footer={footer}>
+        {children}
+      </Modal>
+    );
+  }
+
+  // Default implementation
   if (!analysis) return null;
 
   return (
