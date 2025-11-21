@@ -246,24 +246,37 @@ export class ExportService {
    * Convert HTML content to PDF using Puppeteer
    */
   private async convertHtmlToPDF(htmlContent: string): Promise<Buffer> {
+    let browser;
     try {
       this.logger.log('Launching Puppeteer browser...');
-      const browser = await this.launchPuppeteerBrowser();
+      this.logger.log('HTML content length:', htmlContent.length);
+      this.logger.log('PUPPETEER_EXECUTABLE_PATH:', process.env.PUPPETEER_EXECUTABLE_PATH);
+
+      browser = await this.launchPuppeteerBrowser();
       this.logger.log('Browser launched successfully');
 
       const page = await this.createPuppeteerPage(browser);
       this.logger.log('Page created successfully');
 
+      // Add error handling for page events
+      page.on('pageerror', (error) => {
+        this.logger.error('Page error:', error);
+      });
+
+      page.on('requestfailed', (request) => {
+        this.logger.warn('Request failed:', request.url(), request.failure()?.errorText);
+      });
+
       this.logger.log('Setting page content...');
       await this.setPageContent(page, htmlContent);
       this.logger.log('Page content set successfully');
 
+      // Wait a bit for content to stabilize
+      await page.waitForTimeout(1000);
+
       this.logger.log('Generating PDF...');
       const pdfBuffer = await this.generatePDFFromPage(page);
       this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
-
-      await browser.close();
-      this.logger.log('Browser closed');
 
       return Buffer.from(pdfBuffer);
 
@@ -274,7 +287,20 @@ export class ExportService {
         stack: error.stack,
         name: error.name
       });
+
+      // Log HTML content for debugging (first 500 chars)
+      this.logger.error('HTML content preview:', htmlContent.substring(0, 500));
+
       return this.handlePDFGenerationError(htmlContent);
+    } finally {
+      if (browser) {
+        try {
+          await browser.close();
+          this.logger.log('Browser closed');
+        } catch (closeError) {
+          this.logger.error('Error closing browser:', closeError);
+        }
+      }
     }
   }
 
@@ -286,6 +312,7 @@ export class ExportService {
 
     return await puppeteer.launch({
       headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -295,6 +322,19 @@ export class ExportService {
         '--no-zygote',
         '--single-process',
         '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images', // Speed up loading
+        '--disable-javascript', // We don't need JS for PDF
+        '--disable-web-security',
+        '--allow-running-insecure-content',
+        '--font-render-hinting=none',
       ],
     });
   }
@@ -304,7 +344,28 @@ export class ExportService {
    */
   private async createPuppeteerPage(browser: any): Promise<any> {
     const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 800 });
+
+    // Set viewport for A4 aspect ratio
+    await page.setViewport({
+      width: 794, // A4 width in pixels at 96 DPI
+      height: 1123, // A4 height in pixels at 96 DPI
+      deviceScaleFactor: 1
+    });
+
+    // Set user agent
+    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    // Disable images and other resources to speed up loading
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const resourceType = req.resourceType();
+      if (resourceType === 'image' || resourceType === 'media' || resourceType === 'font') {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
     return page;
   }
 
@@ -313,8 +374,20 @@ export class ExportService {
    */
   private async setPageContent(page: any, htmlContent: string): Promise<void> {
     await page.setContent(htmlContent, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle0',
       timeout: 30000,
+    });
+
+    // Wait for fonts to load
+    await page.evaluate(() => {
+      return new Promise((resolve) => {
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => resolve(true));
+        } else {
+          // Fallback for older browsers
+          setTimeout(() => resolve(true), 1000);
+        }
+      });
     });
   }
 
@@ -325,6 +398,7 @@ export class ExportService {
     return await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: false,
       margin: {
         top: '0.5in',
         right: '0.5in',
@@ -332,6 +406,8 @@ export class ExportService {
         left: '0.5in',
       },
       timeout: 30000,
+      displayHeaderFooter: false,
+      pageRanges: '1',
     });
   }
 
