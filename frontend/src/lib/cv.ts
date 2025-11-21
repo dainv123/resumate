@@ -332,8 +332,10 @@ export const cvApi = {
     try {
       // This would need to be implemented on backend to search by content
       // For now, we'll return null and let the analyzeCompatibility handle it
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       return null;
     } catch (_error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       return null;
     }
   },
@@ -343,8 +345,10 @@ export const cvApi = {
     try {
       // This would need to be implemented on backend to search by content
       // For now, we'll return null and let the generateCoverLetter handle it
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       return null;
     } catch (_error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       return null;
     }
   },

@@ -69,7 +69,7 @@ function CvListContent({
     search,
     sortBy,
     sortOrder:
-      sortOrder === "desc" ? "DESC" : sortOrder === "asc" ? "ASC" : sortOrder,
+      sortOrder === "DESC" ? "DESC" : sortOrder === "ASC" ? "ASC" : sortOrder,
   });
 
   const infiniteQuery = useCvsInfinite({
@@ -77,7 +77,7 @@ function CvListContent({
     search,
     sortBy,
     sortOrder:
-      sortOrder === "desc" ? "DESC" : sortOrder === "asc" ? "ASC" : sortOrder,
+      sortOrder === "DESC" ? "DESC" : sortOrder === "ASC" ? "ASC" : sortOrder,
   });
 
   const { data, isLoading, error, refetch } =

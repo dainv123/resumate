@@ -12,7 +12,7 @@ interface CoverLetterModalProps {
   onClose: () => void;
   coverLetter?: string;
   title?: string;
-  size?: string;
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   footer?: React.ReactNode;
   children?: React.ReactNode;
 }
