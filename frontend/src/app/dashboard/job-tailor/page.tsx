@@ -1139,7 +1139,7 @@ export default function JobTailorPage() {
               )}
             </div>
           )}
-        </Modal>
+        </CompatibilityAnalysisModal>
 
         {/* Cover Letter Modal */}
         <CoverLetterModal
@@ -1193,7 +1193,7 @@ export default function JobTailorPage() {
               </div>
             </div>
           )}
-        </Modal>
+        </CoverLetterModal>
 
         {/* Processing Modal */}
         <ProcessingModal
