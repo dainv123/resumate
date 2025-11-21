@@ -248,12 +248,24 @@ export class ExportService {
   private async convertHtmlToPDF(htmlContent: string): Promise<Buffer> {
     let browser;
     try {
-      this.logger.log('Launching Puppeteer browser...');
+      this.logger.log('=== PDF GENERATION START ===');
       this.logger.log('HTML content length:', htmlContent.length);
       this.logger.log('PUPPETEER_EXECUTABLE_PATH:', process.env.PUPPETEER_EXECUTABLE_PATH);
+      this.logger.log('Node version:', process.version);
+      this.logger.log('Platform:', process.platform);
 
+      // Check if HTML content looks valid
+      if (!htmlContent || htmlContent.length < 100) {
+        throw new Error('HTML content is too short or empty');
+      }
+
+      if (!htmlContent.includes('<html')) {
+        throw new Error('HTML content does not contain <html> tag');
+      }
+
+      this.logger.log('Launching Puppeteer browser...');
       browser = await this.launchPuppeteerBrowser();
-      this.logger.log('Browser launched successfully');
+      this.logger.log('✅ Browser launched successfully');
 
       const page = await this.createPuppeteerPage(browser);
       this.logger.log('Page created successfully');
@@ -269,10 +281,21 @@ export class ExportService {
 
       this.logger.log('Setting page content...');
       await this.setPageContent(page, htmlContent);
-      this.logger.log('Page content set successfully');
+      this.logger.log('✅ Page content set successfully');
 
-      // Wait a bit for content to stabilize
-      await page.waitForTimeout(1000);
+      // Wait for content to stabilize
+      this.logger.log('Waiting for content to stabilize...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Check if page has content
+      const contentCheck = await page.evaluate(() => {
+        return {
+          hasBody: !!document.body,
+          bodyLength: document.body ? document.body.innerHTML.length : 0,
+          title: document.title,
+        };
+      });
+      this.logger.log('Page content check:', contentCheck);
 
       this.logger.log('Generating PDF...');
       const pdfBuffer = await this.generatePDFFromPage(page);
@@ -310,33 +333,90 @@ export class ExportService {
   private async launchPuppeteerBrowser(): Promise<any> {
     const puppeteer = await import('puppeteer');
 
-    return await puppeteer.launch({
-      headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding',
-        '--disable-features=TranslateUI',
-        '--disable-ipc-flooding-protection',
-        '--disable-extensions',
-        '--disable-plugins',
-        '--disable-images', // Speed up loading
-        '--disable-javascript', // We don't need JS for PDF
-        '--disable-web-security',
-        '--allow-running-insecure-content',
-        '--font-render-hinting=none',
-      ],
-    });
+    // Try multiple executable paths
+    const possiblePaths = [
+      process.env.PUPPETEER_EXECUTABLE_PATH,
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chrome',
+      'chromium-browser',
+      'chromium',
+    ].filter(Boolean);
+
+    let lastError: any = null;
+
+    for (const executablePath of possiblePaths) {
+      try {
+        this.logger.log(`Trying executable path: ${executablePath}`);
+
+        const browser = await puppeteer.launch({
+          headless: true,
+          executablePath,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-images',
+            '--disable-javascript',
+            '--disable-web-security',
+            '--allow-running-insecure-content',
+            '--font-render-hinting=none',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--disable-translate',
+            '--hide-scrollbars',
+            '--metrics-recording-only',
+            '--mute-audio',
+            '--no-first-run',
+            '--safebrowsing-disable-auto-update',
+            '--single-process',
+            '--disable-component-extensions-with-background-pages',
+          ],
+          timeout: 10000, // 10 second timeout
+        });
+
+        this.logger.log(`✅ Successfully launched browser with path: ${executablePath}`);
+        return browser;
+
+      } catch (error) {
+        this.logger.warn(`Failed to launch with path ${executablePath}:`, error.message);
+        lastError = error;
+        continue;
+      }
+    }
+
+    // If all paths failed, try without executablePath (let Puppeteer find it)
+    try {
+      this.logger.log('Trying to launch without explicit executable path...');
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+      });
+      this.logger.log('✅ Successfully launched browser without explicit path');
+      return browser;
+    } catch (error) {
+      this.logger.error('All browser launch attempts failed');
+      throw lastError || error;
+    }
   }
 
   /**
@@ -389,6 +469,9 @@ export class ExportService {
         }
       });
     });
+
+    // Additional wait for content stabilization
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   /**
@@ -412,17 +495,53 @@ export class ExportService {
   }
 
   /**
-   * Handle PDF generation errors - NO fallback to HTML!
-   * Why? Because:
-   * 1. Response has Content-Type: application/pdf header
-   * 2. Client expects PDF binary data, not HTML text
-   * 3. HTML fallback creates corrupted "PDF" files that can't be viewed
-   * 4. Better to fail fast and let client handle error properly
+   * Handle PDF generation errors - Try React PDF as fallback
    */
-  private handlePDFGenerationError(htmlContent: string): never {
-    this.logger.error('PDF generation failed - NOT falling back to HTML!');
-    this.logger.error('Reason: Client expects PDF binary, not HTML text');
-    throw new Error('Failed to generate PDF from HTML content');
+  private async handlePDFGenerationError(htmlContent: string): Promise<Buffer> {
+    this.logger.warn('Primary PDF generation failed, trying React PDF fallback...');
+
+    try {
+      // Extract basic CV data from HTML (very basic parsing)
+      const basicCVData = this.extractBasicCVDataFromHTML(htmlContent);
+
+      // Use React PDF as fallback
+      const pdfBuffer = await this.exportReactPDFStrategy(basicCVData, 'professional');
+
+      this.logger.log('✅ React PDF fallback succeeded');
+      return pdfBuffer;
+
+    } catch (fallbackError) {
+      this.logger.error('React PDF fallback also failed:', fallbackError);
+      throw new Error('Failed to generate PDF from HTML content');
+    }
+  }
+
+  /**
+   * Extract basic CV data from HTML content for fallback
+   */
+  private extractBasicCVDataFromHTML(htmlContent: string): CVData {
+    // Very basic HTML parsing - extract name and basic info
+    const nameMatch = htmlContent.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    const emailMatch = htmlContent.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+
+    return {
+      id: 'fallback-cv',
+      contact: {
+        name: nameMatch ? nameMatch[1].trim() : 'CV Export',
+        email: emailMatch ? emailMatch[1] : 'email@example.com',
+        phone: 'Phone not available',
+        address: 'Address not available',
+      },
+      summary: 'Generated from HTML fallback due to PDF generation issues',
+      experience: [],
+      education: [],
+      skills: { technical: [], soft: [], languages: [], tools: [] },
+      projects: [],
+      certifications: [],
+      awards: [],
+      publications: [],
+      volunteer: [],
+    };
   }
 
   async exportToWord(cvData: CVData): Promise<Buffer> {
