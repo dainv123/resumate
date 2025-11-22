@@ -54,7 +54,7 @@ function AuthCallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams, router, updateUser, t]);
+  }, [searchParams, router, t]); // Remove updateUser from dependencies to prevent infinite loop
 
   if (loading) {
     return (
