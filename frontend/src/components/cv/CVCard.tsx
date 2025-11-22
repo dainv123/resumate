@@ -185,7 +185,7 @@ export default function CVCard({
                 onClick={() => onDuplicate?.()}
                 className="flex items-center space-x-1">
                 <Copy className="h-4 w-4" />
-                <span>{t("cv.copy")}</span>
+                <span>{t("cv.duplicate")}</span>
               </Button>
 
               <Button
@@ -213,11 +213,6 @@ export default function CVCard({
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>
                 {t("cv.id")}: {cv.id.slice(0, 8)}...
-              </span>
-              <span>
-                {cv.isTailored
-                  ? t("cvSections.statusLabels.tailored")
-                  : t("cvSections.statusLabels.original")}
               </span>
             </div>
           </div>
@@ -251,7 +246,7 @@ export default function CVCard({
               onClick={() => onDuplicate?.()}
               className="flex items-center space-x-1">
               <Copy className="h-4 w-4" />
-              <span>{t("cv.copy")}</span>
+              <span>{t("cv.duplicate")}</span>
             </Button>
             <Button
               variant="ghost"

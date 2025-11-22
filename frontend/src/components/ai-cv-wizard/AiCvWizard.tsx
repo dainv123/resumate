@@ -30,7 +30,7 @@ interface ConversationState {
 }
 
 const AiCvWizard: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { showSuccess, showError } = useToast();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -38,6 +38,7 @@ const AiCvWizard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [conversationState, setConversationState] = useState<ConversationState>(
     {
@@ -77,6 +78,33 @@ const AiCvWizard: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Focus input whenever messages change (after AI responds)
+  useEffect(() => {
+    if (inputRef.current && !isLoading && messages.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [messages, isLoading]);
+
+  // Focus input when conversation starts
+  useEffect(() => {
+    if (inputRef.current && messages.length === 1 && !isLoading) {
+      // Focus after first AI message (welcome message)
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 500);
+    }
+  }, [messages.length, isLoading]);
+
+  // Focus input on component mount if input is available
+  useEffect(() => {
+    if (inputRef.current && messages.length === 0 && !conversationState.isCompleted) {
+      inputRef.current.focus();
+    }
+  }, [messages.length, conversationState.isCompleted]); // Include dependencies
 
   const addMessage = (type: "user" | "ai", content: string) => {
     const newMessage: Message = {
@@ -150,6 +178,7 @@ const AiCvWizard: React.FC = () => {
           targetRole: updatedData.targetRole || "",
           jobDescription: updatedData.jobDescription || "",
           template: "professional",
+          language: language,
         };
 
         // Add timeout protection
@@ -402,6 +431,7 @@ const AiCvWizard: React.FC = () => {
           <div className="border-t border-gray-200 p-4">
             <div className="flex gap-2">
               <input
+                ref={inputRef}
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getAIPrompt, Language } from '../translations/ai-prompts';
 
 @Injectable()
 export class GoogleAIService {
@@ -46,24 +47,14 @@ export class GoogleAIService {
     description: string,
     role: string,
     techStack: string[],
+    language: Language = 'en',
   ): Promise<string[]> {
     try {
-      const prompt = `
-        Generate 3-5 professional bullet points for a CV based on this project:
-        
-        Role: ${role}
-        Technologies: ${techStack.join(', ')}
-        Description: ${description}
-        
-        Requirements:
-        - Start with action verbs
-        - Include quantifiable results if possible
-        - Focus on technical achievements
-        - Keep each bullet point concise (1-2 lines)
-        - Make them ATS-friendly
-        
-        Return as a JSON array of strings.
-      `;
+      const template = getAIPrompt(language, 'generateBulletPoints');
+      const prompt = template
+        .replace('{{role}}', role)
+        .replace('{{techStack}}', techStack.join(', '))
+        .replace('{{description}}', description);
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -97,44 +88,51 @@ export class GoogleAIService {
     }
   }
 
-  async tailorCvContent(cvData: any, jobDescription: string): Promise<any> {
+  async tailorCvContent(cvData: any, jobDescription: string, language: Language = 'en'): Promise<any> {
     try {
-      const prompt = `
-        Tailor this CV data to match the job description:
-        
-        Job Description:
-        ${jobDescription}
-        
-        Current CV Data:
-        ${JSON.stringify(cvData, null, 2)}
-        
-        Requirements:
-        1. Analyze the job requirements and identify key skills, technologies, and experience needed
-        2. Reorder and emphasize relevant experience
-        3. Add missing keywords from the job description
-        4. Optimize the summary to match the role
-        5. Highlight relevant projects and achievements
-        6. Ensure ATS compatibility
-        
-        IMPORTANT: Return the tailored CV data as a JSON object with EXACTLY the same structure as the input.
-        - Keep the "contact" object nested (do not flatten it)
-        - Maintain all array structures (experience, education, projects, etc.)
-        - Preserve the skills object with technical, soft, languages, tools arrays
-        - Do not change the top-level structure, only modify the content within each field
-      `;
+      // Try with requested language first
+      let template = getAIPrompt(language, 'tailorCvContent');
+      let prompt = template
+        .replace('{{jobDescription}}', jobDescription)
+        .replace('{{cvData}}', JSON.stringify(cvData, null, 2));
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const responseText = response.text();
+      this.logger.log('=== AI TAILOR PROMPT ===');
+      this.logger.log(prompt);
+      this.logger.log('=== END AI TAILOR PROMPT ===');
+
+      let result = await this.model.generateContent(prompt);
+      let response = await result.response;
+      let responseText = response.text();
 
       // Debug logging
       this.logger.log('=== AI TAILOR RESPONSE ===');
       this.logger.log(responseText);
       this.logger.log('=== END AI RESPONSE ===');
 
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      let jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error('No valid JSON found in tailored response');
+        // If no JSON found and language is not English, try with English
+        if (language !== 'en') {
+          this.logger.log('No JSON found in response, trying with English prompt...');
+          template = getAIPrompt('en', 'tailorCvContent');
+          prompt = template
+            .replace('{{jobDescription}}', jobDescription)
+            .replace('{{cvData}}', JSON.stringify(cvData, null, 2));
+
+          result = await this.model.generateContent(prompt);
+          response = await result.response;
+          responseText = response.text();
+
+          this.logger.log('=== AI TAILOR RESPONSE (ENGLISH FALLBACK) ===');
+          this.logger.log(responseText);
+          this.logger.log('=== END AI RESPONSE ===');
+
+          jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        }
+
+        if (!jsonMatch) {
+          throw new Error('No valid JSON found in tailored response');
+        }
       }
 
       const tailoredData = JSON.parse(jsonMatch[0]);
@@ -194,6 +192,7 @@ export class GoogleAIService {
   async analyzeCompatibility(
     cvData: any,
     jobDescription: string,
+    language: Language = 'en',
   ): Promise<{
     score: number;
     matchedSkills: string[];
@@ -205,28 +204,10 @@ export class GoogleAIService {
     reused?: boolean;
   }> {
     try {
-      const prompt = `
-        Analyze the compatibility between this CV and job description. Provide a detailed assessment.
-        
-        Job Description:
-        ${jobDescription}
-        
-        CV Data:
-        ${JSON.stringify(cvData, null, 2)}
-        
-        Analyze and return a JSON object with:
-        {
-          "score": (number 0-10, how well CV matches the job),
-          "matchedSkills": (array of skills from CV that match job requirements),
-          "missingSkills": (array of important skills mentioned in JD but missing from CV),
-          "matchedExperience": (array of relevant experience that matches job requirements),
-          "missingRequirements": (array of key requirements from JD that CV doesn't meet),
-          "suggestions": (array of 3-5 specific suggestions to improve compatibility),
-          "strengths": (array of 3-5 CV strengths that stand out for this role)
-        }
-        
-        Be specific and actionable in your analysis.
-      `;
+      const template = getAIPrompt(language, 'analyzeCompatibility');
+      const prompt = template
+        .replace('{{jobDescription}}', jobDescription)
+        .replace('{{cvData}}', JSON.stringify(cvData, null, 2));
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -247,32 +228,18 @@ export class GoogleAIService {
   async generateCoverLetter(
     cvData: any,
     jobDescription: string,
+    language: Language = 'en',
   ): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
-      const prompt = `
-        Generate a professional cover letter based on this CV and job description.
-        
-        Job Description:
-        ${jobDescription}
-        
-        CV Data:
-        Name: ${cvData.contact?.name || cvData.name || 'Candidate'}
-        Email: ${cvData.contact?.email || cvData.email || ''}
-        Summary: ${cvData.summary || ''}
-        Skills: ${JSON.stringify(cvData.skills)}
-        Experience: ${JSON.stringify(cvData.experience?.slice(0, 3))}
-        Education: ${JSON.stringify(cvData.education?.slice(0, 2))}
-        
-        Requirements:
-        1. Professional tone and format
-        2. Address why the candidate is a great fit for this role
-        3. Highlight relevant skills and experience from CV
-        4. Show enthusiasm for the position
-        5. Keep it concise (3-4 paragraphs)
-        6. Include proper salutation and closing
-        
-        Return ONLY the cover letter text, no JSON, no explanations.
-      `;
+      const template = getAIPrompt(language, 'generateCoverLetter');
+      const prompt = template
+        .replace('{{jobDescription}}', jobDescription)
+        .replace('{{name}}', cvData.contact?.name || cvData.name || 'Candidate')
+        .replace('{{email}}', cvData.contact?.email || cvData.email || '')
+        .replace('{{summary}}', cvData.summary || '')
+        .replace('{{skills}}', JSON.stringify(cvData.skills))
+        .replace('{{experience}}', JSON.stringify(cvData.experience?.slice(0, 3)))
+        .replace('{{education}}', JSON.stringify(cvData.education?.slice(0, 2)));
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -283,161 +250,10 @@ export class GoogleAIService {
     }
   }
 
-  async parseCvContent(text: string): Promise<any> {
+  async parseCvContent(text: string, language: Language = 'en'): Promise<any> {
     try {
-      const prompt = `
-        Parse this CV text and extract **ALL** structured information. Be *extremely* thorough and extract every single detail, no matter how minor. The goal is 100% data fidelity.
-
-        **CV Text:**
-        ${text}
-
-        ---
-
-        **CRITICAL EXTRACTION REQUIREMENTS - ENSURE DATA COMPLETENESS:**
-
-        1. **Personal Information**: Name, Email, Phone, Location/Address, **LinkedIn URL**, **Date of Birth**.
-        2. **About Me/Summary**: Extract the complete professional summary (exact wording).
-        3. **Work Experience**: For **EACH** job, extract:
-           * Company Name (exact)
-           * Job Title (exact)
-           * Employment Period (exact dates/duration)
-           * Company Description & **Team Size** (if mentioned)
-           * **Tech Stack**: Extract **ALL** technologies mentioned, including specific libraries (e.g., Ant Design, Jest, Cypress).
-           * **Responsibilities**: Extract **ALL** bullet points or details.
-           * **Achievements**: Extract **ALL** listed achievements, quantifying results (e.g., percentages, metrics).
-           * **Special Note for Projects/Sub-roles (e.g., Sutrix):** Treat internal projects or distinct roles within one company's entry as detailed **sub-sections**, ensuring the responsibilities and tech stack for **EACH** sub-section (like Globe, Chugai) are captured.
-
-        4. **Education**: Degree, School, Year/Duration, Location, and any Honors/Awards.
-        5. **Skills**: Extract **ALL** skills with **years of experience** if mentioned (e.g., "ReactJS (5 years)"). Organize them into appropriate categories.
-        6. **Projects (Highlight)**: Name, Duration, Description, **Comprehensive Tech Stack** (including unique infrastructure tech like MongoDB Atlas, Amazon S3, Route 53, Docusaurus), Results, and Link.
-        7. **Certifications**: Name, Issuer, Date/Expiry, and Certificate Links.
-        8. **Additional Info**: Any other relevant, uncategorized details.
-
-        ---
-
-        **EXTRACTION RULES & JSON INSTRUCTION:**
-
-        * **Data Integrity:** Extract **EVERY** detail. If dates, team sizes, or specific links (view certificate, view project) are present, **they must be extracted**.
-        * **Exact Wording:** Preserve exact wording for job titles, company names, achievements, and the summary.
-        * **Handle Ambiguity:** Be flexible with headings (e.g., 'EXPERIENCE' vs 'WORK HISTORY').
-        * **JSON Output:** Return **only** the JSON object using the exact structure provided below.
-        * **Mandatory Keys:** If a section or field is not present in the CV, use an **empty array \`[]\`** for list fields or **\`null\`** (or empty string \`""\`) for string fields. **DO NOT OMIT ANY TOP-LEVEL KEY OR MANDATORY NESTED KEY**.
-
-        Extract and return a JSON object with this comprehensive structure:
-        {
-          "contact": {
-            "name": "Full Name",
-            "email": "email@example.com",
-            "phone": "phone number",
-            "address": "address",
-            "linkedin": "url (optional)",
-            "github": "url (optional)",
-            "website": "url (optional)",
-            "location": "location (optional)"
-          },
-          "dateOfBirth": "date (optional)",
-          "summary": "professional summary",
-          "education": [
-            {
-              "degree": "Degree Name",
-              "school": "School Name",
-              "year": "Graduation Year/Duration",
-              "location": "School Location (optional)",
-              "honors": "Honors/Awards (optional)"
-            }
-          ],
-          "experience": [
-            {
-              "title": "Job Title",
-              "company": "Company Name",
-              "duration": "Start Date - End Date",
-              "teamSize": "Team Size (optional)",
-              "companyDescription": "Description (optional)",
-              "responsibilities": ["responsibility 1", "responsibility 2"],
-              "achievements": ["achievement 1", "achievement 2"],
-              "technologies": ["tech1", "tech2"],
-              "subProjects": [
-                {
-                  "name": "Sub Project Name (optional)",
-                  "role": "Role in Sub Project (optional)",
-                  "techStack": ["tech1"],
-                  "responsibilities": ["sub-responsibility 1"]
-                }
-              ]
-            }
-          ],
-          "skills": {
-            "technical": ["skill1 (years)", "skill2 (years)"],
-            "soft": ["skill1", "skill2"],
-            "tools": ["tool1", "tool2"],
-            "languages": ["language1", "language2"]
-          },
-          "projects": [
-            {
-              "name": "Project Name",
-              "duration": "Duration (optional)",
-              "description": "Project description",
-              "techStack": ["tech1", "tech2"],
-              "results": "Project results",
-              "link": "Project link (optional)"
-            }
-          ],
-          "certifications": [
-            {
-              "name": "Certification Name",
-              "issuer": "Issuing Organization",
-              "date": "Issue Date/Expiry Date",
-              "link": "Certificate Link (optional)"
-            }
-          ],
-          "awards": [],
-          "publications": [],
-          "volunteer": []
-        }
-        
-        **CRITICAL EXTRACTION INSTRUCTIONS:**
-        - Extract EVERY SINGLE detail from the CV - nothing should be missed
-        - If a section is not present, use empty array []
-        - Be extremely detailed and thorough
-        - Handle different CV formats: chronological, functional, combination, academic, technical, etc.
-        - Look for information in headers, bullet points, paragraphs, tables, and any other format
-        - If dates are in different formats (MM/YYYY, Month YYYY, etc.), standardize them
-        - If skills are listed with years of experience, extract both skill and years
-        - Extract ALL technologies mentioned in tech stacks
-        - Extract ALL achievements and responsibilities for each job
-        - Don't miss any skills, experiences, achievements, or details
-        - Extract team sizes, company descriptions, project links, certificate links
-        - Focus on extracting detailed tech stack and achievements for work experience
-        - Organize skills into technical, soft, languages, and tools categories
-        - Extract project details with tech stack, duration, and results
-        - Include years of experience for skills if mentioned
-        - Extract ALL bullet points under responsibilities and achievements
-        - **MOST IMPORTANT**: Extract ALL achievements, responsibilities, and tech stacks for each job
-        - Extract company descriptions and team sizes
-        - Extract ALL project details including subprojects
-        - Extract ALL certification details including issuer and date
-        - Extract ALL education details including location
-        - Extract ALL personal information including LinkedIn and date of birth
-        - Return only the JSON object, no additional text
-        
-        **EXAMPLE OF DETAILED EXTRACTION:**
-        For a job like "Senior Full Stack Developer at Rakkar Digital (05/2024 - NOW)", extract:
-        - Company: "Rakkar Digital"
-        - Title: "Senior Full Stack Developer" 
-        - Period: "05/2024 - NOW"
-        - Company Description: "Asia's leading digital asset custodian delivering ultra-secure crypto custody, backed by SCB 10X"
-        - Team Size: "4 (Full-stack team)"
-        - Tech Stack: ["NestJS", "Node.js", "TypeScript", "Go", "Jest", "WebSockets", "React.js", "TypeScript", "Ant Design", "Redux", "GraphQL", "Jest", "Cypress", "PostgreSQL", "MongoDB", "Redis", "AWS", "GCP", "Kubernetes", "Docker", "Datadog", "CI/CD", "Microservices", "BFF architecture"]
-        - Responsibilities: ["Developed new features and enhanced existing functionality", "Built and optimized frontend applications", "Assisted in migrating legacy modules to microservices", "Implemented and maintained automated testing pipelines", "Monitored CI/CD pipelines on AWS/GCP", "Ensured code quality and security compliance", "Collaborated with international teams", "Supported team members and contributed to cross-team knowledge sharing"]
-        - Achievements: ["Improved API latency by 32-44% across critical endpoints", "Improved test coverage to 70%+ across core modules", "Supported platform stability for successful Securities and Exchange Commission compliance", "Participated in building the custody product app for Fireblocks MPC-CMP", "Co-developed the BFF layer, enabling decoupled frontend-backend communication", "Built a dynamic report system, allowing the product team to configure and generate reports independently, speeding up development"]
-        
-        EXAMPLES OF DIFFERENT FORMATS TO HANDLE:
-        - "Work Experience" vs "Professional Experience" vs "Employment History"
-        - "Skills" vs "Technical Skills" vs "Core Competencies" vs "Expertise"
-        - "Education" vs "Academic Background" vs "Qualifications"
-        - "Projects" vs "Portfolio" vs "Key Projects"
-        - "Certifications" vs "Licenses" vs "Professional Certifications"
-      `;
+      const template = getAIPrompt(language, 'parseCvContent');
+      const prompt = template.replace('{{cvText}}', text);
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -723,23 +539,10 @@ export class GoogleAIService {
     return results;
   }
 
-  async generateSuggestions(cvData: any): Promise<string[]> {
+  async generateSuggestions(cvData: any, language: Language = 'en'): Promise<string[]> {
     try {
-      const prompt = `
-        Analyze this CV and provide 5-7 improvement suggestions:
-        
-        CV Data:
-        ${JSON.stringify(cvData, null, 2)}
-        
-        Focus on:
-        - ATS optimization
-        - Keyword enhancement
-        - Experience improvement
-        - Skills alignment
-        - Format and structure
-        
-        Return as a JSON array of suggestion strings.
-      `;
+      const template = getAIPrompt(language, 'generateSuggestions');
+      const prompt = template.replace('{{cvData}}', JSON.stringify(cvData, null, 2));
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -768,17 +571,10 @@ export class GoogleAIService {
     }
   }
 
-  async extractKeywords(jobDescription: string): Promise<string[]> {
+  async extractKeywords(jobDescription: string, language: Language = 'en'): Promise<string[]> {
     try {
-      const prompt = `
-        Extract key skills, technologies, and requirements from this job description:
-        
-        Job Description:
-        ${jobDescription}
-        
-        Return a JSON array of the most important keywords, skills, and technologies mentioned.
-        Focus on technical skills, soft skills, tools, and frameworks.
-      `;
+      const template = getAIPrompt(language, 'extractKeywords');
+      const prompt = template.replace('{{jobDescription}}', jobDescription);
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;

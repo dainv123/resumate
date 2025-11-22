@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 
 export default function JobTailorPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { showSuccess, showError } = useToast();
   const searchParams = useSearchParams();
   const [selectedCv, setSelectedCv] = useState<CV | null>(null);
@@ -126,7 +126,7 @@ export default function JobTailorPage() {
     }: {
       cvId: string;
       jobDescription: string;
-    }) => cvApi.tailorCv(cvId, jobDescription),
+    }) => cvApi.tailorCv(cvId, jobDescription, language),
     onSuccess: (data) => {
       setTailoredCv(data);
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
@@ -149,7 +149,7 @@ export default function JobTailorPage() {
     }: {
       cvId: string;
       jobDescription: string;
-    }) => cvApi.analyzeCompatibility(cvId, jobDescription),
+    }) => cvApi.analyzeCompatibility(cvId, jobDescription, undefined, undefined, language),
     onSuccess: (data) => {
       setCompatibilityAnalysis(data);
       setShowAnalysisModal(true);
@@ -179,7 +179,7 @@ export default function JobTailorPage() {
     }: {
       cvId: string;
       jobDescription: string;
-    }) => cvApi.generateCoverLetter(cvId, jobDescription),
+    }) => cvApi.generateCoverLetter(cvId, jobDescription, undefined, undefined, language),
     onSuccess: (data) => {
       setCoverLetter(data.coverLetter);
       setShowCoverLetterModal(true);

@@ -183,13 +183,14 @@ export class CvController {
     @Param('id') id: string,
     @GetUser('id') userId: string,
     @Body()
-    body: { jobDescription: string; jobTitle?: string; company?: string },
+    body: { jobDescription: string; jobTitle?: string; company?: string; language?: string },
   ) {
     // Generate analysis (will reuse if JobDescription exists)
     const analysis = await this.cvService.analyzeCompatibility(
       id,
       userId,
       body.jobDescription,
+      body.language,
     );
 
     return {
@@ -203,13 +204,14 @@ export class CvController {
     @Param('id') id: string,
     @GetUser('id') userId: string,
     @Body()
-    body: { jobDescription: string; jobTitle?: string; company?: string },
+    body: { jobDescription: string; jobTitle?: string; company?: string; language?: string },
   ) {
     // Generate cover letter (will reuse if JobDescription exists)
     const result = await this.cvService.generateCoverLetter(
       id,
       userId,
       body.jobDescription,
+      body.language,
     );
 
     return {

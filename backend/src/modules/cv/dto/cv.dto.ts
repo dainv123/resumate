@@ -29,6 +29,10 @@ export class UpdateCvDto {
 export class TailorCvDto {
   @IsString()
   jobDescription: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
 }
 
 export class QuickBuildCvDto {
@@ -47,6 +51,10 @@ export class QuickBuildCvDto {
   @IsOptional()
   @IsString()
   template?: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
 }
 
 export class CvResponseDto {

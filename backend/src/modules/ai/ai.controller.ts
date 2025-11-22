@@ -39,10 +39,11 @@ export class AiController {
       role: string;
       techStack: string[];
       results?: string;
+      language?: string;
     },
   ) {
     try {
-      const bullets = await this.aiService.generateProjectBullets(body);
+      const bullets = await this.aiService.generateProjectBullets(body, body.language || 'en');
       return { success: true, bullets };
     } catch (error) {
       return { success: false, error: error.message };
@@ -59,13 +60,14 @@ export class AiController {
     }),
   })
   async tailorCv(
-    @Body() body: { cvData: CVData; jobDescription: string },
+    @Body() body: { cvData: CVData; jobDescription: string; language?: string },
     @GetUser('id') userId: string,
   ) {
     try {
       const tailoredCv = await this.aiService.tailorCvForJob(
         body.cvData,
         body.jobDescription,
+        body.language || 'en',
       );
       return { success: true, data: tailoredCv };
     } catch (error) {
@@ -74,9 +76,9 @@ export class AiController {
   }
 
   @Post('suggestions')
-  async getSuggestions(@Body() body: { cvData: CVData }) {
+  async getSuggestions(@Body() body: { cvData: CVData; language?: string }) {
     try {
-      const suggestions = await this.aiService.suggestImprovements(body.cvData);
+      const suggestions = await this.aiService.suggestImprovements(body.cvData, body.language || 'en');
       return { success: true, suggestions };
     } catch (error) {
       return { success: false, error: error.message };
@@ -84,10 +86,11 @@ export class AiController {
   }
 
   @Post('extract-keywords')
-  async extractKeywords(@Body() body: { jobDescription: string }) {
+  async extractKeywords(@Body() body: { jobDescription: string; language?: string }) {
     try {
       const keywords = await this.aiService.extractJobKeywords(
         body.jobDescription,
+        body.language || 'en',
       );
       return { success: true, keywords };
     } catch (error) {

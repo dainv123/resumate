@@ -13,6 +13,7 @@ import { CvCoverLetter } from './entities/cv-cover-letter.entity';
 import { JobDescriptionService } from './job-description.service';
 import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
+import { Language } from '../ai/translations/ai-prompts';
 import {
   CreateCvDto,
   UpdateCvDto,
@@ -276,6 +277,7 @@ export class CvService {
     const tailoredData = await this.aiService.tailorCvForJob(
       cv.parsedData,
       tailorCvDto.jobDescription,
+      tailorCvDto.language || 'en',
     );
 
     // Create new version
@@ -768,6 +770,7 @@ export class CvService {
     cvId: string,
     userId: string,
     jobDescription: string,
+    language?: string,
   ): Promise<{
     score: number;
     matchedSkills: string[];
@@ -814,6 +817,7 @@ export class CvService {
     const analysis = await this.aiService.analyzeCompatibility(
       cv.parsedData,
       jobDescription,
+      (language as Language) || 'en',
     );
 
     // TODO: Storage Strategy for Analysis Records
@@ -853,6 +857,7 @@ export class CvService {
     cvId: string,
     userId: string,
     jobDescription: string,
+    language?: string,
   ): Promise<{
     coverLetter: string;
   }> {
@@ -887,6 +892,7 @@ export class CvService {
     const coverLetter = await this.aiService.generateCoverLetter(
       cv.parsedData,
       jobDescription,
+      (language as Language) || 'en',
     );
 
     // TODO: Storage Strategy for Cover Letter Records
@@ -965,6 +971,7 @@ export class CvService {
       const tailoredCvData = await this.aiService.tailorCvForJob(
         cvData as any,
         quickBuildDto.jobDescription,
+        quickBuildDto.language || 'en',
       );
 
       // Ensure the data is in the correct standardized format
@@ -1044,6 +1051,7 @@ export class CvService {
       const tailoredCvData = await this.aiService.tailorCvForJob(
         cvData as any,
         quickBuildDto.jobDescription,
+        quickBuildDto.language || 'en',
       );
 
       // Ensure the data is in the correct standardized format

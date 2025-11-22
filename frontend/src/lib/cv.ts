@@ -70,6 +70,7 @@ export interface QuickBuildCvData {
   targetRole: string;
   jobDescription: string;
   template?: string;
+  language?: string;
 }
 
 export interface JobDescription {
@@ -226,25 +227,27 @@ export const cvApi = {
     return response.data;
   },
 
-  tailorCv: async (id: string, jobDescription: string): Promise<CV> => {
-    const response = await api.post(`/cv/${id}/tailor`, { jobDescription });
+  tailorCv: async (id: string, jobDescription: string, language?: string): Promise<CV> => {
+    const response = await api.post(`/cv/${id}/tailor`, { jobDescription, language });
     return response.data;
   },
 
-  analyzeCompatibility: async (id: string, jobDescription: string, jobTitle?: string, company?: string): Promise<CompatibilityAnalysis> => {
-    const response = await api.post(`/cv/${id}/analyze-compatibility`, { 
-      jobDescription, 
-      jobTitle, 
-      company 
+  analyzeCompatibility: async (id: string, jobDescription: string, jobTitle?: string, company?: string, language?: string): Promise<CompatibilityAnalysis> => {
+    const response = await api.post(`/cv/${id}/analyze-compatibility`, {
+      jobDescription,
+      jobTitle,
+      company,
+      language
     });
     return response.data;
   },
 
-  generateCoverLetter: async (id: string, jobDescription: string, jobTitle?: string, company?: string): Promise<{ coverLetter: string; reused?: boolean }> => {
-    const response = await api.post(`/cv/${id}/generate-cover-letter`, { 
-      jobDescription, 
-      jobTitle, 
-      company 
+  generateCoverLetter: async (id: string, jobDescription: string, jobTitle?: string, company?: string, language?: string): Promise<{ coverLetter: string; reused?: boolean }> => {
+    const response = await api.post(`/cv/${id}/generate-cover-letter`, {
+      jobDescription,
+      jobTitle,
+      company,
+      language
     });
     return response.data;
   },

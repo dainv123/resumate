@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GoogleAIService } from './providers/google-ai.service';
 import { DocumentParserService } from './providers/document-parser.service';
 import { CVData } from '../../shared/interfaces/cv-data.interface';
+import { Language } from './translations/ai-prompts';
 
 @Injectable()
 export class AiService {
@@ -55,12 +56,13 @@ export class AiService {
     role: string;
     techStack: string[];
     results?: string;
-  }): Promise<string[]> {
+  }, language?: string): Promise<string[]> {
     try {
       return await this.googleAIService.generateBulletPoints(
         project.name,
         project.role,
         project.techStack,
+        (language as Language) || 'en',
       );
     } catch (error) {
       this.logger.error('Error generating project bullets:', error);
@@ -71,32 +73,33 @@ export class AiService {
   async tailorCvForJob(
     cvData: CVData,
     jobDescription: string,
+    language?: string,
   ): Promise<CVData> {
     try {
-      return await this.googleAIService.tailorCvContent(cvData, jobDescription);
+      return await this.googleAIService.tailorCvContent(cvData, jobDescription, (language as Language) || 'en');
     } catch (error) {
       this.logger.error('Error tailoring CV:', error);
       return cvData; // Return original if tailoring fails
     }
   }
 
-  async suggestImprovements(cvData: CVData): Promise<string[]> {
+  async suggestImprovements(cvData: CVData, language?: string): Promise<string[]> {
     try {
-      return await this.googleAIService.generateSuggestions(cvData);
+      return await this.googleAIService.generateSuggestions(cvData, (language as Language) || 'en');
     } catch (error) {
       this.logger.error('Error generating suggestions:', error);
       return this.fallbackSuggestions();
     }
   }
 
-  async extractJobKeywords(jobDescription: string): Promise<{
+  async extractJobKeywords(jobDescription: string, language?: string): Promise<{
     skills: string[];
     requirements: string[];
     keywords: string[];
   }> {
     try {
       const keywords =
-        await this.googleAIService.extractKeywords(jobDescription);
+        await this.googleAIService.extractKeywords(jobDescription, (language as Language) || 'en');
       return {
         skills: keywords,
         requirements: keywords,
@@ -111,6 +114,7 @@ export class AiService {
   async analyzeCompatibility(
     cvData: CVData,
     jobDescription: string,
+    language?: Language,
   ): Promise<{
     score: number;
     matchedSkills: string[];
@@ -125,6 +129,7 @@ export class AiService {
       return await this.googleAIService.analyzeCompatibility(
         cvData,
         jobDescription,
+        language || 'en',
       );
     } catch (error) {
       this.logger.error('Error analyzing compatibility:', error);
@@ -144,11 +149,13 @@ export class AiService {
   async generateCoverLetter(
     cvData: CVData,
     jobDescription: string,
+    language?: Language,
   ): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
       return await this.googleAIService.generateCoverLetter(
         cvData,
         jobDescription,
+        language || 'en',
       );
     } catch (error) {
       this.logger.error('Error generating cover letter:', error);
