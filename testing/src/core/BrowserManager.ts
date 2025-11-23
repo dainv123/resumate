@@ -13,8 +13,19 @@ export class BrowserManager {
    */
   static async getBrowser(browserType: 'chromium' | 'firefox' | 'webkit' = 'chromium'): Promise<Browser> {
     if (!this.browser) {
+      const isCI = process.env.CI === 'true';
+      const isHeadless = process.env.HEADLESS !== 'false';
+      const headless = isCI ? true : isHeadless;
+
+      console.log(`🚀 Launching browser:`);
+      console.log(`  - CI: ${process.env.CI} (isCI: ${isCI})`);
+      console.log(`  - HEADLESS: '${process.env.HEADLESS}' (isHeadless: ${isHeadless})`);
+      console.log(`  - Logic: isCI ? true : isHeadless`);
+      console.log(`  - Result: ${isCI} ? true : ${isHeadless} = ${headless}`);
+      console.log(`  - Final: headless=${headless}`);
+
       const launchOptions = {
-        headless: process.env.CI ? true : process.env.HEADLESS !== 'false',
+        headless,
         slowMo: process.env.SLOW_MO ? parseInt(process.env.SLOW_MO) : 0,
         args: [
           '--no-sandbox',

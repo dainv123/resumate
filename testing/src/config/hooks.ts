@@ -1,6 +1,10 @@
+import { config } from 'dotenv';
 import { Before, After, BeforeAll, AfterAll, setDefaultTimeout } from '@cucumber/cucumber';
 import { BrowserManager } from '../core/BrowserManager';
 import { TestDataManager } from '../utils/test-data-manager';
+
+// Load environment variables
+config();
 
 // Set default timeout for all steps (30 seconds)
 setDefaultTimeout(30000);
@@ -45,7 +49,10 @@ Before(async function (scenario) {
 
   try {
     // Initialize test context for this scenario
-    await this.init();
+    this.context = await BrowserManager.createTestContext(this.browserType || 'chromium', {
+      authenticated: false
+    });
+    console.log(`🌐 Browser context initialized`);
 
     // Set current page to null at start of each scenario
     this.context.currentPage = null;
@@ -69,15 +76,17 @@ After(async function (scenario) {
 
   try {
     // Take screenshot if scenario failed
-    if (scenario.result?.status === 'FAILED') {
-      const screenshotName = `failed_${scenario.pickle.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-      await this.takeScreenshot(screenshotName);
-      console.log(`📸 Screenshot taken: ${screenshotName}`);
-    }
+    // TODO: Fix takeScreenshot method
+    // if (scenario.result?.status === 'FAILED') {
+    //   const screenshotName = `failed_${scenario.pickle.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    //   await this.takeScreenshot(screenshotName);
+    //   console.log(`📸 Screenshot taken: ${screenshotName}`);
+    // }
 
     // Cleanup scenario-specific data
     if (this.context) {
-      await this.cleanup();
+      await this.context.cleanup();
+      console.log('🧹 Test context cleaned up');
     }
 
     console.log('✅ Scenario cleanup complete');

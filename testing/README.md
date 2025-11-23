@@ -200,13 +200,13 @@ export class TestContext {
 ### Environment Variables
 ```bash
 # .env
-BASE_URL=http://localhost:3000
-API_URL=http://localhost:4000
-CI=false
-HEADLESS=false
-SLOW_MO=0
-RECORD_VIDEO=false
-PREWARM_BROWSER=true
+export BASE_URL=http://localhost:5005
+export API_URL=http://localhost:5001
+export CI=false
+export HEADLESS=false
+export SLOW_MO=0
+export RECORD_VIDEO=false
+export PREWARM_BROWSER=true
 ```
 
 ### Playwright Config

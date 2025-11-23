@@ -6,8 +6,8 @@ setWorldConstructor(TestWorld);
 module.exports = {
   default: {
     require: [
-      'src/steps/**/*.ts',
-      'src/config/hooks.ts'
+      'dist/steps/**/*.js',
+      'dist/config/hooks.js'
     ],
     format: [
       'progress-bar',
@@ -21,10 +21,18 @@ module.exports = {
       'src/features/**/*.feature'
     ],
     requireModule: [
-      'ts-node/register'
+      ['ts-node/register', {
+        project: 'tsconfig.cucumber.json'
+      }]
     ],
     worldParameters: {
-      baseURL: process.env.BASE_URL || 'http://localhost:3000'
+      baseURL: process.env.BASE_URL || 'http://localhost:5005',
+      apiURL: process.env.API_URL || 'http://localhost:5001',
+      headless: process.env.HEADLESS === 'true',
+      ci: process.env.CI === 'true',
+      slowMo: parseInt(process.env.SLOW_MO) || 0,
+      recordVideo: process.env.RECORD_VIDEO === 'true',
+      prewarmBrowser: process.env.PREWARM_BROWSER === 'true'
     },
     timeout: 60000,
     parallel: 2,

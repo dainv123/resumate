@@ -54,13 +54,13 @@ const nextConfig: NextConfig = {
   },
   
   env: {
-    PORT: process.env.PORT || '3000',
+    PORT: process.env.PORT || '5000',
   },
   serverRuntimeConfig: {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 5000,
   },
   publicRuntimeConfig: {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 5000,
   },
 };
 

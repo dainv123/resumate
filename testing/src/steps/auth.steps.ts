@@ -1,13 +1,13 @@
-import { Given, When, Then } from '@cucumber/cucumber';
-import { expect } from '@playwright/test';
-import { LoginPage } from '../pages/auth/LoginPage';
-import { RegisterPage } from '../pages/auth/RegisterPage';
-import { TestDataManager } from '../utils/test-data-manager';
+const { Given, When, Then } = require('@cucumber/cucumber');
+const { expect } = require('@playwright/test');
+const { LoginPage } = require('../pages/auth/LoginPage');
+const { RegisterPage } = require('../pages/auth/RegisterPage');
+const { TestDataManager } = require('../utils/test-data-manager');
 
 // Background step
 Given('I am on the Resumate application', async function () {
   // Ensure we're on the correct base URL
-  await this.context.page.goto(this.parameters.baseURL);
+  await this.context.page.goto(process.env.BASE_URL || 'http://localhost:5006');
 });
 
 // Login page navigation

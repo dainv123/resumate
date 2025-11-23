@@ -105,7 +105,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+!testing/public
+# public
 
 # Storybook build outputs
 .out
@@ -164,5 +165,5 @@ local/
 
 # Reports
 /testing/reports
-/testing/test-results
+# /testing/test-results
 /testing/playwright-report

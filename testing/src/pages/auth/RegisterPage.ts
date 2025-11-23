@@ -11,13 +11,13 @@ export class RegisterPage extends BasePage {
     // Form elements
     nameInput: 'input[type="text"], input[placeholder*="name" i], input[placeholder*="họ tên" i]',
     emailInput: 'input[type="email"], input[placeholder*="email" i]',
-    passwordInput: 'input[type="password"], input[placeholder*="password" i], input[placeholder*="mật khẩu" i]',
+    passwordInput: 'input[name="password"], input[placeholder="Enter your password"], input[placeholder*="mật khẩu" i]:not([placeholder*="confirm" i])',
     confirmPasswordInput: 'input[placeholder*="confirm" i], input[placeholder*="xác nhận" i], input[type="password"]:nth-of-type(2)',
     registerButton: 'button[type="submit"], button:has-text("Register"), button:has-text("Đăng ký"), button:has-text("Sign up")',
     googleRegisterButton: 'button:has-text("Google"), button:has-text("Continue with Google")',
 
     // Links and navigation
-    loginLink: 'a:has-text("Login"), a:has-text("Sign in"), a:has-text("Đăng nhập")',
+    loginLink: 'a:has-text("Login"), a:has-text("Sign in"), a:has-text("Đăng nhập"), a:has-text("Already have an account"), a[href*="login"], a[href*="signin"]',
     termsLink: 'a:has-text("Terms"), a:has-text("Điều khoản")',
     privacyLink: 'a:has-text("Privacy"), a:has-text("Bảo mật")',
 
