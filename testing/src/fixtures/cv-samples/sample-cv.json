@@ -1,0 +1,58 @@
+{
+  "id": "sample-cv-1",
+  "filename": "john-doe-cv.pdf",
+  "filePath": "src/fixtures/cv-samples/john-doe-cv.pdf",
+  "userId": "test-user-1",
+  "parsed": true,
+  "contact": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1-555-0123",
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "location": "San Francisco, CA"
+  },
+  "summary": "Experienced software engineer with 5+ years of experience in full-stack development, specializing in React, Node.js, and cloud technologies.",
+  "experience": [
+    {
+      "title": "Senior Software Engineer",
+      "company": "Tech Corp",
+      "location": "San Francisco, CA",
+      "startDate": "2022-01-01",
+      "current": true,
+      "description": "Lead development of web applications using React and Node.js",
+      "responsibilities": [
+        "Develop and maintain web applications",
+        "Collaborate with cross-functional teams",
+        "Mentor junior developers"
+      ],
+      "technologies": ["React", "Node.js", "TypeScript", "AWS"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of California",
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "startDate": "2014-09-01",
+      "endDate": "2018-05-01",
+      "gpa": "3.8"
+    }
+  ],
+  "skills": {
+    "technical": ["JavaScript", "TypeScript", "React", "Node.js", "Python"],
+    "tools": ["Git", "Docker", "AWS", "Jenkins"],
+    "languages": ["English (Native)", "Spanish (Intermediate)"],
+    "soft": ["Leadership", "Communication", "Problem Solving"]
+  },
+  "projects": [
+    {
+      "name": "E-commerce Platform",
+      "description": "Full-stack e-commerce platform with React frontend and Node.js backend",
+      "technologies": ["React", "Node.js", "MongoDB", "Stripe"],
+      "role": "Full-stack Developer",
+      "startDate": "2023-01-01",
+      "endDate": "2023-06-01",
+      "results": "Increased conversion rate by 25%, Served 10k+ users"
+    }
+  ]
+}

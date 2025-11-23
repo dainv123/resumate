@@ -625,6 +625,9 @@ export const aiPrompts: Record<Language, AIPrompts> = {
   },
 };
 
-export function getAIPrompt(language: Language, promptKey: keyof AIPrompts): string {
+export function getAIPrompt(
+  language: Language,
+  promptKey: keyof AIPrompts,
+): string {
   return aiPrompts[language][promptKey].prompt;
 }

@@ -1,0 +1,35 @@
+{
+  "id": "jd-software-engineer-1",
+  "title": "Senior Software Engineer",
+  "company": "Tech Innovations Inc.",
+  "location": "San Francisco, CA",
+  "type": "Full-time",
+  "salary": "$120k - $160k",
+  "description": "We are seeking a Senior Software Engineer to join our dynamic team. You will be responsible for designing, developing, and maintaining high-quality software solutions that serve millions of users worldwide.",
+  "requirements": [
+    "3+ years of experience in software development",
+    "Strong proficiency in JavaScript/TypeScript",
+    "Experience with React and Node.js",
+    "Knowledge of cloud platforms (AWS/Azure/GCP)",
+    "Experience with microservices architecture",
+    "Excellent problem-solving skills",
+    "Bachelor's degree in Computer Science or related field"
+  ],
+  "responsibilities": [
+    "Design and develop scalable web applications",
+    "Collaborate with product and design teams",
+    "Write clean, maintainable, and well-documented code",
+    "Participate in code reviews and mentor junior developers",
+    "Optimize applications for performance and scalability",
+    "Stay up-to-date with latest technologies and best practices"
+  ],
+  "benefits": [
+    "Competitive salary and equity",
+    "Health, dental, and vision insurance",
+    "Flexible work hours and remote work options",
+    "Professional development budget",
+    "Free lunch and snacks",
+    "Team building activities"
+  ],
+  "content": "Tech Innovations Inc. is a fast-growing technology company focused on building innovative solutions for the modern workplace. Our platform serves over 5 million users across 50+ countries.\n\nAs a Senior Software Engineer, you will play a crucial role in our engineering team, working on challenging problems and contributing to products that impact millions of users.\n\nWe are looking for someone who is passionate about technology, enjoys solving complex problems, and wants to work in a collaborative environment where your voice matters."
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "test-user-1",
+    "email": "test@example.com",
+    "password": "TestPassword123!",
+    "name": "Test User",
+    "plan": "free",
+    "avatar": "https://example.com/avatar.jpg"
+  },
+  {
+    "id": "test-user-2",
+    "email": "premium@example.com",
+    "password": "PremiumPass123!",
+    "name": "Premium User",
+    "plan": "pro",
+    "avatar": "https://example.com/premium-avatar.jpg"
+  },
+  {
+    "id": "test-user-3",
+    "email": "admin@example.com",
+    "password": "AdminPass123!",
+    "name": "Admin User",
+    "plan": "pro",
+    "avatar": "https://example.com/admin-avatar.jpg"
+  }
+]

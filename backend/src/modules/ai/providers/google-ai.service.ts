@@ -88,7 +88,11 @@ export class GoogleAIService {
     }
   }
 
-  async tailorCvContent(cvData: any, jobDescription: string, language: Language = 'en'): Promise<any> {
+  async tailorCvContent(
+    cvData: any,
+    jobDescription: string,
+    language: Language = 'en',
+  ): Promise<any> {
     try {
       // Try with requested language first
       let template = getAIPrompt(language, 'tailorCvContent');
@@ -113,7 +117,9 @@ export class GoogleAIService {
       if (!jsonMatch) {
         // If no JSON found and language is not English, try with English
         if (language !== 'en') {
-          this.logger.log('No JSON found in response, trying with English prompt...');
+          this.logger.log(
+            'No JSON found in response, trying with English prompt...',
+          );
           template = getAIPrompt('en', 'tailorCvContent');
           prompt = template
             .replace('{{jobDescription}}', jobDescription)
@@ -238,8 +244,14 @@ export class GoogleAIService {
         .replace('{{email}}', cvData.contact?.email || cvData.email || '')
         .replace('{{summary}}', cvData.summary || '')
         .replace('{{skills}}', JSON.stringify(cvData.skills))
-        .replace('{{experience}}', JSON.stringify(cvData.experience?.slice(0, 3)))
-        .replace('{{education}}', JSON.stringify(cvData.education?.slice(0, 2)));
+        .replace(
+          '{{experience}}',
+          JSON.stringify(cvData.experience?.slice(0, 3)),
+        )
+        .replace(
+          '{{education}}',
+          JSON.stringify(cvData.education?.slice(0, 2)),
+        );
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -539,10 +551,16 @@ export class GoogleAIService {
     return results;
   }
 
-  async generateSuggestions(cvData: any, language: Language = 'en'): Promise<string[]> {
+  async generateSuggestions(
+    cvData: any,
+    language: Language = 'en',
+  ): Promise<string[]> {
     try {
       const template = getAIPrompt(language, 'generateSuggestions');
-      const prompt = template.replace('{{cvData}}', JSON.stringify(cvData, null, 2));
+      const prompt = template.replace(
+        '{{cvData}}',
+        JSON.stringify(cvData, null, 2),
+      );
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -571,7 +589,10 @@ export class GoogleAIService {
     }
   }
 
-  async extractKeywords(jobDescription: string, language: Language = 'en'): Promise<string[]> {
+  async extractKeywords(
+    jobDescription: string,
+    language: Language = 'en',
+  ): Promise<string[]> {
     try {
       const template = getAIPrompt(language, 'extractKeywords');
       const prompt = template.replace('{{jobDescription}}', jobDescription);

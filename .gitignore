@@ -161,3 +161,8 @@ pnpm-lock.yaml
 # Local development
 .local/
 local/
+
+# Reports
+/testing/reports
+/testing/test-results
+/testing/playwright-report

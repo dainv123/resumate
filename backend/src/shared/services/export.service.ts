@@ -214,7 +214,7 @@ export class ExportService {
    */
   private getDefaultConfigForTemplate(template: string): TemplateConfig {
     const configMap = {
-      'professional': () => CVDataUtils.getDefaultTemplateConfig(), // professional uses default config
+      professional: () => CVDataUtils.getDefaultTemplateConfig(), // professional uses default config
       'two-column': () => this.dynamicTemplateService.getTwoColumnConfig(),
       modern: () => this.dynamicTemplateService.getModernConfig(),
       'show-all': () => this.dynamicTemplateService.getShowAllConfig(),
@@ -250,7 +250,10 @@ export class ExportService {
     try {
       this.logger.log('=== PDF GENERATION START ===');
       this.logger.log('HTML content length:', htmlContent.length);
-      this.logger.log('PUPPETEER_EXECUTABLE_PATH:', process.env.PUPPETEER_EXECUTABLE_PATH);
+      this.logger.log(
+        'PUPPETEER_EXECUTABLE_PATH:',
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+      );
       this.logger.log('Node version:', process.version);
       this.logger.log('Platform:', process.platform);
 
@@ -276,7 +279,11 @@ export class ExportService {
       });
 
       page.on('requestfailed', (request) => {
-        this.logger.warn('Request failed:', request.url(), request.failure()?.errorText);
+        this.logger.warn(
+          'Request failed:',
+          request.url(),
+          request.failure()?.errorText,
+        );
       });
 
       this.logger.log('Setting page content...');
@@ -285,7 +292,7 @@ export class ExportService {
 
       // Wait for content to stabilize
       this.logger.log('Waiting for content to stabilize...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Check if page has content
       const contentCheck = await page.evaluate(() => {
@@ -299,16 +306,17 @@ export class ExportService {
 
       this.logger.log('Generating PDF...');
       const pdfBuffer = await this.generatePDFFromPage(page);
-      this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+      this.logger.log(
+        `PDF generated successfully, size: ${pdfBuffer.length} bytes`,
+      );
 
       return Buffer.from(pdfBuffer);
-
     } catch (error) {
       this.logger.error('Error converting HTML to PDF:', error);
       this.logger.error('Error details:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
       });
 
       // Log HTML content for debugging (first 500 chars)
@@ -390,11 +398,15 @@ export class ExportService {
           timeout: 10000, // 10 second timeout
         });
 
-        this.logger.log(`✅ Successfully launched browser with path: ${executablePath}`);
+        this.logger.log(
+          `✅ Successfully launched browser with path: ${executablePath}`,
+        );
         return browser;
-
       } catch (error) {
-        this.logger.warn(`Failed to launch with path ${executablePath}:`, error.message);
+        this.logger.warn(
+          `Failed to launch with path ${executablePath}:`,
+          error.message,
+        );
         lastError = error;
         continue;
       }
@@ -429,17 +441,23 @@ export class ExportService {
     await page.setViewport({
       width: 794, // A4 width in pixels at 96 DPI
       height: 1123, // A4 height in pixels at 96 DPI
-      deviceScaleFactor: 1
+      deviceScaleFactor: 1,
     });
 
     // Set user agent
-    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    );
 
     // Disable images and other resources to speed up loading
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const resourceType = req.resourceType();
-      if (resourceType === 'image' || resourceType === 'media' || resourceType === 'font') {
+      if (
+        resourceType === 'image' ||
+        resourceType === 'media' ||
+        resourceType === 'font'
+      ) {
         req.abort();
       } else {
         req.continue();
@@ -471,7 +489,7 @@ export class ExportService {
     });
 
     // Additional wait for content stabilization
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   /**
@@ -498,18 +516,22 @@ export class ExportService {
    * Handle PDF generation errors - Try React PDF as fallback
    */
   private async handlePDFGenerationError(htmlContent: string): Promise<Buffer> {
-    this.logger.warn('Primary PDF generation failed, trying React PDF fallback...');
+    this.logger.warn(
+      'Primary PDF generation failed, trying React PDF fallback...',
+    );
 
     try {
       // Extract basic CV data from HTML (very basic parsing)
       const basicCVData = this.extractBasicCVDataFromHTML(htmlContent);
 
       // Use React PDF as fallback
-      const pdfBuffer = await this.exportReactPDFStrategy(basicCVData, 'professional');
+      const pdfBuffer = await this.exportReactPDFStrategy(
+        basicCVData,
+        'professional',
+      );
 
       this.logger.log('✅ React PDF fallback succeeded');
       return pdfBuffer;
-
     } catch (fallbackError) {
       this.logger.error('React PDF fallback also failed:', fallbackError);
       throw new Error('Failed to generate PDF from HTML content');
@@ -522,7 +544,9 @@ export class ExportService {
   private extractBasicCVDataFromHTML(htmlContent: string): CVData {
     // Very basic HTML parsing - extract name and basic info
     const nameMatch = htmlContent.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    const emailMatch = htmlContent.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    const emailMatch = htmlContent.match(
+      /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
+    );
 
     return {
       id: 'fallback-cv',

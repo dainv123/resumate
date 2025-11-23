@@ -1,0 +1,56 @@
+{
+  "name": "resumate-testing-framework",
+  "version": "1.0.0",
+  "description": "Comprehensive testing framework for Resumate application using BDD, Playwright and Page Object Model",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke/",
+    "test:e2e": "playwright test tests/e2e/",
+    "test:api": "playwright test tests/api/",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:ci": "playwright test --reporter=github,html,json",
+    "cucumber": "cucumber-js",
+    "cucumber:features": "cucumber-js --require src/steps/**/*.ts src/features/**/*.feature",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "testing",
+    "bdd",
+    "playwright",
+    "page-object-model",
+    "e2e-testing",
+    "automation"
+  ],
+  "author": "Resumate Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@cucumber/cucumber": "^9.6.0",
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "allure-playwright": "^2.9.0"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "dotenv": "^16.0.0",
+    "faker": "^6.6.6",
+    "@faker-js/faker": "^8.0.0",
+    "axios": "^1.6.0",
+    "fs-extra": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,4 +1,20 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Res, Req, UseInterceptors, UploadedFile, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Res,
+  Req,
+  UseInterceptors,
+  UploadedFile,
+  Logger,
+  BadRequestException,
+} from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -150,10 +166,7 @@ export class CvController {
       duplicatedFrom: cv.originalCvId,
     }),
   })
-  async duplicateCv(
-    @Param('id') id: string,
-    @GetUser('id') userId: string,
-  ) {
+  async duplicateCv(@Param('id') id: string, @GetUser('id') userId: string) {
     const duplicatedCv = await this.cvService.duplicateCv(id, userId);
     return duplicatedCv;
   }
@@ -183,7 +196,12 @@ export class CvController {
     @Param('id') id: string,
     @GetUser('id') userId: string,
     @Body()
-    body: { jobDescription: string; jobTitle?: string; company?: string; language?: string },
+    body: {
+      jobDescription: string;
+      jobTitle?: string;
+      company?: string;
+      language?: string;
+    },
   ) {
     // Generate analysis (will reuse if JobDescription exists)
     const analysis = await this.cvService.analyzeCompatibility(
@@ -204,7 +222,12 @@ export class CvController {
     @Param('id') id: string,
     @GetUser('id') userId: string,
     @Body()
-    body: { jobDescription: string; jobTitle?: string; company?: string; language?: string },
+    body: {
+      jobDescription: string;
+      jobTitle?: string;
+      company?: string;
+      language?: string;
+    },
   ) {
     // Generate cover letter (will reuse if JobDescription exists)
     const result = await this.cvService.generateCoverLetter(

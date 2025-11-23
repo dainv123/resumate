@@ -43,7 +43,10 @@ export class AiController {
     },
   ) {
     try {
-      const bullets = await this.aiService.generateProjectBullets(body, body.language || 'en');
+      const bullets = await this.aiService.generateProjectBullets(
+        body,
+        body.language || 'en',
+      );
       return { success: true, bullets };
     } catch (error) {
       return { success: false, error: error.message };
@@ -78,7 +81,10 @@ export class AiController {
   @Post('suggestions')
   async getSuggestions(@Body() body: { cvData: CVData; language?: string }) {
     try {
-      const suggestions = await this.aiService.suggestImprovements(body.cvData, body.language || 'en');
+      const suggestions = await this.aiService.suggestImprovements(
+        body.cvData,
+        body.language || 'en',
+      );
       return { success: true, suggestions };
     } catch (error) {
       return { success: false, error: error.message };
@@ -86,7 +92,9 @@ export class AiController {
   }
 
   @Post('extract-keywords')
-  async extractKeywords(@Body() body: { jobDescription: string; language?: string }) {
+  async extractKeywords(
+    @Body() body: { jobDescription: string; language?: string },
+  ) {
     try {
       const keywords = await this.aiService.extractJobKeywords(
         body.jobDescription,

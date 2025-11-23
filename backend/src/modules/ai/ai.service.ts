@@ -51,12 +51,15 @@ export class AiService {
     return this.fallbackParsing(fileBuffer, mimeType);
   }
 
-  async generateProjectBullets(project: {
-    name: string;
-    role: string;
-    techStack: string[];
-    results?: string;
-  }, language?: string): Promise<string[]> {
+  async generateProjectBullets(
+    project: {
+      name: string;
+      role: string;
+      techStack: string[];
+      results?: string;
+    },
+    language?: string,
+  ): Promise<string[]> {
     try {
       return await this.googleAIService.generateBulletPoints(
         project.name,
@@ -76,30 +79,45 @@ export class AiService {
     language?: string,
   ): Promise<CVData> {
     try {
-      return await this.googleAIService.tailorCvContent(cvData, jobDescription, (language as Language) || 'en');
+      return await this.googleAIService.tailorCvContent(
+        cvData,
+        jobDescription,
+        (language as Language) || 'en',
+      );
     } catch (error) {
       this.logger.error('Error tailoring CV:', error);
       return cvData; // Return original if tailoring fails
     }
   }
 
-  async suggestImprovements(cvData: CVData, language?: string): Promise<string[]> {
+  async suggestImprovements(
+    cvData: CVData,
+    language?: string,
+  ): Promise<string[]> {
     try {
-      return await this.googleAIService.generateSuggestions(cvData, (language as Language) || 'en');
+      return await this.googleAIService.generateSuggestions(
+        cvData,
+        (language as Language) || 'en',
+      );
     } catch (error) {
       this.logger.error('Error generating suggestions:', error);
       return this.fallbackSuggestions();
     }
   }
 
-  async extractJobKeywords(jobDescription: string, language?: string): Promise<{
+  async extractJobKeywords(
+    jobDescription: string,
+    language?: string,
+  ): Promise<{
     skills: string[];
     requirements: string[];
     keywords: string[];
   }> {
     try {
-      const keywords =
-        await this.googleAIService.extractKeywords(jobDescription, (language as Language) || 'en');
+      const keywords = await this.googleAIService.extractKeywords(
+        jobDescription,
+        (language as Language) || 'en',
+      );
       return {
         skills: keywords,
         requirements: keywords,
