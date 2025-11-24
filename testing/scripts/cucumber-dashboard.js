@@ -124,8 +124,7 @@ app.get('/api/scripts', (req, res) => {
       { name: 'cucumber:smoke', description: 'Run smoke tests only', icon: '🚀' },
       { name: 'cucumber:regression', description: 'Run regression tests', icon: '🔄' },
       { name: 'cucumber:lint', description: 'Run ESLint checks', icon: '🔍' },
-      { name: 'cucumber:type-check', description: 'Run TypeScript type check', icon: '📝' },
-      { name: 'cucumber:features:json', description: 'Generate JSON test results', icon: '📊' }
+      { name: 'cucumber:type-check', description: 'Run TypeScript type check', icon: '📝' }
     ]
   });
 });
