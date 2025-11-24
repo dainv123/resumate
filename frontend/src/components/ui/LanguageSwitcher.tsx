@@ -7,8 +7,10 @@ import { cn } from "@/lib/utils";
 
 export default function LanguageSwitcher({
   className,
+  positionClassName,
 }: {
   className?: string;
+  positionClassName?: string;
 }) {
   const { language, setLanguage, languages } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function LanguageSwitcher({
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-0 right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 animate-fadeIn">
+        <div className={cn("absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 animate-fadeIn", positionClassName)}>
           {languages.map((lang) => (
             <button
               key={lang.code}

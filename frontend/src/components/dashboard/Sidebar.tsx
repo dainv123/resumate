@@ -136,7 +136,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         {/* Settings & Logout - Fixed at bottom */}
         <div className="px-4 py-4 border-t space-y-1 flex-shrink-0">
           <div className="py-2">
-            <LanguageSwitcher className=" w-full" />
+            <LanguageSwitcher className="w-full" positionClassName="bottom-0 right-0" />
           </div>
           {bottomNavigationItems.map((item) => {
             const isActive = pathname === item.href;
