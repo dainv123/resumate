@@ -40,7 +40,12 @@ services:
       BACKEND_URL: ${BACKEND_URL:-http://localhost:5001}
       EMAIL_USER: ${EMAIL_USER}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
-      DOMAIN_NAME: ${DOMAIN_NAME}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
     volumes:
       - ./backend/uploads:/app/uploads
     healthcheck:

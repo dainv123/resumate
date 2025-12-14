@@ -425,7 +425,7 @@ export class NotificationsService {
           </div>
           <div class="footer">
             <p>This is an automated error notification from Resumate</p>
-            <p>Server: ${this.configService.get('DOMAIN_NAME') || 'Unknown'}</p>
+            <p>Server: ${this.configService.get('MAIL_FROM_NAME') || 'Unknown'}</p>
           </div>
         </div>
       </body>

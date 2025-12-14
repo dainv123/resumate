@@ -53,7 +53,7 @@ const SMTP_PORT = process.env.SMTP_PORT || '587';
 const SMTP_SECURE = process.env.SMTP_SECURE;
 const MAIL_FROM = process.env.MAIL_FROM || EMAIL_USER;
 const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME;
-const DOMAIN_NAME = process.env.DOMAIN_NAME || 'Unknown';
+const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'Unknown';
 
 // Containers to monitor
 const CONTAINERS = [
@@ -177,7 +177,7 @@ function generateAlertHTML(containers, isRecovery = false) {
           <ul>${containerList}</ul>
           <div class="detail-row">
             <strong>Timestamp:</strong> ${new Date().toISOString()}<br>
-            <strong>Server:</strong> ${DOMAIN_NAME}<br>
+            <strong>Server:</strong> ${MAIL_FROM_NAME}<br>
             <strong>Hostname:</strong> ${require('os').hostname()}
           </div>
           ${!isRecovery ? '<p><strong>Action Required:</strong> Please check the containers and restart if necessary.</p>' : ''}

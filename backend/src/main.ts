@@ -26,12 +26,6 @@ async function bootstrap() {
     'https://appearance-lectures-achieve-recommended.trycloudflare.com',
   ];
 
-  // Add domain from environment if available
-  if (process.env.DOMAIN_NAME) {
-    allowedOrigins.push(`http://${process.env.DOMAIN_NAME}:5000`);
-    allowedOrigins.push(`https://${process.env.DOMAIN_NAME}:5000`);
-  }
-
   app.enableCors({
     origin: true,
     credentials: true,
