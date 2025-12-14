@@ -98,7 +98,8 @@ show_menu() {
     echo "3) Containers only (restart containers)"
     echo "4) Check status"
     echo "5) View logs"
-    echo "6) Exit"
+    echo "6) Setup container monitoring (cron job) - One-time setup"
+    echo "7) Exit"
     echo ""
 }
 
@@ -220,7 +221,7 @@ main() {
     # Show menu and handle choice
     while true; do
         show_menu
-        read -p "Enter your choice (1-6): " choice
+        read -p "Enter your choice (1-7): " choice
         
         case $choice in
             1)
@@ -241,11 +242,17 @@ main() {
                 view_logs
                 ;;
             6)
+                print_status $BLUE "📊 Setting up container monitoring..."
+                run_cmd "cd /home/resumate && chmod +x deployment/setup-monitor-cron.sh && ./deployment/setup-monitor-cron.sh"
+                print_status $GREEN "✅ Monitoring setup complete! Cron job will run every 5 minutes."
+                print_status $YELLOW "Note: This only needs to be done once, not every deploy."
+                ;;
+            7)
                 print_status $GREEN "👋 Goodbye!"
                 exit 0
                 ;;
             *)
-                print_status $RED "❌ Invalid option. Please choose 1-6."
+                print_status $RED "❌ Invalid option. Please choose 1-7."
                 ;;
         esac
         

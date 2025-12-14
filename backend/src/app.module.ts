@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -12,8 +12,9 @@ import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { AiModule } from './modules/ai/ai.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { TemplatesModule } from './modules/templates/templates.module';
-// import { NotificationsModule } from './modules/notifications/notifications.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ActivityTrackingInterceptor } from './common/interceptors/activity-tracking.interceptor';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 @Module({
   imports: [
@@ -44,7 +45,7 @@ import { ActivityTrackingInterceptor } from './common/interceptors/activity-trac
     AiModule,
     AnalyticsModule,
     TemplatesModule,
-    // NotificationsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -52,6 +53,10 @@ import { ActivityTrackingInterceptor } from './common/interceptors/activity-trac
     {
       provide: APP_INTERCEPTOR,
       useClass: ActivityTrackingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
     },
   ],
 })
