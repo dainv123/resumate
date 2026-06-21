@@ -50,6 +50,15 @@ export class JobDescription {
   @Column('jsonb', { nullable: true })
   keywords: string[];
 
+  @Column({ nullable: true })
+  sourceUrl: string;
+
+  @Column({ nullable: true })
+  sourceType: string;
+
+  @Column('jsonb', { nullable: true })
+  parsedMetadata: Record<string, unknown>;
+
   @CreateDateColumn()
   createdAt: Date;
 

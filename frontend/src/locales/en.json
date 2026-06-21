@@ -41,7 +41,8 @@
     "portfolio": "Portfolio",
     "analytics": "Analytics",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "interviewPrep": "Interview Prep"
   },
   "dashboard": {
     "welcome": "Welcome back, {{name}}! 👋",
@@ -395,6 +396,8 @@
     "feature3Desc": "Upload JD, AI creates tailored CV matching job description",
     "feature4Title": "Portfolio",
     "feature4Desc": "Create beautiful online portfolio to showcase to clients",
+    "feature5Title": "Interview Prep Pro",
+    "feature5Desc": "Paste JD + pick CV → PASS roadmap, STAR stories, mock drills & readiness score",
     "ctaTitle": "Ready to start?",
     "ctaTitleLoggedIn": "Start working",
     "ctaSubtitle": "Join thousands of freelancers using Resumate to update their CVs",
@@ -939,7 +942,7 @@
     "exportTitle": "Export Your Tailored CV",
     "exportDesc": "Download your optimized CV in multiple formats",
     "pdfTitle": "PDF Format",
-    "wordTitle": "Word Document", 
+    "wordTitle": "Word Document",
     "atsTitle": "ATS Optimized",
     "howItWorks": "How AI Tailoring Works",
     "stepsDescription": "Get your CV optimized in 4 simple steps",
@@ -1405,5 +1408,112 @@
   "systemMessages": {
     "english": "English",
     "vietnamese": "Vietnamese"
+  },
+  "interviewPrep": {
+    "title": "Interview Prep",
+    "subtitle": "Adaptive roadmap to maximize your pass rate — tailored to your CV and job description",
+    "dashboardCard": {
+      "subtitle": "Adaptive interview roadmap",
+      "cta": "Create prep plan"
+    },
+    "jobTailorCta": {
+      "title": "Create Interview Prep Plan",
+      "subtitle": "7-day roadmap, STAR stories & mock drills"
+    },
+    "create": {
+      "title": "New prep plan",
+      "subtitle": "Paste the job description and pick your interview date",
+      "submit": "Build my prep plan"
+    },
+    "form": {
+      "cv": "CV to prepare with",
+      "selectCv": "Select a CV",
+      "jd": "Job description",
+      "jdPlaceholder": "Paste the full job description here...",
+      "interviewDate": "Interview date",
+      "capacity": "Daily prep time",
+      "capacityMinutes": "{{minutes}} min / day"
+    },
+    "list": {
+      "title": "Your prep plans",
+      "loading": "Loading plans...",
+      "empty": "No prep plans yet. Create one above.",
+      "readiness": "Readiness: {{score}}/100"
+    },
+    "detail": {
+      "loading": "Loading prep plan...",
+      "back": "Back to plans",
+      "title": "Prep plan",
+      "interviewOn": "Interview on {{date}}"
+    },
+    "export": {
+      "cheatSheet": "Download cheat sheet"
+    },
+    "readiness": {
+      "title": "Interview readiness",
+      "ready": "You're ready for the interview!",
+      "compatibility": "CV fit",
+      "questionCoverage": "Questions practiced",
+      "starReadiness": "STAR stories ready",
+      "companyResearch": "Company research",
+      "mockPerformance": "Mock performance"
+    },
+    "readinessGate": {
+      "passed": "Readiness gate passed — you're interview-ready!",
+      "notReady": "Need {{points}} more points to reach the {{threshold}} readiness gate"
+    },
+    "timeline": {
+      "title": "Your roadmap",
+      "dayLabel": "D-{{days}} · {{date}}",
+      "interviewDay": "Interview day",
+      "minutes": "min"
+    },
+    "starStories": {
+      "title": "STAR stories",
+      "empty": "No STAR stories generated yet.",
+      "situation": "Situation",
+      "task": "Task",
+      "action": "Action",
+      "result": "Result",
+      "save": "Save",
+      "regenerate": "Regenerate",
+      "markReady": "Mark ready",
+      "ready": "Ready"
+    },
+    "questions": {
+      "title": "Question bank",
+      "practice": "Practice",
+      "practiceLocked": "Pro only",
+      "score": "Last score: {{score}}/10",
+      "visibleCount": "Showing {{visible}} of {{total}} questions",
+      "locked": "{{count}} more questions — upgrade to Pro"
+    },
+    "mock": {
+      "title": "Mock drill",
+      "placeholder": "Type your answer here...",
+      "submit": "Submit for feedback",
+      "lastScore": "Previous score: {{score}}/10"
+    },
+    "defense": {
+      "title": "Project defense"
+    },
+    "proUpgrade": {
+      "title": "Upgrade to Pro",
+      "plans": "Free plan includes 1 interview prep plan per month. Upgrade for unlimited plans.",
+      "questions": "Unlock the full curated question bank tailored to your job description.",
+      "mockDrills": "Mock drills with AI rubric scoring are a Pro feature.",
+      "export": "Cheat sheet PDF export is available on Pro.",
+      "benefitPlans": "Unlimited interview prep plans",
+      "benefitQuestions": "Full question bank access",
+      "benefitMock": "Unlimited mock drills with feedback",
+      "benefitExport": "Download interview cheat sheet PDF",
+      "cta": "View plans",
+      "dismiss": "Maybe later"
+    },
+    "errors": {
+      "disabled": "Interview Prep is not available yet.",
+      "planLimit": "Interview prep plan limit reached for your plan.",
+      "exportProOnly": "Cheat sheet export requires Pro."
+    }
   }
 }

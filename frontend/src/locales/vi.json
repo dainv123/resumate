@@ -38,10 +38,11 @@
     "myCV": "CV của tôi",
     "jobTailor": "Tùy chỉnh CV",
     "projects": "Dự án",
-    "portfolio": "Hồ sơ cá nhân",
+    "portfolio": "Portfolio",
     "analytics": "Phân tích",
     "settings": "Cài đặt",
-    "logout": "Đăng xuất"
+    "logout": "Đăng xuất",
+    "interviewPrep": "Luyện phỏng vấn"
   },
   "dashboard": {
     "welcome": "Chào mừng trở lại, {{name}}! 👋",
@@ -875,7 +876,7 @@
     "exportTitle": "Xuất CV Đã Tùy Chỉnh",
     "exportDesc": "Tải xuống CV đã tối ưu hóa ở nhiều định dạng",
     "pdfTitle": "Định Dạng PDF",
-    "wordTitle": "Tài Liệu Word", 
+    "wordTitle": "Tài Liệu Word",
     "atsTitle": "Tối Ưu ATS",
     "howItWorks": "Cách AI Tùy Chỉnh Hoạt Động",
     "stepsDescription": "CV được tối ưu hóa trong 4 bước đơn giản",
@@ -1028,6 +1029,8 @@
     "feature3Desc": "Upload JD, AI tạo CV tailored phù hợp với job description",
     "feature4Title": "Portfolio",
     "feature4Desc": "Tạo portfolio online đẹp mắt để showcase cho khách hàng",
+    "feature5Title": "Interview Prep Pro",
+    "feature5Desc": "Dán JD + chọn CV → lộ trình PASS, STAR stories, mock drill & readiness score",
     "ctaTitle": "Sẵn sàng bắt đầu?",
     "ctaTitleLoggedIn": "Bắt đầu làm việc",
     "ctaSubtitle": "Tham gia hàng nghìn freelancer đã sử dụng Resumate để cập nhật CV",
@@ -1441,5 +1444,112 @@
   "systemMessages": {
     "english": "Tiếng Anh",
     "vietnamese": "Tiếng Việt"
+  },
+  "interviewPrep": {
+    "title": "Luyện phỏng vấn",
+    "subtitle": "Lộ trình adaptive tối đa tỷ lệ đậu — theo CV và JD của bạn",
+    "dashboardCard": {
+      "subtitle": "Lộ trình phỏng vấn adaptive",
+      "cta": "Tạo prep plan"
+    },
+    "jobTailorCta": {
+      "title": "Tạo lộ trình phỏng vấn",
+      "subtitle": "Roadmap 7 ngày, STAR stories & mock drill"
+    },
+    "create": {
+      "title": "Tạo plan mới",
+      "subtitle": "Dán job description và chọn ngày phỏng vấn",
+      "submit": "Tạo lộ trình"
+    },
+    "form": {
+      "cv": "CV chuẩn bị",
+      "selectCv": "Chọn CV",
+      "jd": "Job description",
+      "jdPlaceholder": "Dán JD đầy đủ vào đây...",
+      "interviewDate": "Ngày phỏng vấn",
+      "capacity": "Thời gian ôn mỗi ngày",
+      "capacityMinutes": "{{minutes}} phút / ngày"
+    },
+    "list": {
+      "title": "Các plan của bạn",
+      "loading": "Đang tải...",
+      "empty": "Chưa có plan. Tạo plan ở trên.",
+      "readiness": "Readiness: {{score}}/100"
+    },
+    "detail": {
+      "loading": "Đang tải plan...",
+      "back": "Quay lại danh sách",
+      "title": "Lộ trình phỏng vấn",
+      "interviewOn": "Phỏng vấn ngày {{date}}"
+    },
+    "export": {
+      "cheatSheet": "Tải cheat sheet"
+    },
+    "readiness": {
+      "title": "Mức sẵn sàng",
+      "ready": "Bạn đã sẵn sàng cho buổi phỏng vấn!",
+      "compatibility": "Độ fit CV",
+      "questionCoverage": "Câu đã luyện",
+      "starReadiness": "STAR stories",
+      "companyResearch": "Research công ty",
+      "mockPerformance": "Mock drill"
+    },
+    "readinessGate": {
+      "passed": "Đã đạt ngưỡng readiness — sẵn sàng phỏng vấn!",
+      "notReady": "Cần thêm {{points}} điểm để đạt ngưỡng {{threshold}}"
+    },
+    "timeline": {
+      "title": "Lộ trình",
+      "dayLabel": "D-{{days}} · {{date}}",
+      "interviewDay": "Ngày phỏng vấn",
+      "minutes": "phút"
+    },
+    "starStories": {
+      "title": "STAR stories",
+      "empty": "Chưa có STAR story.",
+      "situation": "Situation",
+      "task": "Task",
+      "action": "Action",
+      "result": "Result",
+      "save": "Lưu",
+      "regenerate": "Tạo lại",
+      "markReady": "Đánh dấu Ready",
+      "ready": "Ready"
+    },
+    "questions": {
+      "title": "Ngân hàng câu hỏi",
+      "practice": "Luyện tập",
+      "practiceLocked": "Chỉ Pro",
+      "score": "Điểm: {{score}}/10",
+      "visibleCount": "Hiển thị {{visible}}/{{total}} câu",
+      "locked": "Thêm {{count}} câu — nâng cấp Pro"
+    },
+    "mock": {
+      "title": "Mock drill",
+      "placeholder": "Nhập câu trả lời...",
+      "submit": "Gửi chấm điểm",
+      "lastScore": "Lần trước: {{score}}/10"
+    },
+    "defense": {
+      "title": "Project defense"
+    },
+    "proUpgrade": {
+      "title": "Nâng cấp Pro",
+      "plans": "Gói Free: 1 plan/tháng. Nâng cấp để tạo không giới hạn.",
+      "questions": "Mở khóa toàn bộ ngân hàng câu hỏi theo JD của bạn.",
+      "mockDrills": "Mock drill chấm điểm AI chỉ có trên Pro.",
+      "export": "Export cheat sheet PDF chỉ có trên Pro.",
+      "benefitPlans": "Tạo plan không giới hạn",
+      "benefitQuestions": "Truy cập full question bank",
+      "benefitMock": "Mock drill không giới hạn + feedback",
+      "benefitExport": "Tải cheat sheet PDF",
+      "cta": "Xem gói",
+      "dismiss": "Để sau"
+    },
+    "errors": {
+      "disabled": "Interview Prep chưa được bật.",
+      "planLimit": "Đã hết lượt tạo plan trong tháng.",
+      "exportProOnly": "Export cheat sheet cần gói Pro."
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
@@ -13,6 +14,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { InterviewPrepModule } from './modules/interview-prep/interview-prep.module';
 import { ActivityTrackingInterceptor } from './common/interceptors/activity-tracking.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
@@ -22,6 +24,7 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -46,6 +49,7 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
     AnalyticsModule,
     TemplatesModule,
     NotificationsModule,
+    InterviewPrepModule,
   ],
   controllers: [AppController],
   providers: [

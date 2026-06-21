@@ -1,11 +1,15 @@
+import { webcrypto } from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+if (!globalThis.crypto) {
+  globalThis.crypto = webcrypto as Crypto;
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -14,15 +18,13 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter is now registered via APP_FILTER in app.module.ts
-
-  // Enable CORS
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:5000',
     process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000',
     'http://2r4p3zcg-5000.asse.devtunnels.ms',
     'https://2r4p3zcg-5000.asse.devtunnels.ms',
     'http://localhost:5000',
+    'http://localhost:3000',
     'https://appearance-lectures-achieve-recommended.trycloudflare.com',
   ];
 
@@ -31,7 +33,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Allow preflight (OPTIONS)
   app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Origin', req.headers.origin);

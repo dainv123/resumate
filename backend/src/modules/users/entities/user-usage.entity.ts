@@ -27,6 +27,12 @@ export class UserUsage {
   @Column({ default: 0 })
   exports: number;
 
+  @Column({ default: 0 })
+  interviewPrepPlans: number;
+
+  @Column({ default: 0 })
+  mockDrills: number;
+
   @Column({ type: 'date' })
   resetDate: Date;
 

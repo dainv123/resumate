@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getAIPrompt, Language } from '../translations/ai-prompts';
+import {
+  INTERVIEW_PREP_AI_PROMPTS,
+  fillInterviewPrepPrompt,
+} from '../prompts/interview-prep.prompts';
 
 @Injectable()
 export class GoogleAIService {
@@ -626,5 +630,108 @@ export class GoogleAIService {
       this.logger.error('Error extracting keywords:', error);
       return [];
     }
+  }
+  async inferInterviewProcess(jobDescription: string): Promise<{
+    rounds: Array<{
+      type: string;
+      label: string;
+      durationMinutes: number;
+      weight: number;
+      focusAreas: string[];
+    }>;
+    totalEstimatedDays: number;
+  }> {
+    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.inferInterviewProcess, {
+      jobDescription,
+    });
+
+    return this.parseJsonObject(prompt);
+  }
+
+  async generateStarStories(
+    cvData: unknown,
+    jobDescription: string,
+  ): Promise<
+    Array<{
+      id: string;
+      question: string;
+      mapsToQuestions: string[];
+      situation: string;
+      task: string;
+      action: string;
+      result: string;
+      projectRef: string;
+      ready: boolean;
+    }>
+  > {
+    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateStarStories, {
+      jobDescription,
+      cvData: JSON.stringify(cvData, null, 2),
+    });
+
+    return this.parseJsonArray(prompt);
+  }
+
+  async generateProjectDefenseSheets(
+    cvData: unknown,
+    jobDescription: string,
+  ): Promise<
+    Array<{
+      projectName: string;
+      role: string;
+      architectureDecision: string;
+      hardestProblem: string;
+      outcome: string;
+      wouldDoDifferently: string;
+      followUpQuestions: string[];
+    }>
+  > {
+    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateProjectDefense, {
+      jobDescription,
+      cvData: JSON.stringify(cvData, null, 2),
+    });
+
+    return this.parseJsonArray(prompt);
+  }
+
+  async evaluateMockAnswer(
+    question: string,
+    rubric: { excellent: string[]; good: string[]; weak: string[] },
+    answer: string,
+  ): Promise<{
+    score: number;
+    matchedCriteria: string[];
+    missingCriteria: string[];
+    feedback: string;
+  }> {
+    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.evaluateMockAnswer, {
+      question,
+      excellent: rubric.excellent.join('; '),
+      good: rubric.good.join('; '),
+      weak: rubric.weak.join('; '),
+      answer,
+    });
+
+    return this.parseJsonObject(prompt);
+  }
+
+  private async parseJsonObject<T>(prompt: string): Promise<T> {
+    const result = await this.model.generateContent(prompt);
+    const responseText = result.response.text();
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON object in AI response');
+    }
+    return JSON.parse(jsonMatch[0]) as T;
+  }
+
+  private async parseJsonArray<T>(prompt: string): Promise<T[]> {
+    const result = await this.model.generateContent(prompt);
+    const responseText = result.response.text();
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON array in AI response');
+    }
+    return JSON.parse(jsonMatch[0]) as T[];
   }
 }

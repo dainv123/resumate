@@ -18,13 +18,14 @@ import {
   Zap,
   Clock,
   Bot,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 import { useCvsPaginated } from "@/hooks/useCvs";
 import { projectsApi } from "@/lib/projects";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import RecentCvsSection from "@/components/dashboard/RecentCvsSection";
-// import { CVUtils } from '@/utils/cv.utils';
+import { isInterviewPrepEnabled } from "@/lib/feature-flags";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -381,6 +382,30 @@ export default function DashboardPage() {
           </div>
         </Link>
 
+        {isInterviewPrepEnabled() && (
+          <Link href="/dashboard/interview-prep" className="group">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-indigo-500">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <GraduationCap className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h4 className="text-lg font-semibold text-dark font-inter">
+                    {t("nav.interviewPrep")}
+                  </h4>
+                  <p className="text-sm text-main font-karla">
+                    {t("interviewPrep.dashboardCard.subtitle")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center text-indigo-600 text-sm font-medium">
+                <span>{t("interviewPrep.dashboardCard.cta")}</span>
+                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </div>
+          </Link>
+        )}
+
         <Link
           href="/dashboard/portfolio"
           className="group"
@@ -521,6 +546,12 @@ export default function DashboardPage() {
               <span className="w-2 h-2 bg-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
               {t("dashboard.tip1")}
             </li>
+            {isInterviewPrepEnabled() && (
+              <li className="flex items-start">
+                <span className="w-2 h-2 bg-indigo-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                Dùng Interview Prep để luyện phỏng vấn theo JD & CV
+              </li>
+            )}
             <li className="flex items-start">
               <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
               {t("dashboard.tip2")}

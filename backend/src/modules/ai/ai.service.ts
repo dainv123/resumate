@@ -329,6 +329,58 @@ ${cvData.contact?.name || 'Candidate'}`;
     }
   }
 
+  async inferInterviewProcess(jobDescription: string) {
+    try {
+      return await this.googleAIService.inferInterviewProcess(jobDescription);
+    } catch (error) {
+      this.logger.error('Error inferring interview process:', error);
+      return null;
+    }
+  }
+
+  async generateStarStories(cvData: CVData, jobDescription: string) {
+    try {
+      return await this.googleAIService.generateStarStories(cvData, jobDescription);
+    } catch (error) {
+      this.logger.error('Error generating STAR stories:', error);
+      return [];
+    }
+  }
+
+  async generateProjectDefenseSheets(cvData: CVData, jobDescription: string) {
+    try {
+      return await this.googleAIService.generateProjectDefenseSheets(
+        cvData,
+        jobDescription,
+      );
+    } catch (error) {
+      this.logger.error('Error generating project defense sheets:', error);
+      return [];
+    }
+  }
+
+  async evaluateMockAnswer(
+    question: string,
+    rubric: { excellent: string[]; good: string[]; weak: string[] },
+    answer: string,
+  ) {
+    try {
+      return await this.googleAIService.evaluateMockAnswer(
+        question,
+        rubric,
+        answer,
+      );
+    } catch (error) {
+      this.logger.error('Error evaluating mock answer:', error);
+      return {
+        score: 5,
+        matchedCriteria: [],
+        missingCriteria: ['Unable to evaluate — try again'],
+        feedback: 'Evaluation unavailable. Review your answer against the rubric.',
+      };
+    }
+  }
+
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

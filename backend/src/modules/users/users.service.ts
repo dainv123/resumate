@@ -201,6 +201,8 @@ export class UsersService {
       usage.projects = 0;
       usage.jobTailors = 0;
       usage.exports = 0;
+      usage.interviewPrepPlans = 0;
+      usage.mockDrills = 0;
       usage.resetDate = now;
       usage = await this.userUsageRepository.save(usage);
     }
@@ -218,26 +220,31 @@ export class UsersService {
   }
 
   async checkUserLimit(userId: string, feature: string): Promise<boolean> {
-    return true;
     const user = await this.findById(userId);
     const usage = await this.getUserUsage(userId);
 
-    const limits = {
+    const limits: Record<string, Record<string, number>> = {
       free: {
         cvUploads: 1,
         projects: 3,
         jobTailors: 5,
         exports: 10,
+        interviewPrepPlans: 1,
+        mockDrills: 0,
       },
       pro: {
         cvUploads: -1,
         projects: -1,
         jobTailors: -1,
         exports: -1,
+        interviewPrepPlans: -1,
+        mockDrills: -1,
       },
     };
 
-    const userLimit = limits[user.plan][feature];
+    const planLimits = limits[user.plan] ?? limits.free;
+    const userLimit = planLimits[feature];
+    if (userLimit === undefined) return true;
     return userLimit === -1 || (usage[feature] as number) < userLimit;
   }
 }

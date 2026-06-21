@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cvApi, CV, CompatibilityAnalysis } from "@/lib/cv";
 import { useCvsPaginated } from "@/hooks/useCvs";
@@ -33,11 +33,15 @@ import {
   CheckSquare,
   XCircle,
   Lightbulb,
+  GraduationCap,
 } from "lucide-react";
+import { isInterviewPrepEnabled } from "@/lib/feature-flags";
+import { saveInterviewPrepPrefill } from "@/components/interview-prep/CreatePrepForm";
 
 export default function JobTailorPage() {
   const { t, language } = useLanguage();
   const { showSuccess, showError } = useToast();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedCv, setSelectedCv] = useState<CV | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -722,6 +726,37 @@ export default function JobTailorPage() {
                         </div>
                       )}
                     </button>
+
+                    {isInterviewPrepEnabled() && (
+                      <button
+                        onClick={() => {
+                          if (!selectedCv || !jobDescription.trim()) return;
+                          saveInterviewPrepPrefill(
+                            selectedCv.id,
+                            jobDescription,
+                          );
+                          router.push("/dashboard/interview-prep");
+                        }}
+                        disabled={!selectedCv || !jobDescription.trim()}
+                        className="group w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <GraduationCap className="h-5 w-5 text-indigo-600" />
+                          </div>
+                          <div className="text-left">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {t("interviewPrep.jobTailorCta.title")}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {t("interviewPrep.jobTailorCta.subtitle")}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </div>
+                      </button>
+                    )}
 
                     {/* Tailor CV - Primary Action */}
                     <button

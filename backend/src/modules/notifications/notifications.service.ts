@@ -432,4 +432,39 @@ export class NotificationsService {
       </html>
     `;
   }
+
+  async notifyDailyPrepReminder(
+    to: string,
+    name: string,
+    planId: string,
+    todayDay: {
+      daysUntilInterview: number;
+      theme: string;
+      tasks: Array<{ done: boolean; title: string }>;
+    },
+    readinessScore: number,
+  ): Promise<void> {
+    const frontendUrl = this.configService.get(
+      'FRONTEND_URL',
+      'http://localhost:3000',
+    );
+    const taskList = todayDay.tasks
+      .map((t) => `<li>${t.done ? '✅' : '⬜'} ${t.title}</li>`)
+      .join('');
+
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 560px;">
+        <h2>Good morning, ${name}!</h2>
+        <p>Your interview prep for <strong>D-${todayDay.daysUntilInterview}</strong> (${todayDay.theme}):</p>
+        <ul>${taskList}</ul>
+        <p>Readiness score: <strong>${readinessScore}/100</strong></p>
+        <p><a href="${frontendUrl}/dashboard/interview-prep/${planId}">Open your prep plan →</a></p>
+      </div>`;
+
+    await this.sendEmail(
+      to,
+      `Interview prep — D-${todayDay.daysUntilInterview}`,
+      html,
+    );
+  }
 }

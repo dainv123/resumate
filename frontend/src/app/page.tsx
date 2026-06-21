@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
-import { memo } from "react";
-import { FileText, Users, Briefcase, Sparkles } from "lucide-react";
+import { FileText, Users, Briefcase, Sparkles, GraduationCap } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { isInterviewPrepEnabled } from "@/lib/feature-flags";
 
 // Memoized Feature Card Component
 const FeatureCard = memo(
@@ -157,7 +157,6 @@ export default function HomePage() {
           </div> */}
         </div>
 
-        {/* Features */}
         <div className="mt-12 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           <FeatureCard
             icon={FileText}
@@ -183,6 +182,14 @@ export default function HomePage() {
             description={t("landing.feature4Desc")}
             iconColor="yellowColor"
           />
+          {isInterviewPrepEnabled() && (
+            <FeatureCard
+              icon={GraduationCap}
+              title={t("landing.feature5Title")}
+              description={t("landing.feature5Desc")}
+              iconColor="blueColor"
+            />
+          )}
         </div>
 
         {/* CTA Section */}
