@@ -769,6 +769,10 @@
       "title": "Tailor for Jobs",
       "content": "Customize your CV for specific job descriptions. Our AI will highlight relevant experience and optimize keywords."
     },
+    "interviewPrep": {
+      "title": "Interview Prep",
+      "content": "Paste a job description and your CV to get a daily roadmap, STAR stories, question bank, and AI mock drills before interview day."
+    },
     "export": {
       "title": "Export Your CV",
       "content": "Export your CV in multiple formats: PDF (with templates), Word, or ATS-friendly text format."
@@ -783,7 +787,7 @@
     },
     "allSet": {
       "title": "You're All Set! 🚀",
-      "content": "Ready to create amazing CVs? Start by uploading your first CV or explore the features at your own pace."
+      "content": "Upload your CV, tailor it to a job, then build an Interview Prep plan when you have an upcoming interview."
     },
     "step": "Step {{current}} of {{total}}",
     "back": "Back",
@@ -1472,7 +1476,8 @@
       "title": "Your roadmap",
       "dayLabel": "D-{{days}} · {{date}}",
       "interviewDay": "Interview day",
-      "minutes": "min"
+      "minutes": "min",
+      "today": "Today"
     },
     "starStories": {
       "title": "STAR stories",
@@ -1504,6 +1509,13 @@
       "resultScore": "Score: {{score}}/10",
       "matched": "What you covered well",
       "missing": "What to improve",
+      "improvedOutline": "Stronger answer structure",
+      "followUpPrompt": "Prepare for this follow-up",
+      "timer": "Time left: {{time}}",
+      "suggestedTime": "Suggested {{minutes}} min",
+      "switchStar": "Use STAR format (Situation / Task / Action / Result)",
+      "switchFreeform": "Switch to free-form answer",
+      "nextQuestion": "Next question",
       "done": "Done"
     },
     "processMap": {
@@ -1521,7 +1533,63 @@
       }
     },
     "defense": {
-      "title": "Project defense"
+      "title": "Project defense",
+      "architecture": "Architecture decision",
+      "hardest": "Hardest problem",
+      "outcome": "Outcome"
+    },
+    "hero": {
+      "preparingFor": "Preparing for",
+      "interviewToday": "Interview today",
+      "daysLeft": "D-{{days}}",
+      "roadmapDone": "Roadmap complete",
+      "questionsDone": "Questions practiced",
+      "statusReady": "Ready",
+      "statusBuilding": "In progress"
+    },
+    "sections": {
+      "overview": "Overview",
+      "practice": "Practice",
+      "prepare": "Stories & defense",
+      "roadmap": "Roadmap"
+    },
+    "gaps": {
+      "title": "Skill gaps to close",
+      "cvFit": "CV fit score",
+      "matched": "Matched skills",
+      "empty": "No major gaps detected — keep practicing questions."
+    },
+    "onboarding": {
+      "title": "Set up your interview prep",
+      "step": "Step {{current}} of {{total}}",
+      "intro": "Paste the job description you're interviewing for — we'll build a personalized roadmap from your CV and the role requirements.",
+      "bulletJd": "Match your CV to the job description",
+      "bulletRoadmap": "Daily roadmap with STAR stories & question bank",
+      "bulletMock": "AI-scored mock drills before interview day",
+      "pickCv": "Which CV should we use for prep?",
+      "noCv": "Upload a CV first so we can tailor questions and STAR stories to your experience.",
+      "uploadCv": "Upload CV",
+      "pasteJd": "Paste the full job description (or fetch from a link on the previous step).",
+      "schedule": "When is your interview? We'll build your daily plan backward from this date.",
+      "back": "Back",
+      "next": "Next",
+      "skip": "Skip guided setup",
+      "createPlan": "Build my prep plan",
+      "reopenWizard": "Use guided setup again",
+      "needCvTitle": "Upload a CV to start interview prep",
+      "needCvDesc": "We need your experience on file to generate STAR stories and gap analysis."
+    },
+    "today": {
+      "title": "Today's focus",
+      "interviewToday": "Interview day — stay calm and review your cheat sheet",
+      "daysLeft": "{{days}} days until interview",
+      "tasks": "Roadmap tasks for today",
+      "noTasks": "All tasks for today are done — great work!",
+      "practiceNext": "Practice these next",
+      "retry": "Retry",
+      "allPracticed": "You've practiced all visible questions.",
+      "weakCount": "{{count}} answers scored below 7 — retry them",
+      "startSession": "Start practice session"
     },
     "proUpgrade": {
       "title": "Upgrade to Pro",

@@ -6,7 +6,7 @@ import { Link2, Loader2 } from "lucide-react";
 import { interviewPrepApi } from "@/lib/interview-prep";
 import { isInterviewPrepEnabled } from "@/lib/feature-flags";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { saveInterviewPrepPrefill } from "@/components/interview-prep/CreatePrepForm";
+import { saveInterviewPrepPrefill } from "@/lib/interview-prep-onboarding";
 
 const URL_PATTERN = /^https?:\/\//i;
 

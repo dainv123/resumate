@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { CV } from "@/lib/cv";
 import { interviewPrepApi, QuestionPack } from "@/lib/interview-prep";
+import { consumeInterviewPrepPrefill } from "@/lib/interview-prep-onboarding";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
 import { GraduationCap } from "lucide-react";
 
 const CAPACITY_OPTIONS = [30, 60, 90] as const;
-export const PREFILL_KEY = "interviewPrepPrefill";
 
 export interface CreatePrepFormValues {
   jobDescription: string;
@@ -40,19 +40,10 @@ export default function CreatePrepForm({
   const [questionPack, setQuestionPack] = useState<QuestionPack>("standard");
 
   useEffect(() => {
-    const raw = sessionStorage.getItem(PREFILL_KEY);
-    if (!raw) return;
-    sessionStorage.removeItem(PREFILL_KEY);
-    try {
-      const prefill = JSON.parse(raw) as {
-        cvId?: string;
-        jobDescription?: string;
-      };
-      if (prefill.jobDescription) setJobDescription(prefill.jobDescription);
-      if (prefill.cvId) setCvId(prefill.cvId);
-    } catch {
-      /* ignore invalid prefill */
-    }
+    const prefill = consumeInterviewPrepPrefill();
+    if (!prefill) return;
+    if (prefill.jobDescription) setJobDescription(prefill.jobDescription);
+    if (prefill.cvId) setCvId(prefill.cvId);
   }, []);
 
   useEffect(() => {
@@ -227,12 +218,5 @@ export default function CreatePrepForm({
         {t("interviewPrep.create.submit")}
       </Button>
     </form>
-  );
-}
-
-export function saveInterviewPrepPrefill(cvId: string, jobDescription: string) {
-  sessionStorage.setItem(
-    PREFILL_KEY,
-    JSON.stringify({ cvId, jobDescription }),
   );
 }

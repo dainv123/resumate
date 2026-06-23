@@ -71,13 +71,20 @@ CV Data:
 `,
 
   evaluateMockAnswer: `
-Evaluate this interview answer against the rubric. Return ONLY JSON:
+Evaluate this interview answer for the target role. Return ONLY JSON:
 {
   "score": number 0-10,
   "matchedCriteria": ["..."],
   "missingCriteria": ["..."],
-  "feedback": "One paragraph actionable feedback"
+  "feedback": "2-3 sentences of actionable feedback",
+  "improvedAnswerOutline": ["bullet 1", "bullet 2", "bullet 3"],
+  "followUpQuestion": "One realistic follow-up the interviewer might ask"
 }
+
+Question category: {{category}}
+
+Job context (tailor feedback to this role):
+{{jobDescription}}
 
 Question: {{question}}
 

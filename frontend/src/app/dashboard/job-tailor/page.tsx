@@ -36,7 +36,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { isInterviewPrepEnabled } from "@/lib/feature-flags";
-import { saveInterviewPrepPrefill } from "@/components/interview-prep/CreatePrepForm";
+import { saveInterviewPrepPrefill } from "@/lib/interview-prep-onboarding";
 
 export default function JobTailorPage() {
   const { t, language } = useLanguage();

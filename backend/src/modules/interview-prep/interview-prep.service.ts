@@ -402,7 +402,7 @@ export class InterviewPrepService {
       throw new BadRequestException('Mock drill limit reached for your plan');
     }
 
-    await this.getPlanEntity(userId, planId);
+    const plan = await this.getPlanEntity(userId, planId);
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id: dto.assignmentId, planId },
@@ -423,6 +423,10 @@ export class InterviewPrepService {
       question.evaluationRubric,
       dto.answer,
       dto.language,
+      {
+        jobDescription: plan.jobDescription?.description ?? '',
+        category: question.category,
+      },
     );
 
     assignment.userAnswer = dto.answer;
@@ -433,6 +437,8 @@ export class InterviewPrepService {
         feedback: evaluation.feedback,
         matchedCriteria: evaluation.matchedCriteria,
         missingCriteria: evaluation.missingCriteria,
+        improvedAnswerOutline: evaluation.improvedAnswerOutline,
+        followUpQuestion: evaluation.followUpQuestion,
         attemptedAt: new Date().toISOString(),
       },
     ];
@@ -443,8 +449,6 @@ export class InterviewPrepService {
 
     await this.assignmentRepository.save(assignment);
     await this.usersService.incrementUsage(userId, 'mockDrills');
-
-    const plan = await this.getPlanEntity(userId, planId);
 
     if (evaluation.score < 7) {
       const roadmap = plan.roadmap as unknown as PrepDay[];
@@ -754,25 +758,24 @@ export class InterviewPrepService {
 
     const enrichedAssignments = visibleAssignments.map((a) => {
       const q = questionsById.get(a.questionId);
-      const hasMocked = (a.mockScores?.length ?? 0) > 0;
-      const showHints = isPro || hasMocked;
       return {
         id: a.id,
         planId: a.planId,
         questionId: a.questionId,
         question: q?.question,
+        category: q?.category,
+        prepTimeMinutes: q?.prepTimeMinutes,
         priority: a.priority,
         impactScore: a.impactScore,
         userAnswer: a.userAnswer,
         status: a.status,
         mockScores: a.mockScores,
-        hints:
-          showHints && q
-            ? {
-                sampleAnswerOutline: q.sampleAnswerOutline,
-                followUpQuestions: q.followUpQuestions,
-              }
-            : undefined,
+        hints: q
+          ? {
+              sampleAnswerOutline: q.sampleAnswerOutline,
+              followUpQuestions: q.followUpQuestions,
+            }
+          : undefined,
       };
     });
 

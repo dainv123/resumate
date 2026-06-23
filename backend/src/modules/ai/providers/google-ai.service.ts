@@ -714,11 +714,14 @@ export class GoogleAIService {
     rubric: { excellent: string[]; good: string[]; weak: string[] },
     answer: string,
     language?: string,
+    context?: { jobDescription?: string; category?: string },
   ): Promise<{
     score: number;
     matchedCriteria: string[];
     missingCriteria: string[];
     feedback: string;
+    improvedAnswerOutline: string[];
+    followUpQuestion: string;
   }> {
     const prompt = appendInterviewPrepLanguage(
       fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.evaluateMockAnswer, {
@@ -727,11 +730,29 @@ export class GoogleAIService {
         good: rubric.good.join('; '),
         weak: rubric.weak.join('; '),
         answer,
+        category: context?.category ?? 'general',
+        jobDescription: (context?.jobDescription ?? '').slice(0, 3000),
       }),
       language,
     );
 
-    return this.parseJsonObject(prompt);
+    const parsed = await this.parseJsonObject<{
+      score: number;
+      matchedCriteria: string[];
+      missingCriteria: string[];
+      feedback: string;
+      improvedAnswerOutline?: string[];
+      followUpQuestion?: string;
+    }>(prompt);
+
+    return {
+      score: parsed.score,
+      matchedCriteria: parsed.matchedCriteria ?? [],
+      missingCriteria: parsed.missingCriteria ?? [],
+      feedback: parsed.feedback ?? '',
+      improvedAnswerOutline: parsed.improvedAnswerOutline ?? [],
+      followUpQuestion: parsed.followUpQuestion ?? '',
+    };
   }
 
   async generateCompanyResearch(

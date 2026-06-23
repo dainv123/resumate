@@ -2,6 +2,7 @@
 
 import React from "react";
 import { PrepDay } from "@/lib/interview-prep";
+import { findTodayPrepDay } from "@/lib/interview-prep-utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,11 +19,15 @@ export default function PrepTimeline({
   updatingTaskId,
 }: PrepTimelineProps) {
   const { t } = useLanguage();
+  const todayDay = findTodayPrepDay(roadmap);
   const [openDays, setOpenDays] = React.useState<Record<number, boolean>>({});
 
   const toggleDay = (dayIndex: number) => {
     setOpenDays((prev) => ({ ...prev, [dayIndex]: !prev[dayIndex] }));
   };
+
+  const isToday = (day: PrepDay) =>
+    todayDay != null && day.dayIndex === todayDay.dayIndex;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -31,23 +36,37 @@ export default function PrepTimeline({
       </h3>
       <div className="space-y-3">
         {roadmap.map((day) => {
-          const isOpen = openDays[day.dayIndex] ?? day.dayIndex === 0;
+          const isOpen =
+            openDays[day.dayIndex] ??
+            (isToday(day) || day.dayIndex === 0);
           const doneCount = day.tasks.filter((t) => t.done).length;
+          const today = isToday(day);
           return (
             <div
               key={`${day.dayIndex}-${day.date}`}
-              className="border border-gray-200 rounded-lg overflow-hidden">
+              className={cn(
+                "border rounded-lg overflow-hidden",
+                today ? "border-blue ring-1 ring-blue/20" : "border-gray-200",
+              )}>
               <button
                 type="button"
                 onClick={() => toggleDay(day.dayIndex)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left">
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-3 text-left",
+                  today ? "bg-blue/5 hover:bg-blue/10" : "bg-gray-50 hover:bg-gray-100",
+                )}>
                 <div>
-                  <p className="text-sm font-semibold text-dark">
+                  <p className="text-sm font-semibold text-dark flex items-center gap-2">
                     {day.daysUntilInterview === 0
                       ? t("interviewPrep.timeline.interviewDay")
                       : t("interviewPrep.timeline.dayLabel")
                           .replace("{{days}}", String(day.daysUntilInterview))
                           .replace("{{date}}", day.date)}
+                    {today && (
+                      <span className="text-xs font-normal px-1.5 py-0.5 rounded bg-blue text-white">
+                        {t("interviewPrep.timeline.today")}
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-main mt-0.5">{day.theme}</p>
                 </div>

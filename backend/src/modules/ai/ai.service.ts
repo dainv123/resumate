@@ -380,6 +380,7 @@ ${cvData.contact?.name || 'Candidate'}`;
     rubric: { excellent: string[]; good: string[]; weak: string[] },
     answer: string,
     language?: string,
+    context?: { jobDescription?: string; category?: string },
   ) {
     try {
       return await this.googleAIService.evaluateMockAnswer(
@@ -387,6 +388,7 @@ ${cvData.contact?.name || 'Candidate'}`;
         rubric,
         answer,
         language,
+        context,
       );
     } catch (error) {
       this.logger.error('Error evaluating mock answer:', error);
@@ -394,7 +396,10 @@ ${cvData.contact?.name || 'Candidate'}`;
         score: 5,
         matchedCriteria: [],
         missingCriteria: ['Unable to evaluate — try again'],
-        feedback: 'Evaluation unavailable. Review your answer against the rubric.',
+        feedback:
+          'Evaluation unavailable. Review your answer against the rubric.',
+        improvedAnswerOutline: [],
+        followUpQuestion: '',
       };
     }
   }

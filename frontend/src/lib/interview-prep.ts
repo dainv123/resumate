@@ -109,6 +109,8 @@ export interface MockScoreEntry {
   feedback: string;
   matchedCriteria?: string[];
   missingCriteria?: string[];
+  improvedAnswerOutline?: string[];
+  followUpQuestion?: string;
   attemptedAt: string;
 }
 
@@ -130,6 +132,8 @@ export interface QuestionAssignment {
   planId: string;
   questionId: string;
   question?: string;
+  category?: string;
+  prepTimeMinutes?: number;
   priority: GapPriority;
   impactScore: number;
   userAnswer?: string;
@@ -203,6 +207,8 @@ export interface MockEvaluation {
   matchedCriteria: string[];
   missingCriteria: string[];
   feedback: string;
+  improvedAnswerOutline?: string[];
+  followUpQuestion?: string;
 }
 
 export const interviewPrepApi = {

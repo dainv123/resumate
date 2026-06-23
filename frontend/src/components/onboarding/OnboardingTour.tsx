@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { isInterviewPrepEnabled } from "@/lib/feature-flags";
 
 interface OnboardingTourProps {
   run: boolean;
@@ -24,30 +25,14 @@ interface TourStep {
   placement?: "top" | "bottom" | "left" | "right" | "center";
 }
 
-const steps: TourStep[] = [
-  {
-    titleKey: "onboarding.welcome.title",
-    contentKey: "onboarding.welcome.content",
-    placement: "center",
-  },
-  {
-    titleKey: "onboarding.uploadCV.title",
-    contentKey: "onboarding.uploadCV.content",
-    target: '[data-tour="upload-cv"]',
-    placement: "bottom",
-  },
-  {
-    titleKey: "onboarding.viewCV.title",
-    contentKey: "onboarding.viewCV.content",
-    target: '[data-tour="cv-preview"]',
-    placement: "top",
-  },
-  {
-    titleKey: "onboarding.tailorJob.title",
-    contentKey: "onboarding.tailorJob.content",
-    target: '[data-tour="tailor-button"]',
-    placement: "bottom",
-  },
+const interviewPrepStep: TourStep = {
+  titleKey: "onboarding.interviewPrep.title",
+  contentKey: "onboarding.interviewPrep.content",
+  target: '[data-tour="interview-prep"]',
+  placement: "bottom",
+};
+
+const tailSteps: TourStep[] = [
   {
     titleKey: "onboarding.export.title",
     contentKey: "onboarding.export.content",
@@ -72,6 +57,42 @@ const steps: TourStep[] = [
     placement: "center",
   },
 ];
+
+const headSteps: TourStep[] = [
+  {
+    titleKey: "onboarding.welcome.title",
+    contentKey: "onboarding.welcome.content",
+    placement: "center",
+  },
+  {
+    titleKey: "onboarding.uploadCV.title",
+    contentKey: "onboarding.uploadCV.content",
+    target: '[data-tour="upload-cv"]',
+    placement: "bottom",
+  },
+  {
+    titleKey: "onboarding.viewCV.title",
+    contentKey: "onboarding.viewCV.content",
+    target: '[data-tour="cv-preview"]',
+    placement: "top",
+  },
+  {
+    titleKey: "onboarding.tailorJob.title",
+    contentKey: "onboarding.tailorJob.content",
+    target: '[data-tour="tailor-button"]',
+    placement: "bottom",
+  },
+];
+
+function buildTourSteps(): TourStep[] {
+  const steps = [...headSteps];
+  if (isInterviewPrepEnabled()) {
+    steps.push(interviewPrepStep);
+  }
+  return [...steps, ...tailSteps];
+}
+
+const steps: TourStep[] = buildTourSteps();
 
 export default function OnboardingTour({
   run,

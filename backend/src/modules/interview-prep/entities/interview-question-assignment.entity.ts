@@ -28,6 +28,8 @@ export interface MockScoreEntry {
   feedback: string;
   matchedCriteria?: string[];
   missingCriteria?: string[];
+  improvedAnswerOutline?: string[];
+  followUpQuestion?: string;
   attemptedAt: string;
 }
 

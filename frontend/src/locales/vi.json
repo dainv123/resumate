@@ -709,6 +709,10 @@
       "title": "Tùy Chỉnh Cho Công Việc",
       "content": "Tùy chỉnh CV cho từng mô tả công việc cụ thể. AI sẽ highlight kinh nghiệm liên quan và tối ưu keywords."
     },
+    "interviewPrep": {
+      "title": "Luyện Phỏng Vấn",
+      "content": "Dán JD + chọn CV để nhận lộ trình từng ngày, STAR stories, ngân hàng câu hỏi và mock drill AI trước ngày phỏng vấn."
+    },
     "export": {
       "title": "Export CV",
       "content": "Export CV với nhiều định dạng: PDF (với templates), Word, hoặc ATS-friendly text."
@@ -723,7 +727,7 @@
     },
     "allSet": {
       "title": "Đã Sẵn Sàng! 🚀",
-      "content": "Sẵn sàng tạo CV tuyệt vời? Bắt đầu bằng cách upload CV đầu tiên hoặc khám phá các tính năng."
+      "content": "Upload CV, tailor theo JD, rồi tạo plan Interview Prep khi sắp có buổi phỏng vấn."
     },
     "step": "Bước {{current}}/{{total}}",
     "back": "Quay Lại",
@@ -1508,7 +1512,8 @@
       "title": "Lộ trình",
       "dayLabel": "D-{{days}} · {{date}}",
       "interviewDay": "Ngày phỏng vấn",
-      "minutes": "phút"
+      "minutes": "phút",
+      "today": "Hôm nay"
     },
     "starStories": {
       "title": "STAR stories",
@@ -1540,6 +1545,13 @@
       "resultScore": "Điểm: {{score}}/10",
       "matched": "Làm tốt",
       "missing": "Cần cải thiện",
+      "improvedOutline": "Cấu trúc câu trả lời tốt hơn",
+      "followUpPrompt": "Chuẩn bị câu follow-up này",
+      "timer": "Còn lại: {{time}}",
+      "suggestedTime": "Gợi ý {{minutes}} phút",
+      "switchStar": "Dùng STAR (Situation / Task / Action / Result)",
+      "switchFreeform": "Chuyển sang trả lời tự do",
+      "nextQuestion": "Câu tiếp theo",
       "done": "Xong"
     },
     "processMap": {
@@ -1557,7 +1569,63 @@
       }
     },
     "defense": {
-      "title": "Project defense"
+      "title": "Project defense",
+      "architecture": "Quyết định kiến trúc",
+      "hardest": "Vấn đề khó nhất",
+      "outcome": "Kết quả"
+    },
+    "hero": {
+      "preparingFor": "Chuẩn bị cho",
+      "interviewToday": "Hôm nay phỏng vấn",
+      "daysLeft": "D-{{days}}",
+      "roadmapDone": "Roadmap hoàn thành",
+      "questionsDone": "Câu đã luyện",
+      "statusReady": "Sẵn sàng",
+      "statusBuilding": "Đang build"
+    },
+    "sections": {
+      "overview": "Tổng quan",
+      "practice": "Luyện tập",
+      "prepare": "STAR & defense",
+      "roadmap": "Lộ trình"
+    },
+    "gaps": {
+      "title": "Skill gaps cần ôn",
+      "cvFit": "Điểm fit CV",
+      "matched": "Skills khớp",
+      "empty": "Không thấy gap lớn — tiếp tục luyện câu hỏi."
+    },
+    "onboarding": {
+      "title": "Thiết lập luyện phỏng vấn",
+      "step": "Bước {{current}}/{{total}}",
+      "intro": "Dán job description bạn sắp phỏng vấn — chúng tôi tạo lộ trình cá nhân từ CV và yêu cầu công việc.",
+      "bulletJd": "So khớp CV với job description",
+      "bulletRoadmap": "Lộ trình từng ngày + STAR stories & câu hỏi",
+      "bulletMock": "Mock drill chấm điểm AI trước ngày PV",
+      "pickCv": "Chọn CV để luyện phỏng vấn",
+      "noCv": "Hãy upload CV trước để gợi ý câu hỏi và STAR stories theo kinh nghiệm của bạn.",
+      "uploadCv": "Upload CV",
+      "pasteJd": "Dán full job description (hoặc lấy từ link ở bước trước).",
+      "schedule": "Ngày phỏng vấn của bạn? Lộ trình sẽ được lên ngược từ ngày này.",
+      "back": "Quay lại",
+      "next": "Tiếp",
+      "skip": "Bỏ qua hướng dẫn",
+      "createPlan": "Tạo lộ trình",
+      "reopenWizard": "Mở lại hướng dẫn thiết lập",
+      "needCvTitle": "Cần CV để bắt đầu luyện phỏng vấn",
+      "needCvDesc": "Cần dữ liệu kinh nghiệm để tạo STAR stories và phân tích gap."
+    },
+    "today": {
+      "title": "Hôm nay luyện gì",
+      "interviewToday": "Hôm nay phỏng vấn — bình tĩnh và ôn cheat sheet",
+      "daysLeft": "Còn {{days}} ngày đến phỏng vấn",
+      "tasks": "Việc cần làm hôm nay",
+      "noTasks": "Đã xong task hôm nay — tốt lắm!",
+      "practiceNext": "Luyện tiếp các câu này",
+      "retry": "Luyện lại",
+      "allPracticed": "Bạn đã luyện hết câu đang hiển thị.",
+      "weakCount": "{{count}} câu dưới 7 điểm — nên luyện lại",
+      "startSession": "Bắt đầu buổi luyện"
     },
     "proUpgrade": {
       "title": "Nâng cấp Pro",

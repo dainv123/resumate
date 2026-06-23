@@ -83,7 +83,7 @@ export const QUESTION_PACK_ROLE_TAG: Record<QuestionPack, string | null> = {
 export const INTERVIEW_PREP_LIMITS = {
   free: {
     interviewPrepPlans: 1,
-    mockDrills: 1,
+    mockDrills: 3,
     visibleQuestions: 5,
     cheatSheetExport: false,
   },
