@@ -14,7 +14,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import {
   CreateInterviewPrepDto,
+  ResolveJdDto,
   SubmitMockAnswerDto,
+  SubmitPostInterviewSurveyDto,
+  UpdateCompanyResearchSectionDto,
   UpdatePrepTaskDto,
   UpdateStarStoryDto,
 } from './dto/interview-prep.dto';
@@ -32,6 +35,14 @@ export class InterviewPrepController {
     @Body() dto: CreateInterviewPrepDto,
   ) {
     return this.interviewPrepService.createPlan(userId, dto);
+  }
+
+  @Post('resolve-jd')
+  async resolveJd(
+    @GetUser('id') userId: string,
+    @Body() dto: ResolveJdDto,
+  ) {
+    return this.interviewPrepService.resolveJobDescription(userId, dto);
   }
 
   @Get()
@@ -117,5 +128,33 @@ export class InterviewPrepController {
     @Body() dto: SubmitMockAnswerDto,
   ) {
     return this.interviewPrepService.submitMockAnswer(userId, id, dto);
+  }
+
+  @Patch(':id/company-research/:sectionId')
+  async updateCompanyResearchSection(
+    @GetUser('id') userId: string,
+    @Param('id') id: string,
+    @Param('sectionId') sectionId: string,
+    @Body() dto: UpdateCompanyResearchSectionDto,
+  ) {
+    return this.interviewPrepService.updateCompanyResearchSection(
+      userId,
+      id,
+      sectionId,
+      dto.checked,
+    );
+  }
+
+  @Post(':id/survey')
+  async submitSurvey(
+    @GetUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: SubmitPostInterviewSurveyDto,
+  ) {
+    return this.interviewPrepService.submitPostInterviewSurvey(
+      userId,
+      id,
+      dto,
+    );
   }
 }

@@ -17,6 +17,10 @@ import StarStoriesPanel from "@/components/interview-prep/StarStoriesPanel";
 import QuestionBankPanel from "@/components/interview-prep/QuestionBankPanel";
 import ProUpgradeModal from "@/components/interview-prep/ProUpgradeModal";
 import InterviewPrepGate from "@/components/interview-prep/InterviewPrepGate";
+import PrepJobContext from "@/components/interview-prep/PrepJobContext";
+import ProcessMapPanel from "@/components/interview-prep/ProcessMapPanel";
+import CompanyResearchPanel from "@/components/interview-prep/CompanyResearchPanel";
+import PostInterviewSurveyModal from "@/components/interview-prep/PostInterviewSurveyModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
 import { ArrowLeft, Download, Shield } from "lucide-react";
@@ -34,7 +38,7 @@ function buildQuestionLabels(roadmap: PrepDay[]): Record<string, string> {
 }
 
 export default function InterviewPrepDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const params = useParams();
   const planId = params.id as string;
   const queryClient = useQueryClient();
@@ -45,6 +49,11 @@ export default function InterviewPrepDetailPage() {
   const [showMockPaywall, setShowMockPaywall] = useState(false);
   const [showExportPaywall, setShowExportPaywall] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [togglingSectionId, setTogglingSectionId] = useState<string | null>(
+    null,
+  );
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [surveyDismissed, setSurveyDismissed] = useState(false);
 
   const { data: plan, isLoading } = useQuery({
     queryKey: ["interview-prep", planId],
@@ -100,14 +109,49 @@ export default function InterviewPrepDetailPage() {
     }: {
       assignmentId: string;
       answer: string;
-    }) => interviewPrepApi.submitMockAnswer(planId, assignmentId, answer),
-    onSuccess: invalidate,
+    }) =>
+      interviewPrepApi.submitMockAnswer(
+        planId,
+        assignmentId,
+        answer,
+        language,
+      ),
+    onSuccess: (data) => {
+      invalidate(data);
+      return data.mockEvaluation;
+    },
     onError: (error) => {
       if (isInterviewPrepPaywallError(error)) {
         setShowMockPaywall(true);
       }
     },
   });
+
+  const companyResearchMutation = useMutation({
+    mutationFn: ({
+      sectionId,
+      checked,
+    }: {
+      sectionId: string;
+      checked: boolean;
+    }) =>
+      interviewPrepApi.updateCompanyResearchSection(planId, sectionId, checked),
+    onMutate: ({ sectionId }) => setTogglingSectionId(sectionId),
+    onSettled: () => setTogglingSectionId(null),
+    onSuccess: invalidate,
+  });
+
+  const interviewPassed =
+    plan &&
+    !plan.postInterviewSurvey &&
+    !surveyDismissed &&
+    new Date(plan.interviewDate) < new Date(new Date().toDateString());
+
+  React.useEffect(() => {
+    if (interviewPassed) {
+      setShowSurvey(true);
+    }
+  }, [interviewPassed]);
 
   const handleExportCheatSheet = async () => {
     if (!plan?.limits?.cheatSheetExportEnabled) {
@@ -184,6 +228,23 @@ export default function InterviewPrepDetailPage() {
         </Button>
       </div>
 
+      <PrepJobContext
+        jobDescription={plan.jobDescription}
+        cvName={plan.cvName}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ProcessMapPanel processMap={plan.processMap} />
+        <CompanyResearchPanel
+          jobDescription={plan.jobDescription}
+          companyResearch={plan.companyResearch}
+          togglingSectionId={togglingSectionId}
+          onToggleSection={(sectionId, checked) =>
+            companyResearchMutation.mutate({ sectionId, checked })
+          }
+        />
+      </div>
+
       <ReadinessRing
         score={plan.readinessScore ?? 0}
         breakdown={plan.readinessBreakdown}
@@ -218,7 +279,11 @@ export default function InterviewPrepDetailPage() {
             limits={plan.limits}
             mockLoading={mockMutation.isPending}
             onMockSubmit={async (assignmentId, answer) => {
-              await mockMutation.mutateAsync({ assignmentId, answer });
+              const result = await mockMutation.mutateAsync({
+                assignmentId,
+                answer,
+              });
+              return result.mockEvaluation;
             }}
           />
           {plan.projectDefenses?.length > 0 && (
@@ -254,6 +319,15 @@ export default function InterviewPrepDetailPage() {
         isOpen={showExportPaywall}
         onClose={() => setShowExportPaywall(false)}
         reason="export"
+      />
+      <PostInterviewSurveyModal
+        planId={planId}
+        isOpen={showSurvey}
+        onClose={() => {
+          setShowSurvey(false);
+          setSurveyDismissed(true);
+        }}
+        onSubmitted={() => queryClient.invalidateQueries({ queryKey: ["interview-prep", planId] })}
       />
     </div>
     </InterviewPrepGate>

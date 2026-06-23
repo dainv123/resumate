@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Sidebar from "./Sidebar";
 import MobileHeader from "./MobileHeader";
+import JdPasteBar from "@/components/interview-prep/JdPasteBar";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -55,6 +56,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main Content */}
       <main className="lg:ml-64 min-h-screen pt-28 lg:pt-0">
+        <JdPasteBar />
         <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>

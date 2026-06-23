@@ -16,6 +16,7 @@ import { ReadinessService } from './services/readiness.service';
 import { SpacedRepetitionService } from './services/spaced-repetition.service';
 import { CheatSheetExportService } from './services/cheat-sheet-export.service';
 import { InterviewPrepAnalyticsService } from './services/interview-prep-analytics.service';
+import { JdUrlResolverService } from './services/jd-url-resolver.service';
 import { PrepPlanStatus } from './constants/interview-prep.constants';
 import { UserPlan } from '../users/entities/user.entity';
 
@@ -114,7 +115,7 @@ describe('InterviewPrepService', () => {
         },
         {
           provide: getRepositoryToken(QuestionBank),
-          useValue: { findOne: jest.fn() },
+          useValue: { findOne: jest.fn(), find: jest.fn().mockResolvedValue([]) },
         },
         {
           provide: getRepositoryToken(JobDescription),
@@ -144,6 +145,18 @@ describe('InterviewPrepService', () => {
             ]),
             generateProjectDefenseSheets: jest.fn().mockResolvedValue([]),
             evaluateMockAnswer: jest.fn(),
+            generateCompanyResearch: jest.fn().mockResolvedValue({
+              sections: [
+                { id: 'mission', title: 'Mission', summary: 'Summary' },
+              ],
+            }),
+          },
+        },
+        {
+          provide: JdUrlResolverService,
+          useValue: {
+            isUrl: jest.fn().mockReturnValue(false),
+            resolve: jest.fn(),
           },
         },
         {

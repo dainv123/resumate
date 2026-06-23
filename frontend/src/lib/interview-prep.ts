@@ -1,5 +1,37 @@
 import api from './api';
 
+export type QuestionPack = 'standard' | 'faang';
+
+export interface ResolvedJobDescription {
+  description: string;
+  title: string;
+  company?: string;
+  location?: string;
+  sourceUrl: string;
+  sourceType: string;
+}
+
+export interface CompanyResearchSection {
+  id: string;
+  title: string;
+  summary: string;
+  checked?: boolean;
+}
+
+export interface CompanyResearchBrief {
+  sections: CompanyResearchSection[];
+  generatedAt: string;
+}
+
+export type PostInterviewOutcome = 'passed' | 'failed' | 'waiting' | 'declined';
+
+export interface PostInterviewSurvey {
+  outcome: PostInterviewOutcome;
+  difficulty: number;
+  notes?: string;
+  submittedAt: string;
+}
+
 export type GapPriority = 'P1' | 'P2' | 'P3';
 
 export interface PrepTask {
@@ -67,19 +99,53 @@ export interface ProjectDefenseSheet {
   followUpQuestions: string[];
 }
 
+export interface QuestionHints {
+  sampleAnswerOutline: string[];
+  followUpQuestions: string[];
+}
+
+export interface MockScoreEntry {
+  score: number;
+  feedback: string;
+  matchedCriteria?: string[];
+  missingCriteria?: string[];
+  attemptedAt: string;
+}
+
+export interface ProcessMapRound {
+  type: string;
+  label: string;
+  durationMinutes: number;
+  weight: number;
+  focusAreas: string[];
+}
+
+export interface ProcessMap {
+  rounds: ProcessMapRound[];
+  totalEstimatedDays?: number;
+}
+
 export interface QuestionAssignment {
   id: string;
   planId: string;
   questionId: string;
+  question?: string;
   priority: GapPriority;
   impactScore: number;
   userAnswer?: string;
   status: string;
-  mockScores?: Array<{
-    score: number;
-    feedback: string;
-    attemptedAt: string;
-  }>;
+  mockScores?: MockScoreEntry[];
+  hints?: QuestionHints;
+}
+
+export interface PrepJobDescriptionSummary {
+  id: string;
+  title: string;
+  company?: string;
+  preview: string;
+  description?: string;
+  sourceUrl?: string;
+  sourceType?: string;
 }
 
 export interface InterviewPrepPlanSummary {
@@ -93,13 +159,18 @@ export interface InterviewPrepPlanSummary {
   status: string;
   createdAt: string;
   updatedAt: string;
+  jobDescription?: PrepJobDescriptionSummary;
+  cvName?: string;
 }
 
 export interface InterviewPrepPlanDetail extends InterviewPrepPlanSummary {
-  processMap: Record<string, unknown>;
+  processMap: ProcessMap;
   roadmap: PrepDay[];
   starStories: PlanStarStory[];
   projectDefenses: ProjectDefenseSheet[];
+  companyResearch?: CompanyResearchBrief;
+  postInterviewSurvey?: PostInterviewSurvey;
+  questionPack?: QuestionPack;
   readinessBreakdown?: ReadinessBreakdown;
   isReady: boolean;
   nextActions: string[];
@@ -123,6 +194,8 @@ export interface CreateInterviewPrepPayload {
   cvId: string;
   interviewDate: string;
   dailyCapacityMinutes?: number;
+  language?: string;
+  questionPack?: QuestionPack;
 }
 
 export interface MockEvaluation {
@@ -133,6 +206,11 @@ export interface MockEvaluation {
 }
 
 export const interviewPrepApi = {
+  resolveJd: async (url: string): Promise<ResolvedJobDescription> => {
+    const { data } = await api.post('/interview-prep/resolve-jd', { url });
+    return data;
+  },
+
   listPlans: async (): Promise<InterviewPrepPlanSummary[]> => {
     const { data } = await api.get('/interview-prep');
     return data;
@@ -189,11 +267,37 @@ export const interviewPrepApi = {
     planId: string,
     assignmentId: string,
     answer: string,
+    language?: string,
   ): Promise<InterviewPrepPlanDetail & { mockEvaluation?: MockEvaluation }> => {
     const { data } = await api.post(`/interview-prep/${planId}/mock`, {
       assignmentId,
       answer,
+      language,
     });
+    return data;
+  },
+
+  updateCompanyResearchSection: async (
+    planId: string,
+    sectionId: string,
+    checked: boolean,
+  ): Promise<InterviewPrepPlanDetail> => {
+    const { data } = await api.patch(
+      `/interview-prep/${planId}/company-research/${sectionId}`,
+      { checked },
+    );
+    return data;
+  },
+
+  submitSurvey: async (
+    planId: string,
+    payload: {
+      outcome: PostInterviewOutcome;
+      difficulty: number;
+      notes?: string;
+    },
+  ): Promise<InterviewPrepPlanDetail> => {
+    const { data } = await api.post(`/interview-prep/${planId}/survey`, payload);
     return data;
   },
 

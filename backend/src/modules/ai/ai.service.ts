@@ -329,29 +329,45 @@ ${cvData.contact?.name || 'Candidate'}`;
     }
   }
 
-  async inferInterviewProcess(jobDescription: string) {
+  async inferInterviewProcess(jobDescription: string, language?: string) {
     try {
-      return await this.googleAIService.inferInterviewProcess(jobDescription);
+      return await this.googleAIService.inferInterviewProcess(
+        jobDescription,
+        language,
+      );
     } catch (error) {
       this.logger.error('Error inferring interview process:', error);
       return null;
     }
   }
 
-  async generateStarStories(cvData: CVData, jobDescription: string) {
+  async generateStarStories(
+    cvData: CVData,
+    jobDescription: string,
+    language?: string,
+  ) {
     try {
-      return await this.googleAIService.generateStarStories(cvData, jobDescription);
+      return await this.googleAIService.generateStarStories(
+        cvData,
+        jobDescription,
+        language,
+      );
     } catch (error) {
       this.logger.error('Error generating STAR stories:', error);
       return [];
     }
   }
 
-  async generateProjectDefenseSheets(cvData: CVData, jobDescription: string) {
+  async generateProjectDefenseSheets(
+    cvData: CVData,
+    jobDescription: string,
+    language?: string,
+  ) {
     try {
       return await this.googleAIService.generateProjectDefenseSheets(
         cvData,
         jobDescription,
+        language,
       );
     } catch (error) {
       this.logger.error('Error generating project defense sheets:', error);
@@ -363,12 +379,14 @@ ${cvData.contact?.name || 'Candidate'}`;
     question: string,
     rubric: { excellent: string[]; good: string[]; weak: string[] },
     answer: string,
+    language?: string,
   ) {
     try {
       return await this.googleAIService.evaluateMockAnswer(
         question,
         rubric,
         answer,
+        language,
       );
     } catch (error) {
       this.logger.error('Error evaluating mock answer:', error);
@@ -378,6 +396,25 @@ ${cvData.contact?.name || 'Candidate'}`;
         missingCriteria: ['Unable to evaluate — try again'],
         feedback: 'Evaluation unavailable. Review your answer against the rubric.',
       };
+    }
+  }
+
+  async generateCompanyResearch(
+    jobDescription: string,
+    title: string,
+    company: string,
+    language?: string,
+  ) {
+    try {
+      return await this.googleAIService.generateCompanyResearch(
+        jobDescription,
+        title,
+        company,
+        language,
+      );
+    } catch (error) {
+      this.logger.error('Error generating company research:', error);
+      return { sections: [] };
     }
   }
 

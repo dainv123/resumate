@@ -89,6 +89,45 @@ Weak: {{weak}}
 Candidate answer:
 {{answer}}
 `,
+
+  generateCompanyResearch: `
+Generate a concise company research brief for interview prep. Use public knowledge and infer from the job description when needed. Return ONLY JSON:
+{
+  "sections": [
+    {
+      "id": "mission",
+      "title": "Mission & product",
+      "summary": "2-4 sentences"
+    },
+    {
+      "id": "product",
+      "title": "Product & tech",
+      "summary": "2-4 sentences"
+    },
+    {
+      "id": "news",
+      "title": "Recent news",
+      "summary": "2-4 sentences"
+    },
+    {
+      "id": "culture",
+      "title": "Culture & interview style",
+      "summary": "2-4 sentences"
+    },
+    {
+      "id": "questions",
+      "title": "Questions to ask",
+      "summary": "3 bullet-style questions as one string"
+    }
+  ]
+}
+
+Company: {{company}}
+Role title: {{title}}
+
+Job Description:
+{{jobDescription}}
+`,
 } as const;
 
 export function fillInterviewPrepPrompt(
@@ -99,4 +138,14 @@ export function fillInterviewPrepPrompt(
     (text, [key, value]) => text.replace(`{{${key}}}`, value),
     template,
   );
+}
+
+export function appendInterviewPrepLanguage(
+  prompt: string,
+  language?: string,
+): string {
+  if (language === 'vi') {
+    return `${prompt}\n\nWrite all user-facing string values in Vietnamese. Keep JSON keys in English.`;
+  }
+  return prompt;
 }

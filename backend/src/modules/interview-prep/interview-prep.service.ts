@@ -15,12 +15,16 @@ import {
   INTERVIEW_PREP_LIMITS,
   InterviewRoundType,
   JobDescriptionSourceType,
+  JD_DESCRIPTION_PREVIEW_LENGTH,
   PrepPlanStatus,
+  QuestionPack,
   READINESS_GATE_THRESHOLD,
 } from './constants/interview-prep.constants';
 import {
   CreateInterviewPrepDto,
+  ResolveJdDto,
   SubmitMockAnswerDto,
+  SubmitPostInterviewSurveyDto,
   UpdateStarStoryDto,
 } from './dto/interview-prep.dto';
 import {
@@ -28,10 +32,12 @@ import {
   PrepDay,
   ProcessMap,
 } from './domain/pass-framework';
-import { PlanStarStory } from './domain/interview-prep-ai.types';
+import { PlanStarStory, PrepJobDescriptionSummary } from './domain/interview-prep-ai.types';
+import { ResolvedJobDescription } from './domain/jd-resolver.types';
 import { InterviewPrepPlan } from './entities/interview-prep-plan.entity';
 import { InterviewQuestionAssignment } from './entities/interview-question-assignment.entity';
 import { QuestionBank } from './entities/question-bank.entity';
+import { Cv } from '../cv/entities/cv.entity';
 import { DailySchedulerService } from './services/daily-scheduler.service';
 import { ImpactScoringService } from './services/impact-scoring.service';
 import { QuestionSelectorService } from './services/question-selector.service';
@@ -40,6 +46,7 @@ import { SpacedRepetitionService } from './services/spaced-repetition.service';
 import { CheatSheetExportService } from './services/cheat-sheet-export.service';
 import { InterviewPrepAnalyticsService } from './services/interview-prep-analytics.service';
 import { InterviewPrepAnalyticsEvent } from './constants/interview-prep-analytics.constants';
+import { JdUrlResolverService } from './services/jd-url-resolver.service';
 
 @Injectable()
 export class InterviewPrepService {
@@ -62,7 +69,22 @@ export class InterviewPrepService {
     private spacedRepetitionService: SpacedRepetitionService,
     private cheatSheetExportService: CheatSheetExportService,
     private analyticsService: InterviewPrepAnalyticsService,
+    private jdUrlResolverService: JdUrlResolverService,
   ) {}
+
+  async resolveJobDescription(
+    userId: string,
+    dto: ResolveJdDto,
+  ): Promise<ResolvedJobDescription> {
+    const resolved = await this.jdUrlResolverService.resolve(dto.url);
+    this.analyticsService.track(
+      userId,
+      InterviewPrepAnalyticsEvent.JD_RESOLVED,
+      undefined,
+      { sourceType: resolved.sourceType },
+    );
+    return resolved;
+  }
 
   async createPlan(
     userId: string,
@@ -84,33 +106,65 @@ export class InterviewPrepService {
     }
 
     const cv = await this.cvService.getCvById(dto.cvId, userId);
+
+    const questionPack = dto.questionPack ?? QuestionPack.STANDARD;
+    if (questionPack === QuestionPack.FAANG) {
+      const packUser = await this.usersService.findById(userId);
+      if (packUser.plan !== UserPlan.PRO) {
+        throw new BadRequestException('FAANG question pack requires Pro plan');
+      }
+    }
+
+    let jdText = dto.jobDescription.trim();
+    let jdSource: Partial<ResolvedJobDescription> | undefined;
+
+    if (this.jdUrlResolverService.isUrl(jdText)) {
+      const resolved = await this.jdUrlResolverService.resolve(jdText);
+      jdText = resolved.description;
+      jdSource = resolved;
+    }
+
     const jobDesc = await this.findOrCreateJobDescription(
       userId,
-      dto.jobDescription,
+      jdText,
+      jdSource,
     );
+
+    const lang = dto.language ?? 'en';
+    const companyName = jobDesc.company ?? jdSource?.company ?? '';
 
     const [
       compatibility,
       processMapRaw,
       starStories,
       projectDefenses,
+      companyResearchRaw,
     ] = await Promise.all([
-      this.aiService.analyzeCompatibility(cv.parsedData, dto.jobDescription),
-      this.aiService.inferInterviewProcess(dto.jobDescription),
-      this.aiService.generateStarStories(cv.parsedData, dto.jobDescription),
-      this.aiService.generateProjectDefenseSheets(
-        cv.parsedData,
-        dto.jobDescription,
+      this.aiService.analyzeCompatibility(cv.parsedData, jdText, lang),
+      this.aiService.inferInterviewProcess(jdText, lang),
+      this.aiService.generateStarStories(cv.parsedData, jdText, lang),
+      this.aiService.generateProjectDefenseSheets(cv.parsedData, jdText, lang),
+      this.aiService.generateCompanyResearch(
+        jdText,
+        jobDesc.title,
+        companyName,
+        lang,
       ),
     ]);
 
+    const companyResearch = {
+      sections: (companyResearchRaw.sections ?? []).map((section) => ({
+        ...section,
+        checked: false,
+      })),
+      generatedAt: new Date().toISOString(),
+    };
+
     const processMap = this.normalizeProcessMap(processMapRaw);
 
-    const jdSkills = this.impactScoringService.extractSkillsFromText(
-      dto.jobDescription,
-    );
+    const jdSkills = this.impactScoringService.extractSkillsFromText(jdText);
     const jdKeywords = this.impactScoringService.countJdMentions(
-      dto.jobDescription,
+      jdText,
       jdSkills.length > 0
         ? jdSkills
         : [...compatibility.matchedSkills, ...compatibility.missingSkills],
@@ -122,8 +176,9 @@ export class InterviewPrepService {
     });
 
     const questions = await this.questionSelectorService.selectFromBank(
-      dto.jobDescription,
+      jdText,
       gaps,
+      { pack: questionPack },
     );
 
     const roadmap = this.dailySchedulerService.buildRoadmap({
@@ -153,6 +208,8 @@ export class InterviewPrepService {
       roadmap: roadmap as unknown as Record<string, unknown>[],
       starStories: normalizedStories,
       projectDefenses,
+      companyResearch,
+      questionPack,
       readinessScore: readiness.score,
       readinessBreakdown: readiness.breakdown,
       status: PrepPlanStatus.ACTIVE,
@@ -188,14 +245,20 @@ export class InterviewPrepService {
       compatibility,
       readiness,
       user.plan,
+      userId,
+      jobDesc,
+      cv,
     );
   }
 
-  async listPlans(userId: string): Promise<InterviewPrepPlan[]> {
-    return this.planRepository.find({
+  async listPlans(userId: string): Promise<Record<string, unknown>[]> {
+    const plans = await this.planRepository.find({
       where: { userId },
+      relations: ['jobDescription', 'cv'],
       order: { createdAt: 'DESC' },
     });
+
+    return plans.map((plan) => this.formatPlanSummary(plan));
   }
 
   async getPlan(
@@ -230,6 +293,9 @@ export class InterviewPrepService {
       null,
       readiness,
       user.plan,
+      userId,
+      plan.jobDescription,
+      plan.cv,
     );
   }
 
@@ -356,6 +422,7 @@ export class InterviewPrepService {
       question.question,
       question.evaluationRubric,
       dto.answer,
+      dto.language,
     );
 
     assignment.userAnswer = dto.answer;
@@ -364,6 +431,8 @@ export class InterviewPrepService {
       {
         score: evaluation.score,
         feedback: evaluation.feedback,
+        matchedCriteria: evaluation.matchedCriteria,
+        missingCriteria: evaluation.missingCriteria,
         attemptedAt: new Date().toISOString(),
       },
     ];
@@ -402,6 +471,59 @@ export class InterviewPrepService {
     return this.saveAndFormat(plan, userId, {
       mockEvaluation: evaluation,
     });
+  }
+
+  async updateCompanyResearchSection(
+    userId: string,
+    planId: string,
+    sectionId: string,
+    checked: boolean,
+  ): Promise<Record<string, unknown>> {
+    const plan = await this.getPlanEntity(userId, planId);
+    const brief = plan.companyResearch as {
+      sections?: Array<{ id: string; checked?: boolean }>;
+      generatedAt?: string;
+    } | null;
+
+    if (!brief?.sections?.length) {
+      throw new NotFoundException('Company research not found on this plan');
+    }
+
+    const section = brief.sections.find((s) => s.id === sectionId);
+    if (!section) {
+      throw new NotFoundException('Company research section not found');
+    }
+
+    section.checked = checked;
+    plan.companyResearch = brief as Record<string, unknown>;
+    await this.planRepository.save(plan);
+
+    return this.saveAndFormat(plan, userId);
+  }
+
+  async submitPostInterviewSurvey(
+    userId: string,
+    planId: string,
+    dto: SubmitPostInterviewSurveyDto,
+  ): Promise<Record<string, unknown>> {
+    const plan = await this.getPlanEntity(userId, planId);
+
+    plan.postInterviewSurvey = {
+      outcome: dto.outcome,
+      difficulty: dto.difficulty,
+      notes: dto.notes,
+      submittedAt: new Date().toISOString(),
+    };
+    await this.planRepository.save(plan);
+
+    this.analyticsService.track(
+      userId,
+      InterviewPrepAnalyticsEvent.SURVEY_SUBMITTED,
+      planId,
+      { outcome: dto.outcome, difficulty: dto.difficulty },
+    );
+
+    return this.saveAndFormat(plan, userId);
   }
 
   async exportCheatSheetPdf(userId: string, planId: string): Promise<Buffer> {
@@ -471,14 +593,17 @@ export class InterviewPrepService {
 
     const user = await this.usersService.findById(userId);
     return {
-      ...this.formatPlanResponse(
+      ...(await this.formatPlanResponse(
         plan,
         assignments,
         [],
         null,
         readiness,
         user.plan,
-      ),
+        userId,
+        plan.jobDescription,
+        plan.cv,
+      )),
       ...extra,
     };
   }
@@ -533,6 +658,7 @@ export class InterviewPrepService {
   ): Promise<InterviewPrepPlan> {
     const plan = await this.planRepository.findOne({
       where: { id: planId, userId },
+      relations: ['jobDescription', 'cv'],
     });
     if (!plan) {
       throw new NotFoundException('Interview prep plan not found');
@@ -543,21 +669,28 @@ export class InterviewPrepService {
   private async findOrCreateJobDescription(
     userId: string,
     description: string,
+    source?: Partial<ResolvedJobDescription>,
   ): Promise<JobDescription> {
-    const existing = await this.jobDescriptionRepository.findOne({
-      where: { userId, description },
-    });
+    const existing = source?.sourceUrl
+      ? await this.jobDescriptionRepository.findOne({
+          where: { userId, sourceUrl: source.sourceUrl },
+        })
+      : await this.jobDescriptionRepository.findOne({
+          where: { userId, description },
+        });
     if (existing) return existing;
 
-    const title = this.extractTitleFromJd(description);
-    const company = this.extractCompanyFromJd(description);
+    const title = source?.title ?? this.extractTitleFromJd(description);
+    const company = source?.company ?? this.extractCompanyFromJd(description);
 
     const jobDescription = this.jobDescriptionRepository.create({
       userId,
       title,
       description,
       company,
-      sourceType: JobDescriptionSourceType.MANUAL,
+      location: source?.location,
+      sourceUrl: source?.sourceUrl,
+      sourceType: source?.sourceType ?? JobDescriptionSourceType.MANUAL,
       requirements: {
         skills: this.impactScoringService.extractSkillsFromText(description),
         education: [],
@@ -588,7 +721,7 @@ export class InterviewPrepService {
     return (breakdown.compatibility / 100) * 10;
   }
 
-  private formatPlanResponse(
+  private async formatPlanResponse(
     plan: InterviewPrepPlan,
     assignments: InterviewQuestionAssignment[],
     gaps: ReturnType<ImpactScoringService['scoreGaps']>,
@@ -597,25 +730,72 @@ export class InterviewPrepService {
     > | null,
     readiness: ReturnType<ReadinessService['calculate']>,
     userPlan: UserPlan,
-  ): Record<string, unknown> {
+    userId: string,
+    jobDescription?: JobDescription | null,
+    cv?: Cv | null,
+  ): Promise<Record<string, unknown>> {
     const isPro = userPlan === UserPlan.PRO;
+    const canMock = await this.usersService.checkUserLimit(userId, 'mockDrills');
     const visibleLimit = INTERVIEW_PREP_LIMITS.free.visibleQuestions;
     const totalQuestions = assignments.length;
     const visibleAssignments = isPro
       ? assignments
       : assignments.slice(0, visibleLimit);
+    const jd = jobDescription ?? plan.jobDescription;
+    const linkedCv = cv ?? plan.cv;
+
+    const questionIds = visibleAssignments.map((a) => a.questionId);
+    const questions = questionIds.length
+      ? await this.questionBankRepository.find({
+          where: { id: In(questionIds) },
+        })
+      : [];
+    const questionsById = new Map(questions.map((q) => [q.id, q]));
+
+    const enrichedAssignments = visibleAssignments.map((a) => {
+      const q = questionsById.get(a.questionId);
+      const hasMocked = (a.mockScores?.length ?? 0) > 0;
+      const showHints = isPro || hasMocked;
+      return {
+        id: a.id,
+        planId: a.planId,
+        questionId: a.questionId,
+        question: q?.question,
+        priority: a.priority,
+        impactScore: a.impactScore,
+        userAnswer: a.userAnswer,
+        status: a.status,
+        mockScores: a.mockScores,
+        hints:
+          showHints && q
+            ? {
+                sampleAnswerOutline: q.sampleAnswerOutline,
+                followUpQuestions: q.followUpQuestions,
+              }
+            : undefined,
+      };
+    });
 
     return {
       id: plan.id,
       userId: plan.userId,
       jobDescriptionId: plan.jobDescriptionId,
       cvId: plan.cvId,
+      jobDescription: jd
+        ? this.mapJobDescriptionSummary(jd, true)
+        : undefined,
+      cvName: linkedCv
+        ? linkedCv.parsedData?.contact?.name ?? linkedCv.originalFileName
+        : undefined,
       interviewDate: plan.interviewDate,
       dailyCapacityMinutes: plan.dailyCapacityMinutes,
       processMap: plan.processMap,
       roadmap: plan.roadmap,
       starStories: plan.starStories ?? [],
       projectDefenses: plan.projectDefenses ?? [],
+      companyResearch: plan.companyResearch,
+      postInterviewSurvey: plan.postInterviewSurvey,
+      questionPack: plan.questionPack,
       readinessScore: plan.readinessScore,
       readinessBreakdown: plan.readinessBreakdown,
       isReady: readiness.isReady,
@@ -633,15 +813,56 @@ export class InterviewPrepService {
         lockedQuestionCount: isPro
           ? 0
           : Math.max(0, totalQuestions - visibleLimit),
-        mockDrillsEnabled: isPro,
+        mockDrillsEnabled: canMock,
         cheatSheetExportEnabled: isPro,
       },
       status: plan.status,
       gaps,
       compatibility,
-      questionAssignments: visibleAssignments,
+      questionAssignments: enrichedAssignments,
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
+    };
+  }
+
+  private formatPlanSummary(plan: InterviewPrepPlan): Record<string, unknown> {
+    return {
+      id: plan.id,
+      userId: plan.userId,
+      jobDescriptionId: plan.jobDescriptionId,
+      cvId: plan.cvId,
+      interviewDate: plan.interviewDate,
+      dailyCapacityMinutes: plan.dailyCapacityMinutes,
+      readinessScore: plan.readinessScore,
+      status: plan.status,
+      createdAt: plan.createdAt,
+      updatedAt: plan.updatedAt,
+      jobDescription: plan.jobDescription
+        ? this.mapJobDescriptionSummary(plan.jobDescription)
+        : undefined,
+      cvName: plan.cv
+        ? plan.cv.parsedData?.contact?.name ?? plan.cv.originalFileName
+        : undefined,
+    };
+  }
+
+  private mapJobDescriptionSummary(
+    jd: JobDescription,
+    includeFullDescription = false,
+  ): PrepJobDescriptionSummary {
+    const preview =
+      jd.description.length <= JD_DESCRIPTION_PREVIEW_LENGTH
+        ? jd.description
+        : `${jd.description.slice(0, JD_DESCRIPTION_PREVIEW_LENGTH).trim()}…`;
+
+    return {
+      id: jd.id,
+      title: jd.title,
+      company: jd.company ?? undefined,
+      preview,
+      sourceUrl: jd.sourceUrl ?? undefined,
+      sourceType: jd.sourceType ?? undefined,
+      ...(includeFullDescription ? { description: jd.description } : {}),
     };
   }
 }

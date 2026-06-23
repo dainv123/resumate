@@ -196,16 +196,45 @@ InterviewPrepController
 
 ---
 
-## Question Bank (MVP seed)
+## Question Bank (400 curated)
 
 | Batch | Count | Status |
 |-------|-------|--------|
-| Behavioral universal | 15 | [x] |
-| Frontend technical | 15 | [x] |
-| Backend technical | 10 | [x] |
-| System design senior | 5 | [x] |
-| Vietnam HR screen | 5 | [x] |
-| **Total** | **50** | [x] |
+| MVP seed (`question-bank.seed.json`) | 50 | [x] |
+| Phase 2 pack (`question-bank-p2.seed.json`) | 40 | [x] |
+| Expansion (`question-bank-expansion.seed.json`) | 310 | [x] |
+| **Total** | **400** | [x] |
+
+### Expansion breakdown (310)
+
+| Category | Count |
+|----------|-------|
+| Behavioral | 52 |
+| Frontend technical | 44 |
+| Backend technical | 44 |
+| System design | 44 |
+| FAANG pack | 24 |
+| Product manager | 24 |
+| Data science/analyst | 24 |
+| DevOps/SRE | 14 |
+| Mobile | 12 |
+| Security | 10 |
+| Vietnam HR screen | 10 |
+| QA | 8 |
+
+Regenerate expansion file: `npm run seed:question-bank` (backend). Seeder upserts `p2` + `expansion` on startup.
+
+AI-enrich rubric/outline/follow-ups for template entries:
+
+```bash
+cd backend
+npm run enrich:question-bank -- --dry-run          # preview count
+npm run enrich:question-bank -- --limit 10         # test batch
+npm run enrich:question-bank                         # all template entries (~350)
+npm run enrich:question-bank -- --file question-bank-expansion.seed.json
+```
+
+Requires `GOOGLE_AI_API_KEY`. Sets `source: ai-enriched` on updated rows. MVP seed (50) is skipped unless rubric still uses template markers.
 
 ---
 
@@ -285,11 +314,13 @@ NEXT_PUBLIC_INTERVIEW_PREP_ENABLED=true
 
 ## Phase 2 backlog (post-v1)
 
-- [ ] JD URL resolver (Greenhouse, Lever, ITviec)
-- [ ] Company research (search grounding)
-- [ ] Global JD paste bar (navbar)
-- [ ] KB expansion 400 câu + PM/Data roles
-- [ ] FAANG pack upsell
+- [x] JD URL resolver (Greenhouse, Lever, ITviec + generic HTML)
+- [x] Company research AI brief + checklist UI
+- [x] Global JD paste bar (dashboard navbar)
+- [x] KB expansion +40 (PM/Data/FAANG) — target 400 in follow-up
+- [x] FAANG pack upsell (Pro-gated question pack)
+- [x] Post-interview survey → analytics event
 - [ ] Voice mock
-- [ ] Post-interview survey → improve weights
 - [ ] Stripe payment
+- [x] KB full 400 câu + role packs (PM/Data/FAANG/DevOps/Mobile/Security/QA)
+- [ ] Survey-driven readiness weight tuning

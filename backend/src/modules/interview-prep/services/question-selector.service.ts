@@ -5,6 +5,8 @@ import {
   GapPriority,
   QuestionFrequency,
   QuestionLevel,
+  QuestionPack,
+  QUESTION_PACK_ROLE_TAG,
 } from '../constants/interview-prep.constants';
 import { assignGapPriority, GapItem, RankedQuestion } from '../domain/pass-framework';
 import { QuestionBank } from '../entities/question-bank.entity';
@@ -29,14 +31,24 @@ export class QuestionSelectorService {
   async selectFromBank(
     jobDescription: string,
     gaps: GapItem[],
-    limit = DEFAULT_QUESTION_LIMIT,
+    options?: { limit?: number; pack?: QuestionPack },
   ): Promise<RankedQuestion[]> {
+    const limit = options?.limit ?? DEFAULT_QUESTION_LIMIT;
     const level = this.inferLevelFromJd(jobDescription);
     const jdSkills = this.extractMentionedSkills(jobDescription);
     const gapSkills = gaps.map((g) => g.skill.toLowerCase());
     const targetSkills = new Set([...jdSkills, ...gapSkills]);
 
-    const allQuestions = await this.questionBankRepository.find();
+    const packTag = options?.pack
+      ? QUESTION_PACK_ROLE_TAG[options.pack]
+      : null;
+
+    let allQuestions = await this.questionBankRepository.find();
+    if (packTag) {
+      allQuestions = allQuestions.filter((q) =>
+        q.roleTags.includes(packTag),
+      );
+    }
     const eligibleLevels = this.eligibleLevels(level);
 
     const scored = allQuestions
@@ -119,6 +131,18 @@ export class QuestionSelectorService {
       'communication',
       'graphql',
       'next.js',
+      'product manager',
+      'product management',
+      'data scientist',
+      'data analyst',
+      'machine learning',
+      'mobile',
+      'ios',
+      'android',
+      'devops',
+      'security',
+      'qa',
+      'testing',
     ];
     return skills.filter((s) => lower.includes(s));
   }

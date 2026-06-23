@@ -13,11 +13,12 @@ import {
 import CreatePrepForm from "@/components/interview-prep/CreatePrepForm";
 import ProUpgradeModal from "@/components/interview-prep/ProUpgradeModal";
 import InterviewPrepGate from "@/components/interview-prep/InterviewPrepGate";
+import PrepJobContext from "@/components/interview-prep/PrepJobContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { GraduationCap, Calendar, ChevronRight } from "lucide-react";
 
 export default function InterviewPrepListPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showPlanPaywall, setShowPlanPaywall] = useState(false);
@@ -60,7 +61,9 @@ export default function InterviewPrepListPage() {
       <CreatePrepForm
         cvs={cvs.filter((c) => !c.isTailored)}
         loading={createMutation.isPending}
-        onSubmit={(values) => createMutation.mutate(values)}
+        onSubmit={(values) =>
+          createMutation.mutate({ ...values, language })
+        }
       />
 
       <div>
@@ -77,20 +80,29 @@ export default function InterviewPrepListPage() {
               <li key={plan.id}>
                 <Link
                   href={`/dashboard/interview-prep/${plan.id}`}
-                  className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-blue hover:shadow-sm transition-all">
-                  <div>
-                    <p className="text-sm font-medium text-dark flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-main" />
-                      {new Date(plan.interviewDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-xs text-main mt-1">
-                      {t("interviewPrep.list.readiness").replace(
-                        "{{score}}",
-                        String(plan.readinessScore ?? 0),
+                  className="block p-4 bg-white border border-gray-200 rounded-xl hover:border-blue hover:shadow-sm transition-all">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      {plan.jobDescription && (
+                        <PrepJobContext
+                          jobDescription={plan.jobDescription}
+                          cvName={plan.cvName}
+                          compact
+                        />
                       )}
-                    </p>
+                      <p className="text-sm font-medium text-dark flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-main flex-shrink-0" />
+                        {new Date(plan.interviewDate).toLocaleDateString()}
+                      </p>
+                      <p className="text-xs text-main">
+                        {t("interviewPrep.list.readiness").replace(
+                          "{{score}}",
+                          String(plan.readinessScore ?? 0),
+                        )}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-main flex-shrink-0" />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-main" />
                 </Link>
               </li>
             ))}

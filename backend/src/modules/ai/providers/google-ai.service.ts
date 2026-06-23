@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getAIPrompt, Language } from '../translations/ai-prompts';
 import {
   INTERVIEW_PREP_AI_PROMPTS,
+  appendInterviewPrepLanguage,
   fillInterviewPrepPrompt,
 } from '../prompts/interview-prep.prompts';
 
@@ -631,7 +632,10 @@ export class GoogleAIService {
       return [];
     }
   }
-  async inferInterviewProcess(jobDescription: string): Promise<{
+  async inferInterviewProcess(
+    jobDescription: string,
+    language?: string,
+  ): Promise<{
     rounds: Array<{
       type: string;
       label: string;
@@ -641,9 +645,12 @@ export class GoogleAIService {
     }>;
     totalEstimatedDays: number;
   }> {
-    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.inferInterviewProcess, {
-      jobDescription,
-    });
+    const prompt = appendInterviewPrepLanguage(
+      fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.inferInterviewProcess, {
+        jobDescription,
+      }),
+      language,
+    );
 
     return this.parseJsonObject(prompt);
   }
@@ -651,6 +658,7 @@ export class GoogleAIService {
   async generateStarStories(
     cvData: unknown,
     jobDescription: string,
+    language?: string,
   ): Promise<
     Array<{
       id: string;
@@ -664,10 +672,13 @@ export class GoogleAIService {
       ready: boolean;
     }>
   > {
-    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateStarStories, {
-      jobDescription,
-      cvData: JSON.stringify(cvData, null, 2),
-    });
+    const prompt = appendInterviewPrepLanguage(
+      fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateStarStories, {
+        jobDescription,
+        cvData: JSON.stringify(cvData, null, 2),
+      }),
+      language,
+    );
 
     return this.parseJsonArray(prompt);
   }
@@ -675,6 +686,7 @@ export class GoogleAIService {
   async generateProjectDefenseSheets(
     cvData: unknown,
     jobDescription: string,
+    language?: string,
   ): Promise<
     Array<{
       projectName: string;
@@ -686,10 +698,13 @@ export class GoogleAIService {
       followUpQuestions: string[];
     }>
   > {
-    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateProjectDefense, {
-      jobDescription,
-      cvData: JSON.stringify(cvData, null, 2),
-    });
+    const prompt = appendInterviewPrepLanguage(
+      fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateProjectDefense, {
+        jobDescription,
+        cvData: JSON.stringify(cvData, null, 2),
+      }),
+      language,
+    );
 
     return this.parseJsonArray(prompt);
   }
@@ -698,19 +713,43 @@ export class GoogleAIService {
     question: string,
     rubric: { excellent: string[]; good: string[]; weak: string[] },
     answer: string,
+    language?: string,
   ): Promise<{
     score: number;
     matchedCriteria: string[];
     missingCriteria: string[];
     feedback: string;
   }> {
-    const prompt = fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.evaluateMockAnswer, {
-      question,
-      excellent: rubric.excellent.join('; '),
-      good: rubric.good.join('; '),
-      weak: rubric.weak.join('; '),
-      answer,
-    });
+    const prompt = appendInterviewPrepLanguage(
+      fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.evaluateMockAnswer, {
+        question,
+        excellent: rubric.excellent.join('; '),
+        good: rubric.good.join('; '),
+        weak: rubric.weak.join('; '),
+        answer,
+      }),
+      language,
+    );
+
+    return this.parseJsonObject(prompt);
+  }
+
+  async generateCompanyResearch(
+    jobDescription: string,
+    title: string,
+    company: string,
+    language?: string,
+  ): Promise<{
+    sections: Array<{ id: string; title: string; summary: string }>;
+  }> {
+    const prompt = appendInterviewPrepLanguage(
+      fillInterviewPrepPrompt(INTERVIEW_PREP_AI_PROMPTS.generateCompanyResearch, {
+        jobDescription,
+        title,
+        company: company || 'Unknown company',
+      }),
+      language,
+    );
 
     return this.parseJsonObject(prompt);
   }

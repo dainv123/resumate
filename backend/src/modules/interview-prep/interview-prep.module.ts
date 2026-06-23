@@ -20,6 +20,7 @@ import { CheatSheetExportService } from './services/cheat-sheet-export.service';
 import { InterviewPrepAnalyticsService } from './services/interview-prep-analytics.service';
 import { InterviewPrepReminderTask } from './tasks/interview-prep-reminder.task';
 import { InterviewPrepEnabledGuard } from './guards/interview-prep-enabled.guard';
+import { JdUrlResolverService } from './services/jd-url-resolver.service';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { InterviewPrepEnabledGuard } from './guards/interview-prep-enabled.guard
     InterviewPrepAnalyticsService,
     InterviewPrepReminderTask,
     InterviewPrepEnabledGuard,
+    JdUrlResolverService,
   ],
   exports: [
     TypeOrmModule,

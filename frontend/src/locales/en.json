@@ -1440,6 +1440,12 @@
       "empty": "No prep plans yet. Create one above.",
       "readiness": "Readiness: {{score}}/100"
     },
+    "jd": {
+      "label": "Preparing for",
+      "cv": "CV: {{name}}",
+      "viewFull": "View full job description",
+      "showLess": "Show less"
+    },
     "detail": {
       "loading": "Loading prep plan...",
       "back": "Back to plans",
@@ -1486,13 +1492,33 @@
       "practiceLocked": "Pro only",
       "score": "Last score: {{score}}/10",
       "visibleCount": "Showing {{visible}} of {{total}} questions",
-      "locked": "{{count}} more questions — upgrade to Pro"
+      "locked": "{{count}} more questions — upgrade to Pro",
+      "hintsTitle": "Answer outline",
+      "followUps": "Follow-up questions"
     },
     "mock": {
       "title": "Mock drill",
       "placeholder": "Type your answer here...",
       "submit": "Submit for feedback",
-      "lastScore": "Previous score: {{score}}/10"
+      "lastScore": "Previous score: {{score}}/10",
+      "resultScore": "Score: {{score}}/10",
+      "matched": "What you covered well",
+      "missing": "What to improve",
+      "done": "Done"
+    },
+    "processMap": {
+      "title": "Interview process map"
+    },
+    "companyResearch": {
+      "title": "Company research",
+      "target": "Focus: {{company}}",
+      "items": {
+        "mission": "Mission, product, and target users",
+        "product": "Recent product launches or tech stack",
+        "news": "Latest news and funding updates",
+        "culture": "Culture, values, and interview style",
+        "questions": "Prepare 3 questions to ask the interviewer"
+      }
     },
     "defense": {
       "title": "Project defense"
@@ -1501,7 +1527,7 @@
       "title": "Upgrade to Pro",
       "plans": "Free plan includes 1 interview prep plan per month. Upgrade for unlimited plans.",
       "questions": "Unlock the full curated question bank tailored to your job description.",
-      "mockDrills": "Mock drills with AI rubric scoring are a Pro feature.",
+      "mockDrills": "Free includes 1 mock drill. Upgrade for unlimited AI-scored mock drills.",
       "export": "Cheat sheet PDF export is available on Pro.",
       "benefitPlans": "Unlimited interview prep plans",
       "benefitQuestions": "Full question bank access",
@@ -1509,6 +1535,39 @@
       "benefitExport": "Download interview cheat sheet PDF",
       "cta": "View plans",
       "dismiss": "Maybe later"
+    },
+    "p2": {
+      "jdBar": {
+        "placeholder": "Paste job link or description to start interview prep…",
+        "cta": "Prep",
+        "error": "Could not load that job link. Try pasting the description instead."
+      },
+      "form": {
+        "jdText": "Paste text",
+        "jdUrl": "Paste link",
+        "jdUrlPlaceholder": "https://boards.greenhouse.io/…",
+        "resolveUrl": "Fetch JD",
+        "questionPack": "Question pack",
+        "packStandard": "Standard (role-matched)",
+        "packFaang": "FAANG pack (Pro)",
+        "packFaangHint": "FAANG pack uses curated big-tech interview questions. Requires Pro."
+      },
+      "survey": {
+        "title": "How did the interview go?",
+        "subtitle": "Your feedback helps us improve prep recommendations.",
+        "outcome": "Outcome",
+        "difficulty": "Interview difficulty",
+        "notes": "Notes (optional)",
+        "notesPlaceholder": "What surprised you? What would you prep differently?",
+        "submit": "Submit feedback",
+        "skip": "Skip",
+        "outcomes": {
+          "passed": "Passed / got offer",
+          "failed": "Did not pass",
+          "waiting": "Still waiting",
+          "declined": "Withdrew / declined"
+        }
+      }
     },
     "errors": {
       "disabled": "Interview Prep is not available yet.",

@@ -70,10 +70,20 @@ export enum JobDescriptionSourceType {
   OTHER = 'other',
 }
 
+export enum QuestionPack {
+  STANDARD = 'standard',
+  FAANG = 'faang',
+}
+
+export const QUESTION_PACK_ROLE_TAG: Record<QuestionPack, string | null> = {
+  [QuestionPack.STANDARD]: null,
+  [QuestionPack.FAANG]: 'faang',
+};
+
 export const INTERVIEW_PREP_LIMITS = {
   free: {
     interviewPrepPlans: 1,
-    mockDrills: 0,
+    mockDrills: 1,
     visibleQuestions: 5,
     cheatSheetExport: false,
   },
@@ -94,6 +104,8 @@ export const READINESS_WEIGHTS = {
 } as const;
 
 export const READINESS_GATE_THRESHOLD = 75;
+
+export const JD_DESCRIPTION_PREVIEW_LENGTH = 160;
 
 export const DEFAULT_DAILY_CAPACITY_MINUTES = 60;
 

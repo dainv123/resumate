@@ -26,3 +26,34 @@ export interface MockEvaluationResult {
   missingCriteria: string[];
   feedback: string;
 }
+
+export interface PrepJobDescriptionSummary {
+  id: string;
+  title: string;
+  company?: string;
+  preview: string;
+  description?: string;
+  sourceUrl?: string;
+  sourceType?: string;
+}
+
+export interface CompanyResearchSection {
+  id: string;
+  title: string;
+  summary: string;
+  checked?: boolean;
+}
+
+export interface CompanyResearchBrief {
+  sections: CompanyResearchSection[];
+  generatedAt: string;
+}
+
+export type PostInterviewOutcome = 'passed' | 'failed' | 'waiting' | 'declined';
+
+export interface PostInterviewSurvey {
+  outcome: PostInterviewOutcome;
+  difficulty: number;
+  notes?: string;
+  submittedAt: string;
+}

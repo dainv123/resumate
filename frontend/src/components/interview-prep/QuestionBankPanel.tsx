@@ -2,7 +2,11 @@
 
 import React, { useState } from "react";
 import { Lock } from "lucide-react";
-import { PrepLimits, QuestionAssignment } from "@/lib/interview-prep";
+import {
+  MockEvaluation,
+  PrepLimits,
+  QuestionAssignment,
+} from "@/lib/interview-prep";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -13,8 +17,100 @@ import ProUpgradeModal, {
 interface QuestionBankPanelProps {
   assignments: Array<QuestionAssignment & { label?: string }>;
   limits?: PrepLimits;
-  onMockSubmit: (assignmentId: string, answer: string) => Promise<void>;
+  onMockSubmit: (
+    assignmentId: string,
+    answer: string,
+  ) => Promise<MockEvaluation | undefined>;
   mockLoading?: boolean;
+}
+
+function MockFeedbackBody({
+  evaluation,
+  lastScore,
+}: {
+  evaluation?: MockEvaluation;
+  lastScore?: QuestionAssignment["mockScores"] extends (infer E)[] | undefined
+    ? E
+    : never;
+}) {
+  const { t } = useLanguage();
+  const data = evaluation ?? lastScore;
+  if (!data) return null;
+
+  const score = evaluation?.score ?? (lastScore as { score: number }).score;
+  const feedback = evaluation?.feedback ?? lastScore?.feedback;
+  const matched =
+    evaluation?.matchedCriteria ?? lastScore?.matchedCriteria ?? [];
+  const missing =
+    evaluation?.missingCriteria ?? lastScore?.missingCriteria ?? [];
+
+  return (
+    <div className="mb-4 space-y-3 rounded-lg bg-gray-50 border border-gray-100 p-3">
+      <p className="text-sm font-semibold text-dark">
+        {t("interviewPrep.mock.resultScore").replace("{{score}}", String(score))}
+      </p>
+      {feedback && (
+        <p className="text-sm text-main whitespace-pre-wrap">{feedback}</p>
+      )}
+      {matched.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-green-700 mb-1">
+            {t("interviewPrep.mock.matched")}
+          </p>
+          <ul className="text-xs text-main list-disc pl-4 space-y-0.5">
+            {matched.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {missing.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-amber-700 mb-1">
+            {t("interviewPrep.mock.missing")}
+          </p>
+          <ul className="text-xs text-main list-disc pl-4 space-y-0.5">
+            {missing.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuestionHintsBlock({
+  hints,
+}: {
+  hints: NonNullable<QuestionAssignment["hints"]>;
+}) {
+  const { t } = useLanguage();
+
+  return (
+    <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-main space-y-2">
+      <p className="font-medium text-dark">{t("interviewPrep.questions.hintsTitle")}</p>
+      {hints.sampleAnswerOutline.length > 0 && (
+        <ul className="list-disc pl-4 space-y-0.5">
+          {hints.sampleAnswerOutline.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+      {hints.followUpQuestions.length > 0 && (
+        <div>
+          <p className="font-medium text-dark mt-1">
+            {t("interviewPrep.questions.followUps")}
+          </p>
+          <ul className="list-disc pl-4 space-y-0.5">
+            {hints.followUpQuestions.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function QuestionBankPanel({
@@ -26,6 +122,10 @@ export default function QuestionBankPanel({
   const { t } = useLanguage();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
+  const [lastEvaluation, setLastEvaluation] = useState<MockEvaluation | null>(
+    null,
+  );
+  const [showResult, setShowResult] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<ProUpgradeReason | null>(
     null,
   );
@@ -44,13 +144,24 @@ export default function QuestionBankPanel({
     }
     setActiveId(id);
     setAnswer("");
+    setLastEvaluation(null);
+    setShowResult(false);
   };
 
   const handleSubmit = async () => {
     if (!activeId || !answer.trim()) return;
-    await onMockSubmit(activeId, answer);
+    const evaluation = await onMockSubmit(activeId, answer);
+    if (evaluation) {
+      setLastEvaluation(evaluation);
+      setShowResult(true);
+    }
+  };
+
+  const closeMockModal = () => {
     setActiveId(null);
     setAnswer("");
+    setLastEvaluation(null);
+    setShowResult(false);
   };
 
   return (
@@ -70,28 +181,32 @@ export default function QuestionBankPanel({
             return (
               <li
                 key={a.id}
-                className="flex items-center justify-between gap-2 p-3 border border-gray-100 rounded-lg">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-dark truncate">
-                    {a.label ?? a.questionId}
-                  </p>
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-xs text-main">{a.priority}</span>
-                    {score != null && (
-                      <span className="text-xs text-blue">
-                        {t("interviewPrep.questions.score").replace(
-                          "{{score}}",
-                          String(score),
-                        )}
-                      </span>
-                    )}
+                className="p-3 border border-gray-100 rounded-lg">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-dark">{a.label ?? a.question ?? a.questionId}</p>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-xs text-main">{a.priority}</span>
+                      {score != null && (
+                        <span className="text-xs text-blue">
+                          {t("interviewPrep.questions.score").replace(
+                            "{{score}}",
+                            String(score),
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openMock(a.id)}>
+                    {mockEnabled
+                      ? t("interviewPrep.questions.practice")
+                      : t("interviewPrep.questions.practiceLocked")}
+                  </Button>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => openMock(a.id)}>
-                  {mockEnabled
-                    ? t("interviewPrep.questions.practice")
-                    : t("interviewPrep.questions.practiceLocked")}
-                </Button>
+                {a.hints && <QuestionHintsBlock hints={a.hints} />}
               </li>
             );
           })}
@@ -112,29 +227,39 @@ export default function QuestionBankPanel({
 
       <Modal
         isOpen={!!activeId}
-        onClose={() => setActiveId(null)}
+        onClose={closeMockModal}
         title={t("interviewPrep.mock.title")}>
         <p className="text-sm text-main mb-2">
-          {active?.label ?? active?.questionId}
+          {active?.label ?? active?.question ?? active?.questionId}
         </p>
-        {lastScore != null && (
-          <p className="text-xs text-green-700 mb-3">
-            {t("interviewPrep.mock.lastScore").replace(
-              "{{score}}",
-              String(lastScore),
+
+        {showResult && lastEvaluation ? (
+          <>
+            <MockFeedbackBody evaluation={lastEvaluation} />
+            <Button onClick={closeMockModal}>{t("interviewPrep.mock.done")}</Button>
+          </>
+        ) : (
+          <>
+            {lastScore != null && (
+              <p className="text-xs text-green-700 mb-3">
+                {t("interviewPrep.mock.lastScore").replace(
+                  "{{score}}",
+                  String(lastScore.score),
+                )}
+              </p>
             )}
-          </p>
+            <textarea
+              rows={6}
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
+              placeholder={t("interviewPrep.mock.placeholder")}
+            />
+            <Button loading={mockLoading} onClick={handleSubmit}>
+              {t("interviewPrep.mock.submit")}
+            </Button>
+          </>
         )}
-        <textarea
-          rows={6}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
-          placeholder={t("interviewPrep.mock.placeholder")}
-        />
-        <Button loading={mockLoading} onClick={handleSubmit}>
-          {t("interviewPrep.mock.submit")}
-        </Button>
       </Modal>
 
       <ProUpgradeModal

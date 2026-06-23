@@ -64,6 +64,15 @@ export class InterviewPrepPlan {
   @Column('jsonb', { nullable: true })
   projectDefenses: ProjectDefenseSheet[];
 
+  @Column('jsonb', { nullable: true })
+  companyResearch: Record<string, unknown>;
+
+  @Column('jsonb', { nullable: true })
+  postInterviewSurvey: Record<string, unknown>;
+
+  @Column({ type: 'varchar', nullable: true })
+  questionPack: string;
+
   @Column({ type: 'varchar', default: PrepPlanStatus.DRAFT })
   status: PrepPlanStatus;
 

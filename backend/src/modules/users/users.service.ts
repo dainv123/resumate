@@ -230,7 +230,7 @@ export class UsersService {
         jobTailors: 5,
         exports: 10,
         interviewPrepPlans: 1,
-        mockDrills: 0,
+        mockDrills: 1,
       },
       pro: {
         cvUploads: -1,

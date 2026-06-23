@@ -1476,6 +1476,12 @@
       "empty": "Chưa có plan. Tạo plan ở trên.",
       "readiness": "Readiness: {{score}}/100"
     },
+    "jd": {
+      "label": "Đang prep cho",
+      "cv": "CV: {{name}}",
+      "viewFull": "Xem full job description",
+      "showLess": "Thu gọn"
+    },
     "detail": {
       "loading": "Đang tải plan...",
       "back": "Quay lại danh sách",
@@ -1522,13 +1528,33 @@
       "practiceLocked": "Chỉ Pro",
       "score": "Điểm: {{score}}/10",
       "visibleCount": "Hiển thị {{visible}}/{{total}} câu",
-      "locked": "Thêm {{count}} câu — nâng cấp Pro"
+      "locked": "Thêm {{count}} câu — nâng cấp Pro",
+      "hintsTitle": "Gợi ý cấu trúc trả lời",
+      "followUps": "Câu hỏi follow-up"
     },
     "mock": {
       "title": "Mock drill",
       "placeholder": "Nhập câu trả lời...",
       "submit": "Gửi chấm điểm",
-      "lastScore": "Lần trước: {{score}}/10"
+      "lastScore": "Lần trước: {{score}}/10",
+      "resultScore": "Điểm: {{score}}/10",
+      "matched": "Làm tốt",
+      "missing": "Cần cải thiện",
+      "done": "Xong"
+    },
+    "processMap": {
+      "title": "Lộ trình vòng phỏng vấn"
+    },
+    "companyResearch": {
+      "title": "Nghiên cứu công ty",
+      "target": "Tập trung: {{company}}",
+      "items": {
+        "mission": "Sứ mệnh, sản phẩm và người dùng mục tiêu",
+        "product": "Sản phẩm mới hoặc tech stack",
+        "news": "Tin tức và funding gần đây",
+        "culture": "Văn hóa, giá trị và phong cách phỏng vấn",
+        "questions": "Chuẩn bị 3 câu hỏi để hỏi interviewer"
+      }
     },
     "defense": {
       "title": "Project defense"
@@ -1537,7 +1563,7 @@
       "title": "Nâng cấp Pro",
       "plans": "Gói Free: 1 plan/tháng. Nâng cấp để tạo không giới hạn.",
       "questions": "Mở khóa toàn bộ ngân hàng câu hỏi theo JD của bạn.",
-      "mockDrills": "Mock drill chấm điểm AI chỉ có trên Pro.",
+      "mockDrills": "Free có 1 mock drill. Nâng cấp Pro để mock không giới hạn.",
       "export": "Export cheat sheet PDF chỉ có trên Pro.",
       "benefitPlans": "Tạo plan không giới hạn",
       "benefitQuestions": "Truy cập full question bank",
@@ -1545,6 +1571,39 @@
       "benefitExport": "Tải cheat sheet PDF",
       "cta": "Xem gói",
       "dismiss": "Để sau"
+    },
+    "p2": {
+      "jdBar": {
+        "placeholder": "Dán link hoặc JD để bắt đầu luyện phỏng vấn…",
+        "cta": "Prep",
+        "error": "Không tải được link. Thử dán mô tả công việc trực tiếp."
+      },
+      "form": {
+        "jdText": "Dán text",
+        "jdUrl": "Dán link",
+        "jdUrlPlaceholder": "https://boards.greenhouse.io/…",
+        "resolveUrl": "Lấy JD",
+        "questionPack": "Gói câu hỏi",
+        "packStandard": "Standard (theo role)",
+        "packFaang": "FAANG pack (Pro)",
+        "packFaangHint": "FAANG pack: câu hỏi big-tech curated. Cần gói Pro."
+      },
+      "survey": {
+        "title": "Phỏng vấn thế nào?",
+        "subtitle": "Feedback giúp cải thiện gợi ý prep.",
+        "outcome": "Kết quả",
+        "difficulty": "Độ khó phỏng vấn",
+        "notes": "Ghi chú (tuỳ chọn)",
+        "notesPlaceholder": "Điều gì bất ngờ? Bạn sẽ prep khác thế nào?",
+        "submit": "Gửi feedback",
+        "skip": "Bỏ qua",
+        "outcomes": {
+          "passed": "Đậu / có offer",
+          "failed": "Không đậu",
+          "waiting": "Đang chờ kết quả",
+          "declined": "Từ chối / rút lui"
+        }
+      }
     },
     "errors": {
       "disabled": "Interview Prep chưa được bật.",

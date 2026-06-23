@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsDateString,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -8,7 +9,11 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { DEFAULT_DAILY_CAPACITY_MINUTES } from '../constants/interview-prep.constants';
+import type { Language } from '../../ai/translations/ai-prompts';
+import {
+  DEFAULT_DAILY_CAPACITY_MINUTES,
+  QuestionPack,
+} from '../constants/interview-prep.constants';
 
 export class CreateInterviewPrepDto {
   @IsString()
@@ -27,8 +32,36 @@ export class CreateInterviewPrepDto {
   dailyCapacityMinutes?: number = DEFAULT_DAILY_CAPACITY_MINUTES;
 
   @IsOptional()
+  @IsIn(['en', 'vi'])
+  language?: Language;
+
+  @IsOptional()
+  @IsIn([QuestionPack.STANDARD, QuestionPack.FAANG])
+  questionPack?: QuestionPack;
+}
+
+export class ResolveJdDto {
   @IsString()
-  language?: string;
+  url: string;
+}
+
+export class UpdateCompanyResearchSectionDto {
+  @IsBoolean()
+  checked: boolean;
+}
+
+export class SubmitPostInterviewSurveyDto {
+  @IsIn(['passed', 'failed', 'waiting', 'declined'])
+  outcome: 'passed' | 'failed' | 'waiting' | 'declined';
+
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  difficulty: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 export class UpdatePrepTaskDto {
@@ -64,4 +97,8 @@ export class SubmitMockAnswerDto {
 
   @IsString()
   answer: string;
+
+  @IsOptional()
+  @IsIn(['en', 'vi'])
+  language?: Language;
 }

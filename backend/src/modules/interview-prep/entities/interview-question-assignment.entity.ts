@@ -26,6 +26,8 @@ export interface StarStoryContent {
 export interface MockScoreEntry {
   score: number;
   feedback: string;
+  matchedCriteria?: string[];
+  missingCriteria?: string[];
   attemptedAt: string;
 }
 
