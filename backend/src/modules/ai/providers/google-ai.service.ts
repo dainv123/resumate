@@ -342,6 +342,16 @@ export class GoogleAIService {
     return AiCvParseProvider.Google;
   }
 
+  private getInterviewPrepProviderPref(): AiCvParseProviderValue {
+    const raw =
+      this.configService.get<string>('AI_INTERVIEW_PREP_PROVIDER') ??
+      this.configService.get<string>('AI_CV_PARSE_PROVIDER');
+    if (raw === AiCvParseProvider.OpenRouter) {
+      return AiCvParseProvider.OpenRouter;
+    }
+    return AiCvParseProvider.Google;
+  }
+
   private isGeminiQuotaError(error: unknown): boolean {
     const detail = cvParseFormatError(error);
     return (
@@ -386,11 +396,17 @@ export class GoogleAIService {
     }
   }
 
-  private async requestOpenRouter(prompt: string): Promise<string> {
-    const responseText = await this.openRouterService.generateText(prompt);
+  private async requestOpenRouter(
+    prompt: string,
+    logTag = 'CV_PARSE',
+  ): Promise<string> {
+    const responseText = await this.openRouterService.generateText(
+      prompt,
+      logTag,
+    );
 
     this.logger.log(
-      `[CV_PARSE] openrouter_response responseChars=${responseText.length} preview=${JSON.stringify(cvParseTextPreview(responseText))}`,
+      `[${logTag}] openrouter_response responseChars=${responseText.length} preview=${JSON.stringify(cvParseTextPreview(responseText))}`,
     );
 
     if (cvParseShouldLogFull()) {
@@ -402,6 +418,59 @@ export class GoogleAIService {
     }
 
     return responseText;
+  }
+
+  private async requestGeminiText(
+    prompt: string,
+    logTag: string,
+  ): Promise<string> {
+    this.logger.log(
+      `[${logTag}] gemini_call promptChars=${prompt.length}`,
+    );
+
+    const result = await this.model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    this.logger.log(
+      `[${logTag}] gemini_response responseChars=${responseText.length}`,
+    );
+
+    return responseText;
+  }
+
+  private async requestLlmText(
+    prompt: string,
+    logTag: string,
+    providerPref = this.getInterviewPrepProviderPref(),
+  ): Promise<string> {
+    this.logger.log(
+      `[${logTag}] llm_provider_pref=${providerPref} openrouter_configured=${this.openRouterService.isConfigured()}`,
+    );
+
+    if (providerPref === AiCvParseProvider.OpenRouter) {
+      if (!this.openRouterService.isConfigured()) {
+        throw new Error(
+          'Interview prep LLM provider is openrouter but OPENROUTER_API_KEY is missing',
+        );
+      }
+      return this.requestOpenRouter(prompt, logTag);
+    }
+
+    try {
+      return await this.requestGeminiText(prompt, logTag);
+    } catch (error) {
+      if (
+        this.isGeminiQuotaError(error) &&
+        this.openRouterService.isConfigured()
+      ) {
+        this.logger.warn(`[${logTag}] gemini_quota → openrouter_fallback`);
+        return this.requestOpenRouter(prompt, logTag);
+      }
+      this.logger.error(
+        `[${logTag}] gemini_failed error=${cvParseFormatError(error)}`,
+      );
+      throw error;
+    }
   }
 
   private parseCvJsonResponse(
@@ -767,7 +836,7 @@ export class GoogleAIService {
       language,
     );
 
-    return this.parseJsonObject(prompt);
+    return this.parseJsonObject(prompt, 'INTERVIEW_PREP_PROCESS');
   }
 
   async generateStarStories(
@@ -795,7 +864,7 @@ export class GoogleAIService {
       language,
     );
 
-    return this.parseJsonArray(prompt);
+    return this.parseJsonArray(prompt, 'INTERVIEW_PREP_STAR');
   }
 
   async generateProjectDefenseSheets(
@@ -821,7 +890,7 @@ export class GoogleAIService {
       language,
     );
 
-    return this.parseJsonArray(prompt);
+    return this.parseJsonArray(prompt, 'INTERVIEW_PREP_DEFENSE');
   }
 
   async evaluateMockAnswer(
@@ -858,7 +927,7 @@ export class GoogleAIService {
       feedback: string;
       improvedAnswerOutline?: string[];
       followUpQuestion?: string;
-    }>(prompt);
+    }>(prompt, 'INTERVIEW_PREP_MOCK');
 
     return {
       score: parsed.score,
@@ -887,12 +956,14 @@ export class GoogleAIService {
       language,
     );
 
-    return this.parseJsonObject(prompt);
+    return this.parseJsonObject(prompt, 'INTERVIEW_PREP_RESEARCH');
   }
 
-  private async parseJsonObject<T>(prompt: string): Promise<T> {
-    const result = await this.model.generateContent(prompt);
-    const responseText = result.response.text();
+  private async parseJsonObject<T>(
+    prompt: string,
+    logTag = 'INTERVIEW_PREP',
+  ): Promise<T> {
+    const responseText = await this.requestLlmText(prompt, logTag);
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON object in AI response');
@@ -900,9 +971,11 @@ export class GoogleAIService {
     return JSON.parse(jsonMatch[0]) as T;
   }
 
-  private async parseJsonArray<T>(prompt: string): Promise<T[]> {
-    const result = await this.model.generateContent(prompt);
-    const responseText = result.response.text();
+  private async parseJsonArray<T>(
+    prompt: string,
+    logTag = 'INTERVIEW_PREP',
+  ): Promise<T[]> {
+    const responseText = await this.requestLlmText(prompt, logTag);
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error('No valid JSON array in AI response');

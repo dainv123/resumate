@@ -5,7 +5,7 @@ import {
   DEFAULT_OPENROUTER_CV_MODEL,
   OPENROUTER_API_BASE_URL,
   OPENROUTER_APP_TITLE,
-  OPENROUTER_CV_PARSE_MAX_TOKENS,
+  OPENROUTER_MAX_TOKENS,
 } from '../constants/ai-provider.constants';
 
 @Injectable()
@@ -48,16 +48,16 @@ export class OpenRouterService {
     return this.client;
   }
 
-  async generateText(prompt: string): Promise<string> {
+  async generateText(prompt: string, logTag = 'LLM'): Promise<string> {
     const model = this.getModel();
     this.logger.log(
-      `[CV_PARSE] openrouter_call model=${model} promptChars=${prompt.length}`,
+      `[${logTag}] openrouter_call model=${model} promptChars=${prompt.length}`,
     );
 
     const completion = await this.getClient().chat.completions.create({
       model,
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: OPENROUTER_CV_PARSE_MAX_TOKENS,
+      max_tokens: OPENROUTER_MAX_TOKENS,
     });
 
     const text = completion.choices[0]?.message?.content ?? '';
