@@ -96,30 +96,51 @@ export class CvService {
     }
 
     try {
-      // Upload file to S3
-      const fileUrl = await this.fileUploadService.uploadFile(file, 'cv');
+      this.logger.log(
+        `[CV_PARSE] upload_start userId=${userId} file=${file.originalname} ` +
+          `mime=${file.mimetype} bytes=${file.size}`,
+      );
 
-      // Parse CV content using AI
-      const parsedData = await this.aiService.parseCvWithRetry(
+      const fileUrl = await this.fileUploadService.uploadFile(file, 'cv');
+      this.logger.log(`[CV_PARSE] s3_ok fileUrl=${fileUrl}`);
+
+      const parseResult = await this.aiService.parseCvWithRetry(
         file.buffer,
         file.mimetype,
       );
 
-      // Create CV record (no improvement notes for initial upload)
+      this.logger.log(
+        `[CV_PARSE] upload_done source=${parseResult.parseSource} ` +
+          `extractedChars=${parseResult.extractedTextLength} ` +
+          `parsed=${JSON.stringify({
+            name: parseResult.data.contact?.name,
+            experienceCount: parseResult.data.experience?.length ?? 0,
+            educationCount: parseResult.data.education?.length ?? 0,
+            skillsCount: parseResult.data.skills?.technical?.length ?? 0,
+          })}`,
+      );
+
       const cv = this.cvRepository.create({
         userId,
         originalFileName: file.originalname,
         fileUrl,
-        parsedData,
+        parsedData: parseResult.data,
       });
 
       const savedCv = await this.cvRepository.save(cv);
 
-      // Increment usage
       await this.usersService.incrementUsage(userId, 'cvUploads');
 
-      return savedCv;
+      return {
+        ...savedCv,
+        parseSource: parseResult.parseSource,
+        extractedTextLength: parseResult.extractedTextLength,
+      } as Cv;
     } catch (error) {
+      this.logger.error(
+        `[CV_PARSE] upload_failed userId=${userId} file=${file.originalname}: ${error instanceof Error ? error.message : error}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new BadRequestException('Failed to process CV file');
     }
   }

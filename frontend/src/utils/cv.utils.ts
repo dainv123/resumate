@@ -29,6 +29,7 @@ export class CVUtils {
       
       contact: this.normalizeContactInfo(data.contact || {}),
       summary: data.summary || '',
+      dateOfBirth: data.dateOfBirth || '',
       
       experience: this.normalizeExperience(data.experience || []),
       education: this.normalizeEducation(data.education || []),
@@ -70,15 +71,23 @@ export class CVUtils {
       title: exp.title || '',
       company: exp.company || '',
       location: exp.location || '',
-      startDate: exp.startDate || exp.dates || '',
-      endDate: exp.endDate || (exp.current ? '' : ''),
+      startDate: exp.startDate || '',
+      endDate: exp.endDate || '',
       current: exp.current || false,
+      duration: exp.duration || '',
       description: exp.description || '',
       responsibilities: exp.responsibilities || [],
       achievements: exp.achievements || [],
       technologies: exp.technologies || [],
-      teamSize: exp.teamSize || undefined,
-      companyDescription: exp.companyDescription || ''
+      teamSize: exp.teamSize,
+      companyDescription: exp.companyDescription || '',
+      subProjects: (exp.subProjects || []).map((sp: any, subIndex: number) => ({
+        id: sp.id || `sub_${index}_${subIndex}`,
+        name: sp.name || '',
+        role: sp.role || '',
+        techStack: sp.techStack || [],
+        responsibilities: sp.responsibilities || [],
+      })),
     }));
   }
 
@@ -91,7 +100,7 @@ export class CVUtils {
       institution: edu.institution || edu.school || '',
       degree: edu.degree || '',
       field: edu.field || '',
-      startDate: edu.startDate || edu.dates || '',
+      startDate: edu.startDate || edu.year || edu.dates || '',
       endDate: edu.endDate || '',
       gpa: edu.gpa || '',
       description: edu.description || '',
@@ -109,10 +118,14 @@ export class CVUtils {
       description: project.description || '',
       startDate: project.startDate || '',
       endDate: project.endDate || '',
-      technologies: project.technologies || [],
+      technologies: project.technologies || project.techStack || [],
       role: project.role || '',
       teamSize: project.teamSize || undefined,
-      results: project.results || [],
+      results: Array.isArray(project.results)
+        ? project.results
+        : project.results
+          ? [project.results]
+          : [],
       link: project.link || '',
       repository: project.repository || '',
       duration: project.duration || ''
@@ -376,12 +389,37 @@ export class CVUtils {
    * Format date range
    */
   static formatDateRange(startDate: string, endDate?: string, current?: boolean): string {
-    const start = this.formatDate(startDate);
+    if (!startDate && !endDate) return '';
+    const start = startDate ? this.formatDate(startDate) : startDate;
     if (current || !endDate) {
-      return `${start} - Present`;
+      return start ? `${start} - Present` : 'Present';
     }
     const end = this.formatDate(endDate);
     return `${start} - ${end}`;
+  }
+
+  static getExperiencePeriod(
+    exp: Experience,
+    presentLabel = 'Present',
+  ): string {
+    if (exp.duration) return exp.duration;
+    if (exp.startDate || exp.endDate || exp.current) {
+      const range = this.formatDateRange(exp.startDate, exp.endDate, exp.current);
+      return range.replace('Present', presentLabel);
+    }
+    return '';
+  }
+
+  static getEducationPeriod(edu: Education): string {
+    if (edu.startDate && !edu.endDate) return edu.startDate;
+    if (edu.startDate || edu.endDate) {
+      return this.formatDateRange(edu.startDate, edu.endDate);
+    }
+    return '';
+  }
+
+  static hasAnySkills(skills: Skills): boolean {
+    return this.getTotalSkillCount(skills) > 0;
   }
 
   // Private helper methods
@@ -400,7 +438,7 @@ export class CVUtils {
     return count;
   }
 
-  private static getTotalSkillCount(skills: Skills): number {
+  static getTotalSkillCount(skills: Skills): number {
     return (skills.technical?.length || 0) + 
            (skills.tools?.length || 0) + 
            (skills.languages?.length || 0) + 

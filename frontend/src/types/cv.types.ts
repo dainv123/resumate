@@ -37,6 +37,14 @@ export interface Education {
 }
 
 // Work Experience
+export interface SubProject {
+  id?: string;
+  name: string;
+  role?: string;
+  techStack?: string[];
+  responsibilities?: string[];
+}
+
 export interface Experience {
   id?: string;
   title: string;
@@ -45,12 +53,14 @@ export interface Experience {
   startDate: string;
   endDate?: string;
   current: boolean;
+  duration?: string;
   description?: string;
   responsibilities: string[];
   achievements: string[];
   technologies: string[];
-  teamSize?: number;
+  teamSize?: number | string;
   companyDescription?: string;
+  subProjects?: SubProject[];
 }
 
 // Projects
@@ -145,6 +155,7 @@ export interface CVData {
   // Personal Information
   contact: ContactInfo;
   summary: string;
+  dateOfBirth?: string;
 
   // Core Sections
   experience: Experience[];

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';
+import { cvParseSummarizeExtracted } from '../../../shared/utils/cv-parse-log.util';
 
 @Injectable()
 export class DocumentParserService {
@@ -9,9 +10,17 @@ export class DocumentParserService {
   async parsePDF(buffer: Buffer): Promise<string> {
     try {
       const data = await pdfParse(buffer);
-      return data.text;
+      const text = data.text ?? '';
+      this.logger.log(
+        `[CV_PARSE] pdf_extract pages=${data.numpages} ` +
+          JSON.stringify({
+            bufferBytes: buffer.length,
+            ...cvParseSummarizeExtracted(text),
+          }),
+      );
+      return text;
     } catch (error) {
-      this.logger.error('Error parsing PDF:', error);
+      this.logger.error('[CV_PARSE] pdf_extract_failed', error);
       throw new Error('Failed to parse PDF file');
     }
   }
@@ -19,14 +28,26 @@ export class DocumentParserService {
   async parseDOCX(buffer: Buffer): Promise<string> {
     try {
       const result = await mammoth.extractRawText({ buffer });
-      return result.value;
+      const text = result.value ?? '';
+      this.logger.log(
+        `[CV_PARSE] docx_extract ` +
+          JSON.stringify({
+            bufferBytes: buffer.length,
+            mammothMessages: result.messages?.length ?? 0,
+            ...cvParseSummarizeExtracted(text),
+          }),
+      );
+      return text;
     } catch (error) {
-      this.logger.error('Error parsing DOCX:', error);
+      this.logger.error('[CV_PARSE] docx_extract_failed', error);
       throw new Error('Failed to parse DOCX file');
     }
   }
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
+    this.logger.log(
+      `[CV_PARSE] extract_start mime=${mimeType} bufferBytes=${buffer.length}`,
+    );
     switch (mimeType) {
       case 'application/pdf':
         return this.parsePDF(buffer);

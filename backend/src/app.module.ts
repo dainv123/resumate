@@ -22,7 +22,8 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['../.env', '.env'],
+      validatePredefined: false,
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({

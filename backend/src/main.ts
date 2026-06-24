@@ -1,7 +1,13 @@
 import { webcrypto } from 'crypto';
+import { config as loadEnv } from 'dotenv';
+import { resolve } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+
+loadEnv({ path: resolve(__dirname, '../../.env'), override: true });
+loadEnv({ path: resolve(__dirname, '../.env') });
+process.env.PORT = process.env.BACKEND_PORT || process.env.PORT || '5001';
 
 if (!globalThis.crypto) {
   globalThis.crypto = webcrypto as Crypto;

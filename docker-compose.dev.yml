@@ -40,6 +40,9 @@ services:
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-resumate-files}
       GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY}
       GOOGLE_AI_MODEL: ${GOOGLE_AI_MODEL:-gemini-1.5-flash}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-2.5-flash}
+      AI_CV_PARSE_PROVIDER: ${AI_CV_PARSE_PROVIDER:-openrouter}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-key}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}

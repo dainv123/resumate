@@ -3,6 +3,21 @@ import { GoogleAIService } from './providers/google-ai.service';
 import { DocumentParserService } from './providers/document-parser.service';
 import { CVData } from '../../shared/interfaces/cv-data.interface';
 import { Language } from './translations/ai-prompts';
+import {
+  cvParseFormatError,
+  cvParseLogFullText,
+  cvParseShouldLogFull,
+  cvParseSummarizeExtracted,
+  cvParseSummarizeResult,
+} from '../../shared/utils/cv-parse-log.util';
+
+export type CvParseSource = 'google' | 'openrouter' | 'fallback_regex';
+
+export interface ParseCvResult {
+  data: CVData;
+  parseSource: CvParseSource;
+  extractedTextLength: number;
+}
 
 @Injectable()
 export class AiService {
@@ -17,38 +32,91 @@ export class AiService {
     fileBuffer: Buffer,
     mimeType: string,
     maxRetries = 3,
-  ): Promise<CVData> {
+  ): Promise<ParseCvResult> {
+    this.logger.log(
+      `[CV_PARSE] parse_start mime=${mimeType} bufferBytes=${fileBuffer.length} maxRetries=${maxRetries}`,
+    );
+
+    let lastExtractedLength = 0;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        // Extract text from file
         const text = await this.documentParserService.extractTextFromFile(
           fileBuffer,
           mimeType,
         );
+        lastExtractedLength = text.length;
 
-        // Parse with AI
-        const cvData = await this.googleAIService.parseCvContent(text);
+        const extractSummary = cvParseSummarizeExtracted(text);
+        this.logger.log(
+          `[CV_PARSE] attempt=${attempt} extracted ${JSON.stringify(extractSummary)}`,
+        );
 
-        this.logger.log(`CV parsed successfully on attempt ${attempt}`);
-        return cvData;
+        if (attempt === 1 && cvParseShouldLogFull()) {
+          cvParseLogFullText(
+            (m) => this.logger.log(m),
+            'extracted_full',
+            text,
+          );
+        }
+
+        if (extractSummary.isEmpty) {
+          throw new Error('Extracted text is empty — PDF/DOCX may be image-only');
+        }
+
+        const { data: cvData, provider } =
+          await this.googleAIService.parseCvContent(text);
+
+        const resultSummary = cvParseSummarizeResult(cvData);
+        this.logger.log(
+          `[CV_PARSE] attempt=${attempt} llm_ok source=${provider} ${JSON.stringify(resultSummary)}`,
+        );
+
+        return {
+          data: cvData,
+          parseSource: provider,
+          extractedTextLength: text.length,
+        };
       } catch (error) {
         this.logger.warn(
-          `CV parsing attempt ${attempt} failed:`,
-          error.message,
+          `[CV_PARSE] attempt=${attempt} failed: ${cvParseFormatError(error)}`,
         );
 
         if (attempt === maxRetries) {
-          this.logger.error('All CV parsing attempts failed, using fallback');
-          return this.fallbackParsing(fileBuffer, mimeType);
+          this.logger.error(
+            `[CV_PARSE] all_attempts_failed → fallback_regex extractedChars=${lastExtractedLength}`,
+          );
+          const fallbackData = await this.fallbackParsing(fileBuffer, mimeType);
+          return {
+            data: fallbackData,
+            parseSource: 'fallback_regex',
+            extractedTextLength: lastExtractedLength,
+          };
         }
 
-        // Exponential backoff
         await this.delay(1000 * attempt);
       }
     }
 
-    // This should never be reached, but TypeScript requires it
-    return this.fallbackParsing(fileBuffer, mimeType);
+    const fallbackData = await this.fallbackParsing(fileBuffer, mimeType);
+    return {
+      data: fallbackData,
+      parseSource: 'fallback_regex',
+      extractedTextLength: lastExtractedLength,
+    };
+  }
+
+  async parseCvFromText(text: string): Promise<ParseCvResult> {
+    this.logger.log(
+      `[CV_PARSE] parse_from_text chars=${text.length} ${JSON.stringify(cvParseSummarizeExtracted(text))}`,
+    );
+    const { data: cvData, provider } =
+      await this.googleAIService.parseCvContent(text);
+    return {
+      data: cvData,
+      parseSource: provider,
+      extractedTextLength: text.length,
+    };
   }
 
   async generateProjectBullets(
@@ -214,7 +282,7 @@ ${cvData.contact?.name || 'Candidate'}`;
         /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/,
       );
 
-      return {
+      const fallback = {
         contact: {
           name: 'Unknown',
           email: emailMatch ? emailMatch[0] : 'unknown@email.com',
@@ -236,8 +304,19 @@ ${cvData.contact?.name || 'Candidate'}`;
         publications: [],
         volunteer: [],
       };
+
+      this.logger.warn(
+        `[CV_PARSE] fallback_regex_result ${JSON.stringify({
+          extracted: cvParseSummarizeExtracted(text),
+          parsed: cvParseSummarizeResult(fallback as CVData),
+        })}`,
+      );
+
+      return fallback;
     } catch (error) {
-      this.logger.error('Fallback parsing also failed:', error);
+      this.logger.error(
+        `[CV_PARSE] fallback_regex_failed: ${cvParseFormatError(error)}`,
+      );
       return {
         contact: {
           name: 'Unknown',

@@ -7,6 +7,25 @@ import {
   appendInterviewPrepLanguage,
   fillInterviewPrepPrompt,
 } from '../prompts/interview-prep.prompts';
+import {
+  cvParseFormatError,
+  cvParseLogFullText,
+  cvParseShouldLogFull,
+  cvParseSummarizeResult,
+  cvParseTextPreview,
+} from '../../../shared/utils/cv-parse-log.util';
+import {
+  AiCvParseProvider,
+  AiCvParseProviderValue,
+} from '../constants/ai-provider.constants';
+import { OpenRouterService } from './openrouter.service';
+
+export type CvParseLlmProvider = 'google' | 'openrouter';
+
+export interface ParseCvContentResult {
+  data: any;
+  provider: CvParseLlmProvider;
+}
 
 @Injectable()
 export class GoogleAIService {
@@ -14,7 +33,10 @@ export class GoogleAIService {
   private genAI: GoogleGenerativeAI;
   private model: any;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private openRouterService: OpenRouterService,
+  ) {
     const apiKey = this.configService.get<string>('GOOGLE_AI_API_KEY');
     const modelName =
       this.configService.get<string>('GOOGLE_AI_MODEL') || 'gemini-2.0-flash';
@@ -267,45 +289,138 @@ export class GoogleAIService {
     }
   }
 
-  async parseCvContent(text: string, language: Language = 'en'): Promise<any> {
-    try {
-      const template = getAIPrompt(language, 'parseCvContent');
-      const prompt = template.replace('{{cvText}}', text);
+  async parseCvContent(
+    text: string,
+    language: Language = 'en',
+  ): Promise<ParseCvContentResult> {
+    const cvTextChars = text.length;
+    const template = getAIPrompt(language, 'parseCvContent');
+    const prompt = template.replace('{{cvText}}', text);
+    const providerPref = this.getCvParseProviderPref();
+    this.logger.log(
+      `[CV_PARSE] llm_provider_pref=${providerPref} openrouter_configured=${this.openRouterService.isConfigured()}`,
+    );
 
+    let responseText: string;
+    let provider: CvParseLlmProvider;
+
+    if (providerPref === AiCvParseProvider.OpenRouter) {
+      if (!this.openRouterService.isConfigured()) {
+        throw new Error(
+          'AI_CV_PARSE_PROVIDER=openrouter but OPENROUTER_API_KEY is missing',
+        );
+      }
+      responseText = await this.requestOpenRouter(prompt);
+      provider = 'openrouter';
+    } else {
+      try {
+        responseText = await this.requestGemini(prompt, cvTextChars);
+        provider = 'google';
+      } catch (error) {
+        if (
+          this.isGeminiQuotaError(error) &&
+          this.openRouterService.isConfigured()
+        ) {
+          this.logger.warn('[CV_PARSE] gemini_quota → openrouter_fallback');
+          responseText = await this.requestOpenRouter(prompt);
+          provider = 'openrouter';
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    const cleanedData = this.parseCvJsonResponse(responseText, provider);
+    return { data: cleanedData, provider };
+  }
+
+  private getCvParseProviderPref(): AiCvParseProviderValue {
+    const raw = this.configService.get<string>('AI_CV_PARSE_PROVIDER');
+    if (raw === AiCvParseProvider.OpenRouter) {
+      return AiCvParseProvider.OpenRouter;
+    }
+    return AiCvParseProvider.Google;
+  }
+
+  private isGeminiQuotaError(error: unknown): boolean {
+    const detail = cvParseFormatError(error);
+    return (
+      detail.includes('429') ||
+      detail.toLowerCase().includes('quota') ||
+      detail.toLowerCase().includes('resource_exhausted')
+    );
+  }
+
+  private async requestGemini(
+    prompt: string,
+    cvTextChars: number,
+  ): Promise<string> {
+    this.logger.log(
+      `[CV_PARSE] gemini_call cvTextChars=${cvTextChars} promptChars=${prompt.length}`,
+    );
+
+    try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const responseText = response.text();
 
-      // Log the raw AI response for debugging
-      this.logger.log('=== AI RAW RESPONSE ===');
-      this.logger.log(responseText);
-      this.logger.log('=== END AI RESPONSE ===');
+      this.logger.log(
+        `[CV_PARSE] gemini_response responseChars=${responseText.length} preview=${JSON.stringify(cvParseTextPreview(responseText))}`,
+      );
 
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in CV parsing response');
+      if (cvParseShouldLogFull()) {
+        cvParseLogFullText(
+          (m) => this.logger.log(m),
+          'gemini_response_full',
+          responseText,
+        );
       }
 
-      const parsedData = JSON.parse(jsonMatch[0]);
-
-      // Log the parsed data for debugging
-      this.logger.log('=== PARSED DATA ===');
-      this.logger.log(JSON.stringify(parsedData, null, 2));
-      this.logger.log('=== END PARSED DATA ===');
-
-      // Clean up and validate the parsed data
-      const cleanedData = this.cleanupParsedData(parsedData);
-
-      // Log the cleaned data for debugging
-      this.logger.log('=== CLEANED DATA ===');
-      this.logger.log(JSON.stringify(cleanedData, null, 2));
-      this.logger.log('=== END CLEANED DATA ===');
-
-      return cleanedData;
+      return responseText;
     } catch (error) {
-      this.logger.error('Error parsing CV content:', error);
+      const detail = cvParseFormatError(error);
+      this.logger.error(
+        `[CV_PARSE] gemini_failed cvTextChars=${cvTextChars} quota=${this.isGeminiQuotaError(error)} error=${detail}`,
+      );
       throw error;
     }
+  }
+
+  private async requestOpenRouter(prompt: string): Promise<string> {
+    const responseText = await this.openRouterService.generateText(prompt);
+
+    this.logger.log(
+      `[CV_PARSE] openrouter_response responseChars=${responseText.length} preview=${JSON.stringify(cvParseTextPreview(responseText))}`,
+    );
+
+    if (cvParseShouldLogFull()) {
+      cvParseLogFullText(
+        (m) => this.logger.log(m),
+        'openrouter_response_full',
+        responseText,
+      );
+    }
+
+    return responseText;
+  }
+
+  private parseCvJsonResponse(
+    responseText: string,
+    provider: CvParseLlmProvider,
+  ) {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON found in CV parsing response');
+    }
+
+    const parsedData = JSON.parse(jsonMatch[0]);
+    const cleanedData = this.cleanupParsedData(parsedData);
+
+    this.logger.log(
+      `[CV_PARSE] ${provider}_parsed ${JSON.stringify(cvParseSummarizeResult(cleanedData))}`,
+    );
+
+    return cleanedData;
   }
 
   private cleanupParsedData(data: any): any {
@@ -538,7 +653,7 @@ export class GoogleAIService {
     const results: any[] = [];
     for (const cvText of testCvTexts) {
       try {
-        const parsed = await this.parseCvContent(cvText);
+        const { data: parsed } = await this.parseCvContent(cvText);
         results.push({
           format: 'Test CV',
           success: true,

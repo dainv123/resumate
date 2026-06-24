@@ -21,11 +21,13 @@ export class AiController {
   })
   async parseCv(@Body() body: { text: string }, @GetUser('id') userId: string) {
     try {
-      const cvData = await this.aiService.parseCvWithRetry(
-        Buffer.from(body.text),
-        'text/plain',
-      );
-      return { success: true, data: cvData };
+      const parseResult = await this.aiService.parseCvFromText(body.text);
+      return {
+        success: true,
+        data: parseResult.data,
+        parseSource: parseResult.parseSource,
+        extractedTextLength: parseResult.extractedTextLength,
+      };
     } catch (error) {
       return { success: false, error: error.message };
     }
