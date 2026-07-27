@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { InfiniteData } from "@tanstack/react-query";
+import { InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useCvsPaginated, useCvsInfinite } from "@/hooks/useCvs";
@@ -9,7 +9,7 @@ import { cvApi, PaginatedResult, CV } from "@/lib/cv";
 import CVCard from "./CVCard";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/contexts/ToastContext";
-import { Search, SortAsc, SortDesc, Grid, List } from "lucide-react";
+import { Search, SortAsc, SortDesc, Grid, List, Trash2 } from "lucide-react";
 
 interface CvManagerProps {
   mode?: "paginated" | "infinite";
@@ -32,6 +32,12 @@ interface CvListContentProps {
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
   viewMode?: "grid" | "list";
+  selectedIds: Set<string>;
+  onToggleSelect: (cvId: string) => void;
+  onSelectAll: (cvIds: string[]) => void;
+  onClearSelection: () => void;
+  onBulkDelete: (cvIds: string[]) => Promise<void>;
+  isBulkDeleting: boolean;
   onEditCv?: (cvId: string) => void;
   onDeleteCv?: (cvId: string) => void;
   onDuplicateCv?: (cvId: string) => void;
@@ -46,12 +52,17 @@ interface CvListContentProps {
 function CvListContent({
   mode,
   onSelectCv,
-  selectedCvId,
   limit,
   search,
   sortBy,
   sortOrder,
   viewMode = "grid",
+  selectedIds,
+  onToggleSelect,
+  onSelectAll,
+  onClearSelection,
+  onBulkDelete,
+  isBulkDeleting,
   onEditCv,
   onDeleteCv,
   onDuplicateCv,
@@ -62,7 +73,6 @@ function CvListContent({
   const [currentPage, setCurrentPage] = useState(1);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Use appropriate hook based on mode
   const paginatedQuery = useCvsPaginated({
     page: currentPage,
     limit,
@@ -83,34 +93,20 @@ function CvListContent({
   const { data, isLoading, error, refetch } =
     mode === "paginated" ? paginatedQuery : infiniteQuery;
 
-  // Get CVs based on mode - MUST be before early returns
   const cvs = React.useMemo(() => {
-    // Debug logging
-    console.log("CvManager Debug:", {
-      mode,
-      data,
-      paginatedData: mode === "paginated" ? (data as any)?.data : undefined,
-      infiniteData: mode === "infinite" ? (data as any)?.pages : undefined,
-      paginationInfo: {
-        totalPages:
-          mode === "paginated" ? (data as any)?.totalPages : undefined,
-        total: mode === "paginated" ? (data as any)?.total : undefined,
-        page: mode === "paginated" ? (data as any)?.page : undefined,
-        limit: mode === "paginated" ? (data as any)?.limit : undefined,
-      },
-    });
-
     if (mode === "paginated") {
       const paginatedData = data as PaginatedResult<CV>;
       return paginatedData?.data || [];
-    } else {
-      // Infinite scroll mode
-      const infiniteData = data as InfiniteData<PaginatedResult<CV>>;
-      return infiniteData?.pages?.flatMap((page) => page.data) || [];
     }
+    const infiniteData = data as InfiniteData<PaginatedResult<CV>>;
+    return infiniteData?.pages?.flatMap((page) => page.data) || [];
   }, [mode, data]);
 
-  // Auto-load more when scroll reaches the load more element - MUST be before early returns
+  const visibleIds = React.useMemo(() => cvs.map((cv) => cv.id), [cvs]);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+  const selectedCount = selectedIds.size;
+
   const lastCvElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (infiniteQuery.isFetchingNextPage) return;
@@ -119,13 +115,10 @@ function CvListContent({
       observerRef.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && infiniteQuery.hasNextPage) {
-            console.log("Auto-loading more CVs...");
             infiniteQuery.fetchNextPage();
           }
         },
-        {
-          rootMargin: "100px", // Start loading 100px before the element comes into view
-        }
+        { rootMargin: "100px" }
       );
 
       if (node) observerRef.current.observe(node);
@@ -180,6 +173,56 @@ function CvListContent({
 
   return (
     <div className="space-y-6">
+      {/* Multi-select toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3">
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={() =>
+                allVisibleSelected
+                  ? onClearSelection()
+                  : onSelectAll(visibleIds)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>
+              {allVisibleSelected
+                ? t("common.deselectAll")
+                : t("common.selectAll")}
+            </span>
+          </label>
+          {selectedCount > 0 && (
+            <span className="text-sm text-gray-600">
+              {t("cv.selectedCount", { count: selectedCount })}
+            </span>
+          )}
+        </div>
+
+        {selectedCount > 0 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearSelection}
+              disabled={isBulkDeleting}>
+              {t("dashboard.clearSelection")}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onBulkDelete(Array.from(selectedIds))}
+              disabled={isBulkDeleting}
+              loading={isBulkDeleting}
+              className="flex items-center space-x-1">
+              <Trash2 className="h-4 w-4" />
+              <span>{t("cv.deleteSelected")}</span>
+            </Button>
+          </div>
+        )}
+      </div>
+
       {/* CV Display */}
       <div
         className={
@@ -187,7 +230,7 @@ function CvListContent({
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr"
             : "space-y-4"
         }>
-        {cvs.map((cv: any, index: number) => (
+        {cvs.map((cv: CV, index: number) => (
           <div
             key={cv.id}
             ref={
@@ -198,7 +241,8 @@ function CvListContent({
             className="h-full">
             <CVCard
               cv={cv}
-              // isSelected={selectedCvId === cv.id}
+              isSelected={selectedIds.has(cv.id)}
+              onToggleSelect={() => onToggleSelect(cv.id)}
               onSelect={() => onSelectCv?.(cv)}
               onEdit={() => onEditCv?.(cv.id)}
               onDelete={() => onDeleteCv?.(cv.id)}
@@ -216,12 +260,6 @@ function CvListContent({
       {/* Pagination for paginated mode */}
       {mode === "paginated" && (
         <div className="space-y-4">
-          {/* Debug info */}
-          {/* <div className="text-xs text-gray-500">
-            Current page: {currentPage} | Total pages: {data?.totalPages || 0} |
-            Total items: {data?.total || 0} | Items per page: {limit}
-          </div> */}
-
           {(data as PaginatedResult<CV>)?.totalPages &&
             (data as PaginatedResult<CV>).totalPages > 1 && (
               <div className="flex items-center justify-between">
@@ -273,14 +311,6 @@ function CvListContent({
       {/* Load More for infinite mode */}
       {mode === "infinite" && (
         <div className="flex flex-col items-center space-y-4">
-          {/* Debug info */}
-          {/* <div className="text-xs text-gray-500">
-            Pages loaded: {data?.pages?.length || 0} | Has next:{" "}
-            {infiniteQuery.hasNextPage ? "Yes" : "No"} | Is fetching:{" "}
-            {infiniteQuery.isFetchingNextPage ? "Yes" : "No"} | Auto-scroll:
-            Enabled
-          </div> */}
-
           {infiniteQuery.hasNextPage && (
             <Button
               variant="outline"
@@ -297,19 +327,6 @@ function CvListContent({
               )}
             </Button>
           )}
-
-          {/* Loading indicator when auto-loading */}
-          {/* {infiniteQuery.isFetchingNextPage && (
-            <div className="text-sm text-blue-600">Loading more CVs...</div>
-          )} */}
-
-          {/* {!infiniteQuery.hasNextPage &&
-            data?.pages &&
-            data.pages.length > 0 && (
-              <div className="text-sm text-gray-600">
-                All CVs loaded ({cvs.length} total)
-              </div>
-            )} */}
         </div>
       )}
     </div>
@@ -329,6 +346,7 @@ export default function CvManager({
 }: CvManagerProps) {
   const { t } = useLanguage();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { showSuccess, showError } = useToast();
   const [search, setSearch] = useState(externalSearch || "");
   const [sortBy, setSortBy] = useState<
@@ -341,8 +359,9 @@ export default function CvManager({
     externalViewMode || "grid"
   );
   const [selectedCv, setSelectedCv] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  // Sync external props with internal state
   React.useEffect(() => {
     if (externalSearch !== undefined) setSearch(externalSearch);
   }, [externalSearch]);
@@ -363,7 +382,6 @@ export default function CvManager({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search will be handled by the list components
   };
 
   const toggleSortOrder = () => {
@@ -375,30 +393,94 @@ export default function CvManager({
     onSelectCv?.(cv);
   };
 
-  // CV Action Handlers
+  const handleToggleSelect = (cvId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cvId)) next.delete(cvId);
+      else next.add(cvId);
+      return next;
+    });
+  };
+
+  const handleSelectAll = (cvIds: string[]) => {
+    setSelectedIds(new Set(cvIds));
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  const invalidateCvs = () => {
+    queryClient.invalidateQueries({ queryKey: ["cvs"] });
+  };
+
   const handleEditCv = (cvId: string) => {
     router.push(`/dashboard/cv/${cvId}/edit`);
   };
 
   const handleDeleteCv = async (cvId: string) => {
-    if (window.confirm(t("cv.deleteCvConfirm"))) {
-      try {
-        await cvApi.deleteCv(cvId);
-        showSuccess(t("cv.deleteCvSuccess"));
-      } catch (error) {
-        console.error("Delete CV failed:", error);
-        showError(t("cv.deleteCvFailed"));
+    if (!window.confirm(t("dashboard.deleteCvConfirm"))) return;
+    try {
+      await cvApi.deleteCv(cvId);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(cvId);
+        return next;
+      });
+      invalidateCvs();
+      showSuccess(t("dashboard.deleteCvSuccess"));
+    } catch (error) {
+      console.error("Delete CV failed:", error);
+      showError(t("dashboard.deleteCvFailed"));
+    }
+  };
+
+  const handleBulkDelete = async (cvIds: string[]) => {
+    if (
+      !window.confirm(t("cv.deleteSelectedConfirm", { count: cvIds.length }))
+    ) {
+      return;
+    }
+
+    setIsBulkDeleting(true);
+    try {
+      const results = await Promise.allSettled(
+        cvIds.map((id) => cvApi.deleteCv(id))
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const succeeded = cvIds.length - failed;
+
+      invalidateCvs();
+      setSelectedIds(new Set());
+
+      if (failed === 0) {
+        showSuccess(t("cv.deleteSelectedSuccess", { count: succeeded }));
+      } else if (succeeded === 0) {
+        showError(t("cv.deleteSelectedFailed"));
+      } else {
+        showError(
+          t("cv.deleteSelectedPartial", {
+            succeeded,
+            failed,
+          })
+        );
       }
+    } catch (error) {
+      console.error("Bulk delete CV failed:", error);
+      showError(t("cv.deleteSelectedFailed"));
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
   const handleDuplicateCv = async (cvId: string) => {
     try {
       await cvApi.duplicateCv(cvId);
-      showSuccess(t("cv.duplicateCvSuccess"));
+      invalidateCvs();
+      showSuccess(t("dashboard.duplicateCvSuccess"));
     } catch (error) {
       console.error("Duplicate CV failed:", error);
-      showError(t("cv.duplicateCvFailed"));
+      showError(t("dashboard.duplicateCvFailed"));
     }
   };
 
@@ -428,7 +510,6 @@ export default function CvManager({
           throw new Error("Unsupported export format");
       }
 
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -445,11 +526,9 @@ export default function CvManager({
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
       {showControls && (
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
             <form onSubmit={handleSearch} className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -463,7 +542,6 @@ export default function CvManager({
               </div>
             </form>
 
-            {/* Sort Controls */}
             <div className="flex gap-2">
               <select
                 value={sortBy}
@@ -491,7 +569,6 @@ export default function CvManager({
               </Button>
             </div>
 
-            {/* View Mode Toggle */}
             <div className="flex gap-1 border border-gray-300 rounded-lg p-1">
               <Button
                 variant={viewMode === "grid" ? "primary" : "ghost"}
@@ -512,35 +589,6 @@ export default function CvManager({
         </div>
       )}
 
-      {/* Selected CV Info */}
-      {/* {selectedCv && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="font-medium text-blue-900">
-                {t("cv.selectedCv")}
-              </h5>
-              <p className="text-blue-800">
-                <strong>{selectedCv.originalFileName}</strong> -{" "}
-                {t("cv.version")} {selectedCv.version} -
-                {selectedCv.version} -
-                {selectedCv.isTailored
-                  ? t("cv.tailored")
-                  : t("cv.original")}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedCv(null)}
-              className="text-blue-600 hover:text-blue-800">
-              {t("cv.clearSelection")}
-            </Button>
-          </div>
-        </div>
-      )} */}
-
-      {/* CV List */}
       <CvListContent
         mode={mode}
         onSelectCv={handleSelectCv}
@@ -550,63 +598,18 @@ export default function CvManager({
         sortBy={sortBy}
         sortOrder={sortOrder}
         viewMode={viewMode}
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onSelectAll={handleSelectAll}
+        onClearSelection={handleClearSelection}
+        onBulkDelete={handleBulkDelete}
+        isBulkDeleting={isBulkDeleting}
         onEditCv={handleEditCv}
         onDeleteCv={handleDeleteCv}
         onDuplicateCv={handleDuplicateCv}
         onTailorCv={handleTailorCv}
         onExportCv={handleExportCv}
       />
-
-      {/* Mode Info */}
-      {/* <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-        <h4 className="font-medium mb-2">
-          {t("cv.currentMode")}:{" "}
-          {mode === "paginated"
-            ? t("cv.pagination")
-            : t("cv.infiniteScroll")}
-        </h4>
-        <ul className="space-y-1">
-          {mode === "paginated" ? (
-            <>
-              <li>
-                • <strong>{t("cv.pageBased")}</strong>{" "}
-                {t("cv.pageBasedDescription")}
-              </li>
-              <li>
-                • <strong>{t("cv.controlledLoading")}</strong>{" "}
-                {t("cv.controlledLoadingDescription")}
-              </li>
-              <li>
-                • <strong>{t("cv.memoryEfficient")}</strong>{" "}
-                {t("cv.memoryEfficientDescription")}
-              </li>
-              <li>
-                • <strong>{t("cv.seoFriendly")}</strong>{" "}
-                {t("cv.seoFriendlyDescription")}
-              </li>
-            </>
-          ) : (
-            <>
-              <li>
-                • <strong>{t("cv.seamlessScrolling")}</strong>{" "}
-                {t("cv.seamlessScrollingDescription")}
-              </li>
-              <li>
-                • <strong>{t("cv.autoLoading")}</strong>{" "}
-                {t("cv.autoLoadingDescription")}
-              </li>
-              <li>
-                • <strong>{t("cv.mobileFriendly")}</strong>{" "}
-                {t("cv.mobileFriendlyDescription")}
-              </li>
-              <li>
-                • <strong>{t("cv.modernUX")}</strong>{" "}
-                {t("cv.modernUXDescription")}
-              </li>
-            </>
-          )}
-        </ul>
-      </div> */}
     </div>
   );
 }

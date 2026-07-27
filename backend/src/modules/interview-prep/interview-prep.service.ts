@@ -261,6 +261,12 @@ export class InterviewPrepService {
     return plans.map((plan) => this.formatPlanSummary(plan));
   }
 
+  async deletePlan(userId: string, planId: string): Promise<void> {
+    const plan = await this.getPlanEntity(userId, planId);
+    await this.assignmentRepository.delete({ planId: plan.id });
+    await this.planRepository.remove(plan);
+  }
+
   async getPlan(
     userId: string,
     planId: string,

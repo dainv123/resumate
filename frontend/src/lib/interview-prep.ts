@@ -234,6 +234,10 @@ export const interviewPrepApi = {
     return data;
   },
 
+  deletePlan: async (id: string): Promise<void> => {
+    await api.delete(`/interview-prep/${id}`);
+  },
+
   updateTask: async (
     planId: string,
     dayIndex: number,

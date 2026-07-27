@@ -13,6 +13,7 @@ import {
   FileText,
   Calendar,
   Tag,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -20,6 +21,7 @@ interface CVCardProps {
   cv: CV;
   isSelected?: boolean;
   onSelect?: () => void;
+  onToggleSelect?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
@@ -32,7 +34,9 @@ export default function CVCard({
   cv,
   isSelected = false,
   onSelect,
+  onToggleSelect,
   onEdit,
+  onDelete,
   onDuplicate,
   onTailor,
   onExport,
@@ -59,26 +63,42 @@ export default function CVCard({
     return t("cvSections.statusLabels.original");
   };
 
+  const checkbox = onToggleSelect ? (
+    <input
+      type="checkbox"
+      checked={isSelected}
+      onChange={onToggleSelect}
+      onClick={(e) => e.stopPropagation()}
+      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+      aria-label={t("cv.selectCv")}
+    />
+  ) : null;
+
   return (
     <div
       className={`h-full flex flex-col bg-white rounded-lg border-2 interactive-card ${
-        isSelected ? "border-blue-500 shadow-md" : "border-gray-200"
+        isSelected ? "border-blue-500 shadow-md bg-blue-50/30" : "border-gray-200"
       } ${viewMode === "list" ? "flex items-center p-4" : ""}`}
       onClick={onSelect}
-      tabIndex={0}
-      role="button"
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect?.();
-        }
-      }}>
+      tabIndex={onSelect ? 0 : undefined}
+      role={onSelect ? "button" : undefined}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect();
+              }
+            }
+          : undefined
+      }>
       {viewMode === "grid" ? (
         <>
           {/* Header */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-start justify-between w-full min-w-0">
               <div className="flex items-center space-x-3 min-w-0 flex-1">
+                {checkbox}
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <FileText className="h-5 w-5 text-blue-600" />
                 </div>
@@ -108,6 +128,7 @@ export default function CVCard({
         <>
           {/* List View Header */}
           <div className="flex items-center space-x-4 flex-1">
+            {checkbox}
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <FileText className="h-6 w-6 text-blue-600" />
             </div>
@@ -159,7 +180,9 @@ export default function CVCard({
             </div>
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              onClick={(e) => e.stopPropagation()}>
               <Link href={`/dashboard/cv/${cv.id}`}>
                 <Button
                   variant="ghost"
@@ -205,6 +228,17 @@ export default function CVCard({
                 <Download className="h-4 w-4" />
                 <span>{t("cv.export")}</span>
               </Button>
+
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete()}
+                  className="flex items-center space-x-1 text-red-600 hover:text-red-700">
+                  <Trash2 className="h-4 w-4" />
+                  <span>{t("common.delete")}</span>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -222,7 +256,9 @@ export default function CVCard({
       {viewMode === "list" && (
         <>
           {/* List View Actions - Same functionality as grid */}
-          <div className="flex items-center space-x-2">
+          <div
+            className="flex items-center space-x-2"
+            onClick={(e) => e.stopPropagation()}>
             <Link href={`/dashboard/cv/${cv.id}`}>
               <Button
                 variant="ghost"
@@ -264,6 +300,16 @@ export default function CVCard({
               <Download className="h-4 w-4" />
               <span>{t("cv.export")}</span>
             </Button>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete()}
+                className="flex items-center space-x-1 text-red-600 hover:text-red-700">
+                <Trash2 className="h-4 w-4" />
+                <span>{t("common.delete")}</span>
+              </Button>
+            )}
           </div>
         </>
       )}

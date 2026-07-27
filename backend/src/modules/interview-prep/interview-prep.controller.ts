@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -74,6 +75,15 @@ export class InterviewPrepController {
     @Param('id') id: string,
   ) {
     return this.interviewPrepService.getPlan(userId, id);
+  }
+
+  @Delete(':id')
+  async deletePlan(
+    @GetUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    await this.interviewPrepService.deletePlan(userId, id);
+    return { success: true };
   }
 
   @Patch(':id/tasks/:dayIndex/:taskId')

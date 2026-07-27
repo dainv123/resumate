@@ -365,6 +365,7 @@ export default function CVCreatePage() {
     <DashboardLayout
       title={t("cv.createNewCV")}
       subtitle={t("cv.createNewCVSubtitle")}
+      backUrl="/dashboard/cv"
       headerActions={headerActions}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* CV Name Input */}

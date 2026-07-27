@@ -18,7 +18,7 @@ export default function DashboardLayout({
   title,
   subtitle,
   showBackButton = true,
-  backUrl = "/dashboard",
+  backUrl,
   headerActions,
   className = "",
 }: DashboardLayoutProps) {
@@ -27,9 +27,9 @@ export default function DashboardLayout({
   const handleBack = () => {
     if (backUrl) {
       router.push(backUrl);
-    } else {
-      router.back();
+      return;
     }
+    router.back();
   };
 
   return (

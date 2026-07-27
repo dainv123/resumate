@@ -175,10 +175,8 @@ export class PortfolioController {
     @Param('username') username: string,
     @Res() res: Response,
   ) {
-    const portfolioData =
-      await this.portfolioService.getPortfolioByUsername(username);
     const html =
-      await this.portfolioService.generatePortfolioHTML(portfolioData);
+      await this.portfolioService.getPublicHtmlByUsername(username);
 
     res.setHeader('Content-Type', 'text/html');
     res.send(html);

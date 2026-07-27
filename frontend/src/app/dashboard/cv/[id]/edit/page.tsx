@@ -185,7 +185,7 @@ export default function CVEditPage() {
     <DashboardLayout
       title={t("cv.editCV")}
       subtitle={cv.originalFileName}
-      // backUrl="/dashboard/cv"
+      backUrl={`/dashboard/cv/${id}`}
       headerActions={headerActions}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {formData && (

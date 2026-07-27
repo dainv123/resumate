@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { GapPriority, PrepTaskType } from '../constants/interview-prep.constants';
+import {
+  DAY1_P1_QUESTION_PRACTICE_COUNT,
+  GapPriority,
+  PrepTaskType,
+} from '../constants/interview-prep.constants';
 import {
   addDays,
   countDaysUntilInterview,
@@ -37,13 +41,16 @@ export class DailySchedulerService {
     const isCrashCourse = effectiveDays <= 3;
 
     const taskPool = this.buildTaskPool(input, isCrashCourse);
-    const sortedTasks = taskPool.sort((a, b) => {
-      const priorityOrder = { P1: 0, P2: 1, P3: 2 };
-      const pDiff =
-        priorityOrder[a.priority] - priorityOrder[b.priority];
-      if (pDiff !== 0) return pDiff;
-      return b.impactScore - a.impactScore;
-    });
+    const sortedTasks = this.pinDay1P1Questions(
+      taskPool.sort((a, b) => {
+        const priorityOrder = { P1: 0, P2: 1, P3: 2 };
+        const pDiff =
+          priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (pDiff !== 0) return pDiff;
+        return b.impactScore - a.impactScore;
+      }),
+      DAY1_P1_QUESTION_PRACTICE_COUNT,
+    );
 
     const roadmap: PrepDay[] = [];
     let taskIndex = 0;
@@ -53,7 +60,6 @@ export class DailySchedulerService {
       const date = addDays(today, i);
       const isLastDay = daysUntil === 1;
       const isDayBefore = daysUntil === 2;
-      const isInterviewDay = false;
 
       if (isLastDay) {
         roadmap.push(this.buildDayBeforeDay(date, daysUntil, i));
@@ -104,6 +110,28 @@ export class DailySchedulerService {
     roadmap.push(this.buildInterviewDay(addDays(input.interviewDate, 0), input.processMap));
 
     return roadmap;
+  }
+
+  /** Move top P1 question-practice tasks to the front so day 1 packs them first. */
+  private pinDay1P1Questions(tasks: PrepTask[], count: number): PrepTask[] {
+    if (count <= 0) return tasks;
+
+    const pinned: PrepTask[] = [];
+    const rest: PrepTask[] = [];
+
+    for (const task of tasks) {
+      if (
+        pinned.length < count &&
+        task.type === PrepTaskType.QUESTION_PRACTICE &&
+        task.priority === GapPriority.P1
+      ) {
+        pinned.push(task);
+      } else {
+        rest.push(task);
+      }
+    }
+
+    return [...pinned, ...rest];
   }
 
   private buildTaskPool(

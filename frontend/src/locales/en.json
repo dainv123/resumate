@@ -605,6 +605,13 @@
     "exportAll": "Export All",
     "createNewCv": "Create New CV",
     "settings": "Settings",
+    "selectCv": "Select CV",
+    "selectedCount": "{{count}} CV(s) selected",
+    "deleteSelected": "Delete selected",
+    "deleteSelectedConfirm": "Are you sure you want to delete {{count}} selected CV(s)? This action cannot be undone.",
+    "deleteSelectedSuccess": "Deleted {{count}} CV(s) successfully",
+    "deleteSelectedFailed": "Failed to delete selected CVs",
+    "deleteSelectedPartial": "Deleted {{succeeded}} CV(s), failed {{failed}}",
     "noCvs": "No CVs yet",
     "noCvsDescription": "Upload your first CV to get started",
     "createFirstCv": "Create Your First CV",
@@ -1442,7 +1449,10 @@
       "title": "Your prep plans",
       "loading": "Loading plans...",
       "empty": "No prep plans yet. Create one above.",
-      "readiness": "Readiness: {{score}}/100"
+      "readiness": "Readiness: {{score}}/100",
+      "deleteConfirm": "Delete this prep plan? This cannot be undone.",
+      "deleteSuccess": "Prep plan deleted",
+      "deleteFailed": "Failed to delete prep plan"
     },
     "jd": {
       "label": "Preparing for",

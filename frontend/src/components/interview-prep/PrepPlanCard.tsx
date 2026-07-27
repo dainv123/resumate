@@ -2,18 +2,25 @@
 
 import React from "react";
 import Link from "next/link";
-import { Calendar, ChevronRight } from "lucide-react";
+import { Calendar, ChevronRight, Trash2 } from "lucide-react";
 import { InterviewPrepPlanSummary } from "@/lib/interview-prep";
 import { daysUntilInterviewDate } from "@/lib/interview-prep-utils";
 import PrepJobContext from "@/components/interview-prep/PrepJobContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
 
 interface PrepPlanCardProps {
   plan: InterviewPrepPlanSummary;
+  onDelete?: (planId: string) => void;
+  deleting?: boolean;
 }
 
-export default function PrepPlanCard({ plan }: PrepPlanCardProps) {
+export default function PrepPlanCard({
+  plan,
+  onDelete,
+  deleting = false,
+}: PrepPlanCardProps) {
   const { t } = useLanguage();
   const score = plan.readinessScore ?? 0;
   const daysLeft = daysUntilInterviewDate(plan.interviewDate);
@@ -22,10 +29,10 @@ export default function PrepPlanCard({ plan }: PrepPlanCardProps) {
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <Link
-      href={`/dashboard/interview-prep/${plan.id}`}
-      className="block p-4 bg-white border border-gray-200 rounded-xl hover:border-blue hover:shadow-md transition-all group">
-      <div className="flex items-start gap-4">
+    <div className="flex items-stretch gap-1 p-4 bg-white border border-gray-200 rounded-xl hover:border-blue hover:shadow-md transition-all group">
+      <Link
+        href={`/dashboard/interview-prep/${plan.id}`}
+        className="flex items-start gap-4 min-w-0 flex-1">
         <div className="relative w-12 h-12 flex-shrink-0">
           <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
             <circle
@@ -83,8 +90,21 @@ export default function PrepPlanCard({ plan }: PrepPlanCardProps) {
           </div>
         </div>
 
-        <ChevronRight className="h-5 w-5 text-main flex-shrink-0 group-hover:text-blue transition-colors" />
-      </div>
-    </Link>
+        <ChevronRight className="h-5 w-5 text-main flex-shrink-0 self-center group-hover:text-blue transition-colors" />
+      </Link>
+
+      {onDelete && (
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={deleting}
+          loading={deleting}
+          onClick={() => onDelete(plan.id)}
+          className="self-center text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0">
+          <Trash2 className="h-4 w-4" />
+          <span className="sr-only">{t("common.delete")}</span>
+        </Button>
+      )}
+    </div>
   );
 }

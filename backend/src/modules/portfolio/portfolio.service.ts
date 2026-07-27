@@ -40,8 +40,11 @@ export class PortfolioService {
       ? cvs.find((cv) => cv.id === createPortfolioDto.selectedCvId)
       : cvs[0]; // Default to latest CV
 
-    // Get projects
-    const projects = await this.projectsService.getProjectsForPortfolio(userId);
+    // Get projects (module first; fall back to CV-embedded projects)
+    const moduleProjects =
+      await this.projectsService.getProjectsForPortfolio(userId);
+    const contact = selectedCv?.parsedData?.contact;
+    const parsed = selectedCv?.parsedData;
 
     // Get template configuration
     const templateConfig = getTemplateConfig(createPortfolioDto.template);
@@ -55,20 +58,18 @@ export class PortfolioService {
     // Build portfolio data based on active sections
     return {
       user: {
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar || createPortfolioDto.avatar,
-        bio: createPortfolioDto.bio,
-        linkedinUrl: createPortfolioDto.linkedinUrl,
-        githubUrl: createPortfolioDto.githubUrl,
-        websiteUrl: createPortfolioDto.websiteUrl,
+        name: user.name || contact?.name || '',
+        email: user.email || contact?.email || '',
+        avatar: createPortfolioDto.avatar || user.avatar,
+        bio: createPortfolioDto.bio || parsed?.summary,
+        linkedinUrl: createPortfolioDto.linkedinUrl || contact?.linkedin,
+        githubUrl: createPortfolioDto.githubUrl || contact?.github,
+        websiteUrl: createPortfolioDto.websiteUrl || contact?.website,
       },
       cv: {
-        summary: finalSections.about
-          ? selectedCv?.parsedData.summary
-          : undefined,
+        summary: finalSections.about ? parsed?.summary : undefined,
         skills: finalSections.skills
-          ? selectedCv?.parsedData.skills || {
+          ? parsed?.skills || {
               technical: [],
               soft: [],
               languages: [],
@@ -76,19 +77,19 @@ export class PortfolioService {
             }
           : undefined,
         experience: finalSections.experience
-          ? selectedCv?.parsedData.experience || []
+          ? parsed?.experience || []
           : undefined,
         education: finalSections.education
-          ? selectedCv?.parsedData.education || []
+          ? parsed?.education || []
           : undefined,
         certifications: finalSections.certifications
-          ? selectedCv?.parsedData.certifications || []
+          ? parsed?.certifications || []
           : undefined,
-        awards: finalSections.awards
-          ? selectedCv?.parsedData.awards || []
-          : undefined,
+        awards: finalSections.awards ? parsed?.awards || [] : undefined,
       },
-      projects: finalSections.projects ? projects : undefined,
+      projects: finalSections.projects
+        ? this.resolvePortfolioProjects(moduleProjects, parsed?.projects)
+        : undefined,
       template: createPortfolioDto.template,
       customDomain: createPortfolioDto.customDomain,
       sections: finalSections,
@@ -163,16 +164,30 @@ export class PortfolioService {
     });
   }
 
-  async getPortfolioByUsername(username: string): Promise<PortfolioData> {
-    // Find portfolio by username
+  async findActiveByUsername(username: string): Promise<PortfolioEntity> {
     const portfolio = await this.portfolioRepository.findOne({
       where: { username, isActive: true },
       order: { createdAt: 'DESC' },
     });
-
     if (!portfolio) {
       throw new NotFoundException('Portfolio not found');
     }
+    return portfolio;
+  }
+
+  /** Public HTML for username URL — prefer saved snapshot so it matches preview/save. */
+  async getPublicHtmlByUsername(username: string): Promise<string> {
+    const portfolio = await this.findActiveByUsername(username);
+    if (portfolio.generatedHtml) {
+      return portfolio.generatedHtml;
+    }
+    // Legacy rows without snapshot: regenerate once
+    const portfolioData = await this.getPortfolioByUsername(username);
+    return this.generatePortfolioHTML(portfolioData);
+  }
+
+  async getPortfolioByUsername(username: string): Promise<PortfolioData> {
+    const portfolio = await this.findActiveByUsername(username);
 
     // Get user data using userId from portfolio
     const user = await this.usersService.findById(portfolio.userId);
@@ -183,20 +198,24 @@ export class PortfolioService {
     // Get CV data
     const cvs = await this.cvService.getUserCvs(user.id);
     const cvData = cvs.length > 0 ? cvs[0] : null;
+    const parsed = cvData?.parsedData;
+    const contact = parsed?.contact;
 
     // Get projects data
-    const projects = await this.projectsService.getUserProjects(user.id);
+    const moduleProjects = await this.projectsService.getProjectsForPortfolio(
+      user.id,
+    );
 
     // Return the complete portfolio data
     return {
       user: {
-        name: user.name || portfolio.bio || 'Portfolio Owner',
-        email: user.email || '',
+        name: user.name || contact?.name || portfolio.bio || 'Portfolio Owner',
+        email: user.email || contact?.email || '',
         avatar: portfolio.avatar || user.avatar || '',
-        bio: portfolio.bio || '',
-        linkedinUrl: portfolio.linkedinUrl || '',
-        githubUrl: portfolio.githubUrl || '',
-        websiteUrl: portfolio.websiteUrl || '',
+        bio: portfolio.bio || parsed?.summary || '',
+        linkedinUrl: portfolio.linkedinUrl || contact?.linkedin || '',
+        githubUrl: portfolio.githubUrl || contact?.github || '',
+        websiteUrl: portfolio.websiteUrl || contact?.website || '',
       },
       sections: {
         hero: true,
@@ -209,25 +228,29 @@ export class PortfolioService {
         certifications: true,
         awards: true,
       },
-      cv: cvData
+      cv: parsed
         ? {
-            summary: cvData.parsedData?.summary || '',
-            skills: cvData.parsedData?.skills || {
+            summary: parsed.summary || '',
+            skills: parsed.skills || {
               technical: [],
               soft: [],
               languages: [],
               tools: [],
             },
-            experience: cvData.parsedData?.experience || [],
-            education: cvData.parsedData?.education || [],
+            experience: parsed.experience || [],
+            education: parsed.education || [],
+            certifications: parsed.certifications || [],
+            awards: parsed.awards || [],
           }
         : {
             summary: '',
             skills: { technical: [], soft: [], languages: [], tools: [] },
             experience: [],
             education: [],
+            certifications: [],
+            awards: [],
           },
-      projects: projects || [],
+      projects: this.resolvePortfolioProjects(moduleProjects, parsed?.projects),
       template: portfolio.template,
       customDomain: portfolio.customDomain,
     };
@@ -547,25 +570,32 @@ export class PortfolioService {
     }
 
     const experienceHtml = data.cv.experience
-      .map(
-        (exp) => `
+      .map((exp) => {
+        const title = exp.title || exp.role || 'Position';
+        const duration = this.formatCvDuration(exp) || 'Duration';
+        const body = this.formatExperienceBody(exp);
+        const tech =
+          Array.isArray(exp.technologies) && exp.technologies.length > 0
+            ? `<p class="tech-stack">${exp.technologies.join(', ')}</p>`
+            : '';
+
+        return `
       <div class="experience-item">
         <div class="experience-card">
-          <h3>${exp.role || 'Position'}</h3>
+          <h3>${title}</h3>
           <div class="company">${exp.company || 'Company'}</div>
-          <div class="duration">${exp.duration || 'Duration'}</div>
-          <p>${exp.description || 'No description available'}</p>
+          <div class="duration">${duration}</div>
+          ${body}
+          ${tech}
         </div>
       </div>
-    `,
-      )
+    `;
+      })
       .join('');
 
     html = html.replace(
       /\{\{#each cv\.experience\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      (match, content) => {
-        return experienceHtml;
-      },
+      () => experienceHtml,
     );
 
     return html;
@@ -577,24 +607,27 @@ export class PortfolioService {
     }
 
     const projectsHtml = data.projects
-      .map(
-        (project) => `
+      .map((project) => {
+        const techStack = project.techStack || project.technologies || [];
+        const demoLink = project.demoLink || project.link;
+        const githubLink = project.githubLink || project.repository;
+        return `
       <div class="card">
         <h3>${project.name || 'Project Name'}</h3>
         <p>${project.description || 'No description available'}</p>
-        <p class="tech-stack">Tech Stack: ${project.techStack ? project.techStack.join(', ') : 'Not specified'}</p>
-        ${project.demoLink ? `<p><a href="${project.demoLink}" target="_blank">View Demo</a></p>` : ''}
-        ${project.githubLink ? `<p><a href="${project.githubLink}" target="_blank">View Code</a></p>` : ''}
+        <p class="tech-stack">Tech Stack: ${
+          techStack.length > 0 ? techStack.join(', ') : 'Not specified'
+        }</p>
+        ${demoLink ? `<p><a href="${demoLink}" target="_blank">View Demo</a></p>` : ''}
+        ${githubLink ? `<p><a href="${githubLink}" target="_blank">View Code</a></p>` : ''}
       </div>
-    `,
-      )
+    `;
+      })
       .join('');
 
     html = html.replace(
       /\{\{#each projects\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      (match, content) => {
-        return projectsHtml;
-      },
+      () => projectsHtml,
     );
 
     return html;
@@ -609,24 +642,24 @@ export class PortfolioService {
     }
 
     const educationHtml = data.cv.education
-      .map(
-        (edu) => `
+      .map((edu) => {
+        const school = edu.school || edu.institution || 'School';
+        const year = this.formatCvDuration(edu);
+        return `
       <div class="education-item">
         <h3>${edu.degree || 'Degree'}</h3>
-        <div class="school">${edu.school || 'School'}</div>
-        <div class="year">${edu.year || ''}</div>
+        <div class="school">${school}</div>
+        <div class="year">${year}</div>
         ${edu.gpa ? `<div class="gpa">GPA: ${edu.gpa}</div>` : ''}
         ${edu.honors ? `<div class="honors">${edu.honors}</div>` : ''}
       </div>
-    `,
-      )
+    `;
+      })
       .join('');
 
     html = html.replace(
       /\{\{#each cv\.education\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      () => {
-        return educationHtml;
-      },
+      () => educationHtml,
     );
 
     return html;
@@ -644,23 +677,22 @@ export class PortfolioService {
     }
 
     const certificationsHtml = data.cv.certifications
-      .map(
-        (cert) => `
+      .map((cert) => {
+        const link = cert.link || cert.credentialUrl;
+        return `
       <div class="certification-item">
         <h3>${cert.name || 'Certification'}</h3>
         <div class="issuer">${cert.issuer || 'Issuer'}</div>
         <div class="date">${cert.date || ''}</div>
-        ${cert.link ? `<a href="${cert.link}" target="_blank">View Certificate</a>` : ''}
+        ${link ? `<a href="${link}" target="_blank">View Certificate</a>` : ''}
       </div>
-    `,
-      )
+    `;
+      })
       .join('');
 
     html = html.replace(
       /\{\{#each cv\.certifications\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      () => {
-        return certificationsHtml;
-      },
+      () => certificationsHtml,
     );
 
     return html;
@@ -672,25 +704,100 @@ export class PortfolioService {
     }
 
     const awardsHtml = data.cv.awards
-      .map(
-        (award) => `
+      .map((award) => {
+        const name = award.name || award.title || 'Award';
+        return `
       <div class="award-item">
-        <h3>${award.name || 'Award'}</h3>
+        <h3>${name}</h3>
         <div class="issuer">${award.issuer || 'Issuer'}</div>
         <div class="date">${award.date || ''}</div>
       </div>
-    `,
-      )
+    `;
+      })
       .join('');
 
     html = html.replace(
       /\{\{#each cv\.awards\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      () => {
-        return awardsHtml;
-      },
+      () => awardsHtml,
     );
 
     return html;
+  }
+
+  private resolvePortfolioProjects(
+    moduleProjects: any[] | undefined,
+    cvProjects: any[] | undefined,
+  ): any[] {
+    if (moduleProjects?.length) return moduleProjects;
+    return (cvProjects || []).map((project) => ({
+      name: project.name,
+      description: project.description,
+      techStack: project.techStack || project.technologies || [],
+      demoLink: project.demoLink || project.link,
+      githubLink: project.githubLink || project.repository,
+    }));
+  }
+
+  private formatCvDuration(item: {
+    duration?: string;
+    year?: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+  }): string {
+    if (item.duration) return item.duration;
+    if (item.year) return item.year;
+    if (item.startDate) {
+      const end = item.current ? 'Present' : item.endDate || '';
+      return end ? `${item.startDate} - ${end}` : item.startDate;
+    }
+    return '';
+  }
+
+  private formatExperienceBody(exp: any): string {
+    if (exp.description) {
+      return `<p>${exp.description}</p>`;
+    }
+
+    const parts: string[] = [];
+    if (exp.companyDescription) {
+      parts.push(`<p>${exp.companyDescription}</p>`);
+    }
+
+    const bullets = [
+      ...(Array.isArray(exp.responsibilities) ? exp.responsibilities : []),
+      ...(Array.isArray(exp.achievements) ? exp.achievements : []),
+    ];
+    if (bullets.length > 0) {
+      parts.push(
+        `<ul>${bullets.map((item: string) => `<li>${item}</li>`).join('')}</ul>`,
+      );
+    }
+
+    if (Array.isArray(exp.subProjects) && exp.subProjects.length > 0) {
+      for (const sub of exp.subProjects) {
+        const heading = [sub.name, sub.role].filter(Boolean).join(' — ');
+        if (heading) {
+          parts.push(`<p><strong>${heading}</strong></p>`);
+        }
+        const subBullets = Array.isArray(sub.responsibilities)
+          ? sub.responsibilities
+          : [];
+        if (subBullets.length > 0) {
+          parts.push(
+            `<ul>${subBullets.map((item: string) => `<li>${item}</li>`).join('')}</ul>`,
+          );
+        }
+        const subTech = sub.techStack || sub.technologies;
+        if (Array.isArray(subTech) && subTech.length > 0) {
+          parts.push(`<p class="tech-stack">${subTech.join(', ')}</p>`);
+        }
+      }
+    }
+
+    return parts.length > 0
+      ? parts.join('')
+      : '<p>No description available</p>';
   }
 
   private cleanupRemainingHandlebars(html: string): string {

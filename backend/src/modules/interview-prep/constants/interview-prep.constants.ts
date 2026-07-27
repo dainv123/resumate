@@ -109,6 +109,9 @@ export const JD_DESCRIPTION_PREVIEW_LENGTH = 160;
 
 export const DEFAULT_DAILY_CAPACITY_MINUTES = 60;
 
+/** Pin this many P1 question-practice tasks to the front of the schedule (day 1). */
+export const DAY1_P1_QUESTION_PRACTICE_COUNT = 3;
+
 export const ROUND_WEIGHTS: Record<InterviewRoundType, number> = {
   [InterviewRoundType.HR_SCREEN]: 0.2,
   [InterviewRoundType.TECHNICAL]: 0.4,

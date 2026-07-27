@@ -548,6 +548,13 @@
     "exportAll": "Xuất tất cả",
     "createNewCv": "Tạo CV mới",
     "settings": "Cài đặt",
+    "selectCv": "Chọn CV",
+    "selectedCount": "Đã chọn {{count}} CV",
+    "deleteSelected": "Xóa đã chọn",
+    "deleteSelectedConfirm": "Bạn có chắc muốn xóa {{count}} CV đã chọn? Hành động này không thể hoàn tác.",
+    "deleteSelectedSuccess": "Đã xóa {{count}} CV thành công",
+    "deleteSelectedFailed": "Xóa các CV đã chọn thất bại",
+    "deleteSelectedPartial": "Đã xóa {{succeeded}} CV, thất bại {{failed}}",
     "noCvs": "Chưa có CV nào",
     "noCvsDescription": "Tải CV đầu tiên để bắt đầu",
     "createFirstCv": "Tạo CV đầu tiên",
@@ -1478,7 +1485,10 @@
       "title": "Các plan của bạn",
       "loading": "Đang tải...",
       "empty": "Chưa có plan. Tạo plan ở trên.",
-      "readiness": "Readiness: {{score}}/100"
+      "readiness": "Readiness: {{score}}/100",
+      "deleteConfirm": "Xóa plan này? Hành động không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa plan",
+      "deleteFailed": "Xóa plan thất bại"
     },
     "jd": {
       "label": "Đang prep cho",

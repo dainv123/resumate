@@ -21,6 +21,7 @@ import ProUpgradeModal from "@/components/interview-prep/ProUpgradeModal";
 import InterviewPrepGate from "@/components/interview-prep/InterviewPrepGate";
 import PrepPlanCard from "@/components/interview-prep/PrepPlanCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/contexts/ToastContext";
 import { GraduationCap, Upload } from "lucide-react";
 import Button from "@/components/ui/Button";
 
@@ -28,8 +29,10 @@ export default function InterviewPrepListPage() {
   const { t, language } = useLanguage();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
   const [showPlanPaywall, setShowPlanPaywall] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: cvs = [], isLoading: cvsLoading } = useQuery({
     queryKey: ["cvs"],
@@ -69,8 +72,26 @@ export default function InterviewPrepListPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (planId: string) => interviewPrepApi.deletePlan(planId),
+    onMutate: (planId) => setDeletingId(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interview-prep"] });
+      showSuccess(t("interviewPrep.list.deleteSuccess"));
+    },
+    onError: () => {
+      showError(t("interviewPrep.list.deleteFailed"));
+    },
+    onSettled: () => setDeletingId(null),
+  });
+
   const handleCreate = (values: CreateInterviewPrepPayload) => {
     createMutation.mutate({ ...values, language });
+  };
+
+  const handleDelete = (planId: string) => {
+    if (!window.confirm(t("interviewPrep.list.deleteConfirm"))) return;
+    deleteMutation.mutate(planId);
   };
 
   return (
@@ -142,7 +163,11 @@ export default function InterviewPrepListPage() {
             <ul className="space-y-3">
               {plans.map((plan) => (
                 <li key={plan.id}>
-                  <PrepPlanCard plan={plan} />
+                  <PrepPlanCard
+                    plan={plan}
+                    onDelete={handleDelete}
+                    deleting={deletingId === plan.id}
+                  />
                 </li>
               ))}
             </ul>

@@ -40,6 +40,8 @@ describe('PortfolioService', () => {
           company: 'Tech Corp',
           duration: '2020-2023',
           responsibilities: ['Lead team', 'Code review'],
+          achievements: ['Shipped v2 platform'],
+          technologies: ['React', 'Node.js'],
         },
       ],
       education: [
@@ -50,20 +52,35 @@ describe('PortfolioService', () => {
           gpa: '3.8',
         },
       ],
+      projects: [
+        {
+          name: 'CV Portfolio App',
+          description: 'Personal portfolio from CV data',
+          techStack: ['Next.js', 'Nest.js'],
+          link: 'https://example.com',
+        },
+      ],
       certifications: [
         {
           name: 'AWS Certified',
           issuer: 'Amazon',
           date: '2022',
+          credentialUrl: 'https://aws.amazon.com/cert',
         },
       ],
       awards: [
         {
-          name: 'Best Developer',
+          title: 'Best Developer',
           issuer: 'Tech Corp',
           date: '2022',
         },
       ],
+      contact: {
+        name: 'Dai Nguyen',
+        email: 'dai@example.com',
+        linkedin: 'https://linkedin.com/in/dai',
+        github: 'https://github.com/dai',
+      },
     },
   };
 
@@ -91,21 +108,51 @@ describe('PortfolioService', () => {
     <!-- /SECTION:ABOUT -->
     
     <!-- SECTION:SKILLS -->
+    {{#if cv.skills.technical}}
     {{#each cv.skills.technical}}
     <span>{{this}}</span>
     {{/each}}
+    {{/if}}
     <!-- /SECTION:SKILLS -->
     
     <!-- SECTION:EXPERIENCE -->
+    {{#if cv.experience}}
     {{#each cv.experience}}
     <div>{{title}} at {{company}}</div>
     {{/each}}
+    {{/if}}
     <!-- /SECTION:EXPERIENCE -->
+
+    <!-- SECTION:EDUCATION -->
+    {{#if cv.education}}
+    {{#each cv.education}}
+    <div>{{degree}} — {{school}}</div>
+    {{/each}}
+    {{/if}}
+    <!-- /SECTION:EDUCATION -->
+
+    <!-- SECTION:CERTIFICATIONS -->
+    {{#if cv.certifications}}
+    {{#each cv.certifications}}
+    <div>{{name}}</div>
+    {{/each}}
+    {{/if}}
+    <!-- /SECTION:CERTIFICATIONS -->
+
+    <!-- SECTION:AWARDS -->
+    {{#if cv.awards}}
+    {{#each cv.awards}}
+    <div>{{name}}</div>
+    {{/each}}
+    {{/if}}
+    <!-- /SECTION:AWARDS -->
     
     <!-- SECTION:PROJECTS -->
+    {{#if projects}}
     {{#each projects}}
     <div>{{name}}</div>
     {{/each}}
+    {{/if}}
     <!-- /SECTION:PROJECTS -->
   `;
 
@@ -264,6 +311,43 @@ describe('PortfolioService', () => {
       expect(result.cv.certifications).toBeUndefined();
       expect(result.cv.awards).toBeUndefined();
     });
+    it('should fall back to CV projects when module projects are empty', async () => {
+      jest
+        .spyOn(projectsService, 'getProjectsForPortfolio')
+        .mockResolvedValue([]);
+
+      const createPortfolioDto = {
+        template: PortfolioTemplate.BASIC,
+      };
+
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
+
+      expect(result.projects).toEqual([
+        expect.objectContaining({
+          name: 'CV Portfolio App',
+          techStack: ['Next.js', 'Nest.js'],
+          demoLink: 'https://example.com',
+        }),
+      ]);
+    });
+
+    it('should use CV contact socials when form fields are empty', async () => {
+      const createPortfolioDto = {
+        template: PortfolioTemplate.BASIC,
+      };
+
+      const result = await service.generatePortfolio(
+        'user-1',
+        createPortfolioDto,
+      );
+
+      expect(result.user.linkedinUrl).toBe('https://linkedin.com/in/dai');
+      expect(result.user.githubUrl).toBe('https://github.com/dai');
+      expect(result.user.bio).toBe('Experienced developer');
+    });
   });
 
   describe('Section Rendering', () => {
@@ -331,7 +415,40 @@ describe('PortfolioService', () => {
       expect(html).toContain('Experienced developer');
       expect(html).toContain('JavaScript');
       expect(html).toContain('Senior Developer');
+      expect(html).toContain('Lead team');
       expect(html).toContain('E-commerce Platform');
+    });
+
+    it('should render CV field names (title, responsibilities, award title)', async () => {
+      const portfolioData: any = {
+        user: { ...mockUser, bio: 'Software Engineer' },
+        cv: mockCv.parsedData,
+        projects: service['resolvePortfolioProjects'](
+          [],
+          mockCv.parsedData.projects,
+        ),
+        template: PortfolioTemplate.BASIC,
+        sections: {
+          hero: true,
+          about: true,
+          skills: true,
+          experience: true,
+          education: true,
+          projects: true,
+          certifications: true,
+          awards: true,
+          contact: true,
+        },
+      };
+
+      const html = await service.generatePortfolioHTML(portfolioData);
+
+      expect(html).toContain('Senior Developer');
+      expect(html).toContain('Lead team');
+      expect(html).toContain('Shipped v2 platform');
+      expect(html).toContain('Best Developer');
+      expect(html).toContain('https://aws.amazon.com/cert');
+      expect(html).toContain('CV Portfolio App');
     });
 
     it('should handle empty data gracefully', async () => {

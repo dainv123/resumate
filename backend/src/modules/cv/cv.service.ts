@@ -5,11 +5,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Cv } from './entities/cv.entity';
 import { JobDescription } from './entities/job-description.entity';
 import { CvMatchingAnalysis } from './entities/cv-matching-analysis.entity';
 import { CvCoverLetter } from './entities/cv-cover-letter.entity';
+import { InterviewPrepPlan } from '../interview-prep/entities/interview-prep-plan.entity';
+import { InterviewQuestionAssignment } from '../interview-prep/entities/interview-question-assignment.entity';
 import { JobDescriptionService } from './job-description.service';
 import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
@@ -62,6 +64,10 @@ export class CvService {
     private matchingAnalysisRepository: Repository<CvMatchingAnalysis>,
     @InjectRepository(CvCoverLetter)
     private coverLetterRepository: Repository<CvCoverLetter>,
+    @InjectRepository(InterviewPrepPlan)
+    private planRepository: Repository<InterviewPrepPlan>,
+    @InjectRepository(InterviewQuestionAssignment)
+    private assignmentRepository: Repository<InterviewQuestionAssignment>,
     private jobDescriptionService: JobDescriptionService,
     private aiService: AiService,
     private usersService: UsersService,
@@ -326,8 +332,38 @@ export class CvService {
   }
 
   async deleteCv(id: string, userId: string): Promise<void> {
-    const cv = await this.getCvById(id, userId);
+    const cv = await this.cvRepository.findOne({ where: { id, userId } });
+    if (!cv) return;
+
+    const tailoredChildren = await this.cvRepository.find({
+      where: { originalCvId: id, userId },
+    });
+    const cvIds = [id, ...tailoredChildren.map((child) => child.id)];
+
+    await this.deleteInterviewPrepForCvs(cvIds, userId);
+
+    // Children first — avoids self-FK on originalCvId
+    if (tailoredChildren.length > 0) {
+      await this.cvRepository.remove(tailoredChildren);
+    }
     await this.cvRepository.remove(cv);
+  }
+
+  private async deleteInterviewPrepForCvs(
+    cvIds: string[],
+    userId: string,
+  ): Promise<void> {
+    if (cvIds.length === 0) return;
+
+    const plans = await this.planRepository.find({
+      where: { userId, cvId: In(cvIds) },
+      select: ['id'],
+    });
+    if (plans.length === 0) return;
+
+    const planIds = plans.map((plan) => plan.id);
+    await this.assignmentRepository.delete({ planId: In(planIds) });
+    await this.planRepository.delete({ id: In(planIds) });
   }
 
   async getCvVersions(cvId: string, userId: string): Promise<any[]> {

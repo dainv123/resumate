@@ -12,7 +12,7 @@ export default function AiWizardPage() {
     <DashboardLayout
       title={t("aiCvWizard.title")}
       subtitle={t("aiCvWizard.subtitle")}
-      // backUrl="/dashboard"
+      backUrl="/dashboard/cv"
     >
       <AiCvWizard />
     </DashboardLayout>

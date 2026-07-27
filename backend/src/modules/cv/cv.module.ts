@@ -8,6 +8,8 @@ import { Cv } from './entities/cv.entity';
 import { JobDescription } from './entities/job-description.entity';
 import { CvMatchingAnalysis } from './entities/cv-matching-analysis.entity';
 import { CvCoverLetter } from './entities/cv-cover-letter.entity';
+import { InterviewPrepPlan } from '../interview-prep/entities/interview-prep-plan.entity';
+import { InterviewQuestionAssignment } from '../interview-prep/entities/interview-question-assignment.entity';
 import { User } from '../users/entities/user.entity';
 import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
@@ -26,6 +28,8 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
       JobDescription,
       CvMatchingAnalysis,
       CvCoverLetter,
+      InterviewPrepPlan,
+      InterviewQuestionAssignment,
       User,
     ]),
     AiModule,
