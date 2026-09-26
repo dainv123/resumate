@@ -124,14 +124,12 @@ export class PortfolioService {
     });
     
     if (!portfolio) {
-    throw new NotFoundException('Portfolio not found');
+      throw new NotFoundException('Portfolio not found');
     }
-    
-    // Get user data
-    const user = await this.usersService.findByEmail(`${username}@default.com`);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+
+    // Username is the email local-part, not a full address. Load the owner
+    // from the portfolio row instead of inventing a @default.com email.
+    const user = await this.usersService.findById(portfolio.userId);
     
     // Get CV data
     const cvs = await this.cvService.getUserCvs(user.id);
@@ -353,10 +351,10 @@ export class PortfolioService {
     const experienceHtml = data.cv.experience.map(exp => `
       <div class="experience-item">
         <div class="experience-card">
-          <h3>${exp.role || 'Position'}</h3>
-          <div class="company">${exp.company || 'Company'}</div>
-          <div class="duration">${exp.duration || 'Duration'}</div>
-          <p>${exp.description || 'No description available'}</p>
+          <h3>${this.escapeHtml(this.formatExperienceTitle(exp))}</h3>
+          <div class="company">${this.escapeHtml(exp.company || 'Company')}</div>
+          <div class="duration">${this.escapeHtml(exp.duration || 'Duration')}</div>
+          <p>${this.escapeHtml(this.formatExperienceDescription(exp))}</p>
         </div>
       </div>
     `).join('');
@@ -388,6 +386,49 @@ export class PortfolioService {
     });
     
     return html;
+  }
+
+  private formatExperienceTitle(exp: {
+    role?: string;
+    title?: string;
+  }): string {
+    if (typeof exp.role === 'string' && exp.role.trim() !== '') {
+      return exp.role;
+    }
+    if (typeof exp.title === 'string' && exp.title.trim() !== '') {
+      return exp.title;
+    }
+    return 'Position';
+  }
+
+  private formatExperienceDescription(exp: {
+    description?: string;
+    responsibilities?: string[];
+    achievements?: string[];
+  }): string {
+    if (typeof exp.description === 'string' && exp.description.trim() !== '') {
+      return exp.description;
+    }
+
+    const lines = [
+      ...(Array.isArray(exp.responsibilities) ? exp.responsibilities : []),
+      ...(Array.isArray(exp.achievements) ? exp.achievements : []),
+    ].filter((line) => typeof line === 'string' && line.trim() !== '');
+
+    if (lines.length > 0) {
+      return lines.join('; ');
+    }
+
+    return 'No description available';
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   private cleanupRemainingHandlebars(html: string): string {
