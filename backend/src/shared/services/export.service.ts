@@ -4,6 +4,7 @@ import { Document as WordDocument, Packer, Paragraph, TextRun, HeadingLevel } fr
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import type { Browser } from 'puppeteer';
 // Dynamic import for ESM module
 import React from 'react';
 import { HtmlTemplateService } from './html-template.service';
@@ -1559,29 +1560,29 @@ ${vol.description}`
   }
 
   private async exportHtmlToPDF(cvData: CVData): Promise<Buffer> {
+    let browser: Browser | null = null;
+    let tempHtmlFile: string | undefined;
+
     try {
       this.logger.log('Generating HTML template for two-column layout...');
-      
-      // Generate HTML template
+
       const htmlContent = await this.htmlTemplateService.generateTwoColumnHtml(cvData);
-      
-      // Write HTML to temporary file
+
       const tempDir = os.tmpdir();
-      const tempHtmlFile = path.join(tempDir, `cv-${Date.now()}.html`);
-      const tempPdfFile = path.join(tempDir, `cv-${Date.now()}.pdf`);
-      
+      tempHtmlFile = path.join(tempDir, `cv-${Date.now()}.html`);
+
       await fs.promises.writeFile(tempHtmlFile, htmlContent, 'utf8');
-      
-      // Convert HTML to PDF using puppeteer
+
+      // Dynamic import: puppeteer is an ESM-heavy optional runtime dependency.
       const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
-      
+
       const page = await browser.newPage();
       await page.goto(`file://${tempHtmlFile}`, { waitUntil: 'networkidle0' });
-      
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
@@ -1592,25 +1593,25 @@ ${vol.description}`
           left: '0.5in'
         }
       });
-      
-      await browser.close();
-      
-      // Clean up temporary files
-      try {
-        await fs.promises.unlink(tempHtmlFile);
-      } catch (error) {
-        this.logger.warn('Failed to delete temporary HTML file:', error);
-      }
-      
-      // Convert Uint8Array to Buffer
+
       const buffer = Buffer.from(pdfBuffer);
-      
+
       this.logger.log(`HTML to PDF conversion successful, size: ${buffer.length} bytes`);
       return buffer;
-      
     } catch (error) {
       this.logger.error('Error converting HTML to PDF:', error);
       throw new Error(`Failed to convert HTML to PDF: ${error.message}`);
+    } finally {
+      if (browser) {
+        await browser.close().catch((closeError) => {
+          this.logger.warn('Failed to close Puppeteer browser:', closeError);
+        });
+      }
+      if (tempHtmlFile) {
+        await fs.promises.unlink(tempHtmlFile).catch((unlinkError) => {
+          this.logger.warn('Failed to delete temporary HTML file:', unlinkError);
+        });
+      }
     }
   }
 }
