@@ -37,13 +37,8 @@ export const authApi = {
     return response.data;
   },
 
-  googleAuth: async (data: {
-    googleId: string;
-    email: string;
-    name: string;
-    avatar?: string;
-  }): Promise<AuthResponse> => {
-    const response = await api.post('/auth/google', data);
+  googleAuth: async (idToken: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/google', { idToken });
     return response.data;
   },
 
