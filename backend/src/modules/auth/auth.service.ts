@@ -60,6 +60,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Google-only accounts have no password. Comparing against null throws.
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -76,37 +81,35 @@ export class AuthService {
   }
 
   async googleAuth(googleAuthDto: GoogleAuthDto) {
-    const { googleId, email, name, avatar } = googleAuthDto;
+    const profile = await this.verifyGoogleIdToken(googleAuthDto.idToken);
+    const { sub: googleId, email, name, picture } = profile;
 
-    // Check if user exists
-    let user = await this.userRepository.findOne({ 
-      where: [{ email }, { googleId }] 
-    });
+    // Identity comes only from the verified token. Do not look up by a
+    // client-supplied google id: that value was previously writable and
+    // could already point at another user's row.
+    let user = await this.userRepository.findOne({ where: { email } });
 
     if (user) {
-      // Update user info if needed
-      if (!user.googleId) {
+      if (user.googleId !== googleId || (picture && user.avatar !== picture)) {
         user.googleId = googleId;
-        user.avatar = avatar || '';
+        if (picture) {
+          user.avatar = picture;
+        }
         user = await this.userRepository.save(user);
       }
     } else {
-      // Create new user
       user = this.userRepository.create({
         googleId,
         email,
         name,
-        avatar,
+        avatar: picture,
         plan: UserPlan.FREE,
       });
 
       user = await this.userRepository.save(user);
-
-      // Create usage tracking
       await this.createUserUsage(user.id);
     }
 
-    // Generate JWT token
     const token = this.generateToken(user);
 
     return {
@@ -156,13 +159,14 @@ export class AuthService {
       
       // Create usage tracking
       await this.createUserUsage(user.id);
-    } else {
-      // Update existing user with Google ID if not set
-      if (!user.googleId) {
-        user.googleId = googleId;
+    } else if (user.googleId !== googleId) {
+      // Replace a missing or previously unverified Google id with the
+      // id from this completed OAuth handshake.
+      user.googleId = googleId;
+      if (avatar) {
         user.avatar = avatar;
-        await this.userRepository.save(user);
       }
+      await this.userRepository.save(user);
     }
 
     // Generate JWT token
@@ -171,6 +175,65 @@ export class AuthService {
     return {
       user: this.sanitizeUser(user),
       token,
+    };
+  }
+
+  private async verifyGoogleIdToken(idToken: string): Promise<{
+    sub: string;
+    email: string;
+    name: string;
+    picture?: string;
+  }> {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId || !idToken || idToken.trim().length < 20) {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
+    let response: Response;
+    try {
+      const tokenInfoUrl = new URL('https://oauth2.googleapis.com/tokeninfo');
+      tokenInfoUrl.searchParams.set('id_token', idToken);
+      response = await fetch(tokenInfoUrl);
+    } catch {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
+    if (!response.ok) {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
+    const payload = (await response.json()) as {
+      iss?: string;
+      aud?: string;
+      sub?: string;
+      email?: string;
+      email_verified?: string | boolean;
+      name?: string;
+      picture?: string;
+    };
+
+    const validIssuers = new Set([
+      'accounts.google.com',
+      'https://accounts.google.com',
+    ]);
+    const emailVerified =
+      payload.email_verified === true || payload.email_verified === 'true';
+    if (
+      !payload.iss ||
+      !validIssuers.has(payload.iss) ||
+      payload.aud !== clientId ||
+      !emailVerified ||
+      !payload.email ||
+      !payload.sub
+    ) {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
+    return {
+      sub: payload.sub,
+      email: payload.email,
+      name: payload.name || payload.email,
+      picture: payload.picture,
     };
   }
 
