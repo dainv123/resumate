@@ -17,17 +17,30 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: {
+      id?: string;
+      name?: { givenName?: string; familyName?: string };
+      emails?: Array<{ value?: string }>;
+      photos?: Array<{ value?: string }>;
+    },
     done: VerifyCallback,
-  ): Promise<any> {
-    const { id, name, emails, photos } = profile;
-    const user = {
-      googleId: id,
-      email: emails[0].value,
-      name: `${name.givenName} ${name.familyName}`,
-      avatar: photos[0].value,
+  ): Promise<void> {
+    const email = profile.emails?.[0]?.value;
+    if (!profile.id || !email) {
+      done(new Error('Google account did not return an id and email'), undefined);
+      return;
+    }
+
+    const givenName = profile.name?.givenName ?? '';
+    const familyName = profile.name?.familyName ?? '';
+    const name = `${givenName} ${familyName}`.trim() || email;
+
+    done(null, {
+      googleId: profile.id,
+      email,
+      name,
+      avatar: profile.photos?.[0]?.value,
       accessToken,
-    };
-    done(null, user);
+    });
   }
 }
