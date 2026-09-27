@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-// import { useAuth } from "@/contexts/AuthContext";
+import { API_BASE_URL } from "@/lib/api";
 
 interface GoogleOAuthButtonProps {
   className?: string;
@@ -12,17 +12,8 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
   className = "",
   children,
 }) => {
-  // const { login } = useAuth();
-
-  const handleGoogleLogin = async () => {
-    try {
-      // Redirect to backend Google OAuth endpoint
-      const backendUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
-      window.location.href = `${backendUrl}/auth/google`;
-    } catch (error) {
-      console.error("Google OAuth error:", error);
-    }
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (
