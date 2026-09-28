@@ -398,6 +398,7 @@ export class HtmlTemplateService {
                             ${cvData.skills.soft.map(skill => `<li>${skill}</li>`).join('')}
                         </ul>
                     </div>
+                    ` : ''}
 
                     ${(cvData.skills?.tools && cvData.skills.tools.length > 0) ? `
                     <div>
@@ -407,7 +408,6 @@ export class HtmlTemplateService {
                         </ul>
                     </div>
                     ` : ""}
-                    ` : ''}
 
                     ${(cvData.skills?.languages && cvData.skills.languages.length > 0) ? `
                     <div id="languages">
@@ -499,6 +499,7 @@ export class HtmlTemplateService {
                         </section>
                     `).join('')}
                 </section>
+                ` : ''}
 
                 <!-- Certifications -->
                 ${cvData.certifications && cvData.certifications.length > 0 ? `
@@ -556,7 +557,6 @@ export class HtmlTemplateService {
                         </div>
                     `).join('')}
                 </section>
-                ` : ''}
                 ` : ''}
             </div>
         </div>
