@@ -341,6 +341,23 @@ export class PortfolioService {
       
       return content.replace(/\{\{#each cv\.skills\.tools\}\}[\s\S]*?\{\{\/each\}\}/g, skillsHtml);
     });
+
+    // basic/modern/creative templates iterate cv.skills as a list of strings.
+    // Parsed CV skills are an object of categories, so expand them before cleanup
+    // strips the unprocessed each-block down to an empty <span>.
+    html = html.replace(/\{\{#each cv\.skills\}\}[\s\S]*?\{\{\/each\}\}/g, () => {
+      const skills = data.cv.skills;
+      const allSkills = [
+        ...(skills?.technical ?? []),
+        ...(skills?.soft ?? []),
+        ...(skills?.languages ?? []),
+        ...(skills?.tools ?? []),
+      ].filter((skill): skill is string => typeof skill === 'string' && skill.trim() !== '');
+
+      return allSkills
+        .map(skill => `<span class="skill">${this.escapeHtml(skill)}</span>`)
+        .join('');
+    });
     
     return html;
   }
@@ -350,22 +367,59 @@ export class PortfolioService {
       return html.replace(/\{\{#if cv\.experience\}\}([\s\S]*?)\{\{\/if\}\}/g, '');
     }
     
-    const experienceHtml = data.cv.experience.map(exp => `
+    const experienceHtml = data.cv.experience.map(exp => {
+      const title = this.escapeHtml(exp.title || exp.role || '');
+      const company = this.escapeHtml(exp.company || '');
+      const duration = this.escapeHtml(exp.duration || '');
+      const details = this.renderExperienceDetails(exp);
+
+      return `
       <div class="experience-item">
         <div class="experience-card">
-          <h3>${exp.role || 'Position'}</h3>
-          <div class="company">${exp.company || 'Company'}</div>
-          <div class="duration">${exp.duration || 'Duration'}</div>
-          <p>${exp.description || 'No description available'}</p>
+          <h3>${title}</h3>
+          ${company ? `<div class="company">${company}</div>` : ''}
+          ${duration ? `<div class="duration">${duration}</div>` : ''}
+          ${details}
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
     
-    html = html.replace(/\{\{#each cv\.experience\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, content) => {
+    html = html.replace(/\{\{#each cv\.experience\}\}([\s\S]*?)\{\{\/each\}\}/g, () => {
       return experienceHtml;
     });
     
     return html;
+  }
+
+  private renderExperienceDetails(exp: {
+    description?: string;
+    responsibilities?: string[];
+    achievements?: string[];
+  }): string {
+    const bullets = [
+      ...(Array.isArray(exp.responsibilities) ? exp.responsibilities : []),
+      ...(Array.isArray(exp.achievements) ? exp.achievements : []),
+    ].filter((item): item is string => typeof item === 'string' && item.trim() !== '');
+
+    if (bullets.length > 0) {
+      return `<ul>${bullets.map(item => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul>`;
+    }
+
+    if (typeof exp.description === 'string' && exp.description.trim() !== '') {
+      return `<p>${this.escapeHtml(exp.description.trim())}</p>`;
+    }
+
+    return '';
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   private renderProjectsSection(html: string, data: PortfolioData): string {
