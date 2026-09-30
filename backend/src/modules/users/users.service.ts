@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserUsage } from './entities/user-usage.entity';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -25,10 +26,27 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async updateProfile(id: string, updateData: Partial<User>): Promise<User> {
+  async updateProfile(
+    id: string,
+    updateData: UpdateProfileDto,
+  ): Promise<Omit<User, 'password'>> {
     const user = await this.findById(id);
-    Object.assign(user, updateData);
-    return this.userRepository.save(user);
+
+    // Only copy allowlisted fields. Assigning the raw body lets a caller
+    // change the primary key, and TypeORM updates the row for that new id.
+    if (typeof updateData.name === 'string') {
+      user.name = updateData.name;
+    }
+    if (typeof updateData.avatar === 'string') {
+      user.avatar = updateData.avatar;
+    }
+
+    const saved = await this.userRepository.save(user);
+    const safeUser: Omit<User, 'password'> & { password?: string } = {
+      ...saved,
+    };
+    delete safeUser.password;
+    return safeUser;
   }
 
   async getUserUsage(userId: string): Promise<UserUsage> {
