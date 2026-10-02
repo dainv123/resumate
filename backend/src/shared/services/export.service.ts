@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { CVData } from '../../modules/cv/entities/cv.entity';
 import { Document as WordDocument, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
@@ -1567,8 +1568,7 @@ ${vol.description}`
       
       // Write HTML to temporary file
       const tempDir = os.tmpdir();
-      const tempHtmlFile = path.join(tempDir, `cv-${Date.now()}.html`);
-      const tempPdfFile = path.join(tempDir, `cv-${Date.now()}.pdf`);
+      const tempHtmlFile = path.join(tempDir, `cv-${randomUUID()}.html`);
       
       await fs.promises.writeFile(tempHtmlFile, htmlContent, 'utf8');
       
