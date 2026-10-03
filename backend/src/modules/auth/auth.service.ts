@@ -60,7 +60,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check password
+    // Google-only accounts have no password. bcrypt throws on a null hash
+    // and would turn this login into a 500.
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -115,12 +120,12 @@ export class AuthService {
     };
   }
 
-  async validateUser(userId: string): Promise<User> {
+  async validateUser(userId: string): Promise<Partial<User>> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    return user;
+    return this.sanitizeUser(user);
   }
 
   private generateToken(user: User): string {
