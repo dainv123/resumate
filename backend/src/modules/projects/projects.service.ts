@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
-import { Cv } from '../cv/entities/cv.entity';
+import { Cv, Project as CvProject } from '../cv/entities/cv.entity';
 import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
 import { CreateProjectDto, UpdateProjectDto, AddToCvDto } from './dto/project.dto';
@@ -99,7 +99,8 @@ export class ProjectsService {
       throw new NotFoundException('CV not found');
     }
 
-    // Add project to CV
+    // Add project to CV. Copy the list first so a missing projects array
+    // cannot throw, and so this write does not depend on in-place mutation.
     const projectData = {
       name: project.name,
       description: project.description,
@@ -108,7 +109,14 @@ export class ProjectsService {
       link: project.demoLink,
     };
 
-    cv.parsedData.projects.push(projectData);
+    const projects = Array.isArray(cv.parsedData?.projects)
+      ? [...cv.parsedData.projects]
+      : [];
+    projects.push(projectData);
+    cv.parsedData = {
+      ...cv.parsedData,
+      projects,
+    };
     cv.version += 1;
 
     // Mark project as added to CV
@@ -128,17 +136,49 @@ export class ProjectsService {
       throw new NotFoundException('CV not found');
     }
 
-    // Remove project from CV
-    cv.parsedData.projects = cv.parsedData.projects.filter(
-      p => p.name !== project.name
-    );
+    // Remove only the entry this action added. Matching on name alone deletes
+    // every resume project that shares that title.
+    const projects = Array.isArray(cv.parsedData?.projects)
+      ? [...cv.parsedData.projects]
+      : [];
+    const removalIndex = this.findTrackedProjectIndex(projects, project);
+    if (removalIndex < 0) {
+      return cv;
+    }
+
+    projects.splice(removalIndex, 1);
+    cv.parsedData = {
+      ...cv.parsedData,
+      projects,
+    };
     cv.version += 1;
 
-    // Mark project as not added to CV
     project.isAddedToCv = false;
     await this.projectRepository.save(project);
 
     return this.cvRepository.save(cv);
+  }
+
+  private findTrackedProjectIndex(projects: CvProject[], project: Project): number {
+    for (let index = projects.length - 1; index >= 0; index -= 1) {
+      const entry = projects[index];
+      if (
+        entry.name === project.name &&
+        (entry.description || '') === (project.description || '') &&
+        (entry.results || '') === (project.results || '') &&
+        (entry.link || '') === (project.demoLink || '') &&
+        this.sameStringList(entry.techStack, project.techStack)
+      ) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  private sameStringList(left?: string[] | null, right?: string[] | null): boolean {
+    const a = left ?? [];
+    const b = right ?? [];
+    return a.length === b.length && a.every((item, index) => item === b[index]);
   }
 
   async regenerateProjectBullets(projectId: string, userId: string): Promise<Project> {
