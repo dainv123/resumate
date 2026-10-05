@@ -149,8 +149,15 @@ export class CvService {
   }
 
   async deleteCv(id: string, userId: string): Promise<void> {
-    const cv = await this.getCvById(id, userId);
-    await this.cvRepository.remove(cv);
+    await this.getCvById(id, userId);
+
+    // Tailored copies store originalCvId, and that foreign key rejects
+    // deleting the source resume. Detach them first so the copies remain.
+    await this.cvRepository.update(
+      { originalCvId: id, userId },
+      { originalCvId: null },
+    );
+    await this.cvRepository.delete({ id, userId });
   }
 
   async getCvVersions(cvId: string, userId: string): Promise<Cv[]> {
