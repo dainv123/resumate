@@ -83,6 +83,9 @@ John Doe`;
             findOne: jest.fn().mockResolvedValue(mockCv),
             save: jest.fn().mockImplementation(cv => Promise.resolve(cv)),
             create: jest.fn().mockImplementation(dto => dto),
+            update: jest.fn().mockResolvedValue({ affected: 0 }),
+            delete: jest.fn().mockResolvedValue({ affected: 1 }),
+            remove: jest.fn(),
           },
         },
         {
@@ -114,6 +117,38 @@ John Doe`;
     service = module.get<CvService>(CvService);
     aiService = module.get<AiService>(AiService);
     cvRepository = module.get<Repository<Cv>>(getRepositoryToken(Cv));
+  });
+
+  describe('deleteCv', () => {
+    it('detaches tailored copies before deleting the source resume', async () => {
+      const update = jest.spyOn(cvRepository, 'update');
+      const removeRow = jest.spyOn(cvRepository, 'delete');
+
+      await service.deleteCv('test-cv-id', 'test-user-id');
+
+      expect(update).toHaveBeenCalledWith(
+        { originalCvId: 'test-cv-id', userId: 'test-user-id' },
+        { originalCvId: null },
+      );
+      expect(removeRow).toHaveBeenCalledWith({
+        id: 'test-cv-id',
+        userId: 'test-user-id',
+      });
+      expect(update.mock.invocationCallOrder[0]).toBeLessThan(
+        removeRow.mock.invocationCallOrder[0],
+      );
+      expect(cvRepository.remove).not.toHaveBeenCalled();
+    });
+
+    it('does not delete a resume owned by someone else', async () => {
+      jest.spyOn(cvRepository, 'findOne').mockResolvedValueOnce(null);
+
+      await expect(
+        service.deleteCv('test-cv-id', 'other-user'),
+      ).rejects.toThrow('CV not found');
+      expect(cvRepository.update).not.toHaveBeenCalled();
+      expect(cvRepository.delete).not.toHaveBeenCalled();
+    });
   });
 
   describe('analyzeCompatibility', () => {

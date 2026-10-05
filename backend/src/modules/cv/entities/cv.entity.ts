@@ -125,7 +125,7 @@ export class Cv {
   tailoredForJob: string;
 
   @Column({ nullable: true })
-  originalCvId: string;
+  originalCvId: string | null;
 
   @Column({ nullable: true })
   jobDescriptionId: string;
