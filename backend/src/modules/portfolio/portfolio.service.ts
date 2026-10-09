@@ -60,24 +60,31 @@ export class PortfolioService {
 
   async savePortfolio(userId: string, createPortfolioDto: CreatePortfolioDto): Promise<PortfolioEntity> {
     const user = await this.usersService.findById(userId);
-    const username = user.email.split('@')[0].toLowerCase();
-    
+
     // Check if user already has a portfolio
     let portfolio = await this.portfolioRepository.findOne({
       where: { userId, isActive: true }
     });
-    
+
+    const username = await this.allocateUsername(
+      userId,
+      user.email,
+      portfolio?.username,
+    );
+    const uuid = portfolio?.uuid ?? randomUUID();
+
     // Generate portfolio data
     const portfolioData = await this.generatePortfolio(userId, createPortfolioDto);
     
     // Generate HTML
     const html = await this.generatePortfolioHTML(portfolioData);
     
-    // Generate URL
-    const url = await this.generatePortfolioUrl(userId, createPortfolioDto.customDomain);
+    // UUID route serves the stored HTML. The username route is a separate lookup.
+    const url = this.buildPublishedUrl(uuid);
     
     if (portfolio) {
       // Update existing portfolio (override)
+      portfolio.username = username;
       portfolio.template = createPortfolioDto.template;
       portfolio.customDomain = createPortfolioDto.customDomain || '';
       portfolio.bio = createPortfolioDto.bio || '';
@@ -89,8 +96,6 @@ export class PortfolioService {
       portfolio.generatedUrl = url;
       portfolio.updatedAt = new Date();
     } else {
-      // Create new portfolio
-      const uuid = randomUUID();
       portfolio = this.portfolioRepository.create({
         username,
         uuid,
@@ -186,12 +191,48 @@ export class PortfolioService {
   }
 
   async generatePortfolioUrl(userId: string, customDomain?: string): Promise<string> {
+    const existing = await this.getUserPortfolio(userId);
+    if (existing?.uuid) {
+      return this.buildPublishedUrl(existing.uuid);
+    }
+
     const user = await this.usersService.findById(userId);
-    const username = user.email.split('@')[0].toLowerCase();
-    
-    // Always return the backend URL as primary portfolio URL
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5001';
-    return `${baseUrl}/portfolio/${username}`;
+    const username = await this.allocateUsername(userId, user.email);
+    // Custom domains are stored on the portfolio; the shareable path stays on this host.
+    this.validateCustomDomain(customDomain);
+    return `${this.portfolioBaseUrl()}/portfolio/${username}`;
+  }
+
+  private portfolioBaseUrl(): string {
+    return process.env.BACKEND_URL || 'http://localhost:5001';
+  }
+
+  private buildPublishedUrl(uuid: string): string {
+    return `${this.portfolioBaseUrl()}/portfolio/uuid/${uuid}`;
+  }
+
+  private emailLocalPart(email: string): string {
+    return email.split('@')[0].toLowerCase();
+  }
+
+  /**
+   * Email local-parts are not unique (alice@gmail.com and alice@yahoo.com).
+   * Keep an existing username when it is free, otherwise append the user id
+   * so the public username route cannot serve someone else's portfolio.
+   */
+  private async allocateUsername(
+    userId: string,
+    email: string,
+    currentUsername?: string,
+  ): Promise<string> {
+    const preferred = currentUsername || this.emailLocalPart(email);
+    const conflict = await this.portfolioRepository.findOne({
+      where: { username: preferred, isActive: true },
+    });
+    if (!conflict || conflict.userId === userId) {
+      return preferred;
+    }
+    return `${this.emailLocalPart(email)}-${userId}`;
   }
 
   /**
