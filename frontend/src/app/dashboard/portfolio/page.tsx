@@ -24,17 +24,11 @@ export default function PortfolioPage() {
   const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
   const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
 
-  const generateHtmlMutation = useMutation({
-    mutationFn: portfolioApi.generatePortfolioHTML,
+  const saveMutation = useMutation({
+    mutationFn: portfolioApi.savePortfolio,
     onSuccess: (data) => {
-      setGeneratedHtml(data.html);
-    },
-  });
-
-  const generateUrlMutation = useMutation({
-    mutationFn: portfolioApi.generatePortfolioUrl,
-    onSuccess: (data) => {
-      setPortfolioUrl(data.url);
+      setGeneratedHtml(data.generatedHtml || null);
+      setPortfolioUrl(data.generatedUrl || null);
     },
   });
 
@@ -48,8 +42,7 @@ export default function PortfolioPage() {
       websiteUrl: websiteUrl || undefined,
     };
 
-    generateHtmlMutation.mutate(data);
-    generateUrlMutation.mutate({ customDomain: customDomain || undefined });
+    saveMutation.mutate(data);
   };
 
   const handlePreview = () => {
@@ -247,13 +240,16 @@ export default function PortfolioPage() {
           {/* Generate Button */}
           <Button
             onClick={handleGeneratePortfolio}
-            loading={
-              generateHtmlMutation.isPending || generateUrlMutation.isPending
-            }
+            loading={saveMutation.isPending}
             className="w-full">
             <Sparkles className="h-4 w-4 mr-2" />
             Generate Portfolio
           </Button>
+          {saveMutation.isError && (
+            <p className="text-sm text-red-600">
+              Could not publish your portfolio. Please try again.
+            </p>
+          )}
         </div>
 
         {/* Preview & Actions */}
