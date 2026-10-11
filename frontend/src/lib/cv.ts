@@ -119,7 +119,10 @@ export const cvApi = {
     
     const response = await api.post('/cv/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        // The shared client defaults to application/json. Clearing that lets the
+        // browser set multipart/form-data with a boundary. A literal
+        // multipart/form-data value has no boundary, so Multer drops the file.
+        'Content-Type': false,
       },
     });
     return response.data;
