@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CVData } from '../../modules/cv/entities/cv.entity';
+import { normalizeCvData } from '../../modules/cv/normalize-cv-data';
 import { Document as WordDocument, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,6 +16,7 @@ export class ExportService {
   constructor(private readonly htmlTemplateService: HtmlTemplateService) {}
 
   async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
+    cvData = normalizeCvData(cvData);
     try {
       this.logger.log(`Starting PDF generation with template: ${template}...`);
       
@@ -47,6 +49,7 @@ export class ExportService {
   }
 
   async exportToWord(cvData: CVData): Promise<Buffer> {
+    cvData = normalizeCvData(cvData);
     try {
       const doc = new WordDocument({
         sections: [{
@@ -467,6 +470,7 @@ export class ExportService {
   }
 
   async exportToATS(cvData: CVData): Promise<Buffer> {
+    cvData = normalizeCvData(cvData);
     try {
       // ATS-friendly format (plain text, no fancy formatting)
       const atsContent = this.formatForATS(cvData);

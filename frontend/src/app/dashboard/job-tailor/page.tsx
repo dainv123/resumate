@@ -53,8 +53,12 @@ export default function JobTailorPage() {
   const filteredAndSortedCvs = React.useMemo(() => {
     const filtered = cvs.filter((cv) => {
       const matchesSearch =
-        cv.parsedData.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cv.originalFileName.toLowerCase().includes(searchTerm.toLowerCase());
+        (cv.parsedData?.name ?? "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (cv.originalFileName ?? "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
       const matchesTailoredFilter = !showOnlyTailored || cv.isTailored;
       return matchesSearch && matchesTailoredFilter;
     });
@@ -71,9 +75,13 @@ export default function JobTailorPage() {
             new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
           );
         case "name":
-          return a.parsedData.name.localeCompare(b.parsedData.name);
-        default:
-          return 0;
+          return (a.parsedData?.name ?? "").localeCompare(
+            b.parsedData?.name ?? ""
+          );
+        default: {
+          const unexpectedSort: never = sortBy;
+          return unexpectedSort;
+        }
       }
     });
 

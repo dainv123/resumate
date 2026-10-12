@@ -244,7 +244,7 @@ export default function CVPreview({
       )}
 
       {/* Experience Preview */}
-      {parsedData.experience.length > 0 && (
+      {parsedData?.experience?.length > 0 && (
         <div className="mb-6">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Experience</h4>
           <div className="space-y-3">

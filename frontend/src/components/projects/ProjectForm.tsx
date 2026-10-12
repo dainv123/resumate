@@ -62,6 +62,7 @@ export default function ProjectForm({
     defaultValues: {
       name: project?.name || "",
       role: project?.role || "",
+      techStack: project?.techStack || [],
       description: project?.description || "",
       results: project?.results || "",
       demoLink: project?.demoLink || "",
@@ -69,6 +70,10 @@ export default function ProjectForm({
       imageUrl: project?.imageUrl || "",
     },
   });
+
+  React.useEffect(() => {
+    setValue("techStack", project?.techStack ?? []);
+  }, [project, setValue]);
 
   const addTech = () => {
     if (newTech.trim() && !techStack.includes(newTech.trim())) {

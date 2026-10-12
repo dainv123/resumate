@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { normalizeCvData } from '../../cv/normalize-cv-data';
 
 @Injectable()
 export class GoogleAIService {
@@ -118,7 +119,7 @@ export class GoogleAIService {
         throw new Error('No valid JSON found in tailored response');
       }
       
-      return JSON.parse(jsonMatch[0]);
+      return normalizeCvData(JSON.parse(jsonMatch[0]));
     } catch (error) {
       this.logger.error('Error tailoring CV content:', error);
       throw error;
@@ -398,85 +399,7 @@ export class GoogleAIService {
   }
 
   private cleanupParsedData(data: any): any {
-    // Preserve all original data and only ensure structure consistency
-    const cleanedData = {
-      name: data.name || '',
-      email: data.email || '',
-      phone: data.phone || '',
-      address: data.address || '',
-      linkedin: data.linkedin || '',
-      dateOfBirth: data.dateOfBirth || '',
-      summary: data.summary || '',
-      education: Array.isArray(data.education) ? data.education.map(edu => ({
-        degree: edu.degree || edu.qualification || edu.certificate || '',
-        school: edu.school || edu.university || edu.institution || edu.college || '',
-        year: edu.year || edu.graduationYear || edu.date || '',
-        gpa: edu.gpa || edu.grade || '',
-        location: edu.location || edu.place || '',
-        honors: edu.honors || edu.awards || edu.achievements || ''
-      })) : [],
-      experience: Array.isArray(data.experience) ? data.experience.map(exp => ({
-        title: exp.title || exp.role || exp.position || '',
-        company: exp.company || exp.employer || '',
-        duration: exp.duration || exp.period || exp.timeframe || '',
-        teamSize: exp.teamSize || '',
-        companyDescription: exp.companyDescription || '',
-        responsibilities: Array.isArray(exp.responsibilities) ? exp.responsibilities : [],
-        achievements: Array.isArray(exp.achievements) ? exp.achievements : [],
-        technologies: Array.isArray(exp.technologies) ? exp.technologies : [],
-        subProjects: Array.isArray(exp.subProjects) ? exp.subProjects.map(sub => ({
-          name: sub.name || '',
-          role: sub.role || '',
-          techStack: Array.isArray(sub.techStack) ? sub.techStack : [],
-          responsibilities: Array.isArray(sub.responsibilities) ? sub.responsibilities : [],
-        })) : []
-      })) : [],
-      skills: {
-        technical: Array.isArray(data.skills?.technical) ? data.skills.technical : [],
-        soft: Array.isArray(data.skills?.soft) ? data.skills.soft : [],
-        languages: Array.isArray(data.skills?.languages) ? data.skills.languages : [],
-        tools: Array.isArray(data.skills?.tools) ? data.skills.tools : []
-      },
-      projects: Array.isArray(data.projects) ? data.projects.map(project => ({
-        name: project.name || '',
-        duration: project.duration || '',
-        description: project.description || '',
-        techStack: Array.isArray(project.techStack) ? project.techStack : [],
-        results: project.results || '',
-        link: project.link || '',
-      })) : [],
-      certifications: Array.isArray(data.certifications) ? data.certifications.map(cert => ({
-        name: cert.name || '',
-        issuer: cert.issuer || '',
-        date: cert.date || cert.issueDate || '',
-        link: cert.link || cert.certificateLink || '',
-      })) : [],
-      awards: Array.isArray(data.awards) ? data.awards : [],
-      publications: Array.isArray(data.publications) ? data.publications : [],
-      volunteer: Array.isArray(data.volunteer) ? data.volunteer : []
-    };
-
-    // Handle skills if it's an array instead of object
-    if (Array.isArray(data.skills) && data.skills.length > 0) {
-      const technicalKeywords = ['programming', 'development', 'coding', 'software', 'technical', 'programming', 'database', 'web', 'mobile', 'cloud', 'devops', 'ai', 'ml', 'data', 'analytics'];
-      const softKeywords = ['leadership', 'communication', 'teamwork', 'management', 'problem', 'creative', 'analytical', 'interpersonal', 'presentation', 'negotiation'];
-      const languageKeywords = ['english', 'spanish', 'french', 'german', 'chinese', 'japanese', 'korean', 'arabic', 'portuguese', 'italian', 'russian'];
-      
-      data.skills.forEach(skill => {
-        const skillLower = skill.toLowerCase();
-        if (technicalKeywords.some(keyword => skillLower.includes(keyword))) {
-          cleanedData.skills.technical.push(skill);
-        } else if (softKeywords.some(keyword => skillLower.includes(keyword))) {
-          cleanedData.skills.soft.push(skill);
-        } else if (languageKeywords.some(keyword => skillLower.includes(keyword))) {
-          cleanedData.skills.languages.push(skill);
-        } else {
-          cleanedData.skills.technical.push(skill);
-        }
-      });
-    }
-
-    return cleanedData;
+    return normalizeCvData(data);
   }
 
   // Test function to validate parsing with different CV formats
