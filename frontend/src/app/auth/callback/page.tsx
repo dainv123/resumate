@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +52,7 @@ function AuthCallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams, router, login, updateUser]);
+  }, [searchParams, router, updateUser]);
 
   if (loading) {
     return (
