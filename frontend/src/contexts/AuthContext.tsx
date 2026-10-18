@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { User, authApi, isAuthenticated } from "@/lib/auth";
 
 interface AuthContextType {
@@ -46,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       const response = await authApi.login({ email, password });
       if (typeof window !== "undefined") {
@@ -56,28 +62,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const register = async (email: string, name: string, password: string) => {
-    try {
-      const response = await authApi.register({ email, name, password });
-      if (typeof window !== "undefined") {
-        localStorage.setItem("token", response.token);
+  const register = useCallback(
+    async (email: string, name: string, password: string) => {
+      try {
+        const response = await authApi.register({ email, name, password });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", response.token);
+        }
+        setUser(response.user);
+      } catch (error) {
+        throw error;
       }
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
-  };
+    },
+    [],
+  );
 
-  const logout = () => {
+  const logout = useCallback(() => {
     authApi.logout();
     setUser(null);
-  };
+  }, []);
 
-  const updateUser = (updatedUser: User) => {
+  const updateUser = useCallback((updatedUser: User) => {
     setUser(updatedUser);
-  };
+  }, []);
 
   const value = {
     user,
