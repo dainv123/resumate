@@ -366,16 +366,20 @@ Use **`PORT=5001`** with `npm run start:dev` (Nest scripts bind 5001).
 ```bash
 cd frontend
 npm install
-# optional .env.local — NEXT_PUBLIC_API_URL=http://localhost:5001
+# optional .env.development — NEXT_PUBLIC_API_URL=http://localhost:5001
 npm run dev           # http://localhost:5005
 ```
 
 ### Docker
 
 ```bash
-docker compose -f docker-compose.dev.yml up
+cp env.dev.example .env.dev   # once — fill secrets
+docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
 # Frontend :5000 · Backend :5001 · Postgres :5432 · Redis :6379
+# Backend boot: schema:sync → migration:run (pgvector embedding) → Nest
 ```
+
+Use **`.env.dev`** for localhost URLs/DB. Keep root **`.env`** for remote (RDS / resumate.click) — Nest loads `.env.dev` first. Host-only DB: `cd backend && npm run db:bootstrap`.
 
 Or: `./deployment/start-dev.sh`
 
@@ -401,7 +405,7 @@ Canonical reference: [`backend/env.example`](./backend/env.example).
 | App | `PORT` (prefer `5001`), `FRONTEND_URL`, `NODE_ENV` |
 | Redis | see [Redis](#redis) |
 
-Frontend (optional `.env.local`):
+Frontend (optional `.env.development`):
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5001

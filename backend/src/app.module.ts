@@ -23,7 +23,8 @@ import { RedisModule } from './shared/redis/redis.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['../.env', '.env'],
+      // Prefer .env.dev (Docker / laptop) over shared .env (RDS / resumate.click)
+      envFilePath: ['../.env.dev', '.env.dev', '../.env', '.env'],
       validatePredefined: false,
     }),
     ScheduleModule.forRoot(),
@@ -35,8 +36,13 @@ import { RedisModule } from './shared/redis/redis.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV === 'development',
-      ssl: { rejectUnauthorized: false },
+      // Docker sets TYPEORM_SYNCHRONIZE=false (entrypoint runs schema:sync + migration:run).
+      synchronize:
+        process.env.TYPEORM_SYNCHRONIZE === 'true' ||
+        (process.env.TYPEORM_SYNCHRONIZE !== 'false' &&
+          process.env.NODE_ENV === 'development'),
+      ssl:
+        process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
       extra: {
         connectionTimeoutMillis: 10000,
         idleTimeoutMillis: 30000,

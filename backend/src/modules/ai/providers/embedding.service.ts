@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, TaskType } from '@google/generative-ai';
 import {
   EmbeddingDefaults,
   EmbeddingEnv,
@@ -126,7 +126,7 @@ export class EmbeddingService {
     const result = await model.batchEmbedContents({
       requests: texts.map((text) => ({
         content: { role: 'user', parts: [{ text }] },
-        taskType: 'RETRIEVAL_DOCUMENT' as const,
+        taskType: TaskType.RETRIEVAL_DOCUMENT,
       })),
     });
 

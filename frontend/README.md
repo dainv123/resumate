@@ -15,7 +15,7 @@ npm run lint
 npm run type-check
 ```
 
-## Env (optional `.env.local`)
+## Env (optional `.env.development`)
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5001

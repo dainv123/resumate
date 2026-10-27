@@ -38,9 +38,9 @@
 
 ---
 
-## 📝 Cập nhật file .env.local:
+## 📝 Cập nhật file .env.development:
 
-Tạo file `.env.local` trong thư mục `frontend/` với nội dung:
+Tạo file `.env.development` trong thư mục `frontend/` với nội dung:
 
 ```bash
 # Frontend Environment Variables
