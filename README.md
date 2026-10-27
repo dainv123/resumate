@@ -71,10 +71,11 @@ flowchart TB
     Notify[notifications]
   end
 
-  PG[(PostgreSQL)]
+  PG[("PostgreSQL + pgvector")]
   S3[(AWS S3)]
   Redis[(Redis)]
-  LLM[Gemini / OpenRouter]
+  LLM[LLM — Gemini / OpenRouter]
+  Emb[Embed — Google text-embedding-004]
 
   User --> FE
   FE -->|REST + JWT| BE
@@ -82,11 +83,17 @@ flowchart TB
   CV --> PG & S3 & AI
   Projects --> PG & AI
   Prep --> PG & AI
+  Prep -->|RAG retrieve| PG
   Portfolio --> PG
+  Portfolio -->|HTML cache| Redis
   Auth & Users & Analytics --> PG
   AI --> LLM
-  BE --> Redis
+  AI -->|query / backfill vectors| Emb
+  BE -->|AI rate limit| Redis
 ```
+
+Redis: short-window **AI rate limits** + **public portfolio HTML cache** (fail-open if down).  
+Prep RAG: embed JD → **pgvector** top‑K on `question_bank` → impact / PASS rank (see [RAG](#interview-prep-rag-pgvector)).
 
 ### Feature map
 
@@ -136,9 +143,11 @@ sequenceDiagram
   actor U as User
   participant FE as Frontend
   participant BE as Backend
-  participant AI as AI provider
+  participant RL as Redis
+  participant AI as LLM
+  participant Emb as Embed API
   participant S3 as S3
-  participant DB as Postgres
+  participant DB as Postgres+pgvector
 
   U->>FE: Register / Google login
   FE->>BE: Auth
@@ -147,26 +156,42 @@ sequenceDiagram
 
   U->>FE: Upload CV
   FE->>BE: POST /cv/upload
+  BE->>RL: AI rate limit check
   BE->>S3: Store file
-  BE->>AI: Parse
+  BE->>AI: Parse CV
   BE->>DB: Save CV JSON
 
   U->>FE: Add project → sync to CV
   FE->>BE: POST /projects → add-to-cv
-  BE->>AI: Bullets
+  BE->>RL: AI rate limit
+  BE->>AI: Generate bullets
 
   U->>FE: Tailor for JD → export
   FE->>BE: POST /cv/:id/tailor
+  BE->>RL: AI rate limit
   BE->>AI: Tailor
   FE->>BE: GET export/pdf
 
   U->>FE: Publish portfolio
   FE->>BE: POST /portfolio/save
+  BE->>DB: Persist HTML
+  BE->>RL: Invalidate portfolio cache
 
-  U->>FE: Interview prep plan
+  U->>FE: Open public portfolio
+  FE->>BE: GET /portfolio/:username
+  BE->>RL: Cache hit/miss
+  BE-->>FE: HTML
+
+  U->>FE: Create interview prep
   FE->>BE: POST /interview-prep
-  BE->>AI: STAR / research
-  BE->>DB: Roadmap + questions
+  BE->>RL: AI rate limit
+  BE->>AI: Compatibility / gaps
+  BE->>Emb: Embed JD + gaps
+  BE->>DB: pgvector top-K question_bank
+  BE->>BE: Impact score + PASS roadmap
+  BE->>AI: STAR / process / research
+  BE->>DB: Save plan + assignments
+  BE-->>FE: Roadmap + readiness
 ```
 
 ---
