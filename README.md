@@ -553,10 +553,10 @@ Embeddings for the bank are built **ahead of time**, not when every user clicks 
 
 ```mermaid
 flowchart LR
-  Seed["Seed JSON\nquestion_bank"] --> Rows[("question_bank rows")]
+  Seed["Seed JSON / question_bank"] --> Rows[("question_bank rows")]
   Rows --> Script["npm run backfill:question-embeddings"]
-  Script --> OR[Google text-embedding-004\n(or OpenRouter)]
-  OR --> Rows2[("UPDATE embedding\nembeddingModel, embeddedAt")]
+  Script --> EmbAPI["Google text-embedding-004 or OpenRouter"]
+  EmbAPI --> Rows2[("rows with embedding + model + embeddedAt")]
   Rows2 -.->|used later by| Create["POST /interview-prep"]
 ```
 
