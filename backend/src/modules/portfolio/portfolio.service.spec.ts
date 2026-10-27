@@ -8,6 +8,8 @@ import { CvService } from '../cv/cv.service';
 import { ProjectsService } from '../projects/projects.service';
 import { TemplateLoaderService } from './templates/template-loader.service';
 import { PortfolioTemplate } from './dto/portfolio.dto';
+import { RedisService } from '../../shared/redis/redis.service';
+import { ConfigService } from '@nestjs/config';
 
 describe('PortfolioService', () => {
   let service: PortfolioService;
@@ -190,6 +192,20 @@ describe('PortfolioService', () => {
           provide: TemplateLoaderService,
           useValue: {
             loadTemplate: jest.fn().mockResolvedValue(mockTemplate),
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            get: jest.fn().mockResolvedValue(null),
+            set: jest.fn(),
+            del: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue(undefined),
           },
         },
       ],

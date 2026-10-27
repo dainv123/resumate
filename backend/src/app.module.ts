@@ -17,6 +17,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { InterviewPrepModule } from './modules/interview-prep/interview-prep.module';
 import { ActivityTrackingInterceptor } from './common/interceptors/activity-tracking.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { RedisModule } from './shared/redis/redis.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
         idleTimeoutMillis: 30000,
       },
     }),
+    RedisModule,
     AuthModule,
     UsersModule,
     CvModule,

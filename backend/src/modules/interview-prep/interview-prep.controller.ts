@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AiRateLimitGuard } from '../../common/guards/ai-rate-limit.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import {
   CreateInterviewPrepDto,
@@ -31,6 +32,7 @@ export class InterviewPrepController {
   constructor(private interviewPrepService: InterviewPrepService) {}
 
   @Post()
+  @UseGuards(AiRateLimitGuard)
   async createPlan(
     @GetUser('id') userId: string,
     @Body() dto: CreateInterviewPrepDto,
@@ -39,6 +41,7 @@ export class InterviewPrepController {
   }
 
   @Post('resolve-jd')
+  @UseGuards(AiRateLimitGuard)
   async resolveJd(
     @GetUser('id') userId: string,
     @Body() dto: ResolveJdDto,
@@ -119,6 +122,7 @@ export class InterviewPrepController {
   }
 
   @Post(':id/star-stories/:storyIndex/regenerate')
+  @UseGuards(AiRateLimitGuard)
   async regenerateStarStory(
     @GetUser('id') userId: string,
     @Param('id') id: string,
@@ -132,6 +136,7 @@ export class InterviewPrepController {
   }
 
   @Post(':id/mock')
+  @UseGuards(AiRateLimitGuard)
   async submitMockAnswer(
     @GetUser('id') userId: string,
     @Param('id') id: string,
