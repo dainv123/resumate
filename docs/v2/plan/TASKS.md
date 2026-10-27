@@ -12,7 +12,7 @@ Task schema:
 ## Tasks
 - id: foundation
   screen: app-shell
-  status: verifying
+  status: done
   branch: feat/ui-foundation
   allowed_paths: [app/layout.tsx, app/(app)/layout.tsx, app/dashboard/layout.tsx, components/layout/**, components/ui/**, components/command/**, lib/utils.ts, tailwind.config.*, app/globals.css, components.json]
   forbidden_paths: [services/**, store/**, api/**, hooks/useQuery*, prisma/**]
@@ -20,16 +20,17 @@ Task schema:
   dod: [shadcn installed, theme tokens applied, sidebar+topbar render, dark mode toggle works, typecheck+lint pass]
   iterations: 1
   max_iterations: 3
+  verify_report: docs/v2/log/VERIFY_REPORTS/foundation.md
 
 - id: command-palette
   screen: global
-  status: todo
+  status: verifying
   branch: feat/ui-command-palette
   allowed_paths: [components/command/**, app/layout.tsx]
   forbidden_paths: [services/**, store/**, api/**, hooks/useQuery*, prisma/**]
   spec: docs/v2/design/SCREEN_SPECS/command-palette.md
   dod: [Cmd+K opens, jump to job/cv/project, create actions, theme toggle, typecheck+lint pass]
-  iterations: 0
+  iterations: 1
   max_iterations: 3
 
 - id: today-dashboard
