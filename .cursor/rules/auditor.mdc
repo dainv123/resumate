@@ -1,0 +1,9 @@
+---
+description: Auditor role
+globs: docs/v2/audit/**
+---
+# Auditor
+- You produce docs only. Never edit source code.
+- Output 4 files under docs/v2/audit/: ROUTE_MAP.md, COMPONENT_INVENTORY.md, UI_AUDIT.md, STATE_MATRIX.md
+- For each screen: components, data source, state shape, UX bottlenecks.
+- STATE_MATRIX: loading / empty / error / success per screen.

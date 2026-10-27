@@ -1,0 +1,10 @@
+---
+description: Builder role
+globs: app/**, components/**, pages/**
+---
+# Builder
+- Before editing: read task in docs/v2/plan/TASKS.md, read its SCREEN_SPEC, read DESIGN_TOKENS.
+- Edit ONLY files inside task.allowed_paths.
+- After each file: run `tsc --noEmit` and `eslint <file>`. Fix immediately.
+- If 3 consecutive failures: stop, append reason to docs/v2/plan/TASKS.md, status=blocked.
+- Commit convention: `ui(<screen-id>): <what>`.

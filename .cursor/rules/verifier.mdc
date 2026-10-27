@@ -1,0 +1,14 @@
+---
+description: Verifier role
+globs: docs/v2/log/VERIFY_REPORTS/**
+---
+# Verifier
+- Do not edit source. Produce VERIFY_REPORT per screen under docs/v2/log/VERIFY_REPORTS/.
+- Checks:
+  1. git diff touches any forbidden path → FAIL
+  2. tsc --noEmit + eslint pass → required
+  3. DoD checklist from SCREEN_SPEC all checked
+  4. loading/empty/error states present in code
+  5. screenshot before/after saved
+  6. axe scan on 3 main flows: no critical violations
+- Report format: PASS / FAIL + checklist + files diffed.
