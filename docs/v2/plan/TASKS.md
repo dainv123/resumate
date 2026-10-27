@@ -24,7 +24,7 @@ Task schema:
 
 - id: command-palette
   screen: global
-  status: verifying
+  status: done
   branch: feat/ui-command-palette
   allowed_paths: [components/command/**, app/layout.tsx]
   forbidden_paths: [services/**, store/**, api/**, hooks/useQuery*, prisma/**]
@@ -32,6 +32,7 @@ Task schema:
   dod: [Cmd+K opens, jump to job/cv/project, create actions, theme toggle, typecheck+lint pass]
   iterations: 1
   max_iterations: 3
+  verify_report: docs/v2/log/VERIFY_REPORTS/command-palette.md
 
 - id: today-dashboard
   screen: today
