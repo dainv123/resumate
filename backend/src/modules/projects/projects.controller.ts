@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AiRateLimitGuard } from '../../common/guards/ai-rate-limit.guard';
 import { ProjectsService } from './projects.service';
 import {
   CreateProjectDto,
@@ -16,7 +17,6 @@ import {
   AddToCvDto,
 } from './dto/project.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
-import { User } from '../users/entities/user.entity';
 import { TrackActivity } from '../../common/decorators/track-activity.decorator';
 import { ActivityType } from '../../common/enums/activity-type.enum';
 
@@ -26,6 +26,7 @@ export class ProjectsController {
   constructor(private projectsService: ProjectsService) {}
 
   @Post()
+  @UseGuards(AiRateLimitGuard)
   @TrackActivity(ActivityType.PROJECT_CREATED, {
     getResourceId: (result) => result?.id,
     getMetadata: (result, context) => ({
@@ -102,6 +103,7 @@ export class ProjectsController {
   }
 
   @Post(':id/regenerate-bullets')
+  @UseGuards(AiRateLimitGuard)
   async regenerateProjectBullets(
     @Param('id') id: string,
     @GetUser('id') userId: string,

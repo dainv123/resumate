@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -15,6 +16,12 @@ import {
 import { TemplateLoaderService } from './templates/template-loader.service';
 import { Portfolio as PortfolioEntity } from './entities/portfolio.entity';
 import { getTemplateConfig } from './portfolio.constants';
+import { RedisService } from '../../shared/redis/redis.service';
+import {
+  RedisDefaults,
+  RedisEnv,
+  RedisKey,
+} from '../../shared/redis/redis.constants';
 
 @Injectable()
 export class PortfolioService {
@@ -25,6 +32,8 @@ export class PortfolioService {
     private cvService: CvService,
     private projectsService: ProjectsService,
     private templateLoaderService: TemplateLoaderService,
+    private redisService: RedisService,
+    private configService: ConfigService,
   ) {}
 
   async generatePortfolio(
@@ -155,7 +164,9 @@ export class PortfolioService {
       });
     }
 
-    return await this.portfolioRepository.save(portfolio);
+    const saved = await this.portfolioRepository.save(portfolio);
+    await this.redisService.del(RedisKey.portfolioHtml(username));
+    return saved;
   }
 
   async getUserPortfolio(userId: string): Promise<PortfolioEntity | null> {
@@ -177,13 +188,24 @@ export class PortfolioService {
 
   /** Public HTML for username URL — prefer saved snapshot so it matches preview/save. */
   async getPublicHtmlByUsername(username: string): Promise<string> {
+    const cacheKey = RedisKey.portfolioHtml(username);
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) return cached;
+
     const portfolio = await this.findActiveByUsername(username);
-    if (portfolio.generatedHtml) {
-      return portfolio.generatedHtml;
+    let html = portfolio.generatedHtml;
+    if (!html) {
+      // Legacy rows without snapshot: regenerate once
+      const portfolioData = await this.getPortfolioByUsername(username);
+      html = await this.generatePortfolioHTML(portfolioData);
     }
-    // Legacy rows without snapshot: regenerate once
-    const portfolioData = await this.getPortfolioByUsername(username);
-    return this.generatePortfolioHTML(portfolioData);
+
+    const ttl = Number(
+      this.configService.get<string>(RedisEnv.PORTFOLIO_CACHE_TTL_SEC) ??
+        RedisDefaults.PORTFOLIO_CACHE_TTL_SEC,
+    );
+    await this.redisService.set(cacheKey, html, ttl);
+    return html;
   }
 
   async getPortfolioByUsername(username: string): Promise<PortfolioData> {

@@ -1,35 +1,63 @@
 # Resumate
 
-> Update your CV in minutes — tailor it to each job, then prep for the interview.
+AI-assisted CV, portfolio, and interview prep for freelancers and job seekers.
 
-AI-assisted CV, portfolio, and interview prep for freelancers and job seekers. Upload a CV once, keep projects in sync, generate JD-specific versions, publish a portfolio, and run a structured interview roadmap.
+Upload a CV once, keep projects in sync, tailor versions to each job description, publish a portfolio, and run a structured interview roadmap.
 
 ---
 
-## What it does
+## Table of contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Workflows](#workflows)
+5. [Tech stack](#tech-stack)
+6. [Getting started](#getting-started)
+7. [Configuration](#configuration)
+8. [Redis](#redis)
+9. [Plans & limits](#plans--limits)
+10. [Project structure](#project-structure)
+11. [Further reading](#further-reading)
+12. [License](#license)
+
+---
+
+## Overview
+
+| | |
+|--|--|
+| **Problem** | Updating CVs and portfolios for every project or JD is slow and inconsistent |
+| **Approach** | Structured CV data + AI for parse / tailor / bullets / interview prep |
+| **Clients** | Freelancers, consultants, developers and designers who change roles often |
+| **Apps** | Next.js frontend · NestJS API · PostgreSQL · Redis · S3 · Gemini / OpenRouter |
+
+---
+
+## Features
 
 | Area | Capabilities |
 |------|----------------|
 | **CV** | Upload PDF/DOCX → AI parse → edit → version history / restore / duplicate → export PDF, Word, ATS |
-| **Projects** | Add project → AI bullet points → attach / detach from CV |
+| **Projects** | Add project → AI bullets → attach / detach from CV |
 | **Job Tailor** | Paste JD → tailored CV, compatibility score, cover letter |
 | **Portfolio** | Template-driven public page (`/portfolio/:username`), HTML export |
 | **Interview Prep** | JD + CV → PASS roadmap, curated question bank, STAR stories, mock drills, cheat-sheet PDF |
-| **Extras** | Analytics dashboard, CV templates, dark mode, EN/VI UI, Google OAuth |
+| **Platform** | Analytics, CV templates, dark mode, EN/VI UI, Google OAuth |
 
 ---
 
-## Architecture & workflows
+## Architecture
 
 ### System context
 
 ```mermaid
 flowchart TB
   User[User]
-  FE[Frontend - Next.js]
-  BE[Backend - NestJS]
+  FE[Frontend — Next.js]
+  BE[Backend — NestJS]
 
-  subgraph Modules
+  subgraph Domain
     Auth[auth]
     Users[users]
     CV[cv]
@@ -50,81 +78,57 @@ flowchart TB
   User --> FE
   FE -->|REST + JWT| BE
   BE --> Auth & Users & CV & Projects & Portfolio & Templates & AI & Analytics & Prep & Notify
-  Auth --> PG
-  Users --> PG
-  CV --> PG
-  CV --> S3
-  CV --> AI
-  Projects --> PG
-  Projects --> AI
+  CV --> PG & S3 & AI
+  Projects --> PG & AI
+  Prep --> PG & AI
   Portfolio --> PG
-  Prep --> PG
-  Prep --> AI
-  Analytics --> PG
+  Auth & Users & Analytics --> PG
   AI --> LLM
-  BE -.-> Redis
+  BE --> Redis
 ```
 
-### App functions map
+### Feature map
 
-Feature areas in the sidebar ↔ frontend route ↔ backend module.
+| Area | Route | Backend | Primary APIs |
+|------|-------|---------|--------------|
+| Auth | `/auth/*` | `auth` | `POST /auth/register`, `login`, `GET /auth/google`, `/auth/me` |
+| CV | `/dashboard/cv` | `cv`, `ai` | `POST /cv/upload`, `PUT /cv/:id`, restore, duplicate, `export/*` |
+| AI Wizard | `/dashboard/ai-wizard` | `cv`, `ai` | `POST /cv/quick-build` |
+| Projects | `/dashboard/projects` | `projects`, `ai` | CRUD, `regenerate-bullets`, `add-to-cv` / `remove-from-cv` |
+| Job Tailor | `/dashboard/job-tailor` | `cv`, `ai` | `tailor`, `analyze-compatibility`, `generate-cover-letter` |
+| Interview Prep | `/dashboard/interview-prep` | `interview-prep`, `ai` | create plan, tasks, STAR, mock, cheat-sheet PDF |
+| Portfolio | `/dashboard/portfolio` | `portfolio` | `generate`, `save`, `GET /portfolio/:username` |
+| Templates | `/dashboard/templates` | `templates` | `GET/POST /templates` |
+| Analytics | `/dashboard/analytics` | `analytics` | `stats`, `timeline`, `exports-by-format` |
+| Settings | `/dashboard/settings` | `users` | profile, password, usage, account export/delete |
 
 ```mermaid
 flowchart LR
-  subgraph FE["Frontend routes"]
-    D["/dashboard"]
-    C["/dashboard/cv"]
-    P["/dashboard/projects"]
-    J["/dashboard/job-tailor"]
-    I["/dashboard/interview-prep"]
-    Po["/dashboard/portfolio"]
-    A["/dashboard/analytics"]
-    T["/dashboard/templates"]
-    S["/dashboard/settings"]
-    W["/dashboard/ai-wizard"]
+  subgraph FE["Frontend"]
+    C["/cv"]
+    P["/projects"]
+    J["/job-tailor"]
+    I["/interview-prep"]
+    Po["/portfolio"]
+    A["/analytics"]
   end
-
-  subgraph BE["Backend modules"]
+  subgraph BE["Backend"]
     MCV[cv]
     MP[projects]
     MAI[ai]
     MPo[portfolio]
     MPrep[interview-prep]
     MAn[analytics]
-    MT[templates]
-    MU[users / auth]
   end
-
-  C --> MCV
-  C --> MAI
-  P --> MP
-  P --> MAI
-  J --> MCV
-  J --> MAI
-  I --> MPrep
-  I --> MAI
+  C --> MCV & MAI
+  P --> MP & MAI
+  J --> MCV & MAI
+  I --> MPrep & MAI
   Po --> MPo
   A --> MAn
-  T --> MT
-  S --> MU
-  W --> MCV
-  W --> MAI
 ```
 
-| Function area | User can… | Route | Module / main APIs |
-|---------------|-----------|-------|---------------------|
-| **Auth** | Register, login, Google OAuth | `/auth/*` | `POST /auth/register`, `login`, `GET /auth/google`, `/auth/me` |
-| **CV** | Upload, edit, version, export | `/dashboard/cv` | `POST /cv/upload`, `PUT /cv/:id`, `restore`, `duplicate`, `export/*` |
-| **AI Wizard** | Guided CV / quick build | `/dashboard/ai-wizard` | `POST /cv/quick-build`, AI parse helpers |
-| **Projects** | CRUD + AI bullets + sync to CV | `/dashboard/projects` | `POST /projects`, `regenerate-bullets`, `add-to-cv`, `remove-from-cv` |
-| **Job Tailor** | Tailor CV, score fit, cover letter | `/dashboard/job-tailor` | `POST /cv/:id/tailor`, `analyze-compatibility`, `generate-cover-letter` |
-| **Interview Prep** | Plan, tasks, STAR, mock, PDF | `/dashboard/interview-prep` | `POST /interview-prep`, task/STAR/mock patches, cheat-sheet export |
-| **Portfolio** | Generate, save, public page | `/dashboard/portfolio` | `POST /portfolio/generate`, `save`, `GET /portfolio/:username` |
-| **Templates** | Browse / manage CV templates | `/dashboard/templates` | `GET/POST /templates`, `GET /cv/templates/available` |
-| **Analytics** | Usage charts & activity | `/dashboard/analytics` | `GET /analytics/stats`, `timeline`, `exports-by-format` |
-| **Settings** | Profile, password, language, theme | `/dashboard/settings` | `GET/PUT /users/profile`, `usage`, `export`, `DELETE /users/account` |
-
-### End-to-end happy path
+### End-to-end flow
 
 ```mermaid
 sequenceDiagram
@@ -136,180 +140,149 @@ sequenceDiagram
   participant DB as Postgres
 
   U->>FE: Register / Google login
-  FE->>BE: POST /auth/register or OAuth
+  FE->>BE: Auth
   BE->>DB: Create user
   BE-->>FE: JWT
 
   U->>FE: Upload CV
   FE->>BE: POST /cv/upload
   BE->>S3: Store file
-  BE->>AI: Parse CV
-  AI-->>BE: Structured CV JSON
-  BE->>DB: Save CV
-  BE-->>FE: Parsed preview
+  BE->>AI: Parse
+  BE->>DB: Save CV JSON
 
-  U->>FE: Add project
-  FE->>BE: POST /projects
-  BE->>AI: Generate bullets
-  BE->>DB: Save project
-  U->>FE: Add project to CV
-  FE->>BE: POST /projects/:id/add-to-cv
+  U->>FE: Add project → sync to CV
+  FE->>BE: POST /projects → add-to-cv
+  BE->>AI: Bullets
 
-  U->>FE: Paste JD → Tailor
+  U->>FE: Tailor for JD → export
   FE->>BE: POST /cv/:id/tailor
-  BE->>AI: Tailor content
-  BE->>DB: Save tailored version
-  U->>FE: Export PDF
-  FE->>BE: GET /cv/:id/export/pdf
+  BE->>AI: Tailor
+  FE->>BE: GET export/pdf
 
   U->>FE: Publish portfolio
   FE->>BE: POST /portfolio/save
-  BE->>DB: Persist portfolio
 
-  U->>FE: Create interview prep
+  U->>FE: Interview prep plan
   FE->>BE: POST /interview-prep
-  BE->>AI: STAR / process / research
-  BE->>DB: Plan + question assignments
-  BE-->>FE: Roadmap + readiness
+  BE->>AI: STAR / research
+  BE->>DB: Roadmap + questions
 ```
 
-### Feature workflows
+---
 
-#### Auth
+## Workflows
+
+### Auth
 
 ```mermaid
 flowchart TD
   A[Landing] --> B{Logged in?}
   B -->|No| C[Login / Register]
   C --> D[Email+password or Google OAuth]
-  D --> E[JWT stored]
+  D --> E[JWT]
   E --> F[Dashboard]
   B -->|Yes| F
 ```
 
-#### CV lifecycle
+### CV
 
 ```mermaid
 flowchart TD
-  U[Upload PDF/DOCX] --> S3[Store on S3]
-  S3 --> P[AI parse → CV JSON]
-  P --> E[Edit sections]
-  E --> V[Version history]
+  U[Upload PDF/DOCX] --> S3[S3]
+  S3 --> P[AI parse → JSON]
+  P --> E[Edit]
+  E --> V[Versions]
   V --> R[Restore / Duplicate]
   E --> X{Export}
-  X --> PDF[PDF]
-  X --> Word[Word]
-  X --> ATS[ATS text]
+  X --> PDF & Word & ATS
   E --> T[Tailor from JD]
   T --> V
 ```
 
-| Step | API |
-|------|-----|
+| Action | API |
+|--------|-----|
 | Upload | `POST /cv/upload` |
 | List / detail | `GET /cv`, `GET /cv/:id`, `GET /cv/:id/full` |
 | Update | `PUT /cv/:id` |
 | Duplicate / restore | `POST /cv/:id/duplicate`, `POST /cv/:id/restore/:version` |
 | Export | `GET /cv/:id/export/pdf\|word\|ats`, `POST /cv/:id/export/pdf/dynamic` |
-| Preview | `POST /cv/:id/preview` |
-| Quick build | `POST /cv/quick-build` |
+| Preview / quick build | `POST /cv/:id/preview`, `POST /cv/quick-build` |
 
-#### Projects → CV
+### Projects → CV
 
 ```mermaid
 flowchart LR
-  A[Create project] --> B[AI generate bullets]
-  B --> C[Optional regenerate]
+  A[Create] --> B[AI bullets]
+  B --> C[Regenerate]
   C --> D[Add to CV]
-  D --> E[CV updated]
-  D --> F[Remove from CV]
+  D --> E[Remove from CV]
 ```
 
-| Step | API |
-|------|-----|
+| Action | API |
+|--------|-----|
 | CRUD | `POST/GET/PUT/DELETE /projects` |
 | Bullets | `POST /projects/:id/regenerate-bullets` |
 | Sync | `POST /projects/:id/add-to-cv`, `remove-from-cv` |
 
-#### Job Tailor
+### Job Tailor
 
 ```mermaid
 flowchart TD
-  JD[Paste / resolve JD] --> C[Compatibility analysis]
+  JD[JD] --> C[Compatibility]
   JD --> T[Tailor CV]
-  JD --> L[Generate cover letter]
-  C --> S[Score + gaps + suggestions]
-  T --> V[New tailored CV version]
-  L --> CL[Saved cover letter]
+  JD --> L[Cover letter]
+  C --> S[Score + gaps]
+  T --> V[Tailored version]
   V --> X[Export]
 ```
 
-| Step | API |
-|------|-----|
+| Action | API |
+|--------|-----|
 | Tailor | `POST /cv/:id/tailor` |
 | Compatibility | `POST /cv/:id/analyze-compatibility` |
 | Cover letter | `POST /cv/:id/generate-cover-letter` |
 | History | `GET /cv/analyses`, `GET /cv/cover-letters` |
 
-#### Portfolio
+### Portfolio
 
 ```mermaid
 flowchart TD
-  CV[CV + projects data] --> G[Generate from template]
+  Data[CV + projects] --> G[Generate]
   G --> Prev[Preview]
-  Prev --> Save[Save portfolio]
-  Save --> Pub[Public page /portfolio/:username]
+  Prev --> Save[Save]
+  Save --> Pub["/portfolio/:username"]
   Save --> HTML[HTML export]
 ```
 
-| Step | API |
-|------|-----|
+| Action | API |
+|--------|-----|
 | Templates | `GET /portfolio/templates` |
 | Generate / preview | `POST /portfolio/generate`, `preview` |
 | Persist | `POST /portfolio/save`, `url`, `html` |
 | Public | `GET /portfolio/:username`, `GET /portfolio/uuid/:uuid` |
 
-#### Interview Prep
+### Interview Prep
 
 ```mermaid
 flowchart TD
-  In[JD + CV + interview date] --> Create[POST /interview-prep]
-  Create --> Bank[Select questions from bank]
-  Create --> AI[STAR / process map / company research]
-  Bank --> Road[Daily PASS roadmap]
-  AI --> Road
-  Road --> Tasks[Mark daily tasks]
-  Road --> STAR[Edit / regenerate STAR]
-  Road --> Mock[Mock drill + rubric]
-  Road --> PDF[Cheat-sheet PDF]
-  Tasks --> Score[Readiness score]
-  STAR --> Score
-  Mock --> Score
+  In[JD + CV + date] --> Create[Create plan]
+  Create --> Bank[Question bank]
+  Create --> AI[STAR / process / research]
+  Bank & AI --> Road[PASS roadmap]
+  Road --> Tasks & STAR & Mock & PDF
+  Tasks & STAR & Mock --> Score[Readiness]
 ```
 
-| Step | API |
-|------|-----|
+| Action | API |
+|--------|-----|
 | Create / list / get | `POST /interview-prep`, `GET /interview-prep`, `GET /interview-prep/:id` |
 | Resolve JD | `POST /interview-prep/resolve-jd` |
 | Tasks | `PATCH /interview-prep/:id/tasks/:dayIndex/:taskId` |
 | STAR | `PATCH .../star-stories/:i`, `POST .../regenerate` |
-| Mock | `POST /interview-prep/:id/mock` |
-| Company research | `PATCH .../company-research/:sectionId` |
-| Survey / delete | `POST .../survey`, `DELETE /interview-prep/:id` |
+| Mock / research / survey | `POST .../mock`, `PATCH .../company-research/:sectionId`, `POST .../survey` |
 | Export | `GET /interview-prep/:id/export/cheat-sheet/pdf` |
 
-#### Analytics & AI helpers
-
-```mermaid
-flowchart LR
-  Actions[CV / export / tailor actions] --> Track[Analytics track]
-  Track --> Dash[Analytics dashboard]
-  AIH[AI module] --> Parse[parse-cv]
-  AIH --> Bullets[generate-bullets]
-  AIH --> Tailor[tailor-cv]
-  AIH --> Sug[suggestions]
-  AIH --> KW[extract-keywords]
-```
+### Analytics & AI helpers
 
 | Area | API |
 |------|-----|
@@ -320,125 +293,148 @@ flowchart LR
 
 ---
 
-## Stack
+## Tech stack
 
-| Layer | Tech |
-|-------|------|
+| Layer | Technology |
+|-------|------------|
 | Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS 4, React Query, RHF + Zod |
 | Backend | NestJS 11, TypeORM, PostgreSQL, Redis |
-| AI | Google Gemini and/or OpenRouter (configurable per feature) |
-| Files | AWS S3 |
+| AI | Google Gemini and/or OpenRouter (per-feature provider) |
+| Storage | AWS S3 (CV files) |
 | Auth | JWT + Google OAuth |
 | Export | Puppeteer / React-PDF / docx |
-| Ops | Docker Compose (dev/prod), deployment scripts under `deployment/` |
+| Ops | Docker Compose, scripts under `deployment/` |
 | Tests | Jest (backend), Playwright + Cucumber (`testing/`) |
 
 ---
 
-## Repo layout
-
-```
-resumate/
-├── frontend/          # Next.js app (landing + dashboard)
-├── backend/           # NestJS API
-├── deployment/        # Dev/prod scripts
-├── testing/           # E2E / BDD
-├── docker-compose*.yml
-└── requiments/        # Product notes & historical feature docs (not always current)
-```
-
-### Backend modules
-
-`auth` · `users` · `cv` · `projects` · `portfolio` · `templates` · `ai` · `analytics` · `interview-prep` · `notifications`
-
-### Frontend routes (dashboard)
-
-`/dashboard` · `/dashboard/cv` · `/dashboard/projects` · `/dashboard/job-tailor` · `/dashboard/portfolio` · `/dashboard/interview-prep` · `/dashboard/analytics` · `/dashboard/templates` · `/dashboard/settings` · `/dashboard/ai-wizard`
-
----
-
-## Quick start
+## Getting started
 
 ### Prerequisites
 
 - Node.js 18+
 - PostgreSQL
+- Redis (recommended)
 - Google AI and/or OpenRouter API key
-- AWS S3 credentials (CV upload)
-- Optional: Redis, Google OAuth, SMTP
+- AWS S3 credentials
+- Optional: Google OAuth, SMTP
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
 npm install
-cp env.example .env
-# Fill DB_*, JWT_*, AWS_*, and AI keys (see env.example)
-npm run db:setup          # migrations + CV template seed
-npm run start:dev         # http://localhost:5001
+cp env.example .env   # see Configuration
+npm run db:setup      # migrations + CV template seed
+npm run start:dev     # http://localhost:5001
 ```
 
-Key env (see `backend/env.example`):
+Use **`PORT=5001`** with `npm run start:dev` (Nest scripts bind 5001).
 
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=password
-DB_NAME=postgres
-
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=resumate-files
-
-GOOGLE_AI_API_KEY=
-GOOGLE_AI_MODEL=gemini-1.5-flash
-OPENROUTER_API_KEY=
-OPENROUTER_MODEL=google/gemini-2.5-flash
-AI_CV_PARSE_PROVIDER=openrouter
-AI_INTERVIEW_PREP_PROVIDER=openrouter
-
-JWT_SECRET=
-JWT_EXPIRES_IN=7d
-PORT=5001
-FRONTEND_URL=http://localhost:5005
-```
-
-> Nest scripts bind **5001**. Prefer `PORT=5001` over the sample `5000` in `env.example` if you run via `npm run start:dev`.
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd frontend
 npm install
-# Optional: .env.local
-# NEXT_PUBLIC_API_URL=http://localhost:5001
-# NEXT_PUBLIC_APP_URL=http://localhost:5005
-# NEXT_PUBLIC_INTERVIEW_PREP_ENABLED=true
-npm run dev               # http://localhost:5005
+# optional .env.local — NEXT_PUBLIC_API_URL=http://localhost:5001
+npm run dev           # http://localhost:5005
 ```
 
-### 3. Docker (optional)
+### Docker
 
 ```bash
 docker compose -f docker-compose.dev.yml up
-# Frontend :5000 · Backend :5001 · Postgres :5432
+# Frontend :5000 · Backend :5001 · Postgres :5432 · Redis :6379
 ```
 
 Or: `./deployment/start-dev.sh`
 
-### URLs
-
-| Service | Local (npm) | Docker / start-dev |
-|---------|-------------|--------------------|
+| Service | npm | Docker |
+|---------|-----|--------|
 | Frontend | http://localhost:5005 | http://localhost:5000 |
 | Backend | http://localhost:5001 | http://localhost:5001 |
 | AI health | http://localhost:5001/ai/health | same |
 
 ---
 
-## Plans (usage limits)
+## Configuration
+
+Canonical reference: [`backend/env.example`](./backend/env.example).
+
+| Group | Variables |
+|-------|-----------|
+| Database | `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` |
+| AWS S3 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET` |
+| AI | `GOOGLE_AI_API_KEY`, `GOOGLE_AI_MODEL`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `AI_CV_PARSE_PROVIDER`, `AI_INTERVIEW_PREP_PROVIDER` |
+| Auth | `JWT_SECRET`, `JWT_EXPIRES_IN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| App | `PORT` (prefer `5001`), `FRONTEND_URL`, `NODE_ENV` |
+| Redis | see [Redis](#redis) |
+
+Frontend (optional `.env.local`):
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5001
+NEXT_PUBLIC_APP_URL=http://localhost:5005
+NEXT_PUBLIC_INTERVIEW_PREP_ENABLED=true
+```
+
+---
+
+## Redis
+
+Backend uses Redis for **AI rate limiting** and **public portfolio HTML cache**.  
+If Redis is down or `REDIS_ENABLED=false`, the API **fail-opens** (no limit / no cache).
+
+```mermaid
+flowchart TB
+  subgraph RateLimit["AI rate limit"]
+    Req[AI-heavy request] --> Guard[AiRateLimitGuard]
+    Guard --> Incr["INCR rl:ai:userId"]
+    Incr -->|ok| Allow
+    Incr -->|over| R429[429]
+  end
+  subgraph Cache["Portfolio cache"]
+    Pub[GET /portfolio/:username] --> Hit{hit?}
+    Hit -->|yes| Html
+    Hit -->|no| DB[(Postgres)] --> Set[SET + TTL] --> Html
+    Save[save portfolio] --> Del[DEL key]
+  end
+```
+
+| Concern | Key | Default | Implementation |
+|---------|-----|---------|----------------|
+| Rate limit | `rl:ai:{userId}` | 30 / 3600s | `AiRateLimitGuard` |
+| Portfolio HTML | `cache:portfolio:html:{username}` | TTL 300s | `PortfolioService` (invalidate on save) |
+
+**Guarded routes** (shared per-user counter):  
+`/ai/*` (except health) · CV upload/tailor/compatibility/cover-letter/quick-build · project create & regenerate-bullets · interview-prep create, resolve-jd, mock, STAR regenerate.
+
+Plan quotas remain in Postgres (`UsersService.checkUserLimit`). Redis only caps short-window bursts.
+
+| Env | Default | Meaning |
+|-----|---------|---------|
+| `REDIS_HOST` | `localhost` | Use `redis` in Compose |
+| `REDIS_PORT` | `6379` | Port |
+| `REDIS_ENABLED` | `true` | `false` skips connect |
+| `AI_RATE_LIMIT_MAX` | `30` | Max requests per window |
+| `AI_RATE_LIMIT_WINDOW_SEC` | `3600` | Window length |
+| `PORTFOLIO_CACHE_TTL_SEC` | `300` | Cache TTL |
+
+```bash
+docker run -d --name resumate-redis -p 6379:6379 redis:7-alpine
+# or: docker compose -f docker-compose.dev.yml up redis
+```
+
+```
+backend/src/shared/redis/          # module, service, constants
+backend/src/common/guards/ai-rate-limit.guard.ts
+```
+
+Out of scope today: sessions, queues, analytics cache, vector search (future RAG / pgvector).
+
+---
+
+## Plans & limits
 
 Enforced in `UsersService.checkUserLimit`:
 
@@ -455,32 +451,37 @@ Pro also unlocks interview-prep pack features (mock scoring, cheat-sheet PDF, et
 
 ---
 
-## Docs map
+## Project structure
 
-| Doc | Role |
-|-----|------|
-| [requiments/IDEA.md](./requiments/IDEA.md) | Product intent (source of truth for “why”) |
-| [requiments/INTERVIEW_PREP_FEATURE.md](./requiments/INTERVIEW_PREP_FEATURE.md) | Interview Prep contract & checklist |
-| [requiments/JOB_TAILOR_FEATURES.md](./requiments/JOB_TAILOR_FEATURES.md) | Compatibility + cover letter |
-| [deployment/README.md](./deployment/README.md) | Deploy / local scripts |
-| [testing/README.md](./testing/README.md) | E2E harness |
-| `requiments/*` other files | Historical notes — verify against code before trusting |
+```
+resumate/
+├── frontend/              # Next.js — landing, auth, dashboard
+├── backend/               # NestJS API
+│   └── src/modules/       # auth, users, cv, projects, portfolio,
+│                          # templates, ai, analytics, interview-prep, notifications
+├── deployment/            # Dev / prod scripts
+├── testing/               # Playwright + Cucumber
+├── docker-compose*.yml
+└── requiments/            # Product notes (verify against code)
+```
 
 ---
 
-## Status (vs older README claims)
+## Further reading
 
-Already in the codebase (not “planned”):
+| Doc | Purpose |
+|-----|---------|
+| [IDEA.md](./requiments/IDEA.md) | Product intent |
+| [INTERVIEW_PREP_FEATURE.md](./requiments/INTERVIEW_PREP_FEATURE.md) | Interview Prep contract |
+| [JOB_TAILOR_FEATURES.md](./requiments/JOB_TAILOR_FEATURES.md) | Compatibility + cover letter |
+| [deployment/README.md](./deployment/README.md) | Deploy / local scripts |
+| [testing/README.md](./testing/README.md) | E2E harness |
+| [frontend/README.md](./frontend/README.md) · [backend/README.md](./backend/README.md) | Package-level notes |
 
-- Interview Prep, analytics, dark mode, EN/VI i18n  
-- Docker Compose + deployment scripts  
-- S3 uploads, Redis config, OpenRouter provider  
-- Backend Jest tests + Playwright suite under `testing/`  
-
-Still optional / incomplete depending on env: Swagger UI, custom portfolio domain, CI polish, full production hardening.
+Other files under `requiments/` are historical — prefer this README and the codebase when they conflict.
 
 ---
 
 ## License
 
-Private / UNLICENSED (see package manifests). Treat as internal unless you publish otherwise.
+Private / UNLICENSED (see package manifests).

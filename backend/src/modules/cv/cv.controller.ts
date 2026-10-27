@@ -18,6 +18,7 @@ import {
 import type { Response, Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AiRateLimitGuard } from '../../common/guards/ai-rate-limit.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { CvService } from './cv.service';
@@ -59,6 +60,7 @@ export class CvController {
   }
 
   @Post('upload')
+  @UseGuards(AiRateLimitGuard)
   @UseInterceptors(FileInterceptor('file'))
   @TrackActivity(ActivityType.CV_UPLOADED, {
     getMetadata: (cv) => ({
@@ -145,6 +147,7 @@ export class CvController {
   }
 
   @Post(':id/tailor')
+  @UseGuards(AiRateLimitGuard)
   @TrackActivity(ActivityType.CV_TAILORED, {
     getMetadata: (cv) => ({
       fileName: cv.originalFileName,
@@ -192,6 +195,7 @@ export class CvController {
   }
 
   @Post(':id/analyze-compatibility')
+  @UseGuards(AiRateLimitGuard)
   async analyzeCompatibility(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -218,6 +222,7 @@ export class CvController {
   }
 
   @Post(':id/generate-cover-letter')
+  @UseGuards(AiRateLimitGuard)
   async generateCoverLetter(
     @Param('id') id: string,
     @GetUser('id') userId: string,
@@ -244,6 +249,7 @@ export class CvController {
   }
 
   @Post('quick-build')
+  @UseGuards(AiRateLimitGuard)
   @TrackActivity(ActivityType.CV_CREATED, {
     getMetadata: (cv) => ({
       fileName: cv.originalFileName,
