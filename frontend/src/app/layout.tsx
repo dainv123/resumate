@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import PerformanceOptimizer from "@/components/ui/PerformanceOptimizer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import { Toaster } from "@/components/ui/sonner";
 
 // Language-aware metadata
 const getMetadata = (): Metadata => {
@@ -192,6 +193,7 @@ export default function RootLayout({
         <Providers>
           {/* <LanguageDetectionLoader /> */}
           {children}
+          <Toaster />
         </Providers>
       </body>
     </html>
