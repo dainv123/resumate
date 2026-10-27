@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
 import {
   FileText,
@@ -12,19 +14,48 @@ import {
   Users,
   TrendingUp,
   CheckCircle,
-  Plus,
   ArrowRight,
+  Zap,
+  Clock,
+  Bot,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
-import { cvApi } from "@/lib/cv";
+import { useCvsPaginated } from "@/hooks/useCvs";
 import { projectsApi } from "@/lib/projects";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import RecentCvsSection from "@/components/dashboard/RecentCvsSection";
+import { isInterviewPrepEnabled } from "@/lib/feature-flags";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [cvs, setCvs] = useState<unknown[]>([]);
-  const [projects, setProjects] = useState<unknown[]>([]);
+  const { t } = useLanguage();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Use React Query with caching to prevent duplicate calls
+  const { data: cvsData } = useCvsPaginated({
+    limit: 50,
+    sortBy: "updatedAt",
+    sortOrder: "DESC",
+  });
+  const cvs = cvsData?.data ?? [];
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: projectsApi.getUserProjects,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   // Calculate real metrics
+  // CV Quality Score Breakdown:
+  // - Basic Info: 20 points (name, email, phone, address: 5 each)
+  // - Experience: 30 points (10 per experience, max 30)
+  // - Sub-Projects: +10 bonus points (2 per sub-project, max 10)
+  // - Skills: 20 points (2 per skill, max 20)
+  // - Projects: 15 points (5 per project, max 15)
+  // - Education: 10 points
+  // - Summary: 5 points
+  // Total possible: 110 points (capped at 100)
   const calculateCVQualityScore = (cvs: unknown[]): number => {
     if (cvs.length === 0) return 0;
 
@@ -39,9 +70,24 @@ export default function DashboardPage() {
       if (data.phone) score += 5;
       if (data.address) score += 5;
 
-      // Experience (30 points)
+      // Experience (30 points base + up to 10 bonus from sub-projects)
       if (data.experience && data.experience.length > 0) {
         score += Math.min(30, data.experience.length * 10);
+
+        // Bonus for sub-projects (up to 10 extra points)
+        const totalSubProjects = data.experience.reduce(
+          (count: number, exp: any) => {
+            return (
+              count +
+              (Array.isArray(exp.subProjects) ? exp.subProjects.length : 0)
+            );
+          },
+          0
+        );
+
+        if (totalSubProjects > 0) {
+          score += Math.min(10, totalSubProjects * 2);
+        }
       }
 
       // Skills (20 points)
@@ -114,38 +160,72 @@ export default function DashboardPage() {
   const profileCompleteness = calculateProfileCompleteness(user, cvs, projects);
   const successRate = calculateSuccessRate(cvs);
 
+  // Check if user has seen onboarding tour
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cvsData, projectsData] = await Promise.all([
-          cvApi.getUserCvs(),
-          projectsApi.getUserProjects(),
-        ]);
-        setCvs(cvsData);
-        setProjects(projectsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
+    if (!hasSeenOnboarding && user) {
+      // Delay slightly to ensure DOM is ready
+      setTimeout(() => setShowOnboarding(true), 1000);
+    }
+  }, [user]);
 
-    fetchData();
-  }, []);
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("hasSeenOnboarding", "true");
+  };
 
-  const recentCvs = cvs.slice(0, 3);
   const recentProjects = projects.slice(0, 3);
   const tailoredCvs = cvs.filter((cv) => (cv as any)?.isTailored);
 
   return (
     <div className="space-y-8">
+      {/* Quick Action Banner */}
+      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 rounded-lg shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold mb-1">
+              {t("landing.quickBuild.title")}
+            </h3>
+            <p className="text-sm opacity-90 mb-2">
+              {t("landing.quickBuild.subtitle")}
+            </p>
+            <div className="flex items-center gap-2 text-xs opacity-75">
+              <Clock className="h-3 w-3" />
+              <span>{t("landing.quickBuild.countdown")}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard/job-tailor">
+              <Button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 px-4 py-2">
+                <Zap className="h-4 w-4" />
+                {t("landing.quickBuild.button")}
+              </Button>
+            </Link>
+            <Link href="/dashboard/ai-wizard">
+              <Button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 px-4 py-2">
+                <Bot className="h-4 w-4" />
+                AI Wizard
+              </Button>
+            </Link>
+            <Link href="/dashboard/templates">
+              <Button className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 px-4 py-2">
+                <Sparkles className="h-4 w-4" />
+                Templates
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Welcome Section */}
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-3xl font-bold text-dark font-inter mb-2">
-              Chào mừng trở lại, {user?.name}! 👋
-            </h3>
+            <h4 className="text-3xl font-bold text-dark font-inter mb-2">
+              {t("dashboard.welcome").replace("{{name}}", user?.name || "")}
+            </h4>
             <p className="text-main text-lg font-karla">
-              Quản lý CV và portfolio của bạn một cách dễ dàng với Resumate.
+              {t("dashboard.subtitle")}
             </p>
           </div>
           <div className="hidden md:block">
@@ -167,7 +247,7 @@ export default function DashboardPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-main font-karla">
-                Total CVs
+                {t("dashboard.totalCVs")}
               </p>
               <p className="text-2xl font-bold text-dark font-inter">
                 {cvs.length}
@@ -185,7 +265,7 @@ export default function DashboardPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-main font-karla">
-                Projects
+                {t("dashboard.totalProjects")}
               </p>
               <p className="text-2xl font-bold text-dark font-inter">
                 {projects.length}
@@ -203,7 +283,7 @@ export default function DashboardPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-main font-karla">
-                Tailored CVs
+                {t("dashboard.tailoredCVs")}
               </p>
               <p className="text-2xl font-bold text-dark font-inter">
                 {tailoredCvs.length}
@@ -221,7 +301,7 @@ export default function DashboardPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-main font-karla">
-                Success Rate
+                {t("dashboard.successRate")}
               </p>
               <p className="text-2xl font-bold text-dark font-inter">
                 {successRate}%
@@ -233,23 +313,23 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Link href="/dashboard/cv" className="group">
+        <Link href="/dashboard/cv" className="group" data-tour="upload-cv">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-blue">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-blue rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-dark font-inter">
-                  My CV
-                </h3>
+                <h4 className="text-lg font-semibold text-dark font-inter">
+                  {t("dashboard.myCV")}
+                </h4>
                 <p className="text-sm text-main font-karla">
-                  Quản lý CV của bạn
+                  {t("dashboard.manageCVs")}
                 </p>
               </div>
             </div>
             <div className="flex items-center text-blue text-sm font-medium">
-              <span>Xem tất cả CV</span>
+              <span>{t("dashboard.viewAllCVs")}</span>
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </div>
@@ -262,124 +342,117 @@ export default function DashboardPage() {
                 <Briefcase className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-dark font-inter">
-                  Projects
-                </h3>
-                <p className="text-sm text-main font-karla">Quản lý dự án</p>
+                <h4 className="text-lg font-semibold text-dark font-inter">
+                  {t("nav.projects")}
+                </h4>
+                <p className="text-sm text-main font-karla">
+                  {t("dashboard.manageProjects")}
+                </p>
               </div>
             </div>
             <div className="flex items-center text-green-600 text-sm font-medium">
-              <span>Xem tất cả dự án</span>
+              <span>{t("dashboard.viewAllProjects")}</span>
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </div>
         </Link>
 
-        <Link href="/dashboard/job-tailor" className="group">
+        <Link
+          href="/dashboard/job-tailor"
+          className="group"
+          data-tour="tailor-button">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-purple-500">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-dark font-inter">
-                  Job Tailor
-                </h3>
-                <p className="text-sm text-main font-karla">Tạo CV tailored</p>
+                <h4 className="text-lg font-semibold text-dark font-inter">
+                  {t("nav.jobTailor")}
+                </h4>
+                <p className="text-sm text-main font-karla">
+                  {t("dashboard.createTailoredCV")}
+                </p>
               </div>
             </div>
             <div className="flex items-center text-purple-600 text-sm font-medium">
-              <span>Tailor CV mới</span>
+              <span>{t("dashboard.tailorNewCV")}</span>
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </div>
         </Link>
 
-        <Link href="/dashboard/portfolio" className="group">
+        {isInterviewPrepEnabled() && (
+          <Link
+            href="/dashboard/interview-prep"
+            className="group"
+            data-tour="interview-prep">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-indigo-500">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <GraduationCap className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h4 className="text-lg font-semibold text-dark font-inter">
+                    {t("nav.interviewPrep")}
+                  </h4>
+                  <p className="text-sm text-main font-karla">
+                    {t("interviewPrep.dashboardCard.subtitle")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center text-indigo-600 text-sm font-medium">
+                <span>{t("interviewPrep.dashboardCard.cta")}</span>
+                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </div>
+          </Link>
+        )}
+
+        <Link
+          href="/dashboard/portfolio"
+          className="group"
+          data-tour="portfolio-nav">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-all duration-300 group-hover:border-yellow">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-yellow rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Users className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-dark font-inter">
-                  Portfolio
-                </h3>
-                <p className="text-sm text-main font-karla">Xem portfolio</p>
+                <h4 className="text-lg font-semibold text-dark font-inter">
+                  {t("nav.portfolio")}
+                </h4>
+                <p className="text-sm text-main font-karla">
+                  {t("dashboard.viewPortfolio")}
+                </p>
               </div>
             </div>
             <div className="flex items-center text-yellow text-sm font-medium">
-              <span>Xem portfolio</span>
+              <span>{t("dashboard.viewPortfolio")}</span>
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Recent CVs */}
-      {recentCvs.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-dark font-inter">
-              CV gần đây
-            </h3>
-            <Link
-              href="/dashboard/cv"
-              className="text-blue text-sm font-medium hover:text-dark transition-colors">
-              Xem tất cả →
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {recentCvs.map((cv) => (
-              <div
-                key={(cv as any)?.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue rounded-lg flex items-center justify-center mr-4">
-                    <FileText className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-dark font-karla">
-                      {(cv as any)?.originalFileName}
-                    </h3>
-                    <p className="text-sm text-main">
-                      {(cv as any)?.isTailored ? "Tailored CV" : "Original CV"}{" "}
-                      •
-                      {new Date((cv as any)?.createdAt).toLocaleDateString(
-                        "vi-VN"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {(cv as any)?.isTailored && (
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
-                      Tailored
-                    </span>
-                  )}
-                  <Link href={`/dashboard/cv`}>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Recent CVs with Lazy Loading */}
+      <div
+        className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
+        data-tour="cv-preview">
+        <RecentCvsSection limit={3} showViewAll={true} />
+      </div>
 
       {/* Recent Projects */}
       {recentProjects.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-dark font-inter">
-              Dự án gần đây
-            </h3>
+            <h4 className="text-xl font-semibold text-dark font-inter">
+              {t("dashboard.recentProjects")}
+            </h4>
             <Link
               href="/dashboard/projects"
               className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors">
-              Xem tất cả →
+              {t("dashboard.viewAll")}
             </Link>
           </div>
           <div className="space-y-4">
@@ -387,23 +460,27 @@ export default function DashboardPage() {
               <div
                 key={(project as any)?.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-4">
+                <div className="flex items-center min-w-0 flex-1 pr-10">
+                  <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
                     <Briefcase className="h-5 w-5 text-white" />
                   </div>
-                  <div>
-                    <h3 className="font-medium text-dark font-karla">
+                  <div className="min-w-0 flex-1">
+                    <h5
+                      className="font-medium text-dark font-karla truncate"
+                      title={(project as any)?.name}>
                       {(project as any)?.name}
-                    </h3>
-                    <p className="text-sm text-main">
-                      {(project as any)?.techStack?.join(", ")} •
-                      {new Date((project as any)?.createdAt).toLocaleDateString(
-                        "vi-VN"
-                      )}
+                    </h5>
+                    <p
+                      className="text-sm text-main truncate"
+                      title={(project as any)?.techStack?.join(", ")}>
+                      {(project as any)?.techStack?.join(", ")} •{" "}
+                      {new Date(
+                        (project as any)?.createdAt
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
                   <Link href={`/dashboard/projects`}>
                     <Button variant="ghost" size="sm">
                       <Eye className="h-4 w-4" />
@@ -418,32 +495,37 @@ export default function DashboardPage() {
 
       {/* Getting Started */}
       {cvs.length === 0 && projects.length === 0 && (
-        <div className="bg-gradient-to-r from-blue to-purple-500 rounded-lg p-8 text-white">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="h-8 w-8" />
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-100 rounded-2xl shadow-sm border border-blue-100">
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-40 h-40 bg-blue-200 opacity-20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-purple-200 opacity-20 rounded-full blur-2xl"></div>
+
+          <div className="relative z-10 p-12 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 mb-6 text-purple">
+              <Sparkles className="h-10 w-10 text-blue animate-pulse" />
             </div>
-            <h3 className="text-2xl font-bold mb-2 font-inter">
-              Bắt đầu với Resumate
-            </h3>
-            <p className="text-lg mb-6 font-karla">
-              Upload CV đầu tiên của bạn để bắt đầu tạo portfolio chuyên nghiệp
+
+            <h4 className="text-3xl md:text-4xl font-bold mb-3 font-inter text-dark">
+              {t("dashboard.gettingStarted")}
+            </h4>
+
+            <p className="text-lg md:text-xl mb-8 font-karla text-main max-w-2xl mx-auto">
+              {t("dashboard.gettingStartedDesc")}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/dashboard/cv">
-                <Button
-                  variant="outline"
-                  className="bg-white text-blue hover:bg-gray-100">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload CV
+                <Button className="bg-blue text-white hover:bg-dark transition-all duration-300 px-6 py-3 text-base font-semibold shadow-md hover:shadow-lg">
+                  <Upload className="h-5 w-5 mr-2" />
+                  {t("dashboard.uploadCVNow")}
                 </Button>
               </Link>
               <Link href="/dashboard/projects">
                 <Button
                   variant="outline"
-                  className="bg-white text-green-600 hover:bg-gray-100">
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Thêm Project
+                  className="bg-white border-2 border-blue text-blue hover:bg-blue hover:text-white transition-all duration-300 px-6 py-3 text-base font-semibold">
+                  <Briefcase className="h-5 w-5 mr-2" />
+                  {t("dashboard.addProject")}
                 </Button>
               </Link>
             </div>
@@ -458,22 +540,28 @@ export default function DashboardPage() {
             <div className="w-10 h-10 bg-yellow rounded-lg flex items-center justify-center mr-3">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-lg font-semibold text-dark font-inter">
-              Tips & Tricks
-            </h3>
+            <h4 className="text-lg font-semibold text-dark font-inter">
+              {t("dashboard.tipsAndTricks")}
+            </h4>
           </div>
           <ul className="space-y-2 text-sm text-main font-karla">
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Sử dụng Job Tailor để tạo CV phù hợp với từng vị trí
+              {t("dashboard.tip1")}
             </li>
+            {isInterviewPrepEnabled() && (
+              <li className="flex items-start">
+                <span className="w-2 h-2 bg-indigo-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                Dùng Interview Prep để luyện phỏng vấn theo JD & CV
+              </li>
+            )}
             <li className="flex items-start">
               <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Thêm project mới để cập nhật portfolio
+              {t("dashboard.tip2")}
             </li>
             <li className="flex items-start">
               <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Export CV dưới nhiều định dạng khác nhau
+              {t("dashboard.tip3")}
             </li>
           </ul>
         </div>
@@ -483,14 +571,14 @@ export default function DashboardPage() {
             <div className="w-10 h-10 bg-blue rounded-lg flex items-center justify-center mr-3">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-lg font-semibold text-dark font-inter">
-              Performance
-            </h3>
+            <h4 className="text-lg font-semibold text-dark font-inter">
+              {t("dashboard.performance")}
+            </h4>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-main font-karla">
-                CV Quality Score
+                {t("dashboard.cvQualityScore")}
               </span>
               <span className="text-sm font-bold text-dark">
                 {cvQualityScore}%
@@ -503,7 +591,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-main font-karla">
-                Profile Completeness
+                {t("dashboard.profileCompleteness")}
               </span>
               <span className="text-sm font-bold text-dark">
                 {profileCompleteness}%
@@ -517,6 +605,12 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        run={showOnboarding}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 }

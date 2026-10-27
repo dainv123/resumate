@@ -7,8 +7,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Skip Chromium download for Puppeteer
+# Skip Chromium download for Puppeteer (both env vars for compatibility)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Increase Node.js heap size during build to avoid OOM in TypeScript/Nest build
 ENV NODE_OPTIONS="--max_old_space_size=4096"
@@ -27,10 +28,21 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install basic dependencies
+# Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
   curl \
   && rm -rf /var/cache/apk/*
+
+# Tell Puppeteer to use installed Chromium and skip download
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Copy package files
 COPY package*.json ./

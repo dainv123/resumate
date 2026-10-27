@@ -8,6 +8,10 @@
       {
         "include": "**/*.html",
         "watchAssets": true
+      },
+      {
+        "include": "modules/interview-prep/data/**/*.json",
+        "watchAssets": true
       }
     ]
   }

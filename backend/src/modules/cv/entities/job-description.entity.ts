@@ -1,6 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Cv } from './cv.entity';
+import { CvMatchingAnalysis } from './cv-matching-analysis.entity';
+import { CvCoverLetter } from './cv-cover-letter.entity';
 
 @Entity('job_descriptions')
 export class JobDescription {
@@ -39,16 +50,31 @@ export class JobDescription {
   @Column('jsonb', { nullable: true })
   keywords: string[];
 
+  @Column({ nullable: true })
+  sourceUrl: string;
+
+  @Column({ nullable: true })
+  sourceType: string;
+
+  @Column('jsonb', { nullable: true })
+  parsedMetadata: Record<string, unknown>;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, user => user.jobDescriptions)
+  @ManyToOne(() => User, (user) => user.jobDescriptions)
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @OneToMany(() => Cv, cv => cv.jobDescription)
+  @OneToMany(() => Cv, (cv) => cv.jobDescription)
   tailoredCvs: Cv[];
+
+  @OneToMany(() => CvMatchingAnalysis, (analysis) => analysis.jobDescription)
+  matchingAnalyses: CvMatchingAnalysis[];
+
+  @OneToMany(() => CvCoverLetter, (coverLetter) => coverLetter.jobDescription)
+  coverLetters: CvCoverLetter[];
 }

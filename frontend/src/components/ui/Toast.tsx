@@ -61,7 +61,9 @@ export function Toast({
 
 export function ToastContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+    <div
+      className="fixed top-4 right-4 flex flex-col gap-2 pointer-events-none"
+      style={{ zIndex: 9999 }}>
       <div className="pointer-events-auto">{children}</div>
     </div>
   );

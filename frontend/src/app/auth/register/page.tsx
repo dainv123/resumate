@@ -5,25 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { FileText, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
-    email: z.string().email("Email không hợp lệ"),
-    password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirmPassword"],
-  });
-
-type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +19,24 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
 
   const { register: registerUser } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
+
+  const registerSchema = z
+    .object({
+      name: z.string().min(2, t("auth.nameMin").replace("{{min}}", "2")),
+      email: z.string().email(t("auth.emailInvalid")),
+      password: z
+        .string()
+        .min(6, t("auth.passwordMin").replace("{{min}}", "6")),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("auth.passwordMismatch"),
+      path: ["confirmPassword"],
+    });
+
+  type RegisterForm = z.infer<typeof registerSchema>;
 
   const {
     register,
@@ -53,8 +57,8 @@ export default function RegisterPage() {
       const errorMessage =
         err && typeof err === "object" && "response" in err
           ? (err as { response?: { data?: { message?: string } } }).response
-              ?.data?.message || "Đăng ký thất bại"
-          : "Đăng ký thất bại";
+              ?.data?.message || t("auth.registerFailed")
+          : t("auth.registerFailed");
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -79,14 +83,14 @@ export default function RegisterPage() {
             </div>
           </div>
           <h3 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Tạo tài khoản mới
+            {t("auth.registerTitle")}
           </h3>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Hoặc{" "}
+            {t("auth.orRegisterWith")}{" "}
             <Link
               href="/auth/login"
               className="font-medium text-blue-600 hover:text-blue-500">
-              đăng nhập vào tài khoản hiện có
+              {t("auth.alreadyHaveAccount")}
             </Link>
           </p>
         </div>
@@ -103,14 +107,14 @@ export default function RegisterPage() {
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700">
-                Họ và tên
+                {t("auth.name")}
               </label>
               <input
                 {...register("name")}
                 type="text"
                 autoComplete="name"
                 className="input-base mt-1"
-                placeholder="Nhập họ và tên"
+                placeholder={t("auth.namePlaceholder")}
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">
@@ -123,14 +127,14 @@ export default function RegisterPage() {
               <label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700">
-                Email
+                {t("auth.email")}
               </label>
               <input
                 {...register("email")}
                 type="email"
                 autoComplete="email"
                 className="input-base mt-1"
-                placeholder="Nhập email của bạn"
+                placeholder={t("auth.emailPlaceholder")}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">
@@ -143,7 +147,7 @@ export default function RegisterPage() {
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700">
-                Mật khẩu
+                {t("auth.password")}
               </label>
               <div className="mt-1 relative">
                 <input
@@ -151,7 +155,7 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   className="input-base pr-10"
-                  placeholder="Nhập mật khẩu"
+                  placeholder={t("auth.passwordPlaceholder")}
                 />
                 <button
                   type="button"
@@ -175,15 +179,15 @@ export default function RegisterPage() {
               <label
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium text-gray-700">
-                Xác nhận mật khẩu
+                {t("auth.confirmPassword")}
               </label>
               <div className="mt-1 relative">
                 <input
                   {...register("confirmPassword")}
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Nhập lại mật khẩu"
+                  className="input-base pr-10"
+                  placeholder={t("auth.confirmPasswordPlaceholder")}
                 />
                 <button
                   type="button"
@@ -206,7 +210,7 @@ export default function RegisterPage() {
 
           <div>
             <Button type="submit" className="w-full" loading={isLoading}>
-              Tạo tài khoản
+              {isLoading ? t("auth.registering") : t("auth.registerButton")}
             </Button>
           </div>
 
@@ -214,7 +218,7 @@ export default function RegisterPage() {
             <Link
               href="/"
               className="text-sm text-blue-600 hover:text-blue-500">
-              ← Quay lại trang chủ
+              {t("auth.backToHome")}
             </Link>
           </div>
         </form>

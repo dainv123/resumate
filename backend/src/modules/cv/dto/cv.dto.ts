@@ -1,12 +1,13 @@
-import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
-import type { CVData } from '../entities/cv.entity';
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import type { CVData } from '../../../shared/interfaces/cv-data.interface';
 
 export class CreateCvDto {
   @IsString()
   originalFileName: string;
 
+  @IsOptional()
   @IsString()
-  fileUrl: string;
+  fileUrl?: string;
 
   @IsOptional()
   parsedData?: CVData;
@@ -28,6 +29,32 @@ export class UpdateCvDto {
 export class TailorCvDto {
   @IsString()
   jobDescription: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
+}
+
+export class QuickBuildCvDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  email: string;
+
+  @IsString()
+  targetRole: string;
+
+  @IsString()
+  jobDescription: string;
+
+  @IsOptional()
+  @IsString()
+  template?: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
 }
 
 export class CvResponseDto {

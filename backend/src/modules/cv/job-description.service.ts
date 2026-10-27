@@ -31,7 +31,7 @@ export class JobDescriptionService {
         skills: [],
         education: [],
         experience: [],
-        certifications: []
+        certifications: [],
       },
       keywords: [],
     });
@@ -39,7 +39,10 @@ export class JobDescriptionService {
     return this.jobDescriptionRepository.save(jobDescription);
   }
 
-  async getJobDescriptionById(id: string, userId: string): Promise<JobDescription> {
+  async getJobDescriptionById(
+    id: string,
+    userId: string,
+  ): Promise<JobDescription> {
     const jobDescription = await this.jobDescriptionRepository.findOne({
       where: { id, userId },
     });

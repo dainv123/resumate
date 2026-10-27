@@ -105,7 +105,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+!testing/public
+# public
 
 # Storybook build outputs
 .out
@@ -161,3 +162,8 @@ pnpm-lock.yaml
 # Local development
 .local/
 local/
+
+# Reports
+/testing/reports
+# /testing/test-results
+/testing/playwright-report

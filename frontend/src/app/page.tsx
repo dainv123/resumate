@@ -1,23 +1,52 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-// import Button from "@/components/ui/Button";
-import { FileText, Users, Briefcase, Sparkles } from "lucide-react";
+import { FileText, Users, Briefcase, Sparkles, GraduationCap } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { isInterviewPrepEnabled } from "@/lib/feature-flags";
+
+// Memoized Feature Card Component
+const FeatureCard = memo(
+  ({
+    icon: Icon,
+    title,
+    description,
+    iconColor,
+  }: {
+    icon: any;
+    title: string;
+    description: string;
+    iconColor: string;
+  }) => (
+    <div className="portfolio-card text-center">
+      <Icon
+        className={`h-10 w-10 lg:h-12 lg:w-12 ${iconColor} mx-auto mb-3 lg:mb-4`}
+      />
+      <h3
+        className="text-base lg:text-lg font-semibold mb-2"
+        style={{ color: "var(--dark-color)" }}>
+        {title}
+      </h3>
+      <p
+        className="text-sm lg:text-base"
+        style={{ color: "var(--main-color)" }}>
+        {description}
+      </p>
+    </div>
+  )
+);
+
+FeatureCard.displayName = "FeatureCard";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/dashboard");
-    }
-  }, [user, loading, router]);
-
+  // Loading authentication state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -31,54 +60,76 @@ export default function HomePage() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-4 lg:py-6">
             <div className="flex items-center">
-              <FileText className="h-8 w-8 text-main" />
-              <span className="ml-2 text-2xl font-bold text-dark font-inter">
+              <FileText className="h-6 w-6 lg:h-8 lg:w-8 text-main" />
+              <span className="ml-2 text-lg lg:text-2xl font-bold text-dark font-inter">
                 Resumate
               </span>
             </div>
-            <div className="flex items-center space-x-4">
-              <LanguageSwitcher />
-              <div className="elisc_tm_button" data-style="border">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/auth/login");
-                  }}>
-                  Đăng nhập
-                </a>
-              </div>
-              <div className="elisc_tm_button">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/auth/register");
-                  }}>
-                  Đăng ký
-                </a>
-              </div>
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              <LanguageSwitcher className="scale-90 lg:scale-100" />
+              {user ? (
+                // User đã login → show Dashboard button
+                <div className="elisc_tm_button">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push("/dashboard");
+                    }}
+                    className="text-sm lg:text-base px-3 lg:px-6 py-2 lg:py-3">
+                    <span className="hidden sm:inline">Go to Dashboard →</span>
+                    <span className="sm:hidden">Dashboard</span>
+                  </a>
+                </div>
+              ) : (
+                // User chưa login → show Login/Register
+                <>
+                  <div className="elisc_tm_button" data-style="border">
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        router.push("/auth/login");
+                      }}
+                      className="text-sm lg:text-base px-3 lg:px-6 py-2 lg:py-3">
+                      {t("landing.login")}
+                    </a>
+                  </div>
+                  <div className="elisc_tm_button">
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        router.push("/auth/register");
+                      }}
+                      className="text-sm lg:text-base px-3 lg:px-6 py-2 lg:py-3">
+                      {t("landing.register")}
+                    </a>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div className="text-center">
           <h1
-            className="text-4xl md:text-6xl font-bold mb-6"
-            style={{ color: "var(--dark-color)" }}>
-            Update CV của bạn trong <span className="blueColor">1 phút</span>
-          </h1>
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 lg:mb-6"
+            style={{ color: "var(--dark-color)" }}
+            dangerouslySetInnerHTML={{
+              __html: t("landing.title")
+                .replace("<span>", '<span class="blueColor">')
+                .replace("</span>", "</span>"),
+            }}></h1>
           <p
-            className="text-xl mb-8 max-w-3xl mx-auto"
+            className="text-lg lg:text-xl mb-6 lg:mb-8 max-w-3xl mx-auto px-4"
             style={{ color: "var(--main-color)" }}>
-            Ứng dụng giúp freelancer cập nhật CV & Portfolio tự động từ project
-            mới hoặc Job Description. Giảm thời gian chỉnh sửa thủ công, tăng
-            tính chuyên nghiệp.
+            {t("landing.subtitle")}
           </p>
           {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <div className="elisc_tm_button">
@@ -106,76 +157,62 @@ export default function HomePage() {
           </div> */}
         </div>
 
-        {/* Features */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="portfolio-card text-center">
-            <FileText className="h-12 w-12 blueColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              Upload CV
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              Upload CV hiện tại, AI sẽ phân tích và trích xuất thông tin
-            </p>
-          </div>
-
-          <div className="portfolio-card text-center">
-            <Briefcase className="h-12 w-12 yellowColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              Thêm Project
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              Thêm project mới, AI tự động tạo bullet points chuyên nghiệp
-            </p>
-          </div>
-
-          <div className="portfolio-card text-center">
-            <Sparkles className="h-12 w-12 blueColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              Job Tailoring
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              Upload JD, AI tạo CV tailored phù hợp với job description
-            </p>
-          </div>
-
-          <div className="portfolio-card text-center">
-            <Users className="h-12 w-12 yellowColor mx-auto mb-4" />
-            <h3
-              className="text-lg font-semibold mb-2"
-              style={{ color: "var(--dark-color)" }}>
-              Portfolio
-            </h3>
-            <p style={{ color: "var(--main-color)" }}>
-              Tạo portfolio online đẹp mắt để showcase cho khách hàng
-            </p>
-          </div>
+        <div className="mt-12 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          <FeatureCard
+            icon={FileText}
+            title={t("landing.feature1Title")}
+            description={t("landing.feature1Desc")}
+            iconColor="blueColor"
+          />
+          <FeatureCard
+            icon={Briefcase}
+            title={t("landing.feature2Title")}
+            description={t("landing.feature2Desc")}
+            iconColor="yellowColor"
+          />
+          <FeatureCard
+            icon={Sparkles}
+            title={t("landing.feature3Title")}
+            description={t("landing.feature3Desc")}
+            iconColor="blueColor"
+          />
+          <FeatureCard
+            icon={Users}
+            title={t("landing.feature4Title")}
+            description={t("landing.feature4Desc")}
+            iconColor="yellowColor"
+          />
+          {isInterviewPrepEnabled() && (
+            <FeatureCard
+              icon={GraduationCap}
+              title={t("landing.feature5Title")}
+              description={t("landing.feature5Desc")}
+              iconColor="blueColor"
+            />
+          )}
         </div>
 
         {/* CTA Section */}
-        <div className="mt-20 text-center portfolio-card p-12">
+        <div className="mt-12 lg:mt-20 text-center portfolio-card p-6 lg:p-12">
           <h2
-            className="text-3xl font-bold mb-4"
+            className="text-2xl lg:text-3xl font-bold mb-4"
             style={{ color: "var(--dark-color)" }}>
-            Sẵn sàng bắt đầu?
+            {user ? t("landing.ctaTitleLoggedIn") : t("landing.ctaTitle")}
           </h2>
-          <p className="text-lg mb-8" style={{ color: "var(--main-color)" }}>
-            Tham gia hàng nghìn freelancer đã sử dụng Resumate để cập nhật CV
+          <p
+            className="text-base lg:text-lg mb-6 lg:mb-8 px-4"
+            style={{ color: "var(--main-color)" }}>
+            {user ? t("landing.ctaSubtitleLoggedIn") : t("landing.ctaSubtitle")}
           </p>
           <div className="elisc_tm_button">
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                router.push("/auth/register");
+                router.push(user ? "/dashboard" : "/auth/register");
               }}
-              className="text-lg px-8 py-4">
-              Tạo tài khoản miễn phí
+              className="text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4">
+              {user ? t("landing.ctaButtonLoggedIn") : t("landing.ctaButton")}
             </a>
           </div>
         </div>
@@ -183,17 +220,21 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer
-        className="py-12"
+        className="py-8 lg:py-12"
         style={{ backgroundColor: "var(--dark-color)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center mb-4">
-            <FileText className="h-8 w-8 blueColor" />
-            <span className="ml-2 text-2xl font-bold" style={{ color: "#fff" }}>
+            <FileText className="h-6 w-6 lg:h-8 lg:w-8 blueColor" />
+            <span
+              className="ml-2 text-lg lg:text-2xl font-bold"
+              style={{ color: "#fff" }}>
               Resumate
             </span>
           </div>
-          <p style={{ color: "var(--blue-color)" }}>
-            © 2024 Resumate. All rights reserved.
+          <p
+            className="text-sm lg:text-base px-4"
+            style={{ color: "var(--blue-color)" }}>
+            {t("landing.footer")}
           </p>
         </div>
       </footer>

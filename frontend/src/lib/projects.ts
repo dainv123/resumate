@@ -12,7 +12,7 @@ export interface Project {
   demoLink?: string;
   githubLink?: string;
   imageUrl?: string;
-  isAddedToCv: boolean;
+  cvIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -37,7 +37,7 @@ export interface UpdateProjectData {
   demoLink?: string;
   githubLink?: string;
   imageUrl?: string;
-  isAddedToCv?: boolean;
+  cvIds?: string[];
 }
 
 export const projectsApi = {

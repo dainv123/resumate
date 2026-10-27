@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CVData } from '../../modules/cv/entities/cv.entity';
+import { CVData } from '../interfaces/cv-data.interface';
 
 @Injectable()
 export class HtmlTemplateService {
@@ -134,7 +134,7 @@ export class HtmlTemplateService {
 
         small::before {
             display: block;
-            content: 'Stack technique :';
+            content: 'Stack:';
             margin-right: .2rem;
         }
 
@@ -150,9 +150,9 @@ export class HtmlTemplateService {
             display: flex;
             flex-direction: row;
             width: 205mm;
-            height: 296mm;
+            min-height: 296mm;
             background: var(--primaryColor);
-            overflow: hidden;
+            /* overflow: hidden; */
             margin: 0 auto;
         }
 
@@ -170,11 +170,11 @@ export class HtmlTemplateService {
 
         .main-part {
             flex: 1.9;
-            justify-content: space-between;
+            justify-content: flex-start;
             margin-right: .3rem;
             margin-left: 5mm;
             padding-bottom: 3rem;
-            overflow: hidden;
+            /* overflow: hidden; */
         }
 
         .main-part>section {
@@ -327,27 +327,23 @@ export class HtmlTemplateService {
         }
 
         .side-part>section:nth-of-type(2)>div ul {
-            display: flex;
-            flex-wrap: wrap;
+            display: block;
             margin: 0;
-            padding: 0;
+            padding-left: 1.2rem;
+            list-style-type: disc;
         }
 
         .side-part>section:nth-of-type(2)>div ul li {
-            display: flex;
-            margin: .20rem 0rem;
+            display: list-item;
+            margin: .15rem 0;
             font-weight: 500;
             font-size: .78rem;
+            line-height: 1.4;
         }
 
         #languages>ul {
             display: block;
-        }
-
-        .side-part>section:nth-of-type(2)>div:not(#languages) ul li:not(:last-child)::after {
-            content: "•";
-            margin-left: 0.3rem;
-            margin-right: 0.3rem;
+            list-style-type: disc;
         }
 
         .side-part>section h3 {
@@ -356,6 +352,7 @@ export class HtmlTemplateService {
             font-size: .95rem;
             margin: .3rem 0;
         }
+
 
         @media print {
             body {
@@ -372,51 +369,68 @@ export class HtmlTemplateService {
             <div class="side-part">
                 <!-- Contact Information -->
                 <section>
-                    <span><i>👤</i> ${cvData.name}</span>
-                    ${cvData.dateOfBirth ? `<span><i>🎂</i> ${cvData.dateOfBirth}</span>` : ""}
-                    <span><i>✉️</i> ${cvData.email}</span>
-                    <span><i>📞</i> ${cvData.phone}</span>
-                    ${cvData.address ? `<span><i>📍</i> ${cvData.address}</span>` : ''}
-                    ${cvData.linkedin ? `<span><i>💼</i> <a target="_blank" rel="noopener noreferrer" href="${cvData.linkedin}">LinkedIn</a></span>` : ''}
+                    <span><i>👤</i> ${cvData.contact?.name || 'N/A'}</span>
+                    <span><i>✉️</i> ${cvData.contact?.email || 'N/A'}</span>
+                    <span><i>📞</i> ${cvData.contact?.phone || 'N/A'}</span>
+                    ${cvData.contact?.address ? `<span><i>📍</i> ${cvData.contact.address}</span>` : ''}
+                    ${cvData.contact?.linkedin ? `<span><i>💼</i> <a target="_blank" rel="noopener noreferrer" href="${cvData.contact.linkedin}">LinkedIn</a></span>` : ''}
                 </section>
 
                 <!-- Skills and Languages -->
                 <section>
-                    ${(cvData.skills?.technical && cvData.skills.technical.length > 0) ? `
+                    ${
+                      cvData.skills?.technical &&
+                      cvData.skills.technical.length > 0
+                        ? `
                     <div>
                         <h3>Skills</h3>
                         <ul>
-                            ${cvData.skills.technical.map(skill => `<li>${skill}</li>`).join('')}
+                            ${cvData.skills.technical.map((skill) => `<li>${skill}</li>`).join('')}
                         </ul>
                     </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${(cvData.skills?.soft && cvData.skills.soft.length > 0) ? `
+                    ${
+                      cvData.skills?.soft && cvData.skills.soft.length > 0
+                        ? `
                     <div>
                         <h3>Soft Skills</h3>
                         <ul>
-                            ${cvData.skills.soft.map(skill => `<li>${skill}</li>`).join('')}
+                            ${cvData.skills.soft.map((skill) => `<li>${skill}</li>`).join('')}
                         </ul>
                     </div>
 
-                    ${(cvData.skills?.tools && cvData.skills.tools.length > 0) ? `
+                    ${
+                      cvData.skills?.tools && cvData.skills.tools.length > 0
+                        ? `
                     <div>
                         <h3>Tools</h3>
                         <ul>
-                            ${cvData.skills.tools.map(tool => `<li>${tool}</li>`).join("")}
+                            ${cvData.skills.tools.map((tool) => `<li>${tool}</li>`).join('')}
                         </ul>
                     </div>
-                    ` : ""}
-                    ` : ''}
+                    `
+                        : ''
+                    }
+                    `
+                        : ''
+                    }
 
-                    ${(cvData.skills?.languages && cvData.skills.languages.length > 0) ? `
+                    ${
+                      cvData.skills?.languages &&
+                      cvData.skills.languages.length > 0
+                        ? `
                     <div id="languages">
                         <h3>Languages</h3>
                         <ul>
-                            ${cvData.skills.languages.map(lang => `<li>${lang}</li>`).join('')}
+                            ${cvData.skills.languages.map((lang) => `<li>${lang}</li>`).join('')}
                         </ul>
                     </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                 </section>
             </div>
 
@@ -429,65 +443,104 @@ export class HtmlTemplateService {
                 </section>
 
                 <!-- Experience -->
-                ${cvData.experience.length > 0 ? `
+                ${
+                  cvData.experience.length > 0
+                    ? `
                 <section id="xp">
                     <h3>Professional experiences</h3>
-                    ${cvData.experience.map(exp => `
+                    ${cvData.experience
+                      .map(
+                        (exp) => `
                         <h4>${exp.title} - ${exp.company}</h4>
                         <div>
-                            <p>${exp.duration}</p>
-                            ${exp.teamSize ? `<p><b>Team Size:</b> ${exp.teamSize}</p>` : ""}
-                            ${exp.companyDescription ? `<p><i>${exp.companyDescription}</i></p>` : ""}
-                            ${exp.responsibilities && exp.responsibilities.length > 0 ? `
+                            <p>${exp.startDate} - ${exp.endDate || 'Present'}</p>
+                            ${exp.teamSize ? `<p><b>Team Size:</b> ${exp.teamSize}</p>` : ''}
+                            ${exp.companyDescription ? `<p><i>${exp.companyDescription}</i></p>` : ''}
+                            ${
+                              exp.responsibilities &&
+                              exp.responsibilities.length > 0
+                                ? `
                                 <ul>
-                                    ${exp.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+                                    ${exp.responsibilities.map((resp) => `<li>${resp}</li>`).join('')}
                                 </ul>
-                            ` : ''}
-                            ${exp.achievements && exp.achievements.length > 0 ? `
+                            `
+                                : ''
+                            }
+                            ${
+                              exp.achievements && exp.achievements.length > 0
+                                ? `
                                 <ul>
-                                    ${exp.achievements.map(ach => `<li>${ach}</li>`).join('')}
+                                    ${exp.achievements.map((ach) => `<li>${ach}</li>`).join('')}
                                 </ul>
-                            ` : ''}
-                            ${exp.technologies && exp.technologies.length > 0 ? `
+                            `
+                                : ''
+                            }
+                            ${
+                              exp.technologies && exp.technologies.length > 0
+                                ? `
                                 <small>${exp.technologies.join(', ')}</small>
-                            ` : ''}
+                            `
+                                : ''
+                            }
                         </div>
-                    `).join('<hr style="opacity: 30%;">')}
+                    `,
+                      )
+                      .join('<hr style="opacity: 30%;">')}
                 </section>
-                ` : ''}
+                `
+                    : ''
+                }
 
                 <hr>
 
                 <!-- Education -->
-                ${cvData.education.length > 0 ? `
+                ${
+                  cvData.education.length > 0
+                    ? `
                 <section id="formation">
                     <h3>Education</h3>
-                    ${cvData.education.map(edu => `
-                        <h4>${edu.school}</h4>
+                    ${cvData.education
+                      .map(
+                        (edu) => `
+                        <h4>${edu.institution}</h4>
                         <div>
-                            <p>${edu.year}</p>
+                            <p>${edu.startDate} - ${edu.endDate || 'Present'}</p>
                             <h4>${edu.degree}</h4>
                             ${edu.gpa ? `<span>GPA: ${edu.gpa}</span>` : ''}
-                            ${edu.location ? `<span>📍 ${edu.location}</span>` : ""}
-                            ${edu.honors ? `<p><i>🏆 ${edu.honors}</i></p>` : ""}
+                            ${edu.location ? `<span>📍 ${edu.location}</span>` : ''}
                         </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                 </section>
                 <hr>
-                ` : ''}
+                `
+                    : ''
+                }
 
                 <!-- Projects -->
-                ${cvData.projects && cvData.projects.length > 0 ? `
+                ${
+                  cvData.projects && cvData.projects.length > 0
+                    ? `
                 <section>
                     <h3>Projects</h3>
-                    ${cvData.projects.map(project => `
+                    ${cvData.projects
+                      .map(
+                        (project) => `
                         <section>
                             <h4>${project.name}</h4>
                             <p>${project.description}</p>
-                            ${project.techStack && project.techStack.length > 0 ? `
-                                <small>${project.techStack.join(', ')}</small>
-                            ` : ''}
-                            ${project.link ? `
+                            ${
+                              project.technologies &&
+                              project.technologies.length > 0
+                                ? `
+                                <small>${project.technologies.join(', ')}</small>
+                            `
+                                : ''
+                            }
+                            ${
+                              project.link
+                                ? `
                                 <nav>
                                     <ul>
                                         <li>
@@ -495,69 +548,107 @@ export class HtmlTemplateService {
                                         </li>
                                     </ul>
                                 </nav>
-                            ` : ''}
+                            `
+                                : ''
+                            }
                         </section>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                 </section>
 
                 <!-- Certifications -->
-                ${cvData.certifications && cvData.certifications.length > 0 ? `
+                ${
+                  cvData.certifications && cvData.certifications.length > 0
+                    ? `
                 <section>
                     <h3>Certifications</h3>
-                    ${cvData.certifications.map(cert => `
+                    ${cvData.certifications
+                      .map(
+                        (cert) => `
                         <div>
                             <h4>${cert.name}</h4>
                             <p>${cert.issuer} - ${cert.date}</p>
-                            ${cert.link ? `<a href="${cert.link}" target="_blank" class="custom-link">View Certificate</a>` : ''}
+                            ${cert.credentialUrl ? `<a href="${cert.credentialUrl}" target="_blank" class="custom-link">View Certificate</a>` : ''}
                         </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                 </section>
                 <hr>
-                ` : ''}
+                `
+                    : ''
+                }
 
                 <!-- Awards -->
-                ${cvData.awards && cvData.awards.length > 0 ? `
+                ${
+                  cvData.awards && cvData.awards.length > 0
+                    ? `
                 <section>
                     <h3>Awards</h3>
-                    ${cvData.awards.map(award => `
+                    ${cvData.awards
+                      .map(
+                        (award) => `
                         <div>
-                            <h4>${award.name}</h4>
+                            <h4>${award.title}</h4>
                             <p>${award.issuer} - ${award.date}</p>
                         </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                 </section>
                 <hr>
-                ` : ''}
+                `
+                    : ''
+                }
 
                 <!-- Publications -->
-                ${cvData.publications && cvData.publications.length > 0 ? `
+                ${
+                  cvData.publications && cvData.publications.length > 0
+                    ? `
                 <section>
                     <h3>Publications</h3>
-                    ${cvData.publications.map(pub => `
+                    ${cvData.publications
+                      .map(
+                        (pub) => `
                         <div>
                             <h4>${pub.title}</h4>
-                            <p>${pub.journal} - ${pub.date}</p>
+                            <p>${pub.journal} - ${pub.publicationDate}</p>
                             <p><i>Authors: ${pub.authors}</i></p>
                         </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                 </section>
                 <hr>
-                ` : ''}
+                `
+                    : ''
+                }
 
                 <!-- Volunteer Experience -->
-                ${cvData.volunteer && cvData.volunteer.length > 0 ? `
+                ${
+                  cvData.volunteer && cvData.volunteer.length > 0
+                    ? `
                 <section>
                     <h3>Volunteer Experience</h3>
-                    ${cvData.volunteer.map(vol => `
+                    ${cvData.volunteer
+                      .map(
+                        (vol) => `
                         <div>
                             <h4>${vol.role} - ${vol.organization}</h4>
-                            <p>${vol.duration}</p>
+                            <p>${vol.startDate} - ${vol.endDate || 'Present'}</p>
                             <p>${vol.description}</p>
                         </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                 </section>
-                ` : ''}
-                ` : ''}
+                `
+                    : ''
+                }
+                `
+                    : ''
+                }
             </div>
         </div>
     </main>

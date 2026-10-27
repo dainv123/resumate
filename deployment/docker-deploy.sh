@@ -14,7 +14,7 @@ VPS_IP=$(hostname -I | awk '{print $1}')
 echo "🌐 VPS IP: $VPS_IP"
 
 # Use domain name if available, otherwise use IP
-DOMAIN_NAME="${DOMAIN_NAME:-daidev.click}"
+DOMAIN_NAME="${DOMAIN_NAME:-resumate.click}"
 if [ -n "$DOMAIN_NAME" ] && [ "$DOMAIN_NAME" != "localhost" ]; then
     echo "🌐 Using domain: $DOMAIN_NAME"
     export NEXT_PUBLIC_API_URL="http://$DOMAIN_NAME:5001"

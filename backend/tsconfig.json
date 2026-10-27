@@ -23,10 +23,15 @@
     "noFallthroughCasesInSwitch": false
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.spec.ts",
+    "**/*.e2e-spec.ts",
+    "**/tests/**",
+    "test/**"
   ]
 }

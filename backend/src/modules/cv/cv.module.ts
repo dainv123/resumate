@@ -6,18 +6,36 @@ import { CvService } from './cv.service';
 import { JobDescriptionService } from './job-description.service';
 import { Cv } from './entities/cv.entity';
 import { JobDescription } from './entities/job-description.entity';
+import { CvMatchingAnalysis } from './entities/cv-matching-analysis.entity';
+import { CvCoverLetter } from './entities/cv-cover-letter.entity';
+import { InterviewPrepPlan } from '../interview-prep/entities/interview-prep-plan.entity';
+import { InterviewQuestionAssignment } from '../interview-prep/entities/interview-question-assignment.entity';
+import { User } from '../users/entities/user.entity';
 import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
+import { TemplatesModule } from '../templates/templates.module';
 import { ExportService } from '../../shared/services/export.service';
 import { HtmlTemplateService } from '../../shared/services/html-template.service';
+import { DynamicTemplateService } from '../../shared/services/dynamic-template.service';
 import { DocumentParserService } from '../ai/providers/document-parser.service';
 import { FileUploadService } from '../../shared/services/file-upload.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Cv, JobDescription]),
+    TypeOrmModule.forFeature([
+      Cv,
+      JobDescription,
+      CvMatchingAnalysis,
+      CvCoverLetter,
+      InterviewPrepPlan,
+      InterviewQuestionAssignment,
+      User,
+    ]),
     AiModule,
     UsersModule,
+    AnalyticsModule,
+    TemplatesModule,
     MulterModule.register({
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB
@@ -25,7 +43,15 @@ import { FileUploadService } from '../../shared/services/file-upload.service';
     }),
   ],
   controllers: [CvController],
-  providers: [CvService, JobDescriptionService, ExportService, HtmlTemplateService, DocumentParserService, FileUploadService],
+  providers: [
+    CvService,
+    JobDescriptionService,
+    ExportService,
+    HtmlTemplateService,
+    DynamicTemplateService,
+    DocumentParserService,
+    FileUploadService,
+  ],
   exports: [CvService, TypeOrmModule],
 })
 export class CvModule {}

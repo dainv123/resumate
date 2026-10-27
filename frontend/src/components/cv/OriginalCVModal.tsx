@@ -228,9 +228,11 @@ export default function OriginalCVModal({
       headerClassName="bg-gradient-to-r from-blue-50 to-indigo-50"
       bodyClassName="bg-gray-50/30"
       footer={
-        <Button onClick={onClose} variant="outline">
-          Close
-        </Button>
+        <div className="flex justify-end w-full">
+          <Button onClick={onClose} variant="outline">
+            Close
+          </Button>
+        </div>
       }>
       {/* Custom Header Content */}
       <div className="flex items-center gap-3 -mt-6 mb-6">

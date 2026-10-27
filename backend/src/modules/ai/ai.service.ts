@@ -1,7 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleAIService } from './providers/google-ai.service';
 import { DocumentParserService } from './providers/document-parser.service';
-import { CVData } from '../cv/entities/cv.entity';
+import { CVData } from '../../shared/interfaces/cv-data.interface';
+import { Language } from './translations/ai-prompts';
+import {
+  cvParseFormatError,
+  cvParseLogFullText,
+  cvParseShouldLogFull,
+  cvParseSummarizeExtracted,
+  cvParseSummarizeResult,
+} from '../../shared/utils/cv-parse-log.util';
+
+export type CvParseSource = 'google' | 'openrouter' | 'fallback_regex';
+
+export interface ParseCvResult {
+  data: CVData;
+  parseSource: CvParseSource;
+  extractedTextLength: number;
+}
 
 @Injectable()
 export class AiService {
@@ -12,45 +28,112 @@ export class AiService {
     private documentParserService: DocumentParserService,
   ) {}
 
-  async parseCvWithRetry(fileBuffer: Buffer, mimeType: string, maxRetries = 3): Promise<CVData> {
+  async parseCvWithRetry(
+    fileBuffer: Buffer,
+    mimeType: string,
+    maxRetries = 3,
+  ): Promise<ParseCvResult> {
+    this.logger.log(
+      `[CV_PARSE] parse_start mime=${mimeType} bufferBytes=${fileBuffer.length} maxRetries=${maxRetries}`,
+    );
+
+    let lastExtractedLength = 0;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        // Extract text from file
-        const text = await this.documentParserService.extractTextFromFile(fileBuffer, mimeType);
-        
-        // Parse with AI
-        const cvData = await this.googleAIService.parseCvContent(text);
-        
-        this.logger.log(`CV parsed successfully on attempt ${attempt}`);
-        return cvData;
-      } catch (error) {
-        this.logger.warn(`CV parsing attempt ${attempt} failed:`, error.message);
-        
-        if (attempt === maxRetries) {
-          this.logger.error('All CV parsing attempts failed, using fallback');
-          return this.fallbackParsing(fileBuffer, mimeType);
+        const text = await this.documentParserService.extractTextFromFile(
+          fileBuffer,
+          mimeType,
+        );
+        lastExtractedLength = text.length;
+
+        const extractSummary = cvParseSummarizeExtracted(text);
+        this.logger.log(
+          `[CV_PARSE] attempt=${attempt} extracted ${JSON.stringify(extractSummary)}`,
+        );
+
+        if (attempt === 1 && cvParseShouldLogFull()) {
+          cvParseLogFullText(
+            (m) => this.logger.log(m),
+            'extracted_full',
+            text,
+          );
         }
-        
-        // Exponential backoff
+
+        if (extractSummary.isEmpty) {
+          throw new Error('Extracted text is empty — PDF/DOCX may be image-only');
+        }
+
+        const { data: cvData, provider } =
+          await this.googleAIService.parseCvContent(text);
+
+        const resultSummary = cvParseSummarizeResult(cvData);
+        this.logger.log(
+          `[CV_PARSE] attempt=${attempt} llm_ok source=${provider} ${JSON.stringify(resultSummary)}`,
+        );
+
+        return {
+          data: cvData,
+          parseSource: provider,
+          extractedTextLength: text.length,
+        };
+      } catch (error) {
+        this.logger.warn(
+          `[CV_PARSE] attempt=${attempt} failed: ${cvParseFormatError(error)}`,
+        );
+
+        if (attempt === maxRetries) {
+          this.logger.error(
+            `[CV_PARSE] all_attempts_failed → fallback_regex extractedChars=${lastExtractedLength}`,
+          );
+          const fallbackData = await this.fallbackParsing(fileBuffer, mimeType);
+          return {
+            data: fallbackData,
+            parseSource: 'fallback_regex',
+            extractedTextLength: lastExtractedLength,
+          };
+        }
+
         await this.delay(1000 * attempt);
       }
     }
-    
-    // This should never be reached, but TypeScript requires it
-    return this.fallbackParsing(fileBuffer, mimeType);
+
+    const fallbackData = await this.fallbackParsing(fileBuffer, mimeType);
+    return {
+      data: fallbackData,
+      parseSource: 'fallback_regex',
+      extractedTextLength: lastExtractedLength,
+    };
   }
 
-  async generateProjectBullets(project: {
-    name: string;
-    role: string;
-    techStack: string[];
-    results?: string;
-  }): Promise<string[]> {
+  async parseCvFromText(text: string): Promise<ParseCvResult> {
+    this.logger.log(
+      `[CV_PARSE] parse_from_text chars=${text.length} ${JSON.stringify(cvParseSummarizeExtracted(text))}`,
+    );
+    const { data: cvData, provider } =
+      await this.googleAIService.parseCvContent(text);
+    return {
+      data: cvData,
+      parseSource: provider,
+      extractedTextLength: text.length,
+    };
+  }
+
+  async generateProjectBullets(
+    project: {
+      name: string;
+      role: string;
+      techStack: string[];
+      results?: string;
+    },
+    language?: string,
+  ): Promise<string[]> {
     try {
       return await this.googleAIService.generateBulletPoints(
         project.name,
         project.role,
-        project.techStack
+        project.techStack,
+        (language as Language) || 'en',
       );
     } catch (error) {
       this.logger.error('Error generating project bullets:', error);
@@ -58,31 +141,51 @@ export class AiService {
     }
   }
 
-  async tailorCvForJob(cvData: CVData, jobDescription: string): Promise<CVData> {
+  async tailorCvForJob(
+    cvData: CVData,
+    jobDescription: string,
+    language?: string,
+  ): Promise<CVData> {
     try {
-      return await this.googleAIService.tailorCvContent(cvData, jobDescription);
+      return await this.googleAIService.tailorCvContent(
+        cvData,
+        jobDescription,
+        (language as Language) || 'en',
+      );
     } catch (error) {
       this.logger.error('Error tailoring CV:', error);
       return cvData; // Return original if tailoring fails
     }
   }
 
-  async suggestImprovements(cvData: CVData): Promise<string[]> {
+  async suggestImprovements(
+    cvData: CVData,
+    language?: string,
+  ): Promise<string[]> {
     try {
-      return await this.googleAIService.generateSuggestions(cvData);
+      return await this.googleAIService.generateSuggestions(
+        cvData,
+        (language as Language) || 'en',
+      );
     } catch (error) {
       this.logger.error('Error generating suggestions:', error);
       return this.fallbackSuggestions();
     }
   }
 
-  async extractJobKeywords(jobDescription: string): Promise<{
+  async extractJobKeywords(
+    jobDescription: string,
+    language?: string,
+  ): Promise<{
     skills: string[];
     requirements: string[];
     keywords: string[];
   }> {
     try {
-      const keywords = await this.googleAIService.extractKeywords(jobDescription);
+      const keywords = await this.googleAIService.extractKeywords(
+        jobDescription,
+        (language as Language) || 'en',
+      );
       return {
         skills: keywords,
         requirements: keywords,
@@ -94,7 +197,11 @@ export class AiService {
     }
   }
 
-  async analyzeCompatibility(cvData: CVData, jobDescription: string): Promise<{
+  async analyzeCompatibility(
+    cvData: CVData,
+    jobDescription: string,
+    language?: Language,
+  ): Promise<{
     score: number;
     matchedSkills: string[];
     missingSkills: string[];
@@ -102,9 +209,14 @@ export class AiService {
     missingRequirements: string[];
     suggestions: string[];
     strengths: string[];
+    reused?: boolean;
   }> {
     try {
-      return await this.googleAIService.analyzeCompatibility(cvData, jobDescription);
+      return await this.googleAIService.analyzeCompatibility(
+        cvData,
+        jobDescription,
+        language || 'en',
+      );
     } catch (error) {
       this.logger.error('Error analyzing compatibility:', error);
       // Return fallback analysis
@@ -120,13 +232,21 @@ export class AiService {
     }
   }
 
-  async generateCoverLetter(cvData: CVData, jobDescription: string): Promise<string> {
+  async generateCoverLetter(
+    cvData: CVData,
+    jobDescription: string,
+    language?: Language,
+  ): Promise<{ coverLetter: string; reused?: boolean }> {
     try {
-      return await this.googleAIService.generateCoverLetter(cvData, jobDescription);
+      return await this.googleAIService.generateCoverLetter(
+        cvData,
+        jobDescription,
+        language || 'en',
+      );
     } catch (error) {
       this.logger.error('Error generating cover letter:', error);
       // Return fallback cover letter
-      return this.fallbackCoverLetter(cvData);
+      return { coverLetter: this.fallbackCoverLetter(cvData) };
     }
   }
 
@@ -140,23 +260,35 @@ ${cvData.summary || 'I am a dedicated professional with a strong track record of
 Thank you for considering my application.
 
 Sincerely,
-${cvData.name || 'Candidate'}`;
+${cvData.contact?.name || 'Candidate'}`;
   }
 
-  private async fallbackParsing(fileBuffer: Buffer, mimeType: string): Promise<CVData> {
+  private async fallbackParsing(
+    fileBuffer: Buffer,
+    mimeType: string,
+  ): Promise<CVData> {
     try {
       // Try to extract text without AI
-      const text = await this.documentParserService.extractTextFromFile(fileBuffer, mimeType);
-      
+      const text = await this.documentParserService.extractTextFromFile(
+        fileBuffer,
+        mimeType,
+      );
+
       // Basic regex-based parsing
-      const emailMatch = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
-      const phoneMatch = text.match(/(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/);
-      
-      return {
-        name: 'Unknown',
-        email: emailMatch ? emailMatch[0] : 'unknown@email.com',
-        phone: phoneMatch ? phoneMatch[0] : '',
-        address: '',
+      const emailMatch = text.match(
+        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+      );
+      const phoneMatch = text.match(
+        /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/,
+      );
+
+      const fallback = {
+        contact: {
+          name: 'Unknown',
+          email: emailMatch ? emailMatch[0] : 'unknown@email.com',
+          phone: phoneMatch ? phoneMatch[0] : '',
+          address: '',
+        },
         summary: '',
         education: [],
         experience: [],
@@ -164,7 +296,7 @@ ${cvData.name || 'Candidate'}`;
           technical: [],
           soft: [],
           languages: [],
-          tools: []
+          tools: [],
         },
         projects: [],
         certifications: [],
@@ -172,13 +304,26 @@ ${cvData.name || 'Candidate'}`;
         publications: [],
         volunteer: [],
       };
+
+      this.logger.warn(
+        `[CV_PARSE] fallback_regex_result ${JSON.stringify({
+          extracted: cvParseSummarizeExtracted(text),
+          parsed: cvParseSummarizeResult(fallback as CVData),
+        })}`,
+      );
+
+      return fallback;
     } catch (error) {
-      this.logger.error('Fallback parsing also failed:', error);
+      this.logger.error(
+        `[CV_PARSE] fallback_regex_failed: ${cvParseFormatError(error)}`,
+      );
       return {
-        name: 'Unknown',
-        email: 'unknown@email.com',
-        phone: '',
-        address: '',
+        contact: {
+          name: 'Unknown',
+          email: 'unknown@email.com',
+          phone: '',
+          address: '',
+        },
         summary: '',
         education: [],
         experience: [],
@@ -186,7 +331,7 @@ ${cvData.name || 'Candidate'}`;
           technical: [],
           soft: [],
           languages: [],
-          tools: []
+          tools: [],
         },
         projects: [],
         certifications: [],
@@ -206,7 +351,9 @@ ${cvData.name || 'Candidate'}`;
     return [
       `Developed ${project.name} using ${project.techStack.join(', ')}`,
       `Collaborated with team to deliver high-quality solutions`,
-      project.results ? `Achieved ${project.results}` : 'Delivered project on time and within budget',
+      project.results
+        ? `Achieved ${project.results}`
+        : 'Delivered project on time and within budget',
     ];
   }
 
@@ -226,9 +373,17 @@ ${cvData.name || 'Candidate'}`;
     keywords: string[];
   } {
     // Basic keyword extraction using common patterns
-    const commonSkills = ['JavaScript', 'Python', 'React', 'Node.js', 'SQL', 'AWS', 'Docker'];
-    const foundSkills = commonSkills.filter(skill => 
-      jobDescription.toLowerCase().includes(skill.toLowerCase())
+    const commonSkills = [
+      'JavaScript',
+      'Python',
+      'React',
+      'Node.js',
+      'SQL',
+      'AWS',
+      'Docker',
+    ];
+    const foundSkills = commonSkills.filter((skill) =>
+      jobDescription.toLowerCase().includes(skill.toLowerCase()),
     );
 
     return {
@@ -241,7 +396,10 @@ ${cvData.name || 'Candidate'}`;
   async tailorCvContent(cvData: any, jobDescription: string): Promise<any> {
     try {
       // Use Google AI service to tailor CV content
-      const tailoredData = await this.googleAIService.tailorCvContent(cvData, jobDescription);
+      const tailoredData = await this.googleAIService.tailorCvContent(
+        cvData,
+        jobDescription,
+      );
       return tailoredData;
     } catch (error) {
       this.logger.error('Error tailoring CV content:', error);
@@ -250,7 +408,101 @@ ${cvData.name || 'Candidate'}`;
     }
   }
 
+  async inferInterviewProcess(jobDescription: string, language?: string) {
+    try {
+      return await this.googleAIService.inferInterviewProcess(
+        jobDescription,
+        language,
+      );
+    } catch (error) {
+      this.logger.error('Error inferring interview process:', error);
+      return null;
+    }
+  }
+
+  async generateStarStories(
+    cvData: CVData,
+    jobDescription: string,
+    language?: string,
+  ) {
+    try {
+      return await this.googleAIService.generateStarStories(
+        cvData,
+        jobDescription,
+        language,
+      );
+    } catch (error) {
+      this.logger.error('Error generating STAR stories:', error);
+      return [];
+    }
+  }
+
+  async generateProjectDefenseSheets(
+    cvData: CVData,
+    jobDescription: string,
+    language?: string,
+  ) {
+    try {
+      return await this.googleAIService.generateProjectDefenseSheets(
+        cvData,
+        jobDescription,
+        language,
+      );
+    } catch (error) {
+      this.logger.error('Error generating project defense sheets:', error);
+      return [];
+    }
+  }
+
+  async evaluateMockAnswer(
+    question: string,
+    rubric: { excellent: string[]; good: string[]; weak: string[] },
+    answer: string,
+    language?: string,
+    context?: { jobDescription?: string; category?: string },
+  ) {
+    try {
+      return await this.googleAIService.evaluateMockAnswer(
+        question,
+        rubric,
+        answer,
+        language,
+        context,
+      );
+    } catch (error) {
+      this.logger.error('Error evaluating mock answer:', error);
+      return {
+        score: 5,
+        matchedCriteria: [],
+        missingCriteria: ['Unable to evaluate — try again'],
+        feedback:
+          'Evaluation unavailable. Review your answer against the rubric.',
+        improvedAnswerOutline: [],
+        followUpQuestion: '',
+      };
+    }
+  }
+
+  async generateCompanyResearch(
+    jobDescription: string,
+    title: string,
+    company: string,
+    language?: string,
+  ) {
+    try {
+      return await this.googleAIService.generateCompanyResearch(
+        jobDescription,
+        title,
+        company,
+        language,
+      );
+    } catch (error) {
+      this.logger.error('Error generating company research:', error);
+      return { sections: [] };
+    }
+  }
+
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

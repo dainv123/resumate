@@ -1,323 +1,450 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  portfolioApi,
-  PortfolioTemplate,
-  CreatePortfolioData,
-} from "@/lib/portfolio";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { portfolioApi, CreatePortfolioData } from "@/lib/portfolio";
 import Button from "@/components/ui/Button";
-import { Eye, Share2, Download, Sparkles } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Eye, Share2, Check, ChevronRight, ChevronLeft } from "lucide-react";
+import TemplateSelector, {
+  type TemplateConfig,
+} from "@/components/portfolio/TemplateSelector";
+import CvSelector from "@/components/portfolio/CvSelector";
+import SectionCustomizer from "@/components/portfolio/SectionCustomizer";
+import { useToast } from "@/contexts/ToastContext";
+
+type Step = 1 | 2 | 3 | 4;
 
 export default function PortfolioPage() {
-  const { user } = useAuth();
-  const [selectedTemplate, setSelectedTemplate] = useState<PortfolioTemplate>(
-    PortfolioTemplate.MODERN
+  const { t } = useLanguage();
+  const { showSuccess, showError } = useToast();
+  const [currentStep, setCurrentStep] = useState<Step>(1);
+
+  // Form state
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [templateConfig, setTemplateConfig] = useState<TemplateConfig | null>(
+    null
   );
-  const [customDomain, setCustomDomain] = useState("");
+  const [selectedCvId, setSelectedCvId] = useState<string>("");
+  const [customSections, setCustomSections] = useState<any>({});
   const [bio, setBio] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
-  const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
+  const [customDomain, setCustomDomain] = useState("");
 
-  const generateHtmlMutation = useMutation({
+  // Results
+  const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+
+  // Check existing portfolio
+  const { data: existingPortfolio } = useQuery({
+    queryKey: ["portfolio", "check"],
+    queryFn: portfolioApi.checkPortfolio,
+  });
+
+  // Preview mutation
+  const previewMutation = useMutation({
     mutationFn: portfolioApi.generatePortfolioHTML,
     onSuccess: (data) => {
-      setGeneratedHtml(data.html);
+      setPreviewHtml(data.html);
     },
   });
 
-  const generateUrlMutation = useMutation({
-    mutationFn: portfolioApi.generatePortfolioUrl,
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: portfolioApi.savePortfolio,
     onSuccess: (data) => {
-      setPortfolioUrl(data.url);
+      setPortfolioUrl(data.generatedUrl);
     },
   });
 
-  const handleGeneratePortfolio = () => {
-    const data: CreatePortfolioData = {
-      template: selectedTemplate,
-      customDomain: customDomain || undefined,
-      bio: bio || undefined,
-      linkedinUrl: linkedinUrl || undefined,
-      githubUrl: githubUrl || undefined,
-      websiteUrl: websiteUrl || undefined,
-    };
-
-    generateHtmlMutation.mutate(data);
-    generateUrlMutation.mutate({ customDomain: customDomain || undefined });
+  const handleTemplateSelect = (templateId: string, config: TemplateConfig) => {
+    setSelectedTemplate(templateId);
+    setTemplateConfig(config);
+    setCustomSections({}); // Reset custom sections when changing template
   };
 
   const handlePreview = () => {
-    if (generatedHtml) {
+    const data: CreatePortfolioData = {
+      template: selectedTemplate as any,
+      selectedCvId: selectedCvId || undefined,
+      customSections:
+        Object.keys(customSections).length > 0 ? customSections : undefined,
+      bio: bio || undefined,
+      avatar: avatar || undefined,
+      linkedinUrl: linkedinUrl || undefined,
+      githubUrl: githubUrl || undefined,
+      websiteUrl: websiteUrl || undefined,
+      customDomain: customDomain || undefined,
+    };
+
+    previewMutation.mutate(data);
+  };
+
+  const handleSave = () => {
+    const data: CreatePortfolioData = {
+      template: selectedTemplate as any,
+      selectedCvId: selectedCvId || undefined,
+      customSections:
+        Object.keys(customSections).length > 0 ? customSections : undefined,
+      bio: bio || undefined,
+      avatar: avatar || undefined,
+      linkedinUrl: linkedinUrl || undefined,
+      githubUrl: githubUrl || undefined,
+      websiteUrl: websiteUrl || undefined,
+      customDomain: customDomain || undefined,
+    };
+
+    saveMutation.mutate(data);
+  };
+
+  const handlePreviewInNewTab = () => {
+    if (previewHtml) {
       const newWindow = window.open("", "_blank");
       if (newWindow) {
-        newWindow.document.write(generatedHtml);
+        newWindow.document.write(previewHtml);
         newWindow.document.close();
       }
     }
   };
 
-  const handleDownload = () => {
-    if (generatedHtml) {
-      const blob = new Blob([generatedHtml], { type: "text/html" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "portfolio.html";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    showSuccess(t("portfolio.success.copied"));
+  };
+
+  const canProceedToStep = (step: Step): boolean => {
+    switch (step) {
+      case 1:
+        return true;
+      case 2:
+        return !!selectedTemplate;
+      case 3:
+        return !!selectedTemplate && !!selectedCvId;
+      case 4:
+        return !!selectedTemplate && !!selectedCvId;
+      default:
+        return false;
     }
   };
 
-  const handleShare = () => {
-    if (portfolioUrl) {
-      navigator.clipboard.writeText(portfolioUrl);
-      alert("Portfolio URL copied to clipboard!");
-    }
-  };
+  const renderStepIndicator = () => {
+    const steps = [
+      { number: 1, label: t("portfolio.steps.template") },
+      { number: 2, label: t("portfolio.steps.cv") },
+      { number: 3, label: t("portfolio.steps.customize") },
+      { number: 4, label: t("portfolio.steps.details") },
+    ];
 
-  const templates = [
-    {
-      id: PortfolioTemplate.BASIC,
-      name: "Basic",
-      description: "Clean and simple design",
-      preview: "bg-gray-100",
-    },
-    {
-      id: PortfolioTemplate.MODERN,
-      name: "Modern",
-      description: "Contemporary with gradients",
-      preview: "bg-gradient-to-br from-blue-100 to-purple-100",
-    },
-    {
-      id: PortfolioTemplate.CREATIVE,
-      name: "Creative",
-      description: "Bold and artistic design",
-      preview: "bg-gradient-to-br from-pink-100 to-orange-100",
-    },
-    {
-      id: PortfolioTemplate.MUHAMMAD_ISMAIL,
-      name: "Muhammad Ismail",
-      description: "Professional with timeline design",
-      preview: "bg-gradient-to-br from-indigo-100 to-purple-100",
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900">Portfolio</h3>
-        <p className="text-gray-600">
-          Create a professional portfolio to showcase your work
-        </p>
+    return (
+      <div className="flex items-center justify-center mb-8">
+        {steps.map((step, index) => (
+          <React.Fragment key={step.number}>
+            <div
+              className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
+                currentStep === step.number
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : currentStep > step.number
+                  ? "border-green-600 bg-green-600 text-white"
+                  : "border-gray-300 text-gray-400"
+              }`}>
+              {currentStep > step.number ? (
+                <Check className="w-5 h-5" />
+              ) : (
+                <span className="font-semibold">{step.number}</span>
+              )}
+            </div>
+            {index < steps.length - 1 && (
+              <div
+                className={`w-16 h-0.5 ${
+                  currentStep > step.number ? "bg-green-600" : "bg-gray-300"
+                }`}
+              />
+            )}
+          </React.Fragment>
+        ))}
       </div>
+    );
+  };
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Configuration */}
-        <div className="space-y-6">
-          {/* Template Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Choose Template
-            </label>
-            <div className="grid grid-cols-1 gap-3">
-              {templates.map((template) => (
-                <div
-                  key={template.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedTemplate === template.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                  onClick={() => setSelectedTemplate(template.id)}>
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-12 h-12 rounded ${template.preview}`}></div>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {template.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {template.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <TemplateSelector
+            selectedTemplate={selectedTemplate}
+            onSelectTemplate={handleTemplateSelect}
+          />
+        );
+
+      case 2:
+        return (
+          <CvSelector
+            selectedCvId={selectedCvId}
+            onSelectCv={setSelectedCvId}
+          />
+        );
+
+      case 3:
+        return templateConfig ? (
+          <SectionCustomizer
+            templateConfig={templateConfig}
+            customSections={customSections}
+            onCustomSectionsChange={setCustomSections}
+          />
+        ) : null;
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-xl font-semibold mb-2">
+                {t("portfolio.details.title")}
+              </h4>
+              <p className="text-gray-600">{t("portfolio.details.subtitle")}</p>
             </div>
-          </div>
 
-          {/* Custom Domain */}
-          <div>
-            <label
-              htmlFor="customDomain"
-              className="block text-sm font-medium text-gray-700">
-              Custom Domain (Optional)
-            </label>
-            <input
-              type="text"
-              id="customDomain"
-              value={customDomain}
-              onChange={(e) => setCustomDomain(e.target.value)}
-              className="input-base mt-1"
-              placeholder="yourname.com"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Leave empty to use default URL: {user?.email?.split("@")[0]}
-              .resumate.app
-            </p>
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label
-              htmlFor="bio"
-              className="block text-sm font-medium text-gray-700">
-              Bio
-            </label>
-            <textarea
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={3}
-              className="textarea-base mt-1"
-              placeholder="Tell us about yourself..."
-            />
-          </div>
-
-          {/* Social Links */}
-          <div className="space-y-3">
+            {/* Bio */}
             <div>
               <label
-                htmlFor="linkedinUrl"
-                className="block text-sm font-medium text-gray-700">
-                LinkedIn URL
+                htmlFor="bio"
+                className="block text-sm font-medium text-gray-700 mb-2">
+                {t("portfolio.details.bioLabel")}
               </label>
-              <input
-                type="url"
-                id="linkedinUrl"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                className="input-base mt-1"
-                placeholder="https://linkedin.com/in/yourname"
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={t("portfolio.details.bioPlaceholder2")}
               />
             </div>
 
+            {/* Avatar */}
             <div>
               <label
-                htmlFor="githubUrl"
-                className="block text-sm font-medium text-gray-700">
-                GitHub URL
+                htmlFor="avatar"
+                className="block text-sm font-medium text-gray-700 mb-2">
+                {t("portfolio.details.avatar")}
               </label>
               <input
                 type="url"
-                id="githubUrl"
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                className="input-base mt-1"
-                placeholder="https://github.com/yourname"
+                id="avatar"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={t("portfolio.details.avatarPlaceholder")}
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="websiteUrl"
-                className="block text-sm font-medium text-gray-700">
-                Website URL
-              </label>
-              <input
-                type="url"
-                id="websiteUrl"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                className="input-base mt-1"
-                placeholder="https://yourwebsite.com"
-              />
-            </div>
-          </div>
+            {/* Social Links */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="linkedinUrl"
+                  className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("portfolio.details.linkedinUrl")}
+                </label>
+                <input
+                  type="url"
+                  id="linkedinUrl"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t("portfolio.details.linkedinPlaceholder")}
+                />
+              </div>
 
-          {/* Generate Button */}
-          <Button
-            onClick={handleGeneratePortfolio}
-            loading={
-              generateHtmlMutation.isPending || generateUrlMutation.isPending
-            }
-            className="w-full">
-            <Sparkles className="h-4 w-4 mr-2" />
-            Generate Portfolio
-          </Button>
-        </div>
+              <div>
+                <label
+                  htmlFor="githubUrl"
+                  className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("portfolio.details.githubUrl")}
+                </label>
+                <input
+                  type="url"
+                  id="githubUrl"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t("portfolio.details.githubPlaceholder")}
+                />
+              </div>
 
-        {/* Preview & Actions */}
-        <div className="space-y-6">
-          {/* Portfolio URL */}
-          {portfolioUrl && (
-            <div className="bg-white border rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-2">Portfolio URL</h3>
-              <div className="flex items-center space-x-2">
+              <div>
+                <label
+                  htmlFor="websiteUrl"
+                  className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("portfolio.details.websiteUrl")}
+                </label>
+                <input
+                  type="url"
+                  id="websiteUrl"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t("portfolio.details.websitePlaceholder")}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="customDomain"
+                  className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("portfolio.details.customDomainLabel")}
+                </label>
                 <input
                   type="text"
-                  value={portfolioUrl}
-                  readOnly
-                  className="flex-1 input-base bg-gray-50"
+                  id="customDomain"
+                  value={customDomain}
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t("portfolio.details.customDomainPlaceholder")}
                 />
-                <Button variant="outline" size="sm" onClick={handleShare}>
-                  <Share2 className="h-4 w-4" />
-                </Button>
               </div>
             </div>
-          )}
 
-          {/* Actions */}
-          {generatedHtml && (
-            <div className="bg-white border rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-3">Actions</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={handlePreview}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </Button>
-                <Button variant="outline" onClick={handleDownload}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </div>
+            {/* Preview & Save Buttons */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                onClick={handlePreview}
+                variant="outline"
+                loading={previewMutation.isPending}
+                className="flex-1">
+                <Eye className="w-4 h-4 mr-2" />
+                {t("portfolio.details.previewButton")}
+              </Button>
+              <Button
+                onClick={handleSave}
+                loading={saveMutation.isPending}
+                className="flex-1">
+                <Check className="w-4 h-4 mr-2" />
+                {t("portfolio.details.savePublish")}
+              </Button>
             </div>
-          )}
 
-          {/* Instructions */}
+            {/* Preview Modal */}
+            {previewHtml && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="font-medium text-green-900">
+                      {t("portfolio.success.previewReady")}
+                    </h5>
+                    <p className="text-sm text-green-700">
+                      {t("portfolio.success.previewDesc")}
+                    </p>
+                  </div>
+                  <Button onClick={handlePreviewInNewTab} size="sm">
+                    {t("portfolio.success.openPreview")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {portfolioUrl && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h5 className="font-medium text-blue-900 mb-2">
+                  {t("portfolio.success.published")}
+                </h5>
+                <p className="text-sm text-blue-700 mb-3">
+                  {t("portfolio.success.publishedDesc")}
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={portfolioUrl}
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded-lg text-sm"
+                  />
+                  <Button
+                    onClick={() => copyToClipboard(portfolioUrl)}
+                    size="sm"
+                    variant="outline">
+                    <Share2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <DashboardLayout
+      title={t("portfolio.title")}
+      subtitle={t("portfolio.subtitle")}
+      showBackButton={false}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Existing Portfolio Notice */}
+        {existingPortfolio?.exists && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-medium text-blue-900 mb-2">How it works</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Choose a template that matches your style</li>
-              <li>• Add your bio and social links</li>
-              <li>• Generate your portfolio automatically</li>
-              <li>• Share the link or download the HTML</li>
-            </ul>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">ℹ️</div>
+              <div className="flex-1">
+                <h5 className="font-medium text-blue-900">
+                  {t("portfolio.existingPortfolio.title")}
+                </h5>
+                <p className="text-sm text-blue-700 mt-1">
+                  {t("portfolio.existingPortfolio.desc")}
+                </p>
+                <a
+                  href={existingPortfolio.portfolio?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline mt-2 inline-block">
+                  {t("portfolio.existingPortfolio.view")}
+                </a>
+              </div>
+            </div>
           </div>
+        )}
 
-          {/* Features */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-medium text-green-900 mb-2">
-              Portfolio Features
-            </h3>
-            <ul className="text-sm text-green-800 space-y-1">
-              <li>• Responsive design for all devices</li>
-              <li>• Auto-generated from your CV and projects</li>
-              <li>• Professional templates</li>
-              <li>• Easy to share and embed</li>
-            </ul>
-          </div>
+        {/* Step Indicator */}
+        {renderStepIndicator()}
+
+        {/* Step Content */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[400px]">
+          {renderStepContent()}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
+          <Button
+            onClick={() =>
+              setCurrentStep((prev) => Math.max(1, prev - 1) as Step)
+            }
+            variant="outline"
+            disabled={currentStep === 1}>
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            {t("portfolio.steps.previous")}
+          </Button>
+
+          {currentStep < 4 ? (
+            <Button
+              onClick={() =>
+                setCurrentStep((prev) => Math.min(4, prev + 1) as Step)
+              }
+              disabled={!canProceedToStep((currentStep + 1) as Step)}>
+              {t("portfolio.steps.next")}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : (
+            <div className="text-sm text-gray-500">
+              {t("portfolio.steps.complete")}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -1,0 +1,21 @@
+{
+  "layout": "two-column",
+  "sections": {
+    "contact": true,
+    "summary": true,
+    "experience": true,
+    "education": true,
+    "skills": true,
+    "projects": true,
+    "certifications": true,
+    "awards": true,
+    "publications": true,
+    "volunteer": true
+  },
+  "styling": {
+    "primaryColor": "#2c3e50",
+    "secondaryColor": "#34495e",
+    "fontFamily": "Arial, sans-serif",
+    "fontSize": "medium"
+  }
+}

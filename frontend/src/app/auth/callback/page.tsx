@@ -3,11 +3,13 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, updateUser } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,18 +43,18 @@ function AuthCallbackContent() {
 
           router.push("/dashboard");
         } else {
-          setError("Authentication failed: Missing token or user data");
+          setError(t("auth.authFailed"));
           setLoading(false);
         }
       } catch (err) {
         console.error("Auth callback error:", err);
-        setError("Authentication failed");
+        setError(t("auth.authFailed"));
         setLoading(false);
       }
     };
 
     handleCallback();
-  }, [searchParams, router, login, updateUser]);
+  }, [searchParams, router, t]); // Remove updateUser from dependencies to prevent infinite loop
 
   if (loading) {
     return (

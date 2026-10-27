@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('user_usage')
@@ -21,10 +27,16 @@ export class UserUsage {
   @Column({ default: 0 })
   exports: number;
 
+  @Column({ default: 0 })
+  interviewPrepPlans: number;
+
+  @Column({ default: 0 })
+  mockDrills: number;
+
   @Column({ type: 'date' })
   resetDate: Date;
 
-  @ManyToOne(() => User, user => user.usage)
+  @ManyToOne(() => User, (user) => user.usage)
   @JoinColumn({ name: 'userId' })
   user: User;
 }

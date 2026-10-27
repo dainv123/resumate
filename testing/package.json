@@ -1,0 +1,77 @@
+{
+  "name": "resumate-testing-framework",
+  "version": "1.0.0",
+  "description": "Comprehensive testing framework for Resumate application using BDD, Playwright and Page Object Model",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke/",
+    "test:e2e": "playwright test tests/e2e/",
+    "test:api": "playwright test tests/api/",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:ci": "playwright test --reporter=github,html,json",
+    "cucumber": "cucumber-js",
+    "cucumber:features": "tsx node_modules/.bin/cucumber-js --require src/steps/**/*.ts --require src/config/hooks.ts src/features/**/*.feature",
+    "cucumber:features:json": "tsx node_modules/.bin/cucumber-js --require src/steps/**/*.ts --require src/config/hooks.ts --format json:reports/results.json src/features/**/*.feature",
+    "cucumber:ui": "node scripts/cucumber-dashboard.js",
+    "cucumber:ui:full": "npm run cucumber:features:json && npm run cucumber:ui",
+    "cucumber:run-scenario": "node scripts/run-specific-scenario.js",
+    "cucumber:smoke": "tsx node_modules/.bin/cucumber-js --require src/steps/**/*.ts --require src/config/hooks.ts --tags '@smoke' --format json:reports/smoke-results.json src/features/**/*.feature",
+    "cucumber:regression": "tsx node_modules/.bin/cucumber-js --require src/steps/**/*.ts --require src/config/hooks.ts --tags 'not @ignore' --format json:reports/regression-results.json src/features/**/*.feature",
+    "cucumber:feature": "tsx node_modules/.bin/cucumber-js --require src/steps/**/*.ts --require src/config/hooks.ts --format json:reports/results.json",
+    "cucumber:lint": "eslint src/**/*.ts --ext .ts",
+    "cucumber:type-check": "tsc --noEmit --project tsconfig.cucumber.json",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "testing",
+    "bdd",
+    "playwright",
+    "page-object-model",
+    "e2e-testing",
+    "automation"
+  ],
+  "author": "Resumate Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@cucumber/cucumber": "^9.6.0",
+    "@playwright/test": "^1.40.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "allure-playwright": "^2.9.0",
+    "eslint": "^8.0.0",
+    "http-server": "^14.1.1",
+    "prettier": "^3.0.0",
+    "ts-node": "^10.9.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.0.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "faker": "^6.6.6",
+    "fs-extra": "^11.0.0",
+    "playwright": "^1.40.0"
+  },
+  "ts-node": {
+    "esm": false,
+    "experimentalSpecifierResolution": "node",
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "ES2020"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

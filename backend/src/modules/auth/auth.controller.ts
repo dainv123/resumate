@@ -1,4 +1,14 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Response, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Request,
+  Response,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, GoogleAuthDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -47,18 +57,19 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Request() req, @Response() res) {
     const result = await this.authService.googleAuthCallback(req.user);
-    
+
     // Redirect to frontend with user data
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'https://2r4p3zcg-5000.asse.devtunnels.ms';
     const redirectUrl = new URL('/auth/callback', frontendUrl);
-    
+
     redirectUrl.searchParams.set('token', result.token);
     redirectUrl.searchParams.set('id', result.user.id || '');
     redirectUrl.searchParams.set('name', result.user.name || '');
     redirectUrl.searchParams.set('email', result.user.email || '');
     redirectUrl.searchParams.set('avatar', result.user.avatar || '');
     redirectUrl.searchParams.set('plan', result.user.plan || 'FREE');
-    
+
     return res.redirect(redirectUrl.toString());
   }
 }

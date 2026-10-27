@@ -1,0 +1,309 @@
+{
+  "note": "Add these to en.json and vi.json to complete i18n",
+  "en": {
+    "compare": {
+      "title": "Version Comparison",
+      "comparing": "Comparing Version {{v1}} vs Version {{v2}}",
+      "backToCVs": "Back to CVs",
+      "personalInfo": "Personal Information",
+      "summary": "Summary",
+      "experience": "Experience",
+      "skills": "Skills",
+      "technical": "Technical:",
+      "soft": "Soft:",
+      "education": "Education",
+      "projects": "Projects",
+      "subProjects": "SUB-PROJECTS ({{count}})",
+      "subProjectDefault": "Sub-Project {{number}}",
+      "achievements": "Achievements:",
+      "loading": "Loading comparison...",
+      "failed": "Failed to load versions for comparison"
+    },
+    "jobTailor": {
+      "title": "Job Tailor",
+      "subtitle": "Tailor your CV for specific jobs using AI",
+      "selectCV": "Select CV",
+      "cvSelected": "CV Selected",
+      "changeCV": "Change CV",
+      "jobDescription": "Job Description",
+      "jobDescPlaceholder": "Paste the job description here...",
+      "analyzeCompatibility": "Analyze Compatibility",
+      "generateCoverLetter": "Generate Cover Letter",
+      "tailorCV": "Tailor CV",
+      "exportTailored": "Export Tailored CV",
+      "startOver": "Start Over",
+      "search": "Search CVs...",
+      "sort": {
+        "newest": "Newest First",
+        "oldest": "Oldest First",
+        "name": "By Name"
+      },
+      "showOnlyTailored": "Show Only Tailored CVs",
+      "compatibility": {
+        "title": "Compatibility Analysis",
+        "matchScore": "Match Score",
+        "matchedSkills": "Matched Skills",
+        "missingSkills": "Missing Skills",
+        "matchedExperience": "Matched Experience",
+        "missingRequirements": "Missing Requirements",
+        "suggestions": "Suggestions",
+        "strengths": "Strengths",
+        "close": "Close"
+      },
+      "coverLetter": {
+        "title": "Cover Letter",
+        "generated": "Generated Cover Letter",
+        "copy": "Copy to Clipboard",
+        "download": "Download",
+        "copied": "Copied to clipboard!",
+        "close": "Close"
+      },
+      "tailoring": {
+        "analyzing": "Analyzing compatibility...",
+        "generating": "Generating cover letter...",
+        "tailoringCV": "Tailoring CV...",
+        "success": "CV tailored successfully!",
+        "error": "Failed to tailor CV"
+      }
+    },
+    "portfolio": {
+      "title": "Create Portfolio",
+      "subtitle": "Build a professional portfolio to showcase your work and skills",
+      "steps": {
+        "template": "Template",
+        "cv": "CV",
+        "customize": "Customize",
+        "details": "Details",
+        "previous": "Previous",
+        "next": "Next",
+        "complete": "Complete the form above"
+      },
+      "templateSelection": {
+        "title": "Choose a Template",
+        "subtitle": "Select a portfolio template that fits your style",
+        "includes": "Includes:",
+        "customizable": "Customizable sections",
+        "selected": "Selected"
+      },
+      "details": {
+        "title": "Personal Details",
+        "subtitle": "Add your bio and social links",
+        "bio": "Bio / Tagline",
+        "bioPlaceholder": "Software Engineer | Full-stack Developer | Tech Enthusiast",
+        "avatar": "Avatar URL (Optional)",
+        "avatarPlaceholder": "https://example.com/your-photo.jpg",
+        "linkedinUrl": "LinkedIn URL",
+        "linkedinPlaceholder": "https://linkedin.com/in/yourname",
+        "githubUrl": "GitHub URL",
+        "githubPlaceholder": "https://github.com/yourname",
+        "websiteUrl": "Website URL",
+        "websitePlaceholder": "https://yourwebsite.com",
+        "customDomain": "Custom Domain (Optional)",
+        "customDomainPlaceholder": "portfolio.yourname.com",
+        "preview": "Preview",
+        "savePublish": "Save & Publish"
+      },
+      "success": {
+        "previewReady": "Preview Ready!",
+        "previewDesc": "Your portfolio is ready to view",
+        "openPreview": "Open Preview",
+        "published": "Portfolio Published! 🎉",
+        "publishedDesc": "Your portfolio is now live and accessible at:"
+      },
+      "existingPortfolio": {
+        "title": "You already have a portfolio",
+        "desc": "Creating a new portfolio will override your existing one.",
+        "view": "View current portfolio →"
+      }
+    },
+    "projects": {
+      "title": "Projects",
+      "subtitle": "Manage your project portfolio",
+      "addProject": "Add Project",
+      "editProject": "Edit Project",
+      "projectDetails": "Project Details",
+      "projectName": "Project Name",
+      "namePlaceholder": "Enter project name",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe what you built and your role",
+      "role": "Your Role",
+      "rolePlaceholder": "e.g., Lead Developer, Full-stack Engineer",
+      "techStack": "Tech Stack",
+      "techStackPlaceholder": "e.g., React, Node.js, MongoDB",
+      "techStackHelper": "Add technologies used (press Enter after each)",
+      "results": "Results/Achievements",
+      "resultsPlaceholder": "What did you achieve? Any metrics?",
+      "demoLink": "Demo Link",
+      "demoPlaceholder": "https://demo.example.com",
+      "githubLink": "GitHub Link",
+      "githubPlaceholder": "https://github.com/username/repo",
+      "startDate": "Start Date",
+      "endDate": "End Date (Optional)",
+      "ongoing": "Ongoing",
+      "saveProject": "Save Project",
+      "cancel": "Cancel",
+      "empty": {
+        "noProjects": "No projects yet",
+        "description": "Add your first project to showcase your work",
+        "addFirst": "Add Your First Project"
+      },
+      "confirm": {
+        "delete": "Are you sure you want to delete this project?"
+      },
+      "saving": "Saving project..."
+    }
+  },
+  "vi": {
+    "compare": {
+      "title": "So Sánh Phiên Bản",
+      "comparing": "Đang so sánh Phiên Bản {{v1}} vs Phiên Bản {{v2}}",
+      "backToCVs": "Quay Lại CVs",
+      "personalInfo": "Thông Tin Cá Nhân",
+      "summary": "Tóm Tắt",
+      "experience": "Kinh Nghiệm",
+      "skills": "Kỹ Năng",
+      "technical": "Kỹ Thuật:",
+      "soft": "Mềm:",
+      "education": "Học Vấn",
+      "projects": "Dự Án",
+      "subProjects": "DỰ ÁN CON ({{count}})",
+      "subProjectDefault": "Dự Án Con {{number}}",
+      "achievements": "Thành Tích:",
+      "loading": "Đang tải so sánh...",
+      "failed": "Không thể tải các phiên bản để so sánh"
+    },
+    "jobTailor": {
+      "title": "Tùy Chỉnh CV",
+      "subtitle": "Tùy chỉnh CV cho công việc cụ thể bằng AI",
+      "selectCV": "Chọn CV",
+      "cvSelected": "Đã Chọn CV",
+      "changeCV": "Đổi CV",
+      "jobDescription": "Mô Tả Công Việc",
+      "jobDescPlaceholder": "Dán mô tả công việc vào đây...",
+      "analyzeCompatibility": "Phân Tích Độ Phù Hợp",
+      "generateCoverLetter": "Tạo Cover Letter",
+      "tailorCV": "Tùy Chỉnh CV",
+      "exportTailored": "Export CV Đã Tùy Chỉnh",
+      "startOver": "Bắt Đầu Lại",
+      "search": "Tìm CV...",
+      "sort": {
+        "newest": "Mới Nhất",
+        "oldest": "Cũ Nhất",
+        "name": "Theo Tên"
+      },
+      "showOnlyTailored": "Chỉ Hiển Thị CV Đã Tùy Chỉnh",
+      "compatibility": {
+        "title": "Phân Tích Độ Phù Hợp",
+        "matchScore": "Điểm Phù Hợp",
+        "matchedSkills": "Kỹ Năng Phù Hợp",
+        "missingSkills": "Kỹ Năng Thiếu",
+        "matchedExperience": "Kinh Nghiệm Phù Hợp",
+        "missingRequirements": "Yêu Cầu Thiếu",
+        "suggestions": "Gợi Ý",
+        "strengths": "Điểm Mạnh",
+        "close": "Đóng"
+      },
+      "coverLetter": {
+        "title": "Cover Letter",
+        "generated": "Cover Letter Đã Tạo",
+        "copy": "Sao Chép",
+        "download": "Tải Xuống",
+        "copied": "Đã sao chép!",
+        "close": "Đóng"
+      },
+      "tailoring": {
+        "analyzing": "Đang phân tích độ phù hợp...",
+        "generating": "Đang tạo cover letter...",
+        "tailoringCV": "Đang tùy chỉnh CV...",
+        "success": "CV đã được tùy chỉnh thành công!",
+        "error": "Không thể tùy chỉnh CV"
+      }
+    },
+    "portfolio": {
+      "title": "Tạo Portfolio",
+      "subtitle": "Xây dựng portfolio chuyên nghiệp để giới thiệu công việc và kỹ năng",
+      "steps": {
+        "template": "Template",
+        "cv": "CV",
+        "customize": "Tùy Chỉnh",
+        "details": "Chi Tiết",
+        "previous": "Trước",
+        "next": "Tiếp",
+        "complete": "Hoàn thành form bên trên"
+      },
+      "templateSelection": {
+        "title": "Chọn Template",
+        "subtitle": "Chọn template portfolio phù hợp với phong cách của bạn",
+        "includes": "Bao gồm:",
+        "customizable": "Có thể tùy chỉnh sections",
+        "selected": "Đã chọn"
+      },
+      "details": {
+        "title": "Thông Tin Cá Nhân",
+        "subtitle": "Thêm bio và các link mạng xã hội",
+        "bio": "Bio / Tagline",
+        "bioPlaceholder": "Software Engineer | Full-stack Developer | Tech Enthusiast",
+        "avatar": "Avatar URL (Tùy chọn)",
+        "avatarPlaceholder": "https://example.com/your-photo.jpg",
+        "linkedinUrl": "LinkedIn URL",
+        "linkedinPlaceholder": "https://linkedin.com/in/yourname",
+        "githubUrl": "GitHub URL",
+        "githubPlaceholder": "https://github.com/yourname",
+        "websiteUrl": "Website URL",
+        "websitePlaceholder": "https://yourwebsite.com",
+        "customDomain": "Custom Domain (Tùy chọn)",
+        "customDomainPlaceholder": "portfolio.yourname.com",
+        "preview": "Xem Trước",
+        "savePublish": "Lưu & Xuất Bản"
+      },
+      "success": {
+        "previewReady": "Bản Xem Trước Sẵn Sàng!",
+        "previewDesc": "Portfolio của bạn đã sẵn sàng để xem",
+        "openPreview": "Mở Xem Trước",
+        "published": "Portfolio Đã Được Xuất Bản! 🎉",
+        "publishedDesc": "Portfolio của bạn giờ đã live tại:"
+      },
+      "existingPortfolio": {
+        "title": "Bạn đã có portfolio rồi",
+        "desc": "Tạo portfolio mới sẽ ghi đè lên portfolio hiện tại.",
+        "view": "Xem portfolio hiện tại →"
+      }
+    },
+    "projects": {
+      "title": "Dự Án",
+      "subtitle": "Quản lý portfolio dự án của bạn",
+      "addProject": "Thêm Dự Án",
+      "editProject": "Sửa Dự Án",
+      "projectDetails": "Chi Tiết Dự Án",
+      "projectName": "Tên Dự Án",
+      "namePlaceholder": "Nhập tên dự án",
+      "description": "Mô Tả",
+      "descriptionPlaceholder": "Mô tả những gì bạn đã xây dựng và vai trò của bạn",
+      "role": "Vai Trò Của Bạn",
+      "rolePlaceholder": "vd: Lead Developer, Full-stack Engineer",
+      "techStack": "Công Nghệ",
+      "techStackPlaceholder": "vd: React, Node.js, MongoDB",
+      "techStackHelper": "Thêm công nghệ sử dụng (nhấn Enter sau mỗi cái)",
+      "results": "Kết Quả/Thành Tích",
+      "resultsPlaceholder": "Bạn đạt được gì? Có số liệu nào không?",
+      "demoLink": "Link Demo",
+      "demoPlaceholder": "https://demo.example.com",
+      "githubLink": "Link GitHub",
+      "githubPlaceholder": "https://github.com/username/repo",
+      "startDate": "Ngày Bắt Đầu",
+      "endDate": "Ngày Kết Thúc (Tùy chọn)",
+      "ongoing": "Đang Thực Hiện",
+      "saveProject": "Lưu Dự Án",
+      "cancel": "Hủy",
+      "empty": {
+        "noProjects": "Chưa có dự án nào",
+        "description": "Thêm dự án đầu tiên để showcase công việc",
+        "addFirst": "Thêm Dự Án Đầu Tiên"
+      },
+      "confirm": {
+        "delete": "Bạn có chắc chắn muốn xóa dự án này?"
+      },
+      "saving": "Đang lưu dự án..."
+    }
+  }
+}

@@ -52,6 +52,14 @@ Resumate is an automated CV and Portfolio management platform that helps users:
 - ATS compatibility tips
 - Experience enhancement
 
+### 7. 🎓 Interview Prep Pro
+- Paste JD + select CV → adaptive PASS roadmap
+- Curated question bank (impact-scored from KB, not AI-invented)
+- STAR stories & project defense from your CV
+- Readiness score (0–100) with gate at 75
+- Mock drills with rubric scoring (Pro)
+- Cheat sheet PDF export (Pro)
+
 ---
 
 ## 📊 System Architecture & Flow

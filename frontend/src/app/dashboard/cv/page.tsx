@@ -1,671 +1,343 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { cvApi, CV } from "@/lib/cv";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import CvManager from "@/components/cv/CvManager";
 import CVUpload from "@/components/cv/CVUpload";
-import CVPreview from "@/components/cv/CVPreview";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import { Plus, FileText, AlertCircle } from "lucide-react";
+import CVSettingsModal from "@/components/cv/CVSettingsModal";
+import {
+  Plus,
+  Settings,
+  Download,
+  Upload,
+  Search,
+  SortAsc,
+  SortDesc,
+  Grid,
+  List,
+} from "lucide-react";
+import { cvApi } from "@/lib/cv";
 
 export default function CVPage() {
-  const [showUpload, setShowUpload] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showView, setShowView] = useState(false);
-  const [selectedCv, setSelectedCv] = useState<CV | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<
-    "all" | "parsed" | "unparsed"
-  >("all");
-  const queryClient = useQueryClient();
+  const { t } = useLanguage();
+  const router = useRouter();
+  const [mode, setMode] = useState<"paginated" | "infinite">("paginated");
+  const [selectedCv, setSelectedCv] = useState<any>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<
+    "createdAt" | "updatedAt" | "originalFileName"
+  >("updatedAt");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const {
-    data: cvs = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["cvs"],
-    queryFn: cvApi.getUserCvs,
-  });
+  // Handlers
+  const handleUploadSuccess = () => {
+    setShowUploadModal(false);
+    // Refresh CV list will be handled by CvManager
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: cvApi.deleteCv,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cvs"] });
-    },
-  });
+  const handleUploadError = (error: string) => {
+    console.error("Upload error:", error);
+    // Could show toast notification here
+  };
 
-  const exportMutation = useMutation({
-    mutationFn: async ({
-      cv,
-      format,
-      template = "professional",
-    }: {
-      cv: CV;
-      format: "pdf" | "word" | "ats";
-      template?: string;
-    }) => {
-      let blob: Blob;
-      let filename: string;
+  const handleExportAll = async () => {
+    setIsExporting(true);
+    try {
+      // Get all CVs first
+      const cvs = await cvApi.getUserCvs();
 
-      switch (format) {
-        case "pdf":
-          blob = await cvApi.exportToPDF(cv.id, template);
-          filename = `${cv.originalFileName.replace(/\.[^/.]+$/, "")}.pdf`;
-          break;
-        case "word":
-          blob = await cvApi.exportToWord(cv.id);
-          filename = `${cv.originalFileName.replace(/\.[^/.]+$/, "")}.docx`;
-          break;
-        case "ats":
-          blob = await cvApi.exportToATS(cv.id);
-          filename = `${cv.originalFileName.replace(/\.[^/.]+$/, "")}_ats.txt`;
-          break;
+      // Export each CV (this is a simplified approach)
+      for (const cv of cvs) {
+        try {
+          const blob = await cvApi.exportToPDF(cv.id);
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${cv.originalFileName}_export.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error(`Failed to export CV ${cv.id}:`, error);
+        }
       }
-
-      // Download file
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    },
-  });
-
-  const handleUploadSuccess = (cv: unknown) => {
-    setShowUpload(false);
-    setSelectedCv(cv as CV);
-  };
-
-  const handleEdit = (cv: CV) => {
-    setSelectedCv(cv);
-    setShowEdit(true);
-  };
-
-  const handleDelete = (cv: CV) => {
-    if (confirm("Are you sure you want to delete this CV?")) {
-      deleteMutation.mutate(cv.id);
+    } catch (error) {
+      console.error("Export all failed:", error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
-  const handleTailor = (cv: CV) => {
-    // Navigate to job tailor page with CV ID
-    window.location.href = `/dashboard/job-tailor?cvId=${cv.id}`;
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
-  const handleExport = (
-    cv: CV,
-    format: "pdf" | "word" | "ats",
-    template?: string
-  ) => {
-    exportMutation.mutate({ cv, format, template });
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Search will be handled by the CvManager component
   };
-
-  // const handleView = (cv: CV) => {
-  //   setSelectedCv(cv);
-  //   setShowView(true);
-  // };
-
-  // const duplicateMutation = useMutation({
-  //   mutationFn: async (cvId: string) => {
-  //     const response = await fetch(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_URL}/cv/${cvId}/duplicate`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     if (!response.ok) throw new Error("Failed to duplicate CV");
-  //     return response.json();
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["cvs"] });
-  //     alert("CV duplicated successfully!");
-  //   },
-  //   onError: () => {
-  //     alert("Failed to duplicate CV");
-  //   },
-  // });
-
-  // const handleDuplicate = (cv: CV) => {
-  //   if (confirm("Are you sure you want to duplicate this CV?")) {
-  //     duplicateMutation.mutate(cv.id);
-  //   }
-  // };
-
-  // const handleShare = (cv: CV) => {
-  //   // Generate shareable link
-  //   const shareUrl = `${window.location.origin}/cv/${cv.id}`;
-  //   navigator.clipboard.writeText(shareUrl);
-  //   alert("CV link copied to clipboard!");
-  // };
-
-  const handleRefresh = () => {
-    // Refresh CV list
-    queryClient.invalidateQueries({ queryKey: ["cvs"] });
-  };
-
-  // const handleBulkDelete = (cvIds: string[]) => {
-  //   if (confirm(`Are you sure you want to delete ${cvIds.length} CVs?`)) {
-  //     cvIds.forEach((id) => deleteMutation.mutate(id));
-  //   }
-  // };
-
-  // Filter and search CVs
-  const filteredCvs = cvs.filter((cv) => {
-    const matchesSearch =
-      cv.originalFileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (cv.parsedData?.name &&
-        cv.parsedData.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesFilter =
-      filterStatus === "all" ||
-      (filterStatus === "parsed" && cv.parsedData) ||
-      (filterStatus === "unparsed" && !cv.parsedData);
-
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
-
-  const handleFilterChange = (status: "all" | "parsed" | "unparsed") => {
-    setFilterStatus(status);
-  };
-
-  // CV Statistics
-  const cvStats = {
-    total: cvs.length,
-    parsed: cvs.filter((cv) => cv.parsedData).length,
-    unparsed: cvs.filter((cv) => !cv.parsedData).length,
-    recent: cvs.filter((cv) => {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      return new Date(cv.createdAt) > oneWeekAgo;
-    }).length,
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-          <p className="text-red-800">Failed to load CVs</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold text-gray-900">My CVs</h3>
-          <p className="text-gray-600">
-            Manage and update your CVs with AI-powered features
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowUpload(true)}
-          className="flex items-center">
-          <Plus className="h-4 w-4 mr-2" />
-          Upload CV
-        </Button>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">
-            {cvStats.total}
-          </div>
-          <div className="text-sm text-blue-800">Total CVs</div>
-        </div>
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">
-            {cvStats.parsed}
-          </div>
-          <div className="text-sm text-green-800">Parsed</div>
-        </div>
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-yellow-600">
-            {cvStats.unparsed}
-          </div>
-          <div className="text-sm text-yellow-800">Unparsed</div>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">
-            {cvStats.recent}
-          </div>
-          <div className="text-sm text-purple-800">This Week</div>
-        </div>
-      </div>
-
-      {/* Upload Modal */}
-      <Modal
-        isOpen={showUpload}
-        onClose={() => setShowUpload(false)}
-        title="Upload New CV"
-        size="lg">
-        <CVUpload
-          onSuccess={handleUploadSuccess}
-          onError={(error) => console.error("Upload error:", error)}
-        />
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        isOpen={showEdit && !!selectedCv}
-        onClose={() => setShowEdit(false)}
-        title={
-          selectedCv ? `Edit CV: ${selectedCv.originalFileName}` : "Edit CV"
-        }
-        size="xl"
-        footer={
-          <>
-            <Button onClick={() => setShowEdit(false)} variant="outline">
-              Cancel
-            </Button>
-            <Button>Save Changes</Button>
-          </>
-        }>
-        {selectedCv && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                File Name
-              </label>
-              <input
-                type="text"
-                defaultValue={selectedCv.originalFileName}
-                className="input-base"
-              />
+    <DashboardLayout
+      title={t("cv.cvManagement")}
+      subtitle={t("cv.subtitle")}
+      showBackButton={false}>
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex flex-col gap-4">
+          {/* Top Row: Mode Selection + Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={mode === "paginated" ? "outline" : "primary"}
+                  size="sm"
+                  onClick={() => setMode("paginated")}
+                  className="text-sm">
+                  {t("cv.pagination")}
+                </Button>
+                <Button
+                  variant={mode === "infinite" ? "outline" : "primary"}
+                  size="sm"
+                  onClick={() => setMode("infinite")}
+                  className="text-sm">
+                  {t("cv.infiniteScroll")}
+                </Button>
+              </div>
             </div>
-            {selectedCv.parsedData && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedCv.parsedData.name || ""}
-                    className="input-base"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue={selectedCv.parsedData.email || ""}
-                    className="input-base"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedCv.parsedData.phone || ""}
-                    className="input-base"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
 
-      {/* View Modal */}
-      <Modal
-        isOpen={showView && !!selectedCv}
-        onClose={() => setShowView(false)}
-        title={
-          selectedCv
-            ? `CV Details: ${selectedCv.originalFileName}`
-            : "CV Details"
-        }
-        size="xl"
-        footer={<Button onClick={() => setShowView(false)}>Close</Button>}>
-        {selectedCv && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  File Name
-                </label>
-                <p className="text-gray-900">{selectedCv.originalFileName}</p>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                className="flex items-center space-x-2"
+                onClick={() => setShowUploadModal(true)}>
+                <Upload className="h-4 w-4" />
+                <span>{t("cv.uploadCV")}</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center space-x-2"
+                onClick={handleExportAll}
+                disabled={isExporting}>
+                <Download className="h-4 w-4" />
+                <span>
+                  {isExporting ? t("common.loading") : t("cv.exportAll")}
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center space-x-2"
+                onClick={() => setShowSettingsModal(true)}>
+                <Settings className="h-4 w-4" />
+                <span>Settings </span>
+              </Button>
+              <Button
+                className="flex items-center space-x-2"
+                onClick={() => router.push("/dashboard/ai-wizard")}>
+                <Plus className="h-4 w-4" />
+                <span>{t("cv.aiCvWizard")}</span>
+              </Button>
+              <Button
+                className="flex items-center space-x-2"
+                onClick={() => router.push("/dashboard/cv/create")}>
+                <Plus className="h-4 w-4" />
+                <span>{t("cv.createNewCV")}</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Search and Sort Controls */}
+          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <form onSubmit={handleSearch} className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="text"
+                    placeholder={t("dashboard.searchCvsPlaceholder")}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </form>
+
+              {/* Sort Controls */}
+              <div className="flex gap-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="updatedAt">
+                    {t("dashboard.sortByUpdatedAt")}
+                  </option>
+                  <option value="createdAt">
+                    {t("dashboard.sortByCreatedAt")}
+                  </option>
+                  <option value="originalFileName">
+                    {t("dashboard.sortByFileName")}
+                  </option>
+                </select>
+
+                <Button
+                  variant="outline"
+                  onClick={toggleSortOrder}
+                  className="flex items-center space-x-1">
+                  {sortOrder === "ASC" ? (
+                    <SortAsc className="h-4 w-4" />
+                  ) : (
+                    <SortDesc className="h-4 w-4" />
+                  )}
+                  <span>
+                    {sortOrder === "ASC"
+                      ? t("dashboard.sortAsc")
+                      : t("dashboard.sortDesc")}
+                  </span>
+                </Button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Date
-                </label>
-                <p className="text-gray-900">
+
+              {/* View Mode Toggle */}
+              <div className="flex gap-1 border border-gray-300 rounded-lg p-1">
+                <Button
+                  variant={viewMode === "grid" ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="flex items-center space-x-1">
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="flex items-center space-x-1">
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CV Manager */}
+        <CvManager
+          mode={mode}
+          onSelectCv={setSelectedCv}
+          selectedCvId={selectedCv?.id}
+          showControls={false}
+          limit={12}
+          search={search}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          viewMode={viewMode}
+        />
+
+        {/* Quick Stats */}
+        {/* {selectedCv && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h4 className="font-medium text-gray-900 mb-2">
+                {t("cv.cvDetails")}
+              </h4>
+              <div className="space-y-1 text-sm text-gray-600">
+                <p>
+                  <strong>{t("cv.file")}:</strong> {selectedCv.originalFileName}
+                </p>
+                <p>
+                  <strong>{t("cv.version")}:</strong> {selectedCv.version}
+                </p>
+                <p>
+                  <strong>{t("cv.type")}:</strong>{" "}
+                  {selectedCv.isTailored ? "Tailored" : "Original"}
+                </p>
+                <p>
+                  <strong>{t("cv.created")}:</strong>{" "}
                   {new Date(selectedCv.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
 
-            {selectedCv.parsedData ? (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Parsed Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedCv.parsedData.name && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedCv.parsedData.name}
-                      </p>
-                    </div>
-                  )}
-                  {selectedCv.parsedData.email && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedCv.parsedData.email}
-                      </p>
-                    </div>
-                  )}
-                  {selectedCv.parsedData.phone && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedCv.parsedData.phone}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {selectedCv.parsedData.experience &&
-                  selectedCv.parsedData.experience.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Experience
-                      </label>
-                      <div className="space-y-2">
-                        {selectedCv.parsedData.experience.map((exp, index) => (
-                          <div
-                            key={index}
-                            className="border border-gray-200 rounded-lg p-3">
-                            <h4 className="font-medium text-gray-900">
-                              {exp.title}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {exp.company}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {exp.duration}
-                            </p>
-                            {exp.location && (
-                              <p className="text-sm text-gray-500">
-                                📍 {exp.location}
-                              </p>
-                            )}
-                            {exp.technologies &&
-                              exp.technologies.length > 0 && (
-                                <div className="mt-2">
-                                  <p className="text-xs text-gray-500 mb-1">
-                                    Technologies:
-                                  </p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {exp.technologies.map((tech, techIndex) => (
-                                      <span
-                                        key={techIndex}
-                                        className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                        {tech}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                {selectedCv.parsedData.skills && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Skills
-                    </label>
-                    <div className="space-y-3">
-                      {selectedCv.parsedData.skills.technical &&
-                        selectedCv.parsedData.skills.technical.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-600 mb-1">
-                              Technical Skills:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {selectedCv.parsedData.skills.technical.map(
-                                (skill, index) => (
-                                  <span
-                                    key={index}
-                                    className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                                    {skill}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      {selectedCv.parsedData.skills.soft &&
-                        selectedCv.parsedData.skills.soft.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-600 mb-1">
-                              Soft Skills:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {selectedCv.parsedData.skills.soft.map(
-                                (skill, index) => (
-                                  <span
-                                    key={index}
-                                    className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
-                                    {skill}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      {selectedCv.parsedData.skills.languages &&
-                        selectedCv.parsedData.skills.languages.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-600 mb-1">
-                              Languages:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {selectedCv.parsedData.skills.languages.map(
-                                (lang, index) => (
-                                  <span
-                                    key={index}
-                                    className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                                    {lang}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedCv.parsedData.projects &&
-                  selectedCv.parsedData.projects.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Projects
-                      </label>
-                      <div className="space-y-2">
-                        {selectedCv.parsedData.projects.map(
-                          (project, index) => (
-                            <div
-                              key={index}
-                              className="border border-gray-200 rounded-lg p-3">
-                              <h4 className="font-medium text-gray-900">
-                                {project.name}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {project.description}
-                              </p>
-                              {project.techStack &&
-                                project.techStack.length > 0 && (
-                                  <div className="mt-2">
-                                    <div className="flex flex-wrap gap-1">
-                                      {project.techStack.map(
-                                        (tech, techIndex) => (
-                                          <span
-                                            key={techIndex}
-                                            className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                            {tech}
-                                          </span>
-                                        )
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {selectedCv.parsedData.certifications &&
-                  selectedCv.parsedData.certifications.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Certifications
-                      </label>
-                      <div className="space-y-2">
-                        {selectedCv.parsedData.certifications.map(
-                          (cert, index) => (
-                            <div
-                              key={index}
-                              className="border border-gray-200 rounded-lg p-3">
-                              <h4 className="font-medium text-gray-900">
-                                {cert.name}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {cert.issuer}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {cert.date}
-                              </p>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h4 className="font-medium text-gray-900 mb-2">
+                {t("cv.actions")}
+              </h4>
+              <div className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  {t("cv.viewCV")}
+                </Button>
+                <Button variant="outline" size="sm" className="w-full">
+                  {t("cv.editCV")}
+                </Button>
+                <Button variant="outline" size="sm" className="w-full">
+                  {t("cv.duplicateCV")}
+                </Button>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">CV has not been parsed yet</p>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h4 className="font-medium text-gray-900 mb-2">Export</h4>
+              <div className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  {t("cv.exportPDF")}
+                </Button>
+                <Button variant="outline" size="sm" className="w-full">
+                  {t("cv.exportWord")}
+                </Button>
+                <Button variant="outline" size="sm" className="w-full">
+                  {t("cv.exportATS")}
+                </Button>
               </div>
-            )}
+            </div>
           </div>
-        )}
+        )} */}
+
+        {/* Help Section */}
+        {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h4 className="font-medium text-blue-900 mb-3">CV Management Tips</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+            <div>
+              <h4 className="font-medium mb-2">Pagination Mode:</h4>
+              <ul className="space-y-1">
+                <li>• Use for precise navigation</li>
+                <li>• Better for large datasets</li>
+                <li>• SEO-friendly URLs</li>
+                <li>• Lower memory usage</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Infinite Scroll Mode:</h4>
+              <ul className="space-y-1">
+                <li>• Seamless browsing experience</li>
+                <li>• Auto-loads more content</li>
+                <li>• Mobile-friendly</li>
+                <li>• Modern UX pattern</li>
+              </ul>
+            </div>
+          </div>
+        </div> */}
+      </div>
+
+      {/* Upload Modal */}
+      <Modal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        title={t("cv.uploadCV")}>
+        <CVUpload onSuccess={handleUploadSuccess} onError={handleUploadError} />
       </Modal>
 
-      {/* Search and Filter */}
-      <div className="flex gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search CVs..."
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="flex-1 input-base"
-        />
-        <select
-          value={filterStatus}
-          onChange={(e) =>
-            handleFilterChange(e.target.value as "all" | "parsed" | "unparsed")
-          }
-          className="input-base w-auto">
-          <option value="all">All CVs</option>
-          <option value="parsed">Parsed</option>
-          <option value="unparsed">Unparsed</option>
-        </select>
-        <Button onClick={handleRefresh} variant="outline" className="h-full">
-          Refresh
-        </Button>
-      </div>
-
-      {/* CVs List */}
-      <div>
-        {filteredCvs.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No CVs uploaded yet
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Upload your first CV to get started with AI-powered features
-            </p>
-            <Button onClick={() => setShowUpload(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Upload Your First CV
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredCvs.map((cv) => (
-              <CVPreview
-                key={cv.id}
-                cv={cv}
-                // onEdit={handleEdit}
-                onDelete={handleDelete}
-                onTailor={handleTailor}
-                onExport={handleExport}
-                onUpdate={() => {
-                  // Refresh CVs after update
-                  queryClient.invalidateQueries({ queryKey: ["cvs"] });
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Export Loading */}
-      {exportMutation.isPending && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
-          <div className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            Exporting...
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Settings Modal */}
+      <CVSettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+      />
+    </DashboardLayout>
   );
 }

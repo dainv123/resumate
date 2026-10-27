@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2020", "DOM"],
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "noEmit": false
+  },
+  "include": [
+    "src/steps/**/*",
+    "src/core/**/*",
+    "src/pages/**/*",
+    "src/utils/**/*",
+    "src/config/**/*",
+    "src/fixtures/**/*"
+  ]
+}

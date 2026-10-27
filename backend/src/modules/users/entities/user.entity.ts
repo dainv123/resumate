@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Cv } from '../../cv/entities/cv.entity';
 import { Project } from '../../projects/entities/project.entity';
 import { UserUsage } from './user-usage.entity';
@@ -38,15 +45,15 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Cv, cv => cv.user)
+  @OneToMany(() => Cv, (cv) => cv.user)
   cvs: Cv[];
 
-  @OneToMany(() => Project, project => project.user)
+  @OneToMany(() => Project, (project) => project.user)
   projects: Project[];
 
-  @OneToMany(() => UserUsage, usage => usage.user)
+  @OneToMany(() => UserUsage, (usage) => usage.user)
   usage: UserUsage[];
 
-  @OneToMany(() => JobDescription, jobDescription => jobDescription.user)
+  @OneToMany(() => JobDescription, (jobDescription) => jobDescription.user)
   jobDescriptions: JobDescription[];
 }

@@ -1,461 +1,591 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CVData } from '../../modules/cv/entities/cv.entity';
-import { Document as WordDocument, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import { CVData, TemplateConfig } from '../interfaces/cv-data.interface';
+import { CVDataUtils } from '../utils/cv-data.utils';
+import {
+  Document as WordDocument,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+} from 'docx';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-// Dynamic import for ESM module
 import React from 'react';
 import { HtmlTemplateService } from './html-template.service';
+import { DynamicTemplateService } from './dynamic-template.service';
 
 @Injectable()
 export class ExportService {
   private readonly logger = new Logger(ExportService.name);
-  
-  constructor(private readonly htmlTemplateService: HtmlTemplateService) {}
 
-  async exportToPDF(cvData: CVData, template: string = 'professional'): Promise<Buffer> {
+  constructor(
+    private readonly htmlTemplateService: HtmlTemplateService,
+    private readonly dynamicTemplateService: DynamicTemplateService,
+  ) {}
+
+  async exportToPDF(
+    cvData: CVData,
+    template: string = 'professional',
+    templateConfig?: TemplateConfig,
+  ): Promise<Buffer> {
     try {
       this.logger.log(`Starting PDF generation with template: ${template}...`);
-      
-      if (template === 'two-column') {
-        return this.exportHtmlToPDF(cvData);
-      }
-      
-      // Default React PDF for professional template
-      // Dynamic import for ESM module
-      const { pdf } = await import('@react-pdf/renderer');
-      
-      const ReactPDFDocument = await this.generateReactPDFDocument(cvData, template);
-      
-      const pdfBlob = await pdf(ReactPDFDocument).toBlob();
-      
-      // Convert Blob to Buffer
-      const arrayBuffer = await pdfBlob.arrayBuffer();
-      const pdfBuffer = Buffer.from(arrayBuffer);
-      
-      if (!pdfBuffer || pdfBuffer.length === 0) {
-        throw new Error('Generated PDF is empty');
-      }
 
-      this.logger.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
-      return pdfBuffer;
+      // Normalize CV data first
+      const normalizedCVData = CVDataUtils.normalizeCVData(cvData);
+
+      // Get the appropriate export strategy based on template
+      const exportStrategy = this.getExportStrategy(template);
+
+      // Execute the export strategy
+      return await exportStrategy(normalizedCVData, template, templateConfig);
     } catch (error) {
       this.logger.error('Error generating PDF:', error);
       throw new Error(`Failed to generate PDF: ${error.message}`);
     }
   }
 
+  /**
+   * Get export strategy based on template name
+   */
+  private getExportStrategy(
+    template: string,
+  ): (
+    cvData: CVData,
+    template: string,
+    templateConfig?: TemplateConfig,
+  ) => Promise<Buffer> {
+    const dynamicTemplates = [
+      'dynamic',
+      'professional',
+      'two-column',
+      'modern',
+      'show-all',
+    ];
+
+    if (dynamicTemplates.includes(template)) {
+      return (
+        cvData: CVData,
+        template: string,
+        templateConfig?: TemplateConfig,
+      ) => this.exportDynamicTemplateStrategy(cvData, template, templateConfig);
+    }
+
+    if (template === 'legacy-two-column') {
+      return (
+        cvData: CVData,
+        template: string,
+        templateConfig?: TemplateConfig,
+      ) => this.exportLegacyHtmlStrategy(cvData, template, templateConfig);
+    }
+
+    // Default to React PDF strategy
+    return (
+      cvData: CVData,
+      template: string,
+      templateConfig?: TemplateConfig,
+    ) => this.exportReactPDFStrategy(cvData, template, templateConfig);
+  }
+
+  /**
+   * Strategy: Dynamic Template Export
+   */
+  private async exportDynamicTemplateStrategy(
+    cvData: CVData,
+    template: string,
+    templateConfig?: TemplateConfig,
+  ): Promise<Buffer> {
+    try {
+      this.logger.log(
+        `Generating dynamic template PDF with template: ${template}`,
+      );
+
+      // Get template configuration
+      const config = this.getTemplateConfig(template, templateConfig);
+
+      // Generate HTML content
+      const htmlContent = this.generateDynamicHtmlContent(
+        cvData,
+        config,
+        template,
+      );
+
+      // Convert HTML to PDF
+      return this.convertHtmlToPDF(htmlContent);
+    } catch (error) {
+      this.logger.error('Error generating dynamic template PDF:', error);
+      throw new Error(
+        `Failed to generate dynamic template PDF: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Strategy: Legacy HTML Template Export
+   */
+  private async exportLegacyHtmlStrategy(
+    cvData: CVData,
+    template: string,
+    templateConfig?: TemplateConfig,
+  ): Promise<Buffer> {
+    return this.exportHtmlToPDF(cvData);
+  }
+
+  /**
+   * Strategy: React PDF Export
+   */
+  private async exportReactPDFStrategy(
+    cvData: CVData,
+    template: string,
+    templateConfig?: TemplateConfig,
+  ): Promise<Buffer> {
+    const { pdf } = await import('@react-pdf/renderer');
+
+    const ReactPDFDocument = await this.generateReactPDFDocument(
+      cvData,
+      template,
+    );
+    const pdfBlob = await pdf(ReactPDFDocument).toBlob();
+
+    // Convert Blob to Buffer
+    const arrayBuffer = await pdfBlob.arrayBuffer();
+    const pdfBuffer = Buffer.from(arrayBuffer);
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Generated PDF is empty');
+    }
+
+    this.logger.log(
+      `PDF generated successfully, size: ${pdfBuffer.length} bytes`,
+    );
+    return pdfBuffer;
+  }
+
+  /**
+   * Export PDF sử dụng dynamic template
+   */
+  async exportDynamicTemplateToPDF(
+    cvData: CVData,
+    template: string,
+    templateConfig?: TemplateConfig,
+  ): Promise<Buffer> {
+    try {
+      this.logger.log(
+        `Generating dynamic template PDF with template: ${template}`,
+      );
+
+      // Get template configuration
+      const config = this.getTemplateConfig(template, templateConfig);
+
+      // Generate HTML content
+      const htmlContent = this.generateDynamicHtmlContent(
+        cvData,
+        config,
+        template,
+      );
+
+      // Convert HTML to PDF
+      return this.convertHtmlToPDF(htmlContent);
+    } catch (error) {
+      this.logger.error('Error generating dynamic template PDF:', error);
+      throw new Error(
+        `Failed to generate dynamic template PDF: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Get template configuration based on template name or provided config
+   */
+  private getTemplateConfig(
+    template: string,
+    templateConfig?: TemplateConfig,
+  ): TemplateConfig {
+    if (templateConfig) {
+      return templateConfig;
+    }
+
+    return this.getDefaultConfigForTemplate(template);
+  }
+
+  /**
+   * Get default configuration for specific template
+   */
+  private getDefaultConfigForTemplate(template: string): TemplateConfig {
+    const configMap = {
+      professional: () => CVDataUtils.getDefaultTemplateConfig(), // professional uses default config
+      'two-column': () => this.dynamicTemplateService.getTwoColumnConfig(),
+      modern: () => this.dynamicTemplateService.getModernConfig(),
+      'show-all': () => this.dynamicTemplateService.getShowAllConfig(),
+    };
+
+    const configGetter = configMap[template];
+    return configGetter
+      ? configGetter()
+      : CVDataUtils.getDefaultTemplateConfig();
+  }
+
+  /**
+   * Generate dynamic HTML content based on template and configuration
+   */
+  private generateDynamicHtmlContent(
+    cvData: CVData,
+    config: TemplateConfig,
+    template: string,
+  ): string {
+    const showEmptySections = template === 'show-all';
+    return this.dynamicTemplateService.generateDynamicTemplate(
+      cvData,
+      config,
+      showEmptySections,
+    );
+  }
+
+  /**
+   * Convert HTML content to PDF using Puppeteer
+   */
+  private async convertHtmlToPDF(htmlContent: string): Promise<Buffer> {
+    let browser;
+    try {
+      this.logger.log('=== PDF GENERATION START ===');
+      this.logger.log('HTML content length:', htmlContent.length);
+      this.logger.log(
+        'PUPPETEER_EXECUTABLE_PATH:',
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+      );
+      this.logger.log('Node version:', process.version);
+      this.logger.log('Platform:', process.platform);
+
+      // Check if HTML content looks valid
+      if (!htmlContent || htmlContent.length < 100) {
+        throw new Error('HTML content is too short or empty');
+      }
+
+      if (!htmlContent.includes('<html')) {
+        throw new Error('HTML content does not contain <html> tag');
+      }
+
+      this.logger.log('Launching Puppeteer browser...');
+      browser = await this.launchPuppeteerBrowser();
+      this.logger.log('✅ Browser launched successfully');
+
+      const page = await this.createPuppeteerPage(browser);
+      this.logger.log('Page created successfully');
+
+      // Add error handling for page events
+      page.on('pageerror', (error) => {
+        this.logger.error('Page error:', error);
+      });
+
+      page.on('requestfailed', (request) => {
+        this.logger.warn(
+          'Request failed:',
+          request.url(),
+          request.failure()?.errorText,
+        );
+      });
+
+      this.logger.log('Setting page content...');
+      await this.setPageContent(page, htmlContent);
+      this.logger.log('✅ Page content set successfully');
+
+      // Wait for content to stabilize
+      this.logger.log('Waiting for content to stabilize...');
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Check if page has content
+      const contentCheck = await page.evaluate(() => {
+        return {
+          hasBody: !!document.body,
+          bodyLength: document.body ? document.body.innerHTML.length : 0,
+          title: document.title,
+        };
+      });
+      this.logger.log('Page content check:', contentCheck);
+
+      this.logger.log('Generating PDF...');
+      const pdfBuffer = await this.generatePDFFromPage(page);
+      this.logger.log(
+        `PDF generated successfully, size: ${pdfBuffer.length} bytes`,
+      );
+
+      return Buffer.from(pdfBuffer);
+    } catch (error) {
+      this.logger.error('Error converting HTML to PDF:', error);
+      this.logger.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+
+      // Log HTML content for debugging (first 500 chars)
+      this.logger.error('HTML content preview:', htmlContent.substring(0, 500));
+
+      return this.handlePDFGenerationError(htmlContent);
+    } finally {
+      if (browser) {
+        try {
+          await browser.close();
+          this.logger.log('Browser closed');
+        } catch (closeError) {
+          this.logger.error('Error closing browser:', closeError);
+        }
+      }
+    }
+  }
+
+  /**
+   * Launch Puppeteer browser with optimized settings
+   */
+  private async launchPuppeteerBrowser(): Promise<any> {
+    const puppeteer = await import('puppeteer');
+
+    // Try multiple executable paths
+    const possiblePaths = [
+      process.env.PUPPETEER_EXECUTABLE_PATH,
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chrome',
+      'chromium-browser',
+      'chromium',
+    ].filter(Boolean);
+
+    let lastError: any = null;
+
+    for (const executablePath of possiblePaths) {
+      try {
+        this.logger.log(`Trying executable path: ${executablePath}`);
+
+        const browser = await puppeteer.launch({
+          headless: true,
+          executablePath,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-images',
+            '--disable-javascript',
+            '--disable-web-security',
+            '--allow-running-insecure-content',
+            '--font-render-hinting=none',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--disable-translate',
+            '--hide-scrollbars',
+            '--metrics-recording-only',
+            '--mute-audio',
+            '--no-first-run',
+            '--safebrowsing-disable-auto-update',
+            '--single-process',
+            '--disable-component-extensions-with-background-pages',
+          ],
+          timeout: 10000, // 10 second timeout
+        });
+
+        this.logger.log(
+          `✅ Successfully launched browser with path: ${executablePath}`,
+        );
+        return browser;
+      } catch (error) {
+        this.logger.warn(
+          `Failed to launch with path ${executablePath}:`,
+          error.message,
+        );
+        lastError = error;
+        continue;
+      }
+    }
+
+    // If all paths failed, try without executablePath (let Puppeteer find it)
+    try {
+      this.logger.log('Trying to launch without explicit executable path...');
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+      });
+      this.logger.log('✅ Successfully launched browser without explicit path');
+      return browser;
+    } catch (error) {
+      this.logger.error('All browser launch attempts failed');
+      throw lastError || error;
+    }
+  }
+
+  /**
+   * Create and configure Puppeteer page
+   */
+  private async createPuppeteerPage(browser: any): Promise<any> {
+    const page = await browser.newPage();
+
+    // Set viewport for A4 aspect ratio
+    await page.setViewport({
+      width: 794, // A4 width in pixels at 96 DPI
+      height: 1123, // A4 height in pixels at 96 DPI
+      deviceScaleFactor: 1,
+    });
+
+    // Set user agent
+    await page.setUserAgent(
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    );
+
+    // Disable images and other resources to speed up loading
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const resourceType = req.resourceType();
+      if (
+        resourceType === 'image' ||
+        resourceType === 'media' ||
+        resourceType === 'font'
+      ) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
+    return page;
+  }
+
+  /**
+   * Set HTML content on Puppeteer page
+   */
+  private async setPageContent(page: any, htmlContent: string): Promise<void> {
+    await page.setContent(htmlContent, {
+      waitUntil: 'networkidle0',
+      timeout: 30000,
+    });
+
+    // Wait for fonts to load
+    await page.evaluate(() => {
+      return new Promise((resolve) => {
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => resolve(true));
+        } else {
+          // Fallback for older browsers
+          setTimeout(() => resolve(true), 1000);
+        }
+      });
+    });
+
+    // Additional wait for content stabilization
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  /**
+   * Generate PDF from Puppeteer page
+   */
+  private async generatePDFFromPage(page: any): Promise<Uint8Array> {
+    return await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: false,
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in',
+      },
+      timeout: 30000,
+      displayHeaderFooter: false,
+      pageRanges: '1',
+    });
+  }
+
+  /**
+   * Handle PDF generation errors - Try React PDF as fallback
+   */
+  private async handlePDFGenerationError(htmlContent: string): Promise<Buffer> {
+    this.logger.warn(
+      'Primary PDF generation failed, trying React PDF fallback...',
+    );
+
+    try {
+      // Extract basic CV data from HTML (very basic parsing)
+      const basicCVData = this.extractBasicCVDataFromHTML(htmlContent);
+
+      // Use React PDF as fallback
+      const pdfBuffer = await this.exportReactPDFStrategy(
+        basicCVData,
+        'professional',
+      );
+
+      this.logger.log('✅ React PDF fallback succeeded');
+      return pdfBuffer;
+    } catch (fallbackError) {
+      this.logger.error('React PDF fallback also failed:', fallbackError);
+      throw new Error('Failed to generate PDF from HTML content');
+    }
+  }
+
+  /**
+   * Extract basic CV data from HTML content for fallback
+   */
+  private extractBasicCVDataFromHTML(htmlContent: string): CVData {
+    // Very basic HTML parsing - extract name and basic info
+    const nameMatch = htmlContent.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    const emailMatch = htmlContent.match(
+      /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
+    );
+
+    return {
+      id: 'fallback-cv',
+      contact: {
+        name: nameMatch ? nameMatch[1].trim() : 'CV Export',
+        email: emailMatch ? emailMatch[1] : 'email@example.com',
+        phone: 'Phone not available',
+        address: 'Address not available',
+      },
+      summary: 'Generated from HTML fallback due to PDF generation issues',
+      experience: [],
+      education: [],
+      skills: { technical: [], soft: [], languages: [], tools: [] },
+      projects: [],
+      certifications: [],
+      awards: [],
+      publications: [],
+      volunteer: [],
+    };
+  }
+
   async exportToWord(cvData: CVData): Promise<Buffer> {
     try {
       const doc = new WordDocument({
-        sections: [{
-          properties: {},
-          children: [
-            // Header
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: cvData.name,
-                  bold: true,
-                  size: 32,
-                }),
-              ],
-              heading: HeadingLevel.HEADING_1,
-            }),
-            
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `${cvData.email} | ${cvData.phone}`,
-                  size: 24,
-                }),
-              ],
-            }),
-
-            // Summary
-            ...(cvData.summary ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'SUMMARY',
-                    bold: true,
-                    size: 28,
-                  }),
-                ],
-                heading: HeadingLevel.HEADING_2,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cvData.summary,
-                    size: 24,
-                  }),
-                ],
-              }),
-            ] : []),
-
-            // Experience
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'EXPERIENCE',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              heading: HeadingLevel.HEADING_2,
-            }),
-            
-            ...cvData.experience.flatMap(exp => [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `${exp.title} at ${exp.company}`,
-                    bold: true,
-                    size: 26,
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: exp.duration,
-                    italics: true,
-                    size: 22,
-                  }),
-                ],
-              }),
-              ...(exp.teamSize ? [new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `👥 Team Size: ${exp.teamSize}`,
-                    size: 22,
-                  }),
-                ],
-              })] : []),
-              ...(exp.companyDescription ? [new Paragraph({
-                children: [
-                  new TextRun({
-                    text: exp.companyDescription,
-                    size: 22,
-                  }),
-                ],
-              })] : []),
-              ...(exp.responsibilities && exp.responsibilities.length > 0 ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: 'Responsibilities:',
-                      bold: true,
-                      size: 24,
-                    }),
-                  ],
-                }),
-                ...exp.responsibilities.map(resp => new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `• ${resp}`,
-                      size: 22,
-                    }),
-                  ],
-                })),
-              ] : []),
-              ...(exp.achievements && exp.achievements.length > 0 ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: 'Achievements:',
-                      bold: true,
-                      size: 24,
-                    }),
-                  ],
-                }),
-                ...exp.achievements.map(achievement => new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `• ${achievement}`,
-                      size: 22,
-                    }),
-                  ],
-                })),
-              ] : []),
-              ...(exp.technologies && exp.technologies.length > 0 ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Technologies: ${exp.technologies.join(', ')}`,
-                      size: 22,
-                    }),
-                  ],
-                }),
-              ] : []),
-              ...(exp.subProjects && exp.subProjects.length > 0 ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: 'Sub-Projects:',
-                      bold: true,
-                      size: 24,
-                    }),
-                  ],
-                }),
-                ...exp.subProjects.flatMap(sub => [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: `${sub.name} (${sub.role})`,
-                        bold: true,
-                        size: 22,
-                      }),
-                    ],
-                  }),
-                  ...(sub.responsibilities && sub.responsibilities.length > 0 ? sub.responsibilities.map(resp => new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: `  • ${resp}`,
-                        size: 20,
-                      }),
-                    ],
-                  })) : []),
-                  ...(sub.techStack && sub.techStack.length > 0 ? [new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: `  Tech Stack: ${sub.techStack.join(', ')}`,
-                        size: 20,
-                      }),
-                    ],
-                  })] : []),
-                ]),
-              ] : []),
-            ]),
-
-            // Skills
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'SKILLS',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              heading: HeadingLevel.HEADING_2,
-            }),
-            ...(cvData.skills.technical && cvData.skills.technical.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'Technical Skills:',
-                    bold: true,
-                    size: 24,
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cvData.skills.technical.join(', '),
-                    size: 22,
-                  }),
-                ],
-              }),
-            ] : []),
-            ...(cvData.skills.soft && cvData.skills.soft.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'Soft Skills:',
-                    bold: true,
-                    size: 24,
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cvData.skills.soft.join(', '),
-                    size: 22,
-                  }),
-                ],
-              }),
-            ] : []),
-            ...(cvData.skills.languages && cvData.skills.languages.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'Languages:',
-                    bold: true,
-                    size: 24,
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cvData.skills.languages.join(', '),
-                    size: 22,
-                  }),
-                ],
-              }),
-            ] : []),
-            ...(cvData.skills.tools && cvData.skills.tools.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'Tools:',
-                    bold: true,
-                    size: 24,
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cvData.skills.tools.join(', '),
-                    size: 22,
-                  }),
-                ],
-              }),
-            ] : []),
-
-            // Education
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'EDUCATION',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              heading: HeadingLevel.HEADING_2,
-            }),
-            
-            ...cvData.education.map(edu => 
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `${edu.degree} - ${edu.school} (${edu.year})`,
-                    size: 24,
-                  }),
-                ],
-              })
-            ),
-
-            // Projects
-            ...(cvData.projects && cvData.projects.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'PROJECTS',
-                    bold: true,
-                    size: 28,
-                  }),
-                ],
-                heading: HeadingLevel.HEADING_2,
-              }),
-              ...cvData.projects.flatMap(project => [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: project.name,
-                      bold: true,
-                      size: 26,
-                    }),
-                  ],
-                }),
-                ...(project.duration ? [new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: project.duration,
-                      italics: true,
-                      size: 22,
-                    }),
-                  ],
-                })] : []),
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: project.description,
-                      size: 24,
-                    }),
-                  ],
-                }),
-                ...(project.techStack && project.techStack.length > 0 ? [new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Tech Stack: ${project.techStack.join(', ')}`,
-                      size: 22,
-                    }),
-                  ],
-                })] : []),
-                ...(project.results ? [new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Results: ${project.results}`,
-                      size: 22,
-                    }),
-                  ],
-                })] : []),
-                ...(project.link ? [new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Link: ${project.link}`,
-                      size: 22,
-                    }),
-                  ],
-                })] : []),
-              ]),
-            ] : []),
-
-            // Certifications
-            ...(cvData.certifications && cvData.certifications.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'CERTIFICATIONS',
-                    bold: true,
-                    size: 28,
-                  }),
-                ],
-                heading: HeadingLevel.HEADING_2,
-              }),
-              ...cvData.certifications.map(cert => 
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `${cert.name} - ${cert.issuer} (${cert.date})`,
-                      size: 24,
-                    }),
-                  ],
-                })
-              ),
-            ] : []),
-
-            // Awards
-            ...(cvData.awards && cvData.awards.length > 0 ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: 'AWARDS',
-                    bold: true,
-                    size: 28,
-                  }),
-                ],
-                heading: HeadingLevel.HEADING_2,
-              }),
-              ...cvData.awards.map(award => 
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `${award.name} - ${award.issuer} (${award.date})`,
-                      size: 24,
-                    }),
-                  ],
-                })
-              ),
-            ] : []),
-          ],
-        }],
+        sections: [
+          {
+            properties: {},
+            children: [
+              ...this.generateWordHeader(cvData),
+              ...this.generateWordSummary(cvData),
+              ...this.generateWordExperience(cvData),
+              ...this.generateWordSkills(cvData),
+              ...this.generateWordEducation(cvData),
+              ...this.generateWordProjects(cvData),
+              ...this.generateWordCertifications(cvData),
+              ...this.generateWordAwards(cvData),
+            ],
+          },
+        ],
       });
 
       const buffer = await Packer.toBuffer(doc);
@@ -464,6 +594,540 @@ export class ExportService {
       this.logger.error('Error generating Word document:', error);
       throw new Error('Failed to generate Word document');
     }
+  }
+
+  /**
+   * Generate Word document header section
+   */
+  private generateWordHeader(cvData: CVData): any[] {
+    return [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: cvData.contact.name,
+            bold: true,
+            size: 32,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_1,
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `${cvData.contact.email} | ${cvData.contact.phone}`,
+            size: 24,
+          }),
+        ],
+      }),
+    ];
+  }
+
+  /**
+   * Generate Word document summary section
+   */
+  private generateWordSummary(cvData: CVData): any[] {
+    if (!cvData.summary) return [];
+
+    return [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'SUMMARY',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: cvData.summary,
+            size: 24,
+          }),
+        ],
+      }),
+    ];
+  }
+
+  /**
+   * Generate Word document experience section
+   */
+  private generateWordExperience(cvData: CVData): any[] {
+    const experienceElements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'EXPERIENCE',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+    ];
+
+    experienceElements.push(
+      ...cvData.experience.flatMap((exp) =>
+        this.generateWordExperienceItem(exp),
+      ),
+    );
+    return experienceElements;
+  }
+
+  /**
+   * Generate Word document experience item
+   */
+  private generateWordExperienceItem(exp: any): any[] {
+    const elements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `${exp.title} at ${exp.company}`,
+            bold: true,
+            size: 26,
+          }),
+        ],
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: this.formatDateRange(exp.startDate, exp.endDate, exp.current),
+            italics: true,
+            size: 22,
+          }),
+        ],
+      }),
+    ];
+
+    if (exp.teamSize) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `👥 Team Size: ${exp.teamSize}`,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (exp.companyDescription) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: exp.companyDescription,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (exp.responsibilities && exp.responsibilities.length > 0) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Responsibilities:',
+              bold: true,
+              size: 24,
+            }),
+          ],
+        }),
+        ...exp.responsibilities.map(
+          (resp) =>
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `• ${resp}`,
+                  size: 22,
+                }),
+              ],
+            }),
+        ),
+      );
+    }
+
+    if (exp.achievements && exp.achievements.length > 0) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Achievements:',
+              bold: true,
+              size: 24,
+            }),
+          ],
+        }),
+        ...exp.achievements.map(
+          (achievement) =>
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `• ${achievement}`,
+                  size: 22,
+                }),
+              ],
+            }),
+        ),
+      );
+    }
+
+    if (exp.technologies && exp.technologies.length > 0) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Technologies: ${exp.technologies.join(', ')}`,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    return elements;
+  }
+
+  /**
+   * Generate Word document skills section
+   */
+  private generateWordSkills(cvData: CVData): any[] {
+    const skillsElements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'SKILLS',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+    ];
+
+    if (cvData.skills.technical && cvData.skills.technical.length > 0) {
+      skillsElements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Technical Skills:',
+              bold: true,
+              size: 24,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cvData.skills.technical.join(', '),
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (cvData.skills.soft && cvData.skills.soft.length > 0) {
+      skillsElements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Soft Skills:',
+              bold: true,
+              size: 24,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cvData.skills.soft.join(', '),
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (cvData.skills.languages && cvData.skills.languages.length > 0) {
+      skillsElements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Languages:',
+              bold: true,
+              size: 24,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cvData.skills.languages.join(', '),
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (cvData.skills.tools && cvData.skills.tools.length > 0) {
+      skillsElements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Tools:',
+              bold: true,
+              size: 24,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cvData.skills.tools.join(', '),
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    return skillsElements;
+  }
+
+  /**
+   * Generate Word document education section
+   */
+  private generateWordEducation(cvData: CVData): any[] {
+    const educationElements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'EDUCATION',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+    ];
+
+    educationElements.push(
+      ...cvData.education.map(
+        (edu) =>
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${edu.degree} - ${edu.institution} (${this.formatDateRange(edu.startDate, edu.endDate)})`,
+                size: 24,
+              }),
+            ],
+          }),
+      ),
+    );
+
+    return educationElements;
+  }
+
+  /**
+   * Generate Word document projects section
+   */
+  private generateWordProjects(cvData: CVData): any[] {
+    if (!cvData.projects || cvData.projects.length === 0) return [];
+
+    const projectsElements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'PROJECTS',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+    ];
+
+    projectsElements.push(
+      ...cvData.projects.flatMap((project) =>
+        this.generateWordProjectItem(project),
+      ),
+    );
+    return projectsElements;
+  }
+
+  /**
+   * Generate Word document project item
+   */
+  private generateWordProjectItem(project: any): any[] {
+    const elements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: project.name,
+            bold: true,
+            size: 26,
+          }),
+        ],
+      }),
+    ];
+
+    if (project.duration) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: project.duration,
+              italics: true,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    elements.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: project.description,
+            size: 24,
+          }),
+        ],
+      }),
+    );
+
+    if (project.technologies && project.technologies.length > 0) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Tech Stack: ${project.technologies.join(', ')}`,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (project.results && project.results.length > 0) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Results: ${project.results.join(', ')}`,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    if (project.link) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Link: ${project.link}`,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
+    return elements;
+  }
+
+  /**
+   * Generate Word document certifications section
+   */
+  private generateWordCertifications(cvData: CVData): any[] {
+    if (!cvData.certifications || cvData.certifications.length === 0) return [];
+
+    const certificationsElements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'CERTIFICATIONS',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+    ];
+
+    certificationsElements.push(
+      ...cvData.certifications.map(
+        (cert) =>
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${cert.name} - ${cert.issuer} (${cert.date})`,
+                size: 24,
+              }),
+            ],
+          }),
+      ),
+    );
+
+    return certificationsElements;
+  }
+
+  /**
+   * Generate Word document awards section
+   */
+  private generateWordAwards(cvData: CVData): any[] {
+    if (!cvData.awards || cvData.awards.length === 0) return [];
+
+    const awardsElements = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'AWARDS',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_2,
+      }),
+    ];
+
+    awardsElements.push(
+      ...cvData.awards.map(
+        (award) =>
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${award.title} - ${award.issuer} (${award.date})`,
+                size: 24,
+              }),
+            ],
+          }),
+      ),
+    );
+
+    return awardsElements;
+  }
+
+  /**
+   * Format date range for display
+   */
+  private formatDateRange(
+    startDate: string,
+    endDate?: string,
+    current?: boolean,
+  ): string {
+    if (current || !endDate) {
+      return `${startDate} - Present`;
+    }
+    return `${startDate} - ${endDate}`;
   }
 
   async exportToATS(cvData: CVData): Promise<Buffer> {
@@ -477,445 +1141,145 @@ export class ExportService {
     }
   }
 
-  private generateHTML(cvData: CVData, template: string): string {
-    const baseStyles = `
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-          background: white; 
-          color: #333; 
-          line-height: 1.6;
-        }
-        .container { 
-          max-width: 210mm; 
-          margin: 0 auto; 
-          background: white;
-          box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-        .header { 
-          text-align: center; 
-          padding: 40px 0 30px; 
-          position: relative;
-          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-        .header::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #007bff, #28a745, #ffc107, #dc3545);
-        }
-        .header h1 { 
-          font-size: 36px; 
-          font-weight: 700; 
-          color: #2c3e50; 
-          margin-bottom: 8px;
-          letter-spacing: 1px;
-        }
-        .header .title { 
-          font-size: 18px; 
-          color: #6c757d; 
-          font-weight: 400;
-          text-transform: uppercase;
-          letter-spacing: 2px;
-        }
-        .main-content {
-          display: flex;
-          min-height: 800px;
-        }
-        .left-column {
-          width: 35%;
-          background: #f8f9fa;
-          padding: 30px 25px;
-          border-right: 1px solid #dee2e6;
-        }
-        .right-column {
-          width: 65%;
-          padding: 30px 35px;
-        }
-        .section { 
-          margin-bottom: 30px; 
-        }
-        .section h2 { 
-          font-size: 14px; 
-          font-weight: 700; 
-          color: #2c3e50; 
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 15px;
-          padding: 8px 12px;
-          background: #e9ecef;
-          border-left: 4px solid #007bff;
-        }
-        .contact-item {
-          display: flex;
-          align-items: center;
-          margin-bottom: 12px;
-          font-size: 14px;
-        }
-        .contact-item .icon {
-          width: 16px;
-          height: 16px;
-          margin-right: 10px;
-          color: #007bff;
-        }
-        .education-item, .experience-item { 
-          margin-bottom: 25px; 
-        }
-        .education-item h3, .experience-item h3 { 
-          font-size: 16px; 
-          font-weight: 600; 
-          color: #2c3e50; 
-          margin-bottom: 5px;
-        }
-        .education-item .school, .experience-item .company { 
-          color: #6c757d; 
-          font-size: 14px;
-          font-weight: 500;
-        }
-        .education-item .year, .experience-item .duration { 
-          color: #007bff; 
-          font-size: 12px; 
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .skills-list {
-          list-style: none;
-        }
-        .skills-list li {
-          margin-bottom: 8px;
-          font-size: 14px;
-          color: #495057;
-        }
-        .skills-list li::before {
-          content: '▶';
-          color: #007bff;
-          font-size: 10px;
-          margin-right: 8px;
-        }
-        .summary {
-          font-size: 15px;
-          line-height: 1.7;
-          color: #495057;
-          text-align: justify;
-        }
-        .experience-item .responsibilities,
-        .experience-item .achievements {
-          margin-top: 10px;
-        }
-        .experience-item .responsibilities ul,
-        .experience-item .achievements ul {
-          margin-left: 20px;
-          margin-top: 8px;
-        }
-        .experience-item .responsibilities li,
-        .experience-item .achievements li {
-          margin-bottom: 5px;
-          font-size: 14px;
-          color: #495057;
-        }
-        .tech-stack {
-          margin-top: 10px;
-          font-size: 13px;
-          color: #6c757d;
-          font-style: italic;
-        }
-        .sub-projects {
-          margin-top: 15px;
-          padding-left: 20px;
-          border-left: 2px solid #e9ecef;
-        }
-        .sub-project {
-          margin-bottom: 15px;
-        }
-        .sub-project h4 {
-          font-size: 14px;
-          font-weight: 600;
-          color: #495057;
-          margin-bottom: 5px;
-        }
-        .project-item, .cert-item {
-          margin-bottom: 20px;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #f1f3f4;
-        }
-        .project-item:last-child, .cert-item:last-child {
-          border-bottom: none;
-        }
-        .project-item h3, .cert-item h3 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin-bottom: 5px;
-        }
-        .project-item .duration, .cert-item .date {
-          color: #007bff;
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .project-item .description {
-          margin-top: 8px;
-          font-size: 14px;
-          color: #495057;
-          line-height: 1.5;
-        }
-        .project-item .tech-stack {
-          margin-top: 8px;
-          font-size: 13px;
-          color: #6c757d;
-        }
-        .cert-item .issuer {
-          color: #6c757d;
-          font-size: 14px;
-          font-weight: 500;
-        }
-        .team-size {
-          background: #e3f2fd;
-          color: #1976d2;
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-          display: inline-block;
-          margin-top: 5px;
-        }
-        .company-description {
-          font-style: italic;
-          color: #6c757d;
-          font-size: 13px;
-          margin-top: 5px;
-        }
-        @media print {
-          .container { box-shadow: none; }
-          .main-content { break-inside: avoid; }
-        }
-      </style>
-    `;
-
+  private formatForATS(cvData: CVData): string {
     return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>${cvData.name} - CV</title>
-        ${baseStyles}
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>${cvData.name.toUpperCase()}</h1>
-            <div class="title">${cvData.experience.length > 0 ? cvData.experience[0].title : 'PROFESSIONAL'}</div>
-          </div>
-          
-          <div class="main-content">
-            <!-- Left Column -->
-            <div class="left-column">
-              <!-- Contact -->
-              <div class="section">
-                <h2>CONTACT</h2>
-                <div class="contact-item">
-                  <span class="icon">📞</span>
-                  <span>${cvData.phone}</span>
-                </div>
-                <div class="contact-item">
-                  <span class="icon">✉️</span>
-                  <span>${cvData.email}</span>
-                </div>
-                ${cvData.address ? `
-                  <div class="contact-item">
-                    <span class="icon">📍</span>
-                    <span>${cvData.address}</span>
-                  </div>
-                ` : ''}
-                ${cvData.linkedin ? `
-                  <div class="contact-item">
-                    <span class="icon">💼</span>
-                    <span>${cvData.linkedin}</span>
-                  </div>
-                ` : ''}
-              </div>
-              
-              <!-- Education -->
-              <div class="section">
-                <h2>EDUCATION</h2>
-                ${cvData.education.map(edu => `
-                  <div class="education-item">
-                    <div class="year">${edu.year}</div>
-                    <h3>${edu.school}</h3>
-                    <div class="school">${edu.degree}</div>
-                    ${edu.gpa ? `<div class="school">GPA: ${edu.gpa}</div>` : ''}
-                    ${edu.honors ? `<div class="school">${edu.honors}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-              
-              <!-- Skills -->
-              <div class="section">
-                <h2>SKILLS</h2>
-                <ul class="skills-list">
-                  ${cvData.skills.technical.map(skill => `<li>${skill}</li>`).join('')}
-                  ${cvData.skills.soft.map(skill => `<li>${skill}</li>`).join('')}
-                  ${cvData.skills.tools.map(skill => `<li>${skill}</li>`).join('')}
-                </ul>
-              </div>
-              
-              <!-- Languages -->
-              ${cvData.skills.languages && cvData.skills.languages.length > 0 ? `
-                <div class="section">
-                  <h2>LANGUAGES</h2>
-                  <ul class="skills-list">
-                    ${cvData.skills.languages.map(lang => `<li>${lang}</li>`).join('')}
-                  </ul>
-                </div>
-              ` : ''}
-            </div>
-            
-            <!-- Right Column -->
-            <div class="right-column">
-              <!-- Profile Summary -->
-              ${cvData.summary ? `
-                <div class="section">
-                  <h2>PROFILE SUMMARY</h2>
-                  <p class="summary">${cvData.summary}</p>
-                </div>
-              ` : ''}
-              
-              <!-- Work Experience -->
-              <div class="section">
-                <h2>WORK EXPERIENCE</h2>
-                ${cvData.experience.map(exp => `
-                  <div class="experience-item">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                      <div>
-                        <h3>${exp.company}</h3>
-                        <div class="company">${exp.title}</div>
-                      </div>
-                      <div class="duration">${exp.duration}</div>
-                    </div>
-                    ${exp.teamSize ? `<span class="team-size">👥 ${exp.teamSize}</span>` : ''}
-                    ${exp.companyDescription ? `<div class="company-description">${exp.companyDescription}</div>` : ''}
-                    ${exp.responsibilities && exp.responsibilities.length > 0 ? `
-                      <div class="responsibilities">
-                        <strong>Responsibilities:</strong>
-                        <ul>
-                          ${exp.responsibilities.map(responsibility => `<li>${responsibility}</li>`).join('')}
-                        </ul>
-                      </div>
-                    ` : ''}
-                    ${exp.achievements && exp.achievements.length > 0 ? `
-                      <div class="achievements">
-                        <strong>Achievements:</strong>
-                        <ul>
-                          ${exp.achievements.map(achievement => `<li>${achievement}</li>`).join('')}
-                        </ul>
-                      </div>
-                    ` : ''}
-                    ${exp.technologies && exp.technologies.length > 0 ? `
-                      <div class="tech-stack">
-                        <strong>Technologies:</strong> ${exp.technologies.join(', ')}
-                      </div>
-                    ` : ''}
-                    ${exp.subProjects && exp.subProjects.length > 0 ? `
-                      <div class="sub-projects">
-                        <strong>Sub-Projects:</strong>
-                        ${exp.subProjects.map(sub => `
-                          <div class="sub-project">
-                            <h4>${sub.name} (${sub.role})</h4>
-                            ${sub.responsibilities && sub.responsibilities.length > 0 ? `
-                              <ul>
-                                ${sub.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
-                              </ul>
-                            ` : ''}
-                            ${sub.techStack && sub.techStack.length > 0 ? `
-                              <div class="tech-stack">Tech Stack: ${sub.techStack.join(', ')}</div>
-                            ` : ''}
-                          </div>
-                        `).join('')}
-                      </div>
-                    ` : ''}
-                  </div>
-                `).join('')}
-              </div>
-              
-              <!-- Projects -->
-              ${cvData.projects.length > 0 ? `
-                <div class="section">
-                  <h2>PROJECTS</h2>
-                  ${cvData.projects.map(project => `
-                    <div class="project-item">
-                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                        <h3>${project.name}</h3>
-                        ${project.duration ? `<div class="duration">${project.duration}</div>` : ''}
-                      </div>
-                      <div class="description">${project.description}</div>
-                      ${project.techStack && project.techStack.length > 0 ? `
-                        <div class="tech-stack">Tech Stack: ${project.techStack.join(', ')}</div>
-                      ` : ''}
-                      ${project.results ? `<div class="description"><strong>Results:</strong> ${project.results}</div>` : ''}
-                      ${project.link ? `<div class="description"><strong>Link:</strong> <a href="${project.link}">${project.link}</a></div>` : ''}
-                    </div>
-                  `).join('')}
-                </div>
-              ` : ''}
-              
-              <!-- Certifications -->
-              ${cvData.certifications.length > 0 ? `
-                <div class="section">
-                  <h2>CERTIFICATIONS</h2>
-                  ${cvData.certifications.map(cert => `
-                    <div class="cert-item">
-                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                        <h3>${cert.name}</h3>
-                        <div class="date">${cert.date}</div>
-                      </div>
-                      <div class="issuer">${cert.issuer}</div>
-                      ${cert.link ? `<div class="description"><strong>Link:</strong> <a href="${cert.link}">${cert.link}</a></div>` : ''}
-                    </div>
-                  `).join('')}
-                </div>
-              ` : ''}
-              
-              <!-- Awards -->
-              ${cvData.awards.length > 0 ? `
-                <div class="section">
-                  <h2>AWARDS</h2>
-                  ${cvData.awards.map(award => `
-                    <div class="cert-item">
-                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                        <h3>${award.name}</h3>
-                        <div class="date">${award.date}</div>
-                      </div>
-                      <div class="issuer">${award.issuer}</div>
-                    </div>
-                  `).join('')}
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+${cvData.contact.name}
+${cvData.contact.email} | ${cvData.contact.phone}
+${cvData.contact.address || ''}
+${cvData.contact.linkedin ? `LinkedIn: ${cvData.contact.linkedin}` : ''}
+
+${
+  cvData.summary
+    ? `SUMMARY
+${cvData.summary}
+
+`
+    : ''
+}EXPERIENCE
+${cvData.experience
+  .map((exp) => {
+    let result = `${exp.title} at ${exp.company} (${this.formatDateRange(exp.startDate, exp.endDate, exp.current)})`;
+    if (exp.teamSize) result += ` - Team Size: ${exp.teamSize}`;
+    if (exp.companyDescription)
+      result += `\nCompany: ${exp.companyDescription}`;
+    if (exp.responsibilities && exp.responsibilities.length > 0) {
+      result += `\nResponsibilities:\n${exp.responsibilities.map((resp) => `- ${resp}`).join('\n')}`;
+    }
+    if (exp.achievements && exp.achievements.length > 0) {
+      result += `\nAchievements:\n${exp.achievements.map((achievement) => `- ${achievement}`).join('\n')}`;
+    }
+    if (exp.technologies && exp.technologies.length > 0) {
+      result += `\nTechnologies: ${exp.technologies.join(', ')}`;
+    }
+    return result;
+  })
+  .join('\n\n')}
+
+SKILLS
+${cvData.skills.technical && cvData.skills.technical.length > 0 ? `Technical Skills: ${cvData.skills.technical.join(', ')}` : ''}
+${cvData.skills.soft && cvData.skills.soft.length > 0 ? `Soft Skills: ${cvData.skills.soft.join(', ')}` : ''}
+${cvData.skills.languages && cvData.skills.languages.length > 0 ? `Languages: ${cvData.skills.languages.join(', ')}` : ''}
+${cvData.skills.tools && cvData.skills.tools.length > 0 ? `Tools: ${cvData.skills.tools.join(', ')}` : ''}
+
+EDUCATION
+${cvData.education
+  .map((edu) => {
+    let result = `${edu.degree} - ${edu.institution} (${this.formatDateRange(edu.startDate, edu.endDate)})`;
+    if (edu.location) result += ` - ${edu.location}`;
+    if (edu.gpa) result += ` - GPA: ${edu.gpa}`;
+    if (edu.description) result += ` - ${edu.description}`;
+    return result;
+  })
+  .join('\n')}
+
+${
+  cvData.projects.length > 0
+    ? `PROJECTS
+${cvData.projects
+  .map((project) => {
+    let result = `${project.name}`;
+    if (project.duration) result += ` (${project.duration})`;
+    result += `\n${project.description}`;
+    if (project.technologies && project.technologies.length > 0) {
+      result += `\nTech Stack: ${project.technologies.join(', ')}`;
+    }
+    if (project.results) {
+      result += `\nResults: ${project.results}`;
+    }
+    if (project.link) {
+      result += `\nLink: ${project.link}`;
+    }
+    return result;
+  })
+  .join('\n\n')}`
+    : ''
+}
+
+${
+  (cvData.certifications || []).length > 0
+    ? `CERTIFICATIONS
+${(cvData.certifications || [])
+  .map((cert) => {
+    let result = `${cert.name} - ${cert.issuer} (${cert.date})`;
+    if (cert.credentialUrl) result += `\nLink: ${cert.credentialUrl}`;
+    return result;
+  })
+  .join('\n')}`
+    : ''
+}
+
+${
+  (cvData.awards || []).length > 0
+    ? `AWARDS
+${(cvData.awards || [])
+  .map((award) => `${award.title} - ${award.issuer} (${award.date})`)
+  .join('\n')}`
+    : ''
+}
+
+${
+  (cvData.publications || []).length > 0
+    ? `PUBLICATIONS
+${(cvData.publications || [])
+  .map(
+    (pub) =>
+      `${pub.title} - ${pub.journal} (${pub.publicationDate})
+Authors: ${pub.authors}`,
+  )
+  .join('\n\n')}`
+    : ''
+}
+
+${
+  (cvData.volunteer || []).length > 0
+    ? `VOLUNTEER EXPERIENCE
+${(cvData.volunteer || [])
+  .map(
+    (vol) =>
+      `${vol.role} at ${vol.organization} (${this.formatDateRange(vol.startDate, vol.endDate, vol.current)})
+${vol.description}`,
+  )
+  .join('\n\n')}`
+    : ''
+}
+    `.trim();
   }
 
-
-  private async generateReactPDFDocument(cvData: CVData, template: string): Promise<any> {
+  private async generateReactPDFDocument(
+    cvData: CVData,
+    template: string,
+  ): Promise<any> {
     // Dynamic import for ESM module
-    const { Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
-    
+    const { Document, Page, Text, View, StyleSheet } = await import(
+      '@react-pdf/renderer'
+    );
+
     // Choose template
     if (template === 'two-column') {
       return this.generateTwoColumnTemplate(cvData);
     }
-    
+
     // Default professional template
-    
     const styles = StyleSheet.create({
       page: {
         flexDirection: 'column',
@@ -1011,250 +1375,327 @@ export class ExportService {
       },
     });
 
-    return React.createElement(Document, {},
-      React.createElement(Page, { style: styles.page },
+    return React.createElement(
+      Document,
+      {},
+      React.createElement(
+        Page,
+        { style: styles.page },
         // Header
-        React.createElement(View, { style: styles.header },
-          React.createElement(Text, { style: styles.name }, cvData.name.toUpperCase()),
-          cvData.experience.length > 0 && React.createElement(Text, { style: styles.title }, cvData.experience[0].title),
-          React.createElement(Text, { style: styles.contact }, `${cvData.email} | ${cvData.phone}`),
-          cvData.address && React.createElement(Text, { style: styles.contact }, cvData.address),
-          cvData.linkedin && React.createElement(Text, { style: styles.contact }, `LinkedIn: ${cvData.linkedin}`),
-          cvData.dateOfBirth && React.createElement(Text, { style: styles.contact }, `Date of Birth: ${cvData.dateOfBirth}`)
+        React.createElement(
+          View,
+          { style: styles.header },
+          React.createElement(
+            Text,
+            { style: styles.name },
+            cvData.contact.name.toUpperCase(),
+          ),
+          cvData.experience.length > 0 &&
+            React.createElement(
+              Text,
+              { style: styles.title },
+              cvData.experience[0].title,
+            ),
+          React.createElement(
+            Text,
+            { style: styles.contact },
+            `${cvData.contact.email} | ${cvData.contact.phone}`,
+          ),
+          cvData.contact.address &&
+            React.createElement(
+              Text,
+              { style: styles.contact },
+              cvData.contact.address,
+            ),
+          cvData.contact.linkedin &&
+            React.createElement(
+              Text,
+              { style: styles.contact },
+              `LinkedIn: ${cvData.contact.linkedin}`,
+            ),
         ),
 
         // Summary
-        cvData.summary && React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'PROFILE SUMMARY'),
-          React.createElement(Text, { style: styles.description }, cvData.summary)
-        ),
+        cvData.summary &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(
+              Text,
+              { style: styles.sectionTitle },
+              'PROFILE SUMMARY',
+            ),
+            React.createElement(
+              Text,
+              { style: styles.description },
+              cvData.summary,
+            ),
+          ),
 
         // Experience
-        React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'WORK EXPERIENCE'),
-          ...cvData.experience.map(exp => 
-            React.createElement(View, { style: styles.experienceItem, key: `${exp.company}-${exp.title}` },
-              React.createElement(Text, { style: styles.jobTitle }, `${exp.title} at ${exp.company}`),
-              React.createElement(Text, { style: styles.duration }, exp.duration),
-              exp.teamSize && React.createElement(Text, { style: styles.description }, `Team Size: ${exp.teamSize}`),
-              exp.companyDescription && React.createElement(Text, { style: styles.description }, exp.companyDescription),
-              exp.responsibilities && exp.responsibilities.length > 0 && 
-                React.createElement(Text, { style: styles.description }, `Responsibilities: ${exp.responsibilities.join(', ')}`),
-              exp.achievements && exp.achievements.length > 0 && 
-                React.createElement(Text, { style: styles.description }, `Achievements: ${exp.achievements.join(', ')}`),
-              exp.technologies && exp.technologies.length > 0 && 
-                React.createElement(Text, { style: styles.description }, `Technologies: ${exp.technologies.join(', ')}`),
-              exp.subProjects && exp.subProjects.length > 0 && 
-                React.createElement(View, { style: { marginTop: 8 } },
-                  React.createElement(Text, { style: { ...styles.description, fontWeight: 'bold' } }, 'Sub-Projects:'),
-                  ...exp.subProjects.map(sub => 
-                    React.createElement(View, { style: { marginLeft: 10, marginTop: 4 }, key: sub.name },
-                      sub.name && React.createElement(Text, { style: styles.description }, `• ${sub.name}${sub.role ? ` (${sub.role})` : ''}`),
-                      sub.responsibilities && sub.responsibilities.length > 0 && 
-                        React.createElement(Text, { style: styles.description }, `  Responsibilities: ${sub.responsibilities.join(', ')}`),
-                      sub.techStack && sub.techStack.length > 0 && 
-                        React.createElement(Text, { style: styles.description }, `  Tech Stack: ${sub.techStack.join(', ')}`)
-                    )
-                  )
-                )
-            )
-          )
+        React.createElement(
+          View,
+          { style: styles.section },
+          React.createElement(
+            Text,
+            { style: styles.sectionTitle },
+            'WORK EXPERIENCE',
+          ),
+          ...cvData.experience.map((exp) =>
+            React.createElement(
+              View,
+              {
+                style: styles.experienceItem,
+                key: `${exp.company}-${exp.title}`,
+              },
+              React.createElement(
+                Text,
+                { style: styles.jobTitle },
+                `${exp.title} at ${exp.company}`,
+              ),
+              React.createElement(
+                Text,
+                { style: styles.duration },
+                this.formatDateRange(exp.startDate, exp.endDate, exp.current),
+              ),
+              exp.teamSize &&
+                React.createElement(
+                  Text,
+                  { style: styles.description },
+                  `Team Size: ${exp.teamSize}`,
+                ),
+              exp.companyDescription &&
+                React.createElement(
+                  Text,
+                  { style: styles.description },
+                  exp.companyDescription,
+                ),
+              exp.responsibilities &&
+                exp.responsibilities.length > 0 &&
+                React.createElement(
+                  Text,
+                  { style: styles.description },
+                  `Responsibilities: ${exp.responsibilities.join(', ')}`,
+                ),
+              exp.achievements &&
+                exp.achievements.length > 0 &&
+                React.createElement(
+                  Text,
+                  { style: styles.description },
+                  `Achievements: ${exp.achievements.join(', ')}`,
+                ),
+              exp.technologies &&
+                exp.technologies.length > 0 &&
+                React.createElement(
+                  Text,
+                  { style: styles.description },
+                  `Technologies: ${exp.technologies.join(', ')}`,
+                ),
+            ),
+          ),
         ),
 
         // Skills
-        React.createElement(View, { style: styles.section },
+        React.createElement(
+          View,
+          { style: styles.section },
           React.createElement(Text, { style: styles.sectionTitle }, 'SKILLS'),
-          cvData.skills.technical && cvData.skills.technical.length > 0 && 
-            React.createElement(Text, { style: styles.skillsList }, `Technical: ${cvData.skills.technical.join(', ')}`),
-          cvData.skills.soft && cvData.skills.soft.length > 0 && 
-            React.createElement(Text, { style: styles.skillsList }, `Soft Skills: ${cvData.skills.soft.join(', ')}`),
-          cvData.skills.tools && cvData.skills.tools.length > 0 && 
-            React.createElement(Text, { style: styles.skillsList }, `Tools: ${cvData.skills.tools.join(', ')}`),
-          cvData.skills.languages && cvData.skills.languages.length > 0 && 
-            React.createElement(Text, { style: styles.skillsList }, `Languages: ${cvData.skills.languages.join(', ')}`)
+          cvData.skills.technical &&
+            cvData.skills.technical.length > 0 &&
+            React.createElement(
+              Text,
+              { style: styles.skillsList },
+              `Technical: ${cvData.skills.technical.join(', ')}`,
+            ),
+          cvData.skills.soft &&
+            cvData.skills.soft.length > 0 &&
+            React.createElement(
+              Text,
+              { style: styles.skillsList },
+              `Soft Skills: ${cvData.skills.soft.join(', ')}`,
+            ),
+          cvData.skills.tools &&
+            cvData.skills.tools.length > 0 &&
+            React.createElement(
+              Text,
+              { style: styles.skillsList },
+              `Tools: ${cvData.skills.tools.join(', ')}`,
+            ),
+          cvData.skills.languages &&
+            cvData.skills.languages.length > 0 &&
+            React.createElement(
+              Text,
+              { style: styles.skillsList },
+              `Languages: ${cvData.skills.languages.join(', ')}`,
+            ),
         ),
 
         // Education
-        React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'EDUCATION'),
-          ...cvData.education.map(edu => 
-            React.createElement(View, { style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
-              React.createElement(Text, { style: styles.degree }, `${edu.degree} - ${edu.school}`),
-              React.createElement(Text, { style: styles.school }, `Year: ${edu.year}`),
-              edu.location && React.createElement(Text, { style: styles.school }, `Location: ${edu.location}`),
-              edu.gpa && React.createElement(Text, { style: styles.school }, `GPA: ${edu.gpa}`),
-              edu.honors && React.createElement(Text, { style: styles.school }, `Honors: ${edu.honors}`)
-            )
-          )
+        React.createElement(
+          View,
+          { style: styles.section },
+          React.createElement(
+            Text,
+            { style: styles.sectionTitle },
+            'EDUCATION',
+          ),
+          ...cvData.education.map((edu) =>
+            React.createElement(
+              View,
+              {
+                style: styles.educationItem,
+                key: `${edu.institution}-${edu.degree}`,
+              },
+              React.createElement(
+                Text,
+                { style: styles.degree },
+                `${edu.degree} - ${edu.institution}`,
+              ),
+              React.createElement(
+                Text,
+                { style: styles.school },
+                `Year: ${this.formatDateRange(edu.startDate, edu.endDate)}`,
+              ),
+              edu.location &&
+                React.createElement(
+                  Text,
+                  { style: styles.school },
+                  `Location: ${edu.location}`,
+                ),
+              edu.gpa &&
+                React.createElement(
+                  Text,
+                  { style: styles.school },
+                  `GPA: ${edu.gpa}`,
+                ),
+              edu.description &&
+                React.createElement(
+                  Text,
+                  { style: styles.school },
+                  `Description: ${edu.description}`,
+                ),
+            ),
+          ),
         ),
 
         // Projects
-        cvData.projects && cvData.projects.length > 0 && React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'PROJECTS'),
-          ...cvData.projects.map(project => 
-            React.createElement(View, { style: styles.projectItem, key: project.name },
-              React.createElement(Text, { style: styles.projectName }, project.name),
-              project.duration && React.createElement(Text, { style: styles.duration }, project.duration),
-              React.createElement(Text, { style: styles.projectDescription }, project.description),
-              project.techStack && project.techStack.length > 0 && 
-                React.createElement(Text, { style: styles.description }, `Tech Stack: ${project.techStack.join(', ')}`),
-              project.results && React.createElement(Text, { style: styles.description }, `Results: ${project.results}`),
-              project.link && React.createElement(Text, { style: styles.description }, `Link: ${project.link}`)
-            )
-          )
-        ),
+        cvData.projects &&
+          cvData.projects.length > 0 &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(
+              Text,
+              { style: styles.sectionTitle },
+              'PROJECTS',
+            ),
+            ...cvData.projects.map((project) =>
+              React.createElement(
+                View,
+                { style: styles.projectItem, key: project.name },
+                React.createElement(
+                  Text,
+                  { style: styles.projectName },
+                  project.name,
+                ),
+                project.duration &&
+                  React.createElement(
+                    Text,
+                    { style: styles.duration },
+                    project.duration,
+                  ),
+                React.createElement(
+                  Text,
+                  { style: styles.projectDescription },
+                  project.description,
+                ),
+                project.technologies &&
+                  project.technologies.length > 0 &&
+                  React.createElement(
+                    Text,
+                    { style: styles.description },
+                    `Tech Stack: ${project.technologies.join(', ')}`,
+                  ),
+                project.results &&
+                  React.createElement(
+                    Text,
+                    { style: styles.description },
+                    `Results: ${project.results}`,
+                  ),
+                project.link &&
+                  React.createElement(
+                    Text,
+                    { style: styles.description },
+                    `Link: ${project.link}`,
+                  ),
+              ),
+            ),
+          ),
 
         // Certifications
-        cvData.certifications && cvData.certifications.length > 0 && React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'CERTIFICATIONS'),
-          ...cvData.certifications.map(cert => 
-            React.createElement(View, { style: styles.educationItem, key: cert.name },
-              React.createElement(Text, { style: styles.degree }, cert.name),
-              React.createElement(Text, { style: styles.school }, `${cert.issuer} - ${cert.date}`),
-              cert.link && React.createElement(Text, { style: styles.school }, `Link: ${cert.link}`)
-            )
-          )
-        ),
+        cvData.certifications &&
+          cvData.certifications.length > 0 &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(
+              Text,
+              { style: styles.sectionTitle },
+              'CERTIFICATIONS',
+            ),
+            ...cvData.certifications.map((cert) =>
+              React.createElement(
+                View,
+                { style: styles.educationItem, key: cert.name },
+                React.createElement(Text, { style: styles.degree }, cert.name),
+                React.createElement(
+                  Text,
+                  { style: styles.school },
+                  `${cert.issuer} - ${cert.date}`,
+                ),
+                cert.credentialUrl &&
+                  React.createElement(
+                    Text,
+                    { style: styles.school },
+                    `Link: ${cert.credentialUrl}`,
+                  ),
+              ),
+            ),
+          ),
 
         // Awards
-        cvData.awards && cvData.awards.length > 0 && React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'AWARDS'),
-          ...cvData.awards.map(award => 
-            React.createElement(View, { style: styles.educationItem, key: award.name },
-              React.createElement(Text, { style: styles.degree }, award.name),
-              React.createElement(Text, { style: styles.school }, `${award.issuer} - ${award.date}`)
-            )
-          )
-        ),
-
-        // Publications
-        cvData.publications && cvData.publications.length > 0 && React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'PUBLICATIONS'),
-          ...cvData.publications.map(pub => 
-            React.createElement(View, { style: styles.educationItem, key: pub.title },
-              React.createElement(Text, { style: styles.degree }, pub.title),
-              React.createElement(Text, { style: styles.school }, `${pub.journal} - ${pub.date}`),
-              React.createElement(Text, { style: styles.school }, `Authors: ${pub.authors}`)
-            )
-          )
-        ),
-
-        // Volunteer Experience
-        cvData.volunteer && cvData.volunteer.length > 0 && React.createElement(View, { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'VOLUNTEER EXPERIENCE'),
-          ...cvData.volunteer.map(vol => 
-            React.createElement(View, { style: styles.experienceItem, key: `${vol.organization}-${vol.role}` },
-              React.createElement(Text, { style: styles.jobTitle }, `${vol.role} at ${vol.organization}`),
-              React.createElement(Text, { style: styles.duration }, vol.duration),
-              React.createElement(Text, { style: styles.description }, vol.description)
-            )
-          )
-        )
-      )
+        cvData.awards &&
+          cvData.awards.length > 0 &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'AWARDS'),
+            ...cvData.awards.map((award) =>
+              React.createElement(
+                View,
+                { style: styles.educationItem, key: award.title },
+                React.createElement(
+                  Text,
+                  { style: styles.degree },
+                  award.title,
+                ),
+                React.createElement(
+                  Text,
+                  { style: styles.school },
+                  `${award.issuer} - ${award.date}`,
+                ),
+              ),
+            ),
+          ),
+      ),
     );
   }
 
-  private formatForATS(cvData: CVData): string {
-    return `
-${cvData.name}
-${cvData.email} | ${cvData.phone}
-${cvData.address || ''}
-${cvData.linkedin ? `LinkedIn: ${cvData.linkedin}` : ''}
-${cvData.dateOfBirth ? `Date of Birth: ${cvData.dateOfBirth}` : ''}
-
-${cvData.summary ? `SUMMARY
-${cvData.summary}
-
-` : ''}EXPERIENCE
-${cvData.experience.map(exp => {
-  let result = `${exp.title} at ${exp.company} (${exp.duration})`;
-  if (exp.teamSize) result += ` - Team Size: ${exp.teamSize}`;
-  if (exp.companyDescription) result += `\nCompany: ${exp.companyDescription}`;
-  if (exp.responsibilities && exp.responsibilities.length > 0) {
-    result += `\nResponsibilities:\n${exp.responsibilities.map(resp => `- ${resp}`).join('\n')}`;
-  }
-  if (exp.achievements && exp.achievements.length > 0) {
-    result += `\nAchievements:\n${exp.achievements.map(achievement => `- ${achievement}`).join('\n')}`;
-  }
-  if (exp.technologies && exp.technologies.length > 0) {
-    result += `\nTechnologies: ${exp.technologies.join(', ')}`;
-  }
-  if (exp.subProjects && exp.subProjects.length > 0) {
-    result += `\nSub-Projects:\n${exp.subProjects.map(sub => {
-      let subResult = `${sub.name} (${sub.role})`;
-      if (sub.responsibilities && sub.responsibilities.length > 0) {
-        subResult += `\n  Responsibilities:\n  ${sub.responsibilities.map(resp => `- ${resp}`).join('\n  ')}`;
-      }
-      if (sub.techStack && sub.techStack.length > 0) {
-        subResult += `\n  Tech Stack: ${sub.techStack.join(', ')}`;
-      }
-      return subResult;
-    }).join('\n\n')}`;
-  }
-  return result;
-}).join('\n\n')}
-
-SKILLS
-${cvData.skills.technical && cvData.skills.technical.length > 0 ? `Technical Skills: ${cvData.skills.technical.join(', ')}` : ''}
-${cvData.skills.soft && cvData.skills.soft.length > 0 ? `Soft Skills: ${cvData.skills.soft.join(', ')}` : ''}
-${cvData.skills.languages && cvData.skills.languages.length > 0 ? `Languages: ${cvData.skills.languages.join(', ')}` : ''}
-${cvData.skills.tools && cvData.skills.tools.length > 0 ? `Tools: ${cvData.skills.tools.join(', ')}` : ''}
-
-EDUCATION
-${cvData.education.map(edu => {
-  let result = `${edu.degree} - ${edu.school} (${edu.year})`;
-  if (edu.location) result += ` - ${edu.location}`;
-  if (edu.gpa) result += ` - GPA: ${edu.gpa}`;
-  if (edu.honors) result += ` - Honors: ${edu.honors}`;
-  return result;
-}).join('\n')}
-
-${cvData.projects.length > 0 ? `PROJECTS
-${cvData.projects.map(project => {
-  let result = `${project.name}`;
-  if (project.duration) result += ` (${project.duration})`;
-  result += `\n${project.description}`;
-  if (project.techStack && project.techStack.length > 0) {
-    result += `\nTech Stack: ${project.techStack.join(', ')}`;
-  }
-  if (project.results) {
-    result += `\nResults: ${project.results}`;
-  }
-  if (project.link) {
-    result += `\nLink: ${project.link}`;
-  }
-  return result;
-}).join('\n\n')}` : ''}
-
-${cvData.certifications.length > 0 ? `CERTIFICATIONS
-${cvData.certifications.map(cert => {
-  let result = `${cert.name} - ${cert.issuer} (${cert.date})`;
-  if (cert.link) result += `\nLink: ${cert.link}`;
-  return result;
-}).join('\n')}` : ''}
-
-${cvData.awards.length > 0 ? `AWARDS
-${cvData.awards.map(award => 
-  `${award.name} - ${award.issuer} (${award.date})`
-).join('\n')}` : ''}
-
-${cvData.publications.length > 0 ? `PUBLICATIONS
-${cvData.publications.map(pub => 
-  `${pub.title} - ${pub.journal} (${pub.date})
-Authors: ${pub.authors}`
-).join('\n\n')}` : ''}
-
-${cvData.volunteer.length > 0 ? `VOLUNTEER EXPERIENCE
-${cvData.volunteer.map(vol => 
-  `${vol.role} at ${vol.organization} (${vol.duration})
-${vol.description}`
-).join('\n\n')}` : ''}
-    `.trim();
-  }
-
   private async generateTwoColumnTemplate(cvData: CVData): Promise<any> {
-    const { Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
-    
+    const { Document, Page, Text, View, StyleSheet } = await import(
+      '@react-pdf/renderer'
+    );
+
     const styles = StyleSheet.create({
       page: {
         backgroundColor: '#FFFFFF',
@@ -1264,26 +1705,20 @@ ${vol.description}`
         margin: 0,
         flexDirection: 'row',
       },
-      
-      // Left Column (Dark Teal Background)
       leftColumn: {
-        width: 240, // Fixed width in points
-        backgroundColor: '#2c5f5f', // Dark teal
+        width: 240,
+        backgroundColor: '#2c5f5f',
         padding: 30,
         color: '#FFFFFF',
-        minHeight: 792, // A4 height
+        minHeight: 792,
       },
-      
-      // Right Column (White Background)
       rightColumn: {
-        width: 315, // Remaining width
+        width: 315,
         backgroundColor: '#FFFFFF',
         padding: 30,
         color: '#333333',
-        minHeight: 792, // A4 height
+        minHeight: 792,
       },
-      
-      // Profile Section
       profileSection: {
         marginBottom: 25,
         textAlign: 'center',
@@ -1309,8 +1744,6 @@ ${vol.description}`
         textAlign: 'center',
         opacity: 0.9,
       },
-      
-      // Left Column Sections
       leftSection: {
         marginBottom: 25,
       },
@@ -1332,8 +1765,6 @@ ${vol.description}`
         color: '#FFFFFF',
         marginBottom: 3,
       },
-      
-      // Skills with Progress Bars
       skillItem: {
         marginBottom: 12,
       },
@@ -1353,8 +1784,6 @@ ${vol.description}`
         backgroundColor: '#FFFFFF',
         borderRadius: 2,
       },
-      
-      // Right Column Sections
       rightSection: {
         marginBottom: 25,
       },
@@ -1372,8 +1801,6 @@ ${vol.description}`
         marginBottom: 8,
         lineHeight: 1.5,
       },
-      
-      // Experience Items
       experienceItem: {
         marginBottom: 15,
       },
@@ -1401,8 +1828,6 @@ ${vol.description}`
         marginBottom: 2,
         marginLeft: 10,
       },
-      
-      // Education
       educationItem: {
         marginBottom: 10,
       },
@@ -1425,163 +1850,304 @@ ${vol.description}`
       },
     });
 
-    // Helper function to get skill level (0-1)
-    const getSkillLevel = (skill: string): number => {
-      // Simple mapping - in real app, this could be stored in CV data
-      const skillLevels: { [key: string]: number } = {
-        'JavaScript': 0.9,
-        'TypeScript': 0.85,
-        'React': 0.9,
-        'Node.js': 0.8,
-        'Python': 0.7,
-        'Java': 0.6,
-        'SQL': 0.75,
-        'AWS': 0.6,
-        'Docker': 0.5,
-        'Git': 0.8,
-      };
-      return skillLevels[skill] || 0.5;
-    };
-
-    // Get primary skill categories
     const technicalSkills = cvData.skills?.technical || [];
     const softSkills = cvData.skills?.soft || [];
     const languages = cvData.skills?.languages || [];
 
-    return React.createElement(Document, {},
-      React.createElement(Page, { style: styles.page },
-        
+    const getSkillLevel = (skill: string): number => {
+      const skillLevels: { [key: string]: number } = {
+        JavaScript: 0.9,
+        TypeScript: 0.85,
+        React: 0.9,
+        'Node.js': 0.8,
+        Python: 0.7,
+        Java: 0.6,
+        SQL: 0.75,
+        AWS: 0.6,
+        Docker: 0.5,
+        Git: 0.8,
+      };
+      return skillLevels[skill] || 0.5;
+    };
+
+    return React.createElement(
+      Document,
+      {},
+      React.createElement(
+        Page,
+        { style: styles.page },
+
         // LEFT COLUMN
-        React.createElement(View, { style: styles.leftColumn },
-          
+        React.createElement(
+          View,
+          { style: styles.leftColumn },
+
           // Profile Section
-          React.createElement(View, { style: styles.profileSection },
+          React.createElement(
+            View,
+            { style: styles.profileSection },
             React.createElement(View, { style: styles.profileImage }),
-            React.createElement(Text, { style: styles.name }, cvData.name.toUpperCase()),
-            cvData.experience.length > 0 && 
-              React.createElement(Text, { style: styles.title }, cvData.experience[0].title)
-          ),
-          
-          // Contact Details
-          React.createElement(View, { style: styles.leftSection },
-            React.createElement(Text, { style: styles.leftSectionTitle }, 'DETAILS'),
-            React.createElement(Text, { style: styles.leftSectionLabel }, 'Address'),
-            React.createElement(Text, { style: styles.leftSectionText }, cvData.address || 'Not provided'),
-            React.createElement(Text, { style: styles.leftSectionLabel }, 'Phone'),
-            React.createElement(Text, { style: styles.leftSectionText }, cvData.phone),
-            React.createElement(Text, { style: styles.leftSectionLabel }, 'Email'),
-            React.createElement(Text, { style: styles.leftSectionText }, cvData.email),
-          ),
-          
-          // Links
-          cvData.linkedin && 
-            React.createElement(View, { style: styles.leftSection },
-              React.createElement(Text, { style: styles.leftSectionTitle }, 'LINKS'),
-              React.createElement(Text, { style: styles.leftSectionText }, 'LinkedIn'),
+            React.createElement(
+              Text,
+              { style: styles.name },
+              cvData.contact.name.toUpperCase(),
             ),
-          
+            cvData.experience.length > 0 &&
+              React.createElement(
+                Text,
+                { style: styles.title },
+                cvData.experience[0].title,
+              ),
+          ),
+
+          // Contact Details
+          React.createElement(
+            View,
+            { style: styles.leftSection },
+            React.createElement(
+              Text,
+              { style: styles.leftSectionTitle },
+              'DETAILS',
+            ),
+            React.createElement(
+              Text,
+              { style: styles.leftSectionLabel },
+              'Address',
+            ),
+            React.createElement(
+              Text,
+              { style: styles.leftSectionText },
+              cvData.contact.address || 'Not provided',
+            ),
+            React.createElement(
+              Text,
+              { style: styles.leftSectionLabel },
+              'Phone',
+            ),
+            React.createElement(
+              Text,
+              { style: styles.leftSectionText },
+              cvData.contact.phone,
+            ),
+            React.createElement(
+              Text,
+              { style: styles.leftSectionLabel },
+              'Email',
+            ),
+            React.createElement(
+              Text,
+              { style: styles.leftSectionText },
+              cvData.contact.email,
+            ),
+          ),
+
+          // Links
+          cvData.contact.linkedin &&
+            React.createElement(
+              View,
+              { style: styles.leftSection },
+              React.createElement(
+                Text,
+                { style: styles.leftSectionTitle },
+                'LINKS',
+              ),
+              React.createElement(
+                Text,
+                { style: styles.leftSectionText },
+                'LinkedIn',
+              ),
+            ),
+
           // Skills
-          technicalSkills.length > 0 && 
-            React.createElement(View, { style: styles.leftSection },
-              React.createElement(Text, { style: styles.leftSectionTitle }, 'SKILLS'),
-              ...technicalSkills.slice(0, 6).map(skill => 
-                React.createElement(View, { style: styles.skillItem, key: skill },
+          technicalSkills.length > 0 &&
+            React.createElement(
+              View,
+              { style: styles.leftSection },
+              React.createElement(
+                Text,
+                { style: styles.leftSectionTitle },
+                'SKILLS',
+              ),
+              ...technicalSkills.slice(0, 6).map((skill) =>
+                React.createElement(
+                  View,
+                  { style: styles.skillItem, key: skill },
                   React.createElement(Text, { style: styles.skillName }, skill),
-                  React.createElement(View, { style: styles.progressBar },
-                    React.createElement(View, { 
-                      style: { 
-                        ...styles.progressFill, 
-                        width: `${getSkillLevel(skill) * 100}%` 
-                      } 
-                    })
-                  )
-                )
-              )
+                  React.createElement(
+                    View,
+                    { style: styles.progressBar },
+                    React.createElement(View, {
+                      style: {
+                        ...styles.progressFill,
+                        width: `${getSkillLevel(skill) * 100}%`,
+                      },
+                    }),
+                  ),
+                ),
+              ),
             ),
         ),
-        
+
         // RIGHT COLUMN
-        React.createElement(View, { style: styles.rightColumn },
-          
+        React.createElement(
+          View,
+          { style: styles.rightColumn },
+
           // Profile Summary
-          cvData.summary && 
-            React.createElement(View, { style: styles.rightSection },
-              React.createElement(Text, { style: styles.rightSectionTitle }, 'PROFILE'),
-              React.createElement(Text, { style: styles.rightSectionText }, cvData.summary)
+          cvData.summary &&
+            React.createElement(
+              View,
+              { style: styles.rightSection },
+              React.createElement(
+                Text,
+                { style: styles.rightSectionTitle },
+                'PROFILE',
+              ),
+              React.createElement(
+                Text,
+                { style: styles.rightSectionText },
+                cvData.summary,
+              ),
             ),
-          
+
           // Experience
-          React.createElement(View, { style: styles.rightSection },
-            React.createElement(Text, { style: styles.rightSectionTitle }, 'EXPERIENCE'),
-            ...cvData.experience.map(exp => 
-              React.createElement(View, { style: styles.experienceItem, key: `${exp.company}-${exp.title}` },
-                React.createElement(Text, { style: styles.jobTitle }, exp.title),
-                React.createElement(Text, { style: styles.company }, exp.company),
-                React.createElement(Text, { style: styles.duration }, exp.duration),
-                ...(exp.responsibilities && exp.responsibilities.length > 0 ? 
-                  exp.responsibilities.map(resp => 
-                    React.createElement(Text, { style: styles.responsibility, key: resp }, `• ${resp}`)
-                  ) : []),
-                ...(exp.achievements && exp.achievements.length > 0 ? 
-                  exp.achievements.map(ach => 
-                    React.createElement(Text, { style: styles.responsibility, key: ach }, `• ${ach}`)
-                  ) : []),
-              )
-            )
+          React.createElement(
+            View,
+            { style: styles.rightSection },
+            React.createElement(
+              Text,
+              { style: styles.rightSectionTitle },
+              'EXPERIENCE',
+            ),
+            ...cvData.experience.map((exp) =>
+              React.createElement(
+                View,
+                {
+                  style: styles.experienceItem,
+                  key: `${exp.company}-${exp.title}`,
+                },
+                React.createElement(
+                  Text,
+                  { style: styles.jobTitle },
+                  exp.title,
+                ),
+                React.createElement(
+                  Text,
+                  { style: styles.company },
+                  exp.company,
+                ),
+                React.createElement(
+                  Text,
+                  { style: styles.duration },
+                  this.formatDateRange(exp.startDate, exp.endDate, exp.current),
+                ),
+                ...(exp.responsibilities && exp.responsibilities.length > 0
+                  ? exp.responsibilities.map((resp) =>
+                      React.createElement(
+                        Text,
+                        { style: styles.responsibility, key: resp },
+                        `• ${resp}`,
+                      ),
+                    )
+                  : []),
+                ...(exp.achievements && exp.achievements.length > 0
+                  ? exp.achievements.map((ach) =>
+                      React.createElement(
+                        Text,
+                        { style: styles.responsibility, key: ach },
+                        `• ${ach}`,
+                      ),
+                    )
+                  : []),
+              ),
+            ),
           ),
-          
+
           // Education
-          cvData.education.length > 0 && 
-            React.createElement(View, { style: styles.rightSection },
-              React.createElement(Text, { style: styles.rightSectionTitle }, 'EDUCATION'),
-              ...cvData.education.map(edu => 
-                React.createElement(View, { style: styles.educationItem, key: `${edu.school}-${edu.degree}` },
-                  React.createElement(Text, { style: styles.degree }, edu.degree),
-                  React.createElement(Text, { style: styles.school }, edu.school),
-                  React.createElement(Text, { style: styles.educationDuration }, 
-                    `${edu.year}${edu.gpa ? ` | GPA: ${edu.gpa}` : ''}`
+          cvData.education.length > 0 &&
+            React.createElement(
+              View,
+              { style: styles.rightSection },
+              React.createElement(
+                Text,
+                { style: styles.rightSectionTitle },
+                'EDUCATION',
+              ),
+              ...cvData.education.map((edu) =>
+                React.createElement(
+                  View,
+                  {
+                    style: styles.educationItem,
+                    key: `${edu.institution}-${edu.degree}`,
+                  },
+                  React.createElement(
+                    Text,
+                    { style: styles.degree },
+                    edu.degree,
                   ),
-                )
-              )
+                  React.createElement(
+                    Text,
+                    { style: styles.school },
+                    edu.institution,
+                  ),
+                  React.createElement(
+                    Text,
+                    { style: styles.educationDuration },
+                    `${this.formatDateRange(edu.startDate, edu.endDate)}${edu.gpa ? ` | GPA: ${edu.gpa}` : ''}`,
+                  ),
+                ),
+              ),
             ),
-          
+
           // Languages
-          languages.length > 0 && 
-            React.createElement(View, { style: styles.rightSection },
-              React.createElement(Text, { style: styles.rightSectionTitle }, 'LANGUAGES'),
-              ...languages.map(lang => 
-                React.createElement(Text, { style: styles.rightSectionText, key: lang }, lang)
-              )
+          languages.length > 0 &&
+            React.createElement(
+              View,
+              { style: styles.rightSection },
+              React.createElement(
+                Text,
+                { style: styles.rightSectionTitle },
+                'LANGUAGES',
+              ),
+              ...languages.map((lang) =>
+                React.createElement(
+                  Text,
+                  { style: styles.rightSectionText, key: lang },
+                  lang,
+                ),
+              ),
             ),
-        )
-      )
+        ),
+      ),
     );
   }
 
   private async exportHtmlToPDF(cvData: CVData): Promise<Buffer> {
     try {
       this.logger.log('Generating HTML template for two-column layout...');
-      
+
       // Generate HTML template
-      const htmlContent = await this.htmlTemplateService.generateTwoColumnHtml(cvData);
-      
+      const htmlContent = await this.htmlTemplateService.generateTwoColumnHtml(
+        cvData as any,
+      );
+
       // Write HTML to temporary file
       const tempDir = os.tmpdir();
-      const tempHtmlFile = path.join(tempDir, `cv-${Date.now()}.html`);
-      const tempPdfFile = path.join(tempDir, `cv-${Date.now()}.pdf`);
-      
+      const tempHtmlFile = path.join(tempDir, `Resumated-${Date.now()}.html`);
+      const tempPdfFile = path.join(tempDir, `Resumated-${Date.now()}.pdf`);
+
       await fs.promises.writeFile(tempHtmlFile, htmlContent, 'utf8');
-      
+
       // Convert HTML to PDF using puppeteer
       const puppeteer = await import('puppeteer');
       const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
-      
+
       const page = await browser.newPage();
       await page.goto(`file://${tempHtmlFile}`, { waitUntil: 'networkidle0' });
-      
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
@@ -1589,25 +2155,26 @@ ${vol.description}`
           top: '0.5in',
           right: '0.5in',
           bottom: '0.5in',
-          left: '0.5in'
-        }
+          left: '0.5in',
+        },
       });
-      
+
       await browser.close();
-      
+
       // Clean up temporary files
       try {
         await fs.promises.unlink(tempHtmlFile);
       } catch (error) {
         this.logger.warn('Failed to delete temporary HTML file:', error);
       }
-      
+
       // Convert Uint8Array to Buffer
       const buffer = Buffer.from(pdfBuffer);
-      
-      this.logger.log(`HTML to PDF conversion successful, size: ${buffer.length} bytes`);
+
+      this.logger.log(
+        `HTML to PDF conversion successful, size: ${buffer.length} bytes`,
+      );
       return buffer;
-      
     } catch (error) {
       this.logger.error('Error converting HTML to PDF:', error);
       throw new Error(`Failed to convert HTML to PDF: ${error.message}`);

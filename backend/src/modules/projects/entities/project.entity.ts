@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('projects')
@@ -36,8 +44,8 @@ export class Project {
   @Column({ nullable: true })
   imageUrl: string;
 
-  @Column({ default: false })
-  isAddedToCv: boolean;
+  @Column('text', { array: true, default: [] })
+  cvIds: string[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -45,7 +53,7 @@ export class Project {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, user => user.projects)
+  @ManyToOne(() => User, (user) => user.projects)
   @JoinColumn({ name: 'userId' })
   user: User;
 }

@@ -3,8 +3,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Globe, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({
+  className,
+  positionClassName,
+}: {
+  className?: string;
+  positionClassName?: string;
+}) {
   const { language, setLanguage, languages } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -30,15 +37,18 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className={cn(
+          "flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors",
+          className
+        )}
         aria-label="Change language">
-        <Globe className="h-4 w-4" />
+        <Globe className="mr-3 h-5 w-5 flex-shrink-0" />
         <span className="hidden sm:inline">{currentLanguage?.nativeName}</span>
         <span className="sm:hidden">{currentLanguage?.code.toUpperCase()}</span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 animate-fadeIn">
+        <div className={cn("absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 animate-fadeIn", positionClassName)}>
           {languages.map((lang) => (
             <button
               key={lang.code}
@@ -65,3 +75,5 @@ export default function LanguageSwitcher() {
     </div>
   );
 }
+
+

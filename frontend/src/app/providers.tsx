@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,14 +22,16 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <ToastProvider>
-          <AuthProvider>
-            {children}
-            <ReactQueryDevtools initialIsOpen={false} />
-          </AuthProvider>
-        </ToastProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <AuthProvider>
+              {children}
+              <ReactQueryDevtools initialIsOpen={false} />
+            </AuthProvider>
+          </ToastProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
