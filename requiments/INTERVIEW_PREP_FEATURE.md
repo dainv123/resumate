@@ -196,6 +196,20 @@ InterviewPrepController
 
 ---
 
+## External MIT supplements
+
+Do **not** replace curated core. Import adds FAQGURU + Data/ML packs:
+
+```bash
+cd backend && npm run import:external-question-banks
+```
+
+Seeds: `question-bank-external-faqguru.seed.json`, `question-bank-external-mlds.seed.json`  
+Sources: `external:faqguru`, `external:mlds-ajit`, `external:mlds-kaggle`  
+See `data/EXTERNAL_ATTRIBUTION.md`. Note: HF/Kaggle CSV is low-diversity (~20 unique after dedupe); Ajit repo is the main Data pack.
+
+---
+
 ## Question Bank (400 curated)
 
 | Batch | Count | Status |

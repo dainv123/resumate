@@ -167,3 +167,6 @@ local/
 /testing/reports
 # /testing/test-results
 /testing/playwright-report
+# External question bank download cache (regenerate via import script)
+backend/src/modules/interview-prep/data/external-raw/
+

@@ -16,3 +16,9 @@ export const OPENROUTER_MAX_TOKENS = 4096;
 export const OPENROUTER_CV_PARSE_MAX_TOKENS = OPENROUTER_MAX_TOKENS;
 
 export const OPENROUTER_APP_TITLE = 'Resumate';
+
+export {
+  EmbeddingDefaults,
+  EmbeddingEnv,
+  EmbeddingProvider,
+} from './embedding.constants';

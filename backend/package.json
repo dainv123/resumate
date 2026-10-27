@@ -28,6 +28,8 @@
     "seed:templates": "ts-node -r tsconfig-paths/register src/scripts/seed-cv-templates.ts",
     "seed:question-bank": "ts-node -r tsconfig-paths/register src/scripts/generate-question-bank-expansion.ts",
     "enrich:question-bank": "ts-node -r tsconfig-paths/register src/scripts/enrich-question-bank-ai.ts",
+    "backfill:question-embeddings": "ts-node -r tsconfig-paths/register src/scripts/backfill-question-embeddings.ts",
+    "import:external-question-banks": "ts-node -r tsconfig-paths/register src/scripts/import-external-question-banks.ts",
     "migrate:cv-data": "ts-node -r tsconfig-paths/register src/scripts/migrate-cv-data-to-standard.ts",
     "db:reset": "npm run migration:revert && npm run migration:run && npm run seed:templates",
     "db:setup": "npm run migration:run && npm run seed:templates",

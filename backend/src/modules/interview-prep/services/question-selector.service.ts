@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EmbeddingService } from '../../ai/providers/embedding.service';
 import {
-  GapPriority,
   QuestionFrequency,
   QuestionLevel,
   QuestionPack,
@@ -11,6 +11,7 @@ import {
 import { assignGapPriority, GapItem, RankedQuestion } from '../domain/pass-framework';
 import { QuestionBank } from '../entities/question-bank.entity';
 import { DailySchedulerService } from './daily-scheduler.service';
+import { QuestionEmbeddingService } from './question-embedding.service';
 
 const FREQUENCY_BOOST: Record<QuestionFrequency, number> = {
   [QuestionFrequency.VERY_COMMON]: 1.4,
@@ -19,13 +20,18 @@ const FREQUENCY_BOOST: Record<QuestionFrequency, number> = {
 };
 
 const DEFAULT_QUESTION_LIMIT = 15;
+const MIN_EMBEDDED_FOR_RAG = 10;
 
 @Injectable()
 export class QuestionSelectorService {
+  private readonly logger = new Logger(QuestionSelectorService.name);
+
   constructor(
     @InjectRepository(QuestionBank)
     private questionBankRepository: Repository<QuestionBank>,
     private dailySchedulerService: DailySchedulerService,
+    private embeddingService: EmbeddingService,
+    private questionEmbeddingService: QuestionEmbeddingService,
   ) {}
 
   async selectFromBank(
@@ -35,57 +41,109 @@ export class QuestionSelectorService {
   ): Promise<RankedQuestion[]> {
     const limit = options?.limit ?? DEFAULT_QUESTION_LIMIT;
     const level = this.inferLevelFromJd(jobDescription);
-    const jdSkills = this.extractMentionedSkills(jobDescription);
-    const gapSkills = gaps.map((g) => g.skill.toLowerCase());
-    const targetSkills = new Set([...jdSkills, ...gapSkills]);
-
+    const eligibleLevels = this.eligibleLevels(level);
     const packTag = options?.pack
       ? QUESTION_PACK_ROLE_TAG[options.pack]
       : null;
 
+    const candidates = await this.loadCandidates(
+      jobDescription,
+      gaps,
+      eligibleLevels,
+      packTag,
+    );
+
+    const jdSkills = this.extractMentionedSkills(jobDescription);
+    const gapSkills = gaps.map((g) => g.skill.toLowerCase());
+    const targetSkills = new Set([...jdSkills, ...gapSkills]);
+
+    const scored = candidates.map((q) => {
+      const skillMatch = q.skillTags.filter((tag) =>
+        [...targetSkills].some(
+          (s) =>
+            tag.toLowerCase().includes(s) || s.includes(tag.toLowerCase()),
+        ),
+      ).length;
+      const gapBoost = gaps.some((g) =>
+        q.skillTags.some(
+          (t) =>
+            t.toLowerCase() === g.skill.toLowerCase() && g.priority === 'P1',
+        ),
+      )
+        ? 1.5
+        : 1;
+      const frequencyBoost =
+        FREQUENCY_BOOST[q.frequency as QuestionFrequency] ?? 1;
+      const impactScore =
+        (1 + skillMatch * 0.8) * gapBoost * frequencyBoost;
+
+      return {
+        questionId: q.id,
+        question: q.question,
+        category: q.category,
+        impactScore,
+        priority: assignGapPriority(impactScore),
+        prepTimeMinutes: q.prepTimeMinutes,
+      } satisfies RankedQuestion;
+    });
+
+    return this.dailySchedulerService.rankQuestions(scored, gaps, limit);
+  }
+
+  private async loadCandidates(
+    jobDescription: string,
+    gaps: GapItem[],
+    eligibleLevels: QuestionLevel[],
+    packTag: string | null,
+  ): Promise<QuestionBank[]> {
+    const useRag =
+      this.embeddingService.canEmbed() &&
+      (await this.questionEmbeddingService.countEmbedded()) >=
+        MIN_EMBEDDED_FOR_RAG;
+
+    if (useRag) {
+      try {
+        const queryText = this.questionEmbeddingService.buildQueryText(
+          jobDescription,
+          gaps.map((g) => g.skill),
+        );
+        const queryEmbedding =
+          await this.embeddingService.embedQuery(queryText);
+        const rows =
+          await this.questionEmbeddingService.findSimilarCandidates({
+            queryEmbedding,
+            levels: eligibleLevels,
+            packTag,
+          });
+        if (rows.length > 0) {
+          this.logger.log(
+            `RAG candidates=${rows.length} levels=${eligibleLevels.join(',')}`,
+          );
+          return rows;
+        }
+      } catch (err) {
+        this.logger.warn(
+          `RAG retrieval failed — fallback to full scan: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    return this.loadLegacyCandidates(eligibleLevels, packTag);
+  }
+
+  private async loadLegacyCandidates(
+    eligibleLevels: QuestionLevel[],
+    packTag: string | null,
+  ): Promise<QuestionBank[]> {
     let allQuestions = await this.questionBankRepository.find();
     if (packTag) {
       allQuestions = allQuestions.filter((q) =>
         q.roleTags.includes(packTag),
       );
     }
-    const eligibleLevels = this.eligibleLevels(level);
-
-    const scored = allQuestions
-      .filter((q) => eligibleLevels.includes(q.level as QuestionLevel))
-      .map((q) => {
-        const skillMatch = q.skillTags.filter((tag) =>
-          [...targetSkills].some(
-            (s) =>
-              tag.toLowerCase().includes(s) ||
-              s.includes(tag.toLowerCase()),
-          ),
-        ).length;
-        const gapBoost = gaps.some((g) =>
-          q.skillTags.some(
-            (t) =>
-              t.toLowerCase() === g.skill.toLowerCase() &&
-              g.priority === 'P1',
-          ),
-        )
-          ? 1.5
-          : 1;
-        const frequencyBoost =
-          FREQUENCY_BOOST[q.frequency as QuestionFrequency] ?? 1;
-        const impactScore =
-          (1 + skillMatch * 0.8) * gapBoost * frequencyBoost;
-
-        return {
-          questionId: q.id,
-          question: q.question,
-          category: q.category,
-          impactScore,
-          priority: assignGapPriority(impactScore),
-          prepTimeMinutes: q.prepTimeMinutes,
-        } satisfies RankedQuestion;
-      });
-
-    return this.dailySchedulerService.rankQuestions(scored, gaps, limit);
+    return allQuestions.filter((q) =>
+      eligibleLevels.includes(q.level as QuestionLevel),
+    );
   }
 
   inferLevelFromJd(jobDescription: string): QuestionLevel {

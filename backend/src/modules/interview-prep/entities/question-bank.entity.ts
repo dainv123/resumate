@@ -59,6 +59,13 @@ export class QuestionBank {
   @Column({ default: 'curated' })
   source: string;
 
+  /** pgvector column — read/write via raw SQL in QuestionEmbeddingService */
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  embeddingModel: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  embeddedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -67,4 +67,32 @@ export class OpenRouterService {
 
     return text;
   }
+
+  async embedTexts(
+    texts: string[],
+    model: string,
+  ): Promise<number[][]> {
+    if (texts.length === 0) return [];
+
+    this.logger.log(
+      `[EMBED] openrouter_call model=${model} batch=${texts.length}`,
+    );
+
+    const response = await this.getClient().embeddings.create({
+      model,
+      input: texts,
+    });
+
+    const byIndex = new Map(
+      response.data.map((row) => [row.index, row.embedding]),
+    );
+
+    return texts.map((_, i) => {
+      const embedding = byIndex.get(i);
+      if (!embedding) {
+        throw new Error(`Missing embedding for batch index ${i}`);
+      }
+      return embedding;
+    });
+  }
 }

@@ -16,10 +16,11 @@ Upload a CV once, keep projects in sync, tailor versions to each job description
 6. [Getting started](#getting-started)
 7. [Configuration](#configuration)
 8. [Redis](#redis)
-9. [Plans & limits](#plans--limits)
-10. [Project structure](#project-structure)
-11. [Further reading](#further-reading)
-12. [License](#license)
+9. [Interview Prep RAG](#interview-prep-rag-pgvector)
+10. [Plans & limits](#plans--limits)
+11. [Project structure](#project-structure)
+12. [Further reading](#further-reading)
+13. [License](#license)
 
 ---
 
@@ -266,12 +267,16 @@ flowchart TD
 ```mermaid
 flowchart TD
   In[JD + CV + date] --> Create[Create plan]
-  Create --> Bank[Question bank]
+  Create --> Gaps[Gap analysis]
+  Gaps --> RAG[RAG: embed JD → pgvector top-K]
+  RAG --> Rank[Impact score + PASS rank]
   Create --> AI[STAR / process / research]
-  Bank & AI --> Road[PASS roadmap]
+  Rank & AI --> Road[Roadmap + assignments]
   Road --> Tasks & STAR & Mock & PDF
   Tasks & STAR & Mock --> Score[Readiness]
 ```
+
+See [Interview Prep RAG](#interview-prep-rag-pgvector) for how retrieval hooks into this flow.
 
 | Action | API |
 |--------|-----|
@@ -366,6 +371,7 @@ Canonical reference: [`backend/env.example`](./backend/env.example).
 | Database | `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` |
 | AWS S3 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET` |
 | AI | `GOOGLE_AI_API_KEY`, `GOOGLE_AI_MODEL`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `AI_CV_PARSE_PROVIDER`, `AI_INTERVIEW_PREP_PROVIDER` |
+| Embeddings / RAG | `AI_EMBEDDING_ENABLED`, `AI_EMBEDDING_PROVIDER` (`google` \| `openrouter`), `GOOGLE_EMBEDDING_MODEL`, `AI_EMBEDDING_DIMENSIONS` |
 | Auth | `JWT_SECRET`, `JWT_EXPIRES_IN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 | App | `PORT` (prefer `5001`), `FRONTEND_URL`, `NODE_ENV` |
 | Redis | see [Redis](#redis) |
@@ -430,7 +436,146 @@ backend/src/shared/redis/          # module, service, constants
 backend/src/common/guards/ai-rate-limit.guard.ts
 ```
 
-Out of scope today: sessions, queues, analytics cache, vector search (future RAG / pgvector).
+Out of scope today: sessions, queues, analytics cache.
+
+---
+
+## Interview Prep RAG (pgvector)
+
+RAG is **not a chat UI**. It only improves **which curated questions** get into an Interview Prep plan when the user creates one. Downstream (roadmap, STAR, mock, cheat sheet) stays the same — they consume the ranked question list RAG helped pick.
+
+### Where it sits in the app
+
+```mermaid
+flowchart TB
+  subgraph UI["Frontend"]
+    Page["/dashboard/interview-prep"]
+    Create["Create plan form\nJD + CV + date"]
+  end
+
+  subgraph API["Backend"]
+    Ctrl["POST /interview-prep"]
+    Prep["InterviewPrepService.createPlan"]
+    Gaps["Impact scoring\nJD ↔ CV gaps"]
+    Sel["QuestionSelectorService"]
+    Sched["DailyScheduler\nPASS roadmap"]
+    LLM["AI: STAR / process / research"]
+  end
+
+  subgraph RAG["RAG layer"]
+    Emb["EmbeddingService\nembed query"]
+    QE["QuestionEmbeddingService\npgvector top-K"]
+    Bank[("question_bank\n+ embedding")]
+  end
+
+  Page --> Create --> Ctrl --> Prep
+  Prep --> Gaps --> Sel
+  Sel -->|hybrid retrieve| Emb --> QE --> Bank
+  Sel -->|score + rank| Sched
+  Prep --> LLM
+  Sched --> Plan["Plan: roadmap + assignments"]
+  LLM --> Plan
+  Plan --> Page
+```
+
+| App surface | Uses RAG? |
+|-------------|-----------|
+| Create Interview Prep plan | **Yes** — question candidate retrieval |
+| Mark tasks / edit STAR / mock / cheat sheet | No — works on plan already saved |
+| CV upload, Job Tailor, Portfolio, Analytics | No |
+
+### Runtime interaction (create plan)
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant FE as Frontend
+  participant Prep as InterviewPrepService
+  participant Sel as QuestionSelector
+  participant Emb as EmbeddingService
+  participant OR as OpenRouter embed
+  participant PG as Postgres + pgvector
+  participant AI as LLM (STAR etc.)
+
+  U->>FE: Submit JD + CV + interview date
+  FE->>Prep: POST /interview-prep
+  Prep->>Prep: Parse JD, compatibility, gaps
+  Prep->>Sel: selectFromBank(JD, gaps, pack)
+
+  alt embeddings ready (>=10 rows) and embed enabled
+    Sel->>Emb: embedQuery(JD + gap skills)
+    Emb->>OR: Google / OpenRouter embed API
+    OR-->>Emb: vector(768 default)
+    Sel->>PG: ORDER BY embedding <=> query LIMIT 50<br/>filter level + roleTags
+    PG-->>Sel: candidate questions
+  else fallback
+    Sel->>PG: load question_bank (tag/level filter)
+    PG-->>Sel: all eligible rows
+  end
+
+  Sel->>Sel: impactScore (skills × gaps × frequency)
+  Sel->>Sel: DailyScheduler.rankQuestions → top 15
+  Sel-->>Prep: RankedQuestion[]
+  Prep->>AI: STAR / process map / company research
+  Prep->>PG: save plan + assignments
+  Prep-->>FE: roadmap + readiness + questions
+  FE-->>U: Prep plan UI
+```
+
+### Offline indexing (not on the request path)
+
+Embeddings for the bank are built **ahead of time**, not when every user clicks Create.
+
+```mermaid
+flowchart LR
+  Seed["Seed JSON\nquestion_bank"] --> Rows[("question_bank rows")]
+  Rows --> Script["npm run backfill:question-embeddings"]
+  Script --> OR[Google text-embedding-004\n(or OpenRouter)]
+  OR --> Rows2[("UPDATE embedding\nembeddingModel, embeddedAt")]
+  Rows2 -.->|used later by| Create["POST /interview-prep"]
+```
+
+| Piece | Detail |
+|-------|--------|
+| Extension | `vector` (`pgvector/pgvector:pg15` in Compose) |
+| Column | `question_bank.embedding vector(768)` + `embeddingModel` / `embeddedAt` |
+| Default model | Google **`text-embedding-004`** (AI Studio free tier) |
+| Alt | `AI_EMBEDDING_PROVIDER=openrouter` — model dim must match `AI_EMBEDDING_DIMENSIONS` / DB |
+| Hybrid | vector top‑K → same impact / PASS ranking as before |
+| Fallback | full tag scan if embed off, API fail, or &lt;10 embedded rows |
+| Code | `EmbeddingService`, `QuestionEmbeddingService`, `QuestionSelectorService` |
+
+```bash
+cd backend
+npm run migration:run
+npm run backfill:question-embeddings   # uses GOOGLE_AI_API_KEY by default
+```
+
+Env: `AI_EMBEDDING_PROVIDER=google`, `GOOGLE_EMBEDDING_MODEL=text-embedding-004`, `AI_EMBEDDING_DIMENSIONS=768`, `GOOGLE_AI_API_KEY`.
+
+### External question banks (MIT supplements)
+
+Curated seeds stay the core. Optional MIT imports **add** questions (never replace):
+
+| Seed file | Source | Role tags |
+|-----------|--------|-----------|
+| `question-bank-external-faqguru.seed.json` | [FAQGURU](https://github.com/FAQGURU/FAQGURU) (MIT) | `software-engineer` |
+| `question-bank-external-mlds.seed.json` | [Ajit DS Q&A](https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers) (MIT) + deduped [HF/Kaggle ML-DS](https://huggingface.co/datasets/haoxianc/shamimhasan8_ml-and-ds-coding-interview-question-bank) (~20 unique) | `data-scientist`, `machine-learning` |
+
+```bash
+cd backend
+npm run import:external-question-banks   # regenerate seeds + EXTERNAL_ATTRIBUTION.md
+# restart API → seeder upserts new ids
+npm run backfill:question-embeddings     # embed new rows for RAG
+```
+
+Attribution: `backend/src/modules/interview-prep/data/EXTERNAL_ATTRIBUTION.md`.
+
+### What the user sees
+
+1. Same Interview Prep screens — no separate “RAG” button.  
+2. Better question relevance to the JD (semantic match beyond hardcoded skill strings).  
+3. If RAG is off / not backfilled, create plan still works; questions come from the legacy selector.
 
 ---
 
@@ -473,6 +618,7 @@ resumate/
 |-----|---------|
 | [IDEA.md](./requiments/IDEA.md) | Product intent |
 | [INTERVIEW_PREP_FEATURE.md](./requiments/INTERVIEW_PREP_FEATURE.md) | Interview Prep contract |
+| [README § RAG](#interview-prep-rag-pgvector) | Question bank vector retrieval |
 | [JOB_TAILOR_FEATURES.md](./requiments/JOB_TAILOR_FEATURES.md) | Compatibility + cover letter |
 | [deployment/README.md](./deployment/README.md) | Deploy / local scripts |
 | [testing/README.md](./testing/README.md) | E2E harness |

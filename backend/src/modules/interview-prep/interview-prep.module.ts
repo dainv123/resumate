@@ -14,6 +14,7 @@ import { ImpactScoringService } from './services/impact-scoring.service';
 import { DailySchedulerService } from './services/daily-scheduler.service';
 import { QuestionBankSeederService } from './services/question-bank-seeder.service';
 import { QuestionSelectorService } from './services/question-selector.service';
+import { QuestionEmbeddingService } from './services/question-embedding.service';
 import { ReadinessService } from './services/readiness.service';
 import { SpacedRepetitionService } from './services/spaced-repetition.service';
 import { CheatSheetExportService } from './services/cheat-sheet-export.service';
@@ -42,6 +43,7 @@ import { JdUrlResolverService } from './services/jd-url-resolver.service';
     DailySchedulerService,
     QuestionBankSeederService,
     QuestionSelectorService,
+    QuestionEmbeddingService,
     ReadinessService,
     SpacedRepetitionService,
     CheatSheetExportService,

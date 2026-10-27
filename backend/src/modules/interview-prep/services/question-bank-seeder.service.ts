@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { QuestionBank } from '../entities/question-bank.entity';
 import { QUESTION_BANK_ENRICH_SOURCE } from '../constants/question-bank-enrich.constants';
+import { QUESTION_BANK_EXTERNAL_SEED_FILES } from '../constants/question-bank-external.constants';
 
 @Injectable()
 export class QuestionBankSeederService implements OnModuleInit {
@@ -20,6 +21,7 @@ export class QuestionBankSeederService implements OnModuleInit {
     await this.seedUpsertFiles([
       'question-bank-p2.seed.json',
       'question-bank-expansion.seed.json',
+      ...QUESTION_BANK_EXTERNAL_SEED_FILES,
     ]);
   }
 
