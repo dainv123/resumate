@@ -1,7 +1,7 @@
 # Dev stack. Prefer:
 #   docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
 # Template: env.dev.example → .env.dev
-# Backend entrypoint: wait Postgres → schema:sync → migration:run → nest
+# Backend entrypoint: wait Postgres → schema:sync (empty DB only) → migration:run → nest
 # Service env below hardcodes compose hosts so a root .env (RDS/resumate.click) cannot leak in.
 
 services:
@@ -47,8 +47,9 @@ services:
       DB_PORT: "5432"
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_DATABASE: ${DB_DATABASE:-resumate_dev}
-      DB_NAME: ${DB_NAME:-resumate_dev}
+      # Hardcode DB name so a polluted host shell (DB_NAME=...) cannot leak in
+      DB_DATABASE: resumate_dev
+      DB_NAME: resumate_dev
       DB_SSL: "false"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
@@ -68,7 +69,7 @@ services:
       AI_INTERVIEW_PREP_PROVIDER: ${AI_INTERVIEW_PREP_PROVIDER:-openrouter}
       AI_EMBEDDING_ENABLED: ${AI_EMBEDDING_ENABLED:-true}
       AI_EMBEDDING_PROVIDER: ${AI_EMBEDDING_PROVIDER:-google}
-      GOOGLE_EMBEDDING_MODEL: ${GOOGLE_EMBEDDING_MODEL:-text-embedding-004}
+      GOOGLE_EMBEDDING_MODEL: gemini-embedding-001
       AI_EMBEDDING_DIMENSIONS: ${AI_EMBEDDING_DIMENSIONS:-768}
       OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-openai/text-embedding-3-small}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-key}

@@ -376,10 +376,10 @@ npm run dev           # http://localhost:5005
 cp env.dev.example .env.dev   # once — fill secrets
 docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
 # Frontend :5000 · Backend :5001 · Postgres :5432 · Redis :6379
-# Backend boot: schema:sync → migration:run (pgvector embedding) → Nest
+# Backend boot: (schema:sync if empty DB) → migration:run → Nest
 ```
 
-Use **`.env.dev`** for localhost URLs/DB. Keep root **`.env`** for remote (RDS / resumate.click) — Nest loads `.env.dev` first. Host-only DB: `cd backend && npm run db:bootstrap`.
+Use **`.env.dev`** for localhost URLs/DB. Keep root **`.env`** for remote (RDS / resumate.click) — Nest loads `.env.dev` first. Host-only: `cd backend && npm run migration:run` (or `npm run db:bootstrap` on a fresh DB).
 
 Or: `./deployment/start-dev.sh`
 

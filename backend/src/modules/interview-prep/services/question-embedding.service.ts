@@ -6,7 +6,9 @@ import { QUESTION_VECTOR_CANDIDATE_LIMIT } from '../../ai/constants/embedding.co
 import { QuestionLevel } from '../constants/interview-prep.constants';
 import { QuestionBank } from '../entities/question-bank.entity';
 
-const EMBED_BATCH_SIZE = 32;
+/** Smaller batches + pause — Google free-tier RPM is tight for 950 rows. */
+const EMBED_BATCH_SIZE = 16;
+const EMBED_BATCH_PAUSE_MS = 1500;
 
 @Injectable()
 export class QuestionEmbeddingService {
@@ -136,6 +138,9 @@ export class QuestionEmbeddingService {
       this.logger.log(
         `Embedded ${done}/${pending.length} questions (model=${model})`,
       );
+      if (i + EMBED_BATCH_SIZE < pending.length) {
+        await new Promise((r) => setTimeout(r, EMBED_BATCH_PAUSE_MS));
+      }
     }
 
     return done;

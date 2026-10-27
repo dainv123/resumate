@@ -1311,8 +1311,8 @@ export class CvService {
     }
 
     // Get analysis and cover letter if CV has jobDescriptionId
-    let matchingAnalysis = null;
-    let coverLetter = null;
+    let matchingAnalysis: CvMatchingAnalysis | null = null;
+    let coverLetter: CvCoverLetter | null = null;
 
     if (cv.jobDescriptionId) {
       try {
@@ -1335,16 +1335,13 @@ export class CvService {
     }
 
     // Get tailored CVs for this CV
-    let tailoredCvs = [];
+    let tailoredCvs: Cv[] = [];
     try {
-      console.log('bbbb', cvId, userId);
       tailoredCvs = await this.cvRepository.find({
         where: { originalCvId: cvId, userId },
         relations: ['jobDescription'],
         order: { createdAt: 'DESC' },
       });
-
-      console.log('tailoredCvs', tailoredCvs);
     } catch (error) {
       this.logger.warn(
         `Failed to fetch tailored CVs for CV ${cvId}:`,

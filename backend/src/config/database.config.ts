@@ -3,12 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
-// Prefer .env.dev over .env for CLI (migration / schema:sync)
+// Fill gaps only — never override Docker/compose/shell env already set
+dotenv.config({ path: resolve(__dirname, '../../../.env.dev') });
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
-dotenv.config({
-  path: resolve(__dirname, '../../../.env.dev'),
-  override: true,
-});
 
 const configService = new ConfigService();
 

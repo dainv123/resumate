@@ -69,6 +69,7 @@ export class QuestionBankSeederService implements OnModuleInit {
     let inserted = 0;
     let updated = 0;
     for (const item of items) {
+      if (!item.id) continue;
       const exists = await this.questionBankRepository.findOne({
         where: { id: item.id },
       });

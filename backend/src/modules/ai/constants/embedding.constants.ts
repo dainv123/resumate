@@ -14,14 +14,13 @@ export const EmbeddingEnv = {
 } as const;
 
 export const EmbeddingDefaults = {
-  /** Free-tier friendly default */
+  /** Free-tier friendly default (text-embedding-004 shut down Jan 2026) */
   PROVIDER: EmbeddingProvider.Google,
-  GOOGLE_MODEL: 'text-embedding-004',
+  GOOGLE_MODEL: 'gemini-embedding-001',
   OPENROUTER_MODEL: 'openai/text-embedding-3-small',
   /**
-   * Default dims for Google text-embedding-004.
-   * OpenRouter path must use a 768-dim model OR set AI_EMBEDDING_DIMENSIONS
-   * and re-run migration to match.
+   * Keep 768 to match question_bank.embedding vector(768).
+   * gemini-embedding-001 defaults to 3072 — request outputDimensionality=768.
    */
   DIMENSIONS: 768,
   ENABLED: 'true',

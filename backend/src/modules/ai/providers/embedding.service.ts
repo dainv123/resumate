@@ -114,23 +114,41 @@ export class EmbeddingService {
 
   private async embedWithGoogle(texts: string[]): Promise<number[][]> {
     const modelName = this.getModel();
+    const dims = this.getDimensions();
     this.logger.log(
-      `[EMBED] google_call model=${modelName} batch=${texts.length}`,
+      `[EMBED] google_call model=${modelName} batch=${texts.length} dims=${dims}`,
     );
 
     const model = this.getGoogleClient().getGenerativeModel({
       model: modelName,
     });
 
-    // batchEmbedContents — free-tier friendly vs N round-trips
-    const result = await model.batchEmbedContents({
-      requests: texts.map((text) => ({
-        content: { role: 'user', parts: [{ text }] },
-        taskType: TaskType.RETRIEVAL_DOCUMENT,
-      })),
-    });
+    // batchEmbedContents — free-tier friendly vs N round-trips.
+    // outputDimensionality not in SDK 0.24 types but API accepts it (gemini-embedding-001).
+    const requests = texts.map((text) => ({
+      content: { role: 'user', parts: [{ text }] },
+      taskType: TaskType.RETRIEVAL_DOCUMENT,
+      outputDimensionality: dims,
+    })) as Parameters<typeof model.batchEmbedContents>[0]['requests'];
 
-    const embeddings = result.embeddings ?? [];
+    let result: Awaited<ReturnType<typeof model.batchEmbedContents>> | null =
+      null;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      try {
+        result = await model.batchEmbedContents({ requests });
+        break;
+      } catch (err: unknown) {
+        const status = (err as { status?: number })?.status;
+        if (status !== 429 || attempt === 5) throw err;
+        const waitMs = Math.min(60_000, 2000 * 2 ** attempt);
+        this.logger.warn(
+          `[EMBED] 429 rate limit — retry in ${waitMs}ms (attempt ${attempt + 1}/6)`,
+        );
+        await new Promise((r) => setTimeout(r, waitMs));
+      }
+    }
+
+    const embeddings = result?.embeddings ?? [];
     if (embeddings.length !== texts.length) {
       throw new Error(
         `Google embed batch size mismatch: got ${embeddings.length}, expected ${texts.length}`,
@@ -142,7 +160,21 @@ export class EmbeddingService {
       if (!values?.length) {
         throw new Error('Empty embedding from Google AI');
       }
-      return values;
+      // Truncate + L2-normalize if API ignored outputDimensionality (001 requires normalize when <3072)
+      return this.fitGoogleEmbedding(values, dims);
     });
+  }
+
+  /** Match DB vector size; L2-normalize truncated gemini-embedding-001 vectors. */
+  private fitGoogleEmbedding(values: number[], dims: number): number[] {
+    const sliced = values.length > dims ? values.slice(0, dims) : values;
+    if (sliced.length !== dims) {
+      throw new Error(
+        `Google embed dim ${sliced.length} != expected ${dims} (model=${this.getModel()})`,
+      );
+    }
+    const norm = Math.sqrt(sliced.reduce((sum, x) => sum + x * x, 0));
+    if (!norm) return sliced;
+    return sliced.map((x) => x / norm);
   }
 }

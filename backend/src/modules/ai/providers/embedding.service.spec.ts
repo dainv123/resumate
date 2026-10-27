@@ -15,7 +15,7 @@ describe('EmbeddingService', () => {
 
     expect(service.getProvider()).toBe('google');
     expect(service.getDimensions()).toBe(768);
-    expect(service.getModel()).toBe('text-embedding-004');
+    expect(service.getModel()).toBe('gemini-embedding-001');
   });
 
   it('canEmbed is true for google when GOOGLE_AI_API_KEY set', () => {
