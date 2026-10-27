@@ -245,10 +245,10 @@ function saveContent(content) {
   console.log(`✅ Generated: all-content.json`);
   
   // Generate markdown summary
-  const markdownPath = path.join(outputDir, 'content-summary.md');
+  const markdownPath = path.join(outputDir, 'CONTENT_SUMMARY.md');
   const markdown = generateMarkdownSummary(content);
   fs.writeFileSync(markdownPath, markdown);
-  console.log(`✅ Generated: content-summary.md`);
+  console.log(`✅ Generated: CONTENT_SUMMARY.md`);
 }
 
 // Generate markdown summary
