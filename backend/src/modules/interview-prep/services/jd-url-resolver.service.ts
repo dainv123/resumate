@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { load } from 'cheerio';
 import { JobDescriptionSourceType } from '../constants/interview-prep.constants';
 import { ResolvedJobDescription } from '../domain/jd-resolver.types';
+import { assertPublicHttpUrl } from './safe-outbound-url';
 
 const URL_PATTERN = /^https?:\/\//i;
 
@@ -24,14 +26,17 @@ export class JdUrlResolverService {
     const sourceType = this.detectSourceType(parsed);
     const resolved = await this.resolveBySource(sourceUrl, parsed, sourceType);
     if (!resolved.description.trim()) {
-      throw new BadRequestException('Could not extract job description from URL');
+      throw new BadRequestException(
+        'Could not extract job description from URL',
+      );
     }
     return resolved;
   }
 
   detectSourceType(url: URL): JobDescriptionSourceType {
     const host = url.hostname.toLowerCase();
-    if (host.includes('greenhouse.io')) return JobDescriptionSourceType.GREENHOUSE;
+    if (host.includes('greenhouse.io'))
+      return JobDescriptionSourceType.GREENHOUSE;
     if (host.includes('lever.co')) return JobDescriptionSourceType.LEVER;
     if (host.includes('itviec.com')) return JobDescriptionSourceType.ITVIEC;
     if (host.includes('topcv.vn')) return JobDescriptionSourceType.TOPCV;
@@ -65,7 +70,7 @@ export class JdUrlResolverService {
     if (match) {
       const [, board, jobId] = match;
       const apiUrl = `https://boards-api.greenhouse.io/v1/boards/${board}/jobs/${jobId}`;
-      const response = await fetch(apiUrl);
+      const response = await this.safeFetch(apiUrl);
       if (response.ok) {
         const data = (await response.json()) as {
           title?: string;
@@ -82,8 +87,12 @@ export class JdUrlResolverService {
           description: this.stripHtmlTags(data.content ?? ''),
         };
       }
+      await response.body?.cancel();
     }
-    return this.resolveGenericHtml(sourceUrl, JobDescriptionSourceType.GREENHOUSE);
+    return this.resolveGenericHtml(
+      sourceUrl,
+      JobDescriptionSourceType.GREENHOUSE,
+    );
   }
 
   private async resolveLever(
@@ -95,7 +104,7 @@ export class JdUrlResolverService {
       const company = parts[0];
       const postingId = parts[1];
       const apiUrl = `https://api.lever.co/v0/postings/${company}/${postingId}`;
-      const response = await fetch(apiUrl);
+      const response = await this.safeFetch(apiUrl);
       if (response.ok) {
         const data = (await response.json()) as {
           text?: string;
@@ -113,13 +122,16 @@ export class JdUrlResolverService {
             data.descriptionPlain ?? this.stripHtmlTags(data.text ?? ''),
         };
       }
+      await response.body?.cancel();
     }
     return this.resolveGenericHtml(sourceUrl, JobDescriptionSourceType.LEVER);
   }
 
-  private async resolveItviec(sourceUrl: string): Promise<ResolvedJobDescription> {
+  private async resolveItviec(
+    sourceUrl: string,
+  ): Promise<ResolvedJobDescription> {
     const html = await this.fetchHtml(sourceUrl);
-    const $ = await this.loadHtml(html);
+    const $ = this.loadHtml(html);
     const title =
       $('h1').first().text().trim() ||
       $('meta[property="og:title"]').attr('content')?.trim() ||
@@ -147,7 +159,7 @@ export class JdUrlResolverService {
     sourceType: JobDescriptionSourceType,
   ): Promise<ResolvedJobDescription> {
     const html = await this.fetchHtml(sourceUrl);
-    const $ = await this.loadHtml(html);
+    const $ = this.loadHtml(html);
     const title =
       $('meta[property="og:title"]').attr('content')?.trim() ||
       $('h1').first().text().trim() ||
@@ -171,30 +183,67 @@ export class JdUrlResolverService {
   }
 
   private async fetchHtml(url: string): Promise<string> {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'ResumateBot/1.0 (+https://resumate.app)',
-        Accept: 'text/html,application/xhtml+xml',
-      },
-    });
+    const response = await this.safeFetch(url);
     if (!response.ok) {
-      this.logger.warn(`JD fetch failed ${response.status} for ${url}`);
+      this.logger.warn(`JD fetch failed ${response.status}`);
       throw new BadRequestException('Could not fetch job posting URL');
     }
     return response.text();
   }
 
-  private extractMainText($: Awaited<ReturnType<JdUrlResolverService['loadHtml']>>): string {
+  /** Fetch with manual redirects so each hop is checked for private targets. */
+  private async safeFetch(inputUrl: string, hops = 0): Promise<Response> {
+    if (hops > 3) {
+      throw new BadRequestException('Could not fetch job posting URL');
+    }
+
+    const safeUrl = await assertPublicHttpUrl(inputUrl);
+    let response: Response;
+    try {
+      response = await fetch(safeUrl.toString(), {
+        redirect: 'manual',
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          'User-Agent': 'ResumateBot/1.0 (+https://resumate.app)',
+          Accept: 'text/html,application/xhtml+xml,application/json',
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`JD fetch failed: ${(err as Error).message}`);
+      throw new BadRequestException('Could not fetch job posting URL');
+    }
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      await response.body?.cancel();
+      if (!location) {
+        throw new BadRequestException('Could not fetch job posting URL');
+      }
+      let next: string;
+      try {
+        next = new URL(location, safeUrl).toString();
+      } catch {
+        throw new BadRequestException('Could not fetch job posting URL');
+      }
+      return this.safeFetch(next, hops + 1);
+    }
+
+    return response;
+  }
+
+  private extractMainText($: ReturnType<typeof load>): string {
     $('script, style, nav, footer, header').remove();
     return $('body').text().replace(/\s+/g, ' ').trim().slice(0, 12000);
   }
 
   private stripHtmlTags(html: string): string {
-    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    return html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
-  private async loadHtml(html: string) {
-    const { load } = await import('cheerio');
+  private loadHtml(html: string) {
     return load(html);
   }
 }
