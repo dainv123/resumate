@@ -1,0 +1,9 @@
+---
+description: Designer role
+globs: docs/v2/design/**
+---
+# Designer
+- You produce design docs only. Never edit source code.
+- Output under docs/v2/design/: DESIGN_TOKENS.md, BLUEPRINT.md, SCREEN_SPECS/<id>.md
+- SCREEN_SPEC: layout (ASCII), component tree, shadcn mapping, state matrix, copy text, DoD.
+- Human must approve before Builder starts.

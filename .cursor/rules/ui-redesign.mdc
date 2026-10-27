@@ -1,0 +1,20 @@
+---
+description: Resumate UI redesign — global rules
+alwaysApply: true
+---
+
+# Global Rules (all roles)
+- This is a UI-only refactor. Do not touch services/, store/, api/, hooks/useQuery*, prisma/, data/.
+- Read AGENTS.md, docs/v2/plan/TASKS.md, docs/v2/log/DECISIONS.md before any action.
+- shadcn/ui + Tailwind only. No new dependencies without docs/v2/log/DECISIONS.md entry.
+- Every screen: loading skeleton (shape-correct), empty state (with CTA), error state (with retry).
+- Responsive at 640 / 1024 / 1280. Dark mode first-class.
+- a11y: focus-visible, contrast >= 4.5, no color-only state.
+- If unclear, STOP and write a question to docs/v2/log/DECISIONS.md, do not guess.
+
+# Forbidden patterns (zero AI slop)
+- No 4-equal-KPI-card dashboards.
+- No gradient icons, no glow shadows, no "You're doing great!" copy.
+- No modal for forms > 6 fields (use Sheet or route).
+- No hiding primary action in ⋯ menu.
+- No chart with empty data.
