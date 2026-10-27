@@ -14,6 +14,7 @@ import {
   Calendar,
   Tag,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -23,6 +24,7 @@ interface CVCardProps {
   onSelect?: () => void;
   onToggleSelect?: () => void;
   onEdit?: () => void;
+  onRename?: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
   onTailor?: () => void;
@@ -36,6 +38,7 @@ export default function CVCard({
   onSelect,
   onToggleSelect,
   onEdit,
+  onRename,
   onDelete,
   onDuplicate,
   onTailor,
@@ -202,6 +205,17 @@ export default function CVCard({
                 <span>{t("cv.edit")}</span>
               </Button>
 
+              {onRename ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRename()}
+                  className="flex items-center space-x-1">
+                  <Pencil className="h-4 w-4" />
+                  <span>{t("cv.rename")}</span>
+                </Button>
+              ) : null}
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -276,6 +290,16 @@ export default function CVCard({
               <Edit className="h-4 w-4" />
               <span>{t("cv.edit")}</span>
             </Button>
+            {onRename ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRename()}
+                className="flex items-center space-x-1">
+                <Pencil className="h-4 w-4" />
+                <span>{t("cv.rename")}</span>
+              </Button>
+            ) : null}
             <Button
               variant="ghost"
               size="sm"

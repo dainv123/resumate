@@ -101,6 +101,66 @@ export class CvController {
     });
   }
 
+  /** Static paths must be registered before @Get(':id') */
+  @Get('job-descriptions/:id')
+  async getJobDescription(
+    @Param('id') id: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.cvService.getJobDescriptionById(id, userId);
+  }
+
+  @Get('analyses')
+  async getUserAnalyses(@GetUser('id') userId: string) {
+    return this.cvService.getUserAnalyses(userId);
+  }
+
+  @Get('analyses/:cvId/job-description/:jobDescriptionId')
+  async getAnalysisByJobDescription(
+    @Param('cvId') cvId: string,
+    @Param('jobDescriptionId') jobDescriptionId: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.cvService.getAnalysisByJobDescription(
+      jobDescriptionId,
+      cvId,
+      userId,
+    );
+  }
+
+  @Get('cover-letters')
+  async getUserCoverLetters(@GetUser('id') userId: string) {
+    return this.cvService.getUserCoverLetters(userId);
+  }
+
+  @Get('cover-letters/:cvId/job-description/:jobDescriptionId')
+  async getCoverLetterByJobDescription(
+    @Param('cvId') cvId: string,
+    @Param('jobDescriptionId') jobDescriptionId: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.cvService.getCoverLetterByJobDescription(
+      jobDescriptionId,
+      cvId,
+      userId,
+    );
+  }
+
+  @Get('templates/available')
+  async getAvailableTemplates(@GetUser() user: User) {
+    return this.cvService.getAvailableTemplates();
+  }
+
+  @Get('admin/cleanup/stats')
+  async getCleanupStats(@GetUser() user: User) {
+    return this.cvService.getCleanupStats();
+  }
+
+  @Post('admin/cleanup/manual')
+  async triggerManualCleanup(@GetUser() user: User) {
+    return this.cvService.triggerManualCleanup();
+  }
+
   @Get(':id')
   @TrackActivity(ActivityType.CV_VIEWED, {
     getResourceId: (_result, context) => context.params.id,
@@ -442,80 +502,6 @@ export class CvController {
         error: error.message,
       });
     }
-  }
-
-  /**
-   * Get all analyses for user
-   */
-  @Get('analyses')
-  async getUserAnalyses(@GetUser('id') userId: string) {
-    return this.cvService.getUserAnalyses(userId);
-  }
-
-  /**
-   * Get analysis by JobDescription ID
-   */
-  @Get('analyses/:cvId/job-description/:jobDescriptionId')
-  async getAnalysisByJobDescription(
-    @Param('cvId') cvId: string,
-    @Param('jobDescriptionId') jobDescriptionId: string,
-    @GetUser('id') userId: string,
-  ) {
-    return this.cvService.getAnalysisByJobDescription(
-      jobDescriptionId,
-      cvId,
-      userId,
-    );
-  }
-
-  /**
-   * Get all cover letters for user
-   */
-  @Get('cover-letters')
-  async getUserCoverLetters(@GetUser('id') userId: string) {
-    return this.cvService.getUserCoverLetters(userId);
-  }
-
-  /**
-   * Get cover letter by JobDescription ID
-   */
-  @Get('cover-letters/:cvId/job-description/:jobDescriptionId')
-  async getCoverLetterByJobDescription(
-    @Param('cvId') cvId: string,
-    @Param('jobDescriptionId') jobDescriptionId: string,
-    @GetUser('id') userId: string,
-  ) {
-    return this.cvService.getCoverLetterByJobDescription(
-      jobDescriptionId,
-      cvId,
-      userId,
-    );
-  }
-
-  /**
-   * Get available templates
-   */
-  @Get('templates/available')
-  async getAvailableTemplates(@GetUser() user: User) {
-    return this.cvService.getAvailableTemplates();
-  }
-
-  /**
-   * Get cleanup statistics (admin only)
-   */
-  @Get('admin/cleanup/stats')
-  async getCleanupStats(@GetUser() user: User) {
-    // TODO: Add admin role check
-    return this.cvService.getCleanupStats();
-  }
-
-  /**
-   * Trigger manual cleanup (admin only)
-   */
-  @Post('admin/cleanup/manual')
-  async triggerManualCleanup(@GetUser() user: User) {
-    // TODO: Add admin role check
-    return this.cvService.triggerManualCleanup();
   }
 
   /**

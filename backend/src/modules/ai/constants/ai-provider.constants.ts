@@ -10,6 +10,9 @@ export const OPENROUTER_API_BASE_URL = 'https://openrouter.ai/api/v1';
 
 export const DEFAULT_OPENROUTER_CV_MODEL = 'google/gemini-2.5-flash';
 
+/** Google AI Studio direct calls — gemini-2.0-flash shut down (404). Prefer 2.5 (stable free-tier). */
+export const DEFAULT_GOOGLE_AI_MODEL = 'gemini-2.5-flash';
+
 export const OPENROUTER_MAX_TOKENS = 4096;
 
 /** @deprecated use OPENROUTER_MAX_TOKENS */

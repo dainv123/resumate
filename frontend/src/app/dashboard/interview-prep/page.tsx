@@ -44,12 +44,10 @@ export default function InterviewPrepListPage() {
     queryFn: interviewPrepApi.listPlans,
   });
 
-  const masterCvs = cvs.filter((c) => !c.isTailored);
-
   useEffect(() => {
     if (cvsLoading || plansLoading) return;
-    setShowWizard(shouldShowPrepWizard(plans.length, masterCvs.length));
-  }, [cvsLoading, plansLoading, plans.length, masterCvs.length]);
+    setShowWizard(shouldShowPrepWizard(plans.length, cvs.length));
+  }, [cvsLoading, plansLoading, plans.length, cvs.length]);
 
   const finishOnboarding = () => {
     markPrepOnboardingDone();
@@ -98,7 +96,7 @@ export default function InterviewPrepListPage() {
     <InterviewPrepGate>
       {showWizard && (
         <InterviewPrepOnboardingWizard
-          cvs={masterCvs}
+          cvs={cvs}
           loading={createMutation.isPending}
           onSubmit={handleCreate}
           onSkip={finishOnboarding}
@@ -115,7 +113,7 @@ export default function InterviewPrepListPage() {
           <p className="text-main mt-1">{t("interviewPrep.subtitle")}</p>
         </div>
 
-        {!cvsLoading && masterCvs.length === 0 && (
+        {!cvsLoading && cvs.length === 0 && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-amber-900">
@@ -134,15 +132,15 @@ export default function InterviewPrepListPage() {
           </div>
         )}
 
-        {!showWizard && masterCvs.length > 0 && (
+        {!showWizard && cvs.length > 0 && (
           <CreatePrepForm
-            cvs={masterCvs}
+            cvs={cvs}
             loading={createMutation.isPending}
             onSubmit={handleCreate}
           />
         )}
 
-        {!showWizard && masterCvs.length > 0 && plans.length === 0 && (
+        {!showWizard && cvs.length > 0 && plans.length === 0 && (
           <button
             type="button"
             onClick={() => setShowWizard(true)}

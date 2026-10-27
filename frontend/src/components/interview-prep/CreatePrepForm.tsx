@@ -1,12 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { CV } from "@/lib/cv";
 import { interviewPrepApi, QuestionPack } from "@/lib/interview-prep";
 import { consumeInterviewPrepPrefill } from "@/lib/interview-prep-onboarding";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
-import { GraduationCap } from "lucide-react";
+import { ExternalLink, GraduationCap } from "lucide-react";
+
+function cvOptionLabel(cv: CV, tailoredLabel: string) {
+  return cv.isTailored
+    ? `${cv.originalFileName} (${tailoredLabel})`
+    : cv.originalFileName;
+}
 
 const CAPACITY_OPTIONS = [30, 60, 90] as const;
 
@@ -48,8 +55,7 @@ export default function CreatePrepForm({
 
   useEffect(() => {
     if (!cvId && cvs.length > 0) {
-      const master = cvs.find((c) => !c.isTailored) ?? cvs[0];
-      setCvId(master.id);
+      setCvId(cvs[0].id);
     }
   }, [cvs, cvId]);
 
@@ -89,9 +95,21 @@ export default function CreatePrepForm({
       <p className="text-sm text-main">{t("interviewPrep.create.subtitle")}</p>
 
       <div>
-        <label className="block text-sm font-medium text-dark mb-1">
-          {t("interviewPrep.form.cv")}
-        </label>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <label className="block text-sm font-medium text-dark">
+            {t("interviewPrep.form.cv")}
+          </label>
+          {cvId ? (
+            <Link
+              href={`/dashboard/cv/${cvId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-medium text-blue hover:underline">
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t("interviewPrep.form.viewCv")}
+            </Link>
+          ) : null}
+        </div>
         <select
           value={cvId}
           onChange={(e) => setCvId(e.target.value)}
@@ -100,7 +118,7 @@ export default function CreatePrepForm({
           <option value="">{t("interviewPrep.form.selectCv")}</option>
           {cvs.map((cv) => (
             <option key={cv.id} value={cv.id}>
-              {cv.parsedData.contact?.name || cv.originalFileName}
+              {cvOptionLabel(cv, t("interviewPrep.form.tailoredCv"))}
             </option>
           ))}
         </select>

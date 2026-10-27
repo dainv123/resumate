@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Calendar,
+  ExternalLink,
   FileText,
   GraduationCap,
   Sparkles,
@@ -19,6 +20,12 @@ import {
 import { CreatePrepFormValues } from "@/components/interview-prep/CreatePrepForm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Button from "@/components/ui/Button";
+
+function cvOptionLabel(cv: CV, tailoredLabel: string) {
+  return cv.isTailored
+    ? `${cv.originalFileName} (${tailoredLabel})`
+    : cv.originalFileName;
+}
 
 const CAPACITY_OPTIONS = [30, 60, 90] as const;
 const STEP_COUNT = 4;
@@ -54,8 +61,7 @@ export default function InterviewPrepOnboardingWizard({
 
   useEffect(() => {
     if (!cvId && cvs.length > 0) {
-      const master = cvs.find((c) => !c.isTailored) ?? cvs[0];
-      setCvId(master.id);
+      setCvId(cvs[0].id);
     }
   }, [cvs, cvId]);
 
@@ -155,16 +161,28 @@ export default function InterviewPrepOnboardingWizard({
                   </Link>
                 </div>
               ) : (
-                <select
-                  value={cvId}
-                  onChange={(e) => setCvId(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                  {cvs.map((cv) => (
-                    <option key={cv.id} value={cv.id}>
-                      {cv.parsedData?.contact?.name || cv.originalFileName}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-2">
+                  <select
+                    value={cvId}
+                    onChange={(e) => setCvId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    {cvs.map((cv) => (
+                      <option key={cv.id} value={cv.id}>
+                        {cvOptionLabel(cv, t("interviewPrep.form.tailoredCv"))}
+                      </option>
+                    ))}
+                  </select>
+                  {cvId ? (
+                    <Link
+                      href={`/dashboard/cv/${cvId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-blue hover:underline">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      {t("interviewPrep.form.viewCv")}
+                    </Link>
+                  ) : null}
+                </div>
               )}
             </>
           )}
@@ -231,10 +249,21 @@ export default function InterviewPrepOnboardingWizard({
                 {t("interviewPrep.onboarding.schedule")}
               </p>
               <div className="rounded-lg bg-gray-50 border border-gray-100 p-3 text-xs text-main space-y-1 mb-4">
-                <p>
+                <p className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-dark">CV:</span>{" "}
-                  {selectedCv?.parsedData?.contact?.name ||
-                    selectedCv?.originalFileName}
+                  <span className="break-all">
+                    {selectedCv?.originalFileName}
+                  </span>
+                  {cvId ? (
+                    <Link
+                      href={`/dashboard/cv/${cvId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-blue hover:underline">
+                      <ExternalLink className="h-3 w-3" />
+                      {t("interviewPrep.form.viewCv")}
+                    </Link>
+                  ) : null}
                 </p>
                 <p className="line-clamp-2">
                   <span className="font-medium text-dark">JD:</span>{" "}

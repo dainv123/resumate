@@ -7,7 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cvApi } from "@/lib/cv";
 import Button from "@/components/ui/Button";
-import { Edit, Share2, Copy, Download, Settings, Trash2 } from "lucide-react";
+import { Edit, Share2, Copy, Download, Settings, Trash2, Pencil } from "lucide-react";
 import { TemplateConfig } from "@/types/cv.types";
 
 interface CVActionsProps {
@@ -17,6 +17,7 @@ interface CVActionsProps {
   onShowJobDescription?: () => void;
   onShowMatchingAnalysis?: () => void;
   onShowCoverLetter?: () => void;
+  onRename?: () => void;
   onExport: (
     format: "pdf" | "word" | "ats",
     template?: string,
@@ -31,6 +32,7 @@ export default function CVActions({
   onShowJobDescription,
   onShowMatchingAnalysis,
   onShowCoverLetter,
+  onRename,
   onExport,
 }: CVActionsProps) {
   const router = useRouter();
@@ -70,6 +72,16 @@ export default function CVActions({
           <Edit className="h-4 w-4" />
           <span>{t("cv.edit")}</span>
         </Button>
+
+        {onRename ? (
+          <Button
+            variant="outline"
+            onClick={onRename}
+            className="w-full flex items-center justify-center space-x-2">
+            <Pencil className="h-4 w-4" />
+            <span>{t("cv.rename")}</span>
+          </Button>
+        ) : null}
 
         {/* Tailor - Always available */}
         <Button

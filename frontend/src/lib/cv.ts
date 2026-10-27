@@ -106,6 +106,7 @@ export interface CompatibilityAnalysis {
 
 export interface CvMatchingAnalysis {
   id: string;
+  cvId?: string;
   jobDescriptionId: string;
   userId: string;
   jobDescriptionSnapshot: {
@@ -128,10 +129,12 @@ export interface CvMatchingAnalysis {
   createdAt: string;
   updatedAt: string;
   jobDescription?: JobDescription;
+  cv?: Pick<CV, 'id' | 'originalFileName' | 'parsedData'>;
 }
 
 export interface CvCoverLetter {
   id: string;
+  cvId?: string;
   jobDescriptionId: string;
   userId: string;
   jobDescriptionSnapshot: {
@@ -155,6 +158,7 @@ export interface CvCoverLetter {
   createdAt: string;
   updatedAt: string;
   jobDescription?: JobDescription;
+  cv?: Pick<CV, 'id' | 'originalFileName' | 'parsedData'>;
 }
 
 export const cvApi = {
@@ -306,6 +310,11 @@ export const cvApi = {
 
   updateCvWithQuickBuild: async (id: string, data: QuickBuildCvData): Promise<CV> => {
     const response = await api.put(`/cv/${id}/quick-build`, data);
+    return response.data;
+  },
+
+  getJobDescription: async (id: string): Promise<JobDescription> => {
+    const response = await api.get(`/cv/job-descriptions/${id}`);
     return response.data;
   },
 

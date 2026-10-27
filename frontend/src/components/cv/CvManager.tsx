@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCvsPaginated, useCvsInfinite } from "@/hooks/useCvs";
 import { cvApi, PaginatedResult, CV } from "@/lib/cv";
 import CVCard from "./CVCard";
+import RenameCvModal from "./RenameCvModal";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/contexts/ToastContext";
 import { Search, SortAsc, SortDesc, Grid, List, Trash2 } from "lucide-react";
@@ -39,6 +40,7 @@ interface CvListContentProps {
   onBulkDelete: (cvIds: string[]) => Promise<void>;
   isBulkDeleting: boolean;
   onEditCv?: (cvId: string) => void;
+  onRenameCv?: (cv: CV) => void;
   onDeleteCv?: (cvId: string) => void;
   onDuplicateCv?: (cvId: string) => void;
   onTailorCv?: (cvId: string) => void;
@@ -64,6 +66,7 @@ function CvListContent({
   onBulkDelete,
   isBulkDeleting,
   onEditCv,
+  onRenameCv,
   onDeleteCv,
   onDuplicateCv,
   onTailorCv,
@@ -245,6 +248,7 @@ function CvListContent({
               onToggleSelect={() => onToggleSelect(cv.id)}
               onSelect={() => onSelectCv?.(cv)}
               onEdit={() => onEditCv?.(cv.id)}
+              onRename={() => onRenameCv?.(cv)}
               onDelete={() => onDeleteCv?.(cv.id)}
               onDuplicate={() => onDuplicateCv?.(cv.id)}
               onTailor={() => onTailorCv?.(cv.id)}
@@ -361,6 +365,7 @@ export default function CvManager({
   const [selectedCv, setSelectedCv] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [renamingCv, setRenamingCv] = useState<CV | null>(null);
 
   React.useEffect(() => {
     if (externalSearch !== undefined) setSearch(externalSearch);
@@ -416,6 +421,19 @@ export default function CvManager({
 
   const handleEditCv = (cvId: string) => {
     router.push(`/dashboard/cv/${cvId}/edit`);
+  };
+
+  const handleRenameCv = async (name: string) => {
+    if (!renamingCv) return;
+    try {
+      await cvApi.updateCv(renamingCv.id, { originalFileName: name });
+      invalidateCvs();
+      showSuccess(t("cv.renameSuccess"));
+    } catch (error) {
+      console.error("Rename CV failed:", error);
+      showError(t("cv.renameFailed"));
+      throw error;
+    }
   };
 
   const handleDeleteCv = async (cvId: string) => {
@@ -605,10 +623,18 @@ export default function CvManager({
         onBulkDelete={handleBulkDelete}
         isBulkDeleting={isBulkDeleting}
         onEditCv={handleEditCv}
+        onRenameCv={setRenamingCv}
         onDeleteCv={handleDeleteCv}
         onDuplicateCv={handleDuplicateCv}
         onTailorCv={handleTailorCv}
         onExportCv={handleExportCv}
+      />
+
+      <RenameCvModal
+        isOpen={!!renamingCv}
+        currentName={renamingCv?.originalFileName || ""}
+        onClose={() => setRenamingCv(null)}
+        onSave={handleRenameCv}
       />
     </div>
   );

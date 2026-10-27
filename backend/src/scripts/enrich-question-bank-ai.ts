@@ -18,6 +18,7 @@ import {
   QUESTION_BANK_SEED_FILES,
   QUESTION_BANK_TEMPLATE_RUBRIC_EXCELLENT,
 } from '../modules/interview-prep/constants/question-bank-enrich.constants';
+import { DEFAULT_GOOGLE_AI_MODEL } from 'src/modules/ai/constants/ai-provider.constants';
 
 type QuestionSeed = {
   id: string;
@@ -132,7 +133,7 @@ async function main() {
     process.exit(1);
   }
 
-  const modelName = process.env.GOOGLE_AI_MODEL || 'gemini-2.0-flash';
+  const modelName = process.env.GOOGLE_AI_MODEL || DEFAULT_GOOGLE_AI_MODEL;
   const model = apiKey
     ? new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: modelName })
     : null;
@@ -140,7 +141,11 @@ async function main() {
   const dataDir = join(__dirname, '..', 'modules', 'interview-prep', 'data');
   const seedFiles = file ? [file] : [...QUESTION_BANK_SEED_FILES];
 
-  const pending: Array<{ file: string; question: QuestionSeed; index: number }> = [];
+  const pending: Array<{
+    file: string;
+    question: QuestionSeed;
+    index: number;
+  }> = [];
 
   for (const filename of seedFiles) {
     const path = join(dataDir, filename);

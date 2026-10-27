@@ -17,6 +17,7 @@ import {
 import {
   AiCvParseProvider,
   AiCvParseProviderValue,
+  DEFAULT_GOOGLE_AI_MODEL,
 } from '../constants/ai-provider.constants';
 import { OpenRouterService } from './openrouter.service';
 
@@ -39,7 +40,8 @@ export class GoogleAIService {
   ) {
     const apiKey = this.configService.get<string>('GOOGLE_AI_API_KEY');
     const modelName =
-      this.configService.get<string>('GOOGLE_AI_MODEL') || 'gemini-2.0-flash';
+      this.configService.get<string>('GOOGLE_AI_MODEL') ||
+      DEFAULT_GOOGLE_AI_MODEL;
 
     if (!apiKey) {
       throw new Error('Google AI API key is not configured');

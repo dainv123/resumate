@@ -793,9 +793,7 @@ export class InterviewPrepService {
       jobDescription: jd
         ? this.mapJobDescriptionSummary(jd, true)
         : undefined,
-      cvName: linkedCv
-        ? linkedCv.parsedData?.contact?.name ?? linkedCv.originalFileName
-        : undefined,
+      cvName: linkedCv?.originalFileName,
       interviewDate: plan.interviewDate,
       dailyCapacityMinutes: plan.dailyCapacityMinutes,
       processMap: plan.processMap,
@@ -849,9 +847,7 @@ export class InterviewPrepService {
       jobDescription: plan.jobDescription
         ? this.mapJobDescriptionSummary(plan.jobDescription)
         : undefined,
-      cvName: plan.cv
-        ? plan.cv.parsedData?.contact?.name ?? plan.cv.originalFileName
-        : undefined,
+      cvName: plan.cv?.originalFileName,
     };
   }
 

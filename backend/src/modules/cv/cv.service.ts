@@ -701,7 +701,7 @@ export class CvService {
       // Create JobDescription
       const jobDesc = await this.jobDescriptionService.createJobDescription(
         userId,
-        'Job Description',
+        this.deriveJobTitle(jobDescription),
         jobDescription,
       );
 
@@ -783,6 +783,27 @@ export class CvService {
   }
 
   /**
+   * Title for paste-created JDs: first short line if it looks like a role name,
+   * otherwise a stable placeholder (never store raw JD blob as title).
+   */
+  private deriveJobTitle(description: string): string {
+    const fallback = 'Job Description';
+    const line = description
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find((l) => l.length >= 3 && l.length <= 100);
+    if (!line) return fallback;
+    if (
+      /^(about the job|job description|we are looking|responsibilities|requirements|about us)\b/i.test(
+        line,
+      )
+    ) {
+      return fallback;
+    }
+    return line;
+  }
+
+  /**
    * Find or create JobDescription based on content
    */
   private async findOrCreateJobDescription(
@@ -804,7 +825,7 @@ export class CvService {
     // Create new JobDescription
     return this.jobDescriptionService.createJobDescription(
       userId,
-      'Job Description',
+      this.deriveJobTitle(jobDescription),
       jobDescription,
     );
   }
@@ -877,32 +898,19 @@ export class CvService {
       (language as Language) || 'en',
     );
 
-    // TODO: Storage Strategy for Analysis Records
-    // Current Issue: Analysis is tied to (CV, JD, User) tuple
-    // Problem: When tailoring CV, new CV created but analysis not auto-generated
-    // Result: CV detail page shows "No analysis available" when opening tailored CV
-    //
-    // Solution Options (to be implemented):
-    // 1. Auto-create analysis when tailorCv() is called
-    // 2. Generate on-demand when getCvWithRelatedData() is called
-    // 3. Store analysis differently (decoupled from CV)
-    //
-    // For now: Skip saving analysis - will implement comprehensive storage strategy later
-
-    // COMMENTED OUT - See TODO above
-    // const analysisRecord = this.matchingAnalysisRepository.create({
-    //   cvId,
-    //   jobDescriptionId: jobDesc.id,
-    //   userId,
-    //   jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
-    //   score: analysis.score,
-    //   matchedSkills: analysis.matchedSkills,
-    //   missingSkills: analysis.missingSkills,
-    //   suggestions: analysis.suggestions,
-    //   strengths: analysis.strengths,
-    //   isSnapshot: false,
-    // });
-    // await this.matchingAnalysisRepository.save(analysisRecord);
+    const analysisRecord = this.matchingAnalysisRepository.create({
+      cvId,
+      jobDescriptionId: jobDesc.id,
+      userId,
+      jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
+      score: analysis.score,
+      matchedSkills: analysis.matchedSkills,
+      missingSkills: analysis.missingSkills,
+      suggestions: analysis.suggestions,
+      strengths: analysis.strengths,
+      isSnapshot: false,
+    });
+    await this.matchingAnalysisRepository.save(analysisRecord);
 
     return {
       ...analysis,
@@ -952,29 +960,16 @@ export class CvService {
       (language as Language) || 'en',
     );
 
-    // TODO: Storage Strategy for Cover Letter Records
-    // Current Issue: Cover letter is tied to (CV, JD, User) tuple
-    // Problem: When tailoring CV, new CV created but cover letter not auto-generated
-    // Result: CV detail page shows "No cover letter available" when opening tailored CV
-    //
-    // Solution Options (to be implemented):
-    // 1. Auto-create cover letter when tailorCv() is called
-    // 2. Generate on-demand when getCvWithRelatedData() is called
-    // 3. Store cover letter differently (decoupled from CV)
-    //
-    // For now: Skip saving cover letter - will implement comprehensive storage strategy later
-
-    // COMMENTED OUT - See TODO above
-    // const coverLetterRecord = this.coverLetterRepository.create({
-    //   cvId,
-    //   jobDescriptionId: jobDesc.id,
-    //   userId,
-    //   jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
-    //   content: coverLetter.coverLetter,
-    //   wordCount: coverLetter.coverLetter.split(' ').length,
-    //   isSnapshot: false,
-    // });
-    // await this.coverLetterRepository.save(coverLetterRecord);
+    const coverLetterRecord = this.coverLetterRepository.create({
+      cvId,
+      jobDescriptionId: jobDesc.id,
+      userId,
+      jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
+      content: coverLetter.coverLetter,
+      wordCount: coverLetter.coverLetter.split(/\s+/).filter(Boolean).length,
+      isSnapshot: false,
+    });
+    await this.coverLetterRepository.save(coverLetterRecord);
 
     return {
       coverLetter: coverLetter.coverLetter,
@@ -1278,10 +1273,17 @@ export class CvService {
   /**
    * Get all analyses for a user
    */
+  async getJobDescriptionById(
+    id: string,
+    userId: string,
+  ): Promise<JobDescription> {
+    return this.jobDescriptionService.getJobDescriptionById(id, userId);
+  }
+
   async getUserAnalyses(userId: string): Promise<CvMatchingAnalysis[]> {
     return this.matchingAnalysisRepository.find({
       where: { userId },
-      relations: ['jobDescription'],
+      relations: ['jobDescription', 'cv'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -1292,7 +1294,7 @@ export class CvService {
   async getUserCoverLetters(userId: string): Promise<CvCoverLetter[]> {
     return this.coverLetterRepository.find({
       where: { userId },
-      relations: ['jobDescription'],
+      relations: ['jobDescription', 'cv'],
       order: { createdAt: 'DESC' },
     });
   }

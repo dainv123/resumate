@@ -15,6 +15,10 @@ export class CreateCvDto {
 
 export class UpdateCvDto {
   @IsOptional()
+  @IsString()
+  originalFileName?: string;
+
+  @IsOptional()
   parsedData?: CVData;
 
   @IsOptional()

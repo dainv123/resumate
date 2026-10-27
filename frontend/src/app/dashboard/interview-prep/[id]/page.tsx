@@ -247,6 +247,7 @@ export default function InterviewPrepDetailPage() {
           <PrepPlanHero
             jobDescription={plan.jobDescription}
             cvName={plan.cvName}
+            cvId={plan.cvId}
             interviewDate={plan.interviewDate}
             readinessScore={plan.readinessScore ?? 0}
             isReady={plan.isReady}
@@ -281,6 +282,7 @@ export default function InterviewPrepDetailPage() {
             <PrepJobContext
               jobDescription={plan.jobDescription}
               cvName={plan.cvName}
+              cvId={plan.cvId}
             />
 
             <ReadinessRing

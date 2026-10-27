@@ -29,6 +29,7 @@ const MatchingAnalysisModal = lazy(
   () => import("@/components/cv/MatchingAnalysisModal")
 );
 const CoverLetterModal = lazy(() => import("@/components/cv/CoverLetterModal"));
+const RenameCvModal = lazy(() => import("@/components/cv/RenameCvModal"));
 
 export default function CVDetailPage() {
   const { id } = useParams();
@@ -41,6 +42,7 @@ export default function CVDetailPage() {
   const [showJobDescription, setShowJobDescription] = useState(false);
   const [showMatchingAnalysis, setShowMatchingAnalysis] = useState(false);
   const [showCoverLetter, setShowCoverLetter] = useState(false);
+  const [showRename, setShowRename] = useState(false);
   const [exportFormat, setExportFormat] = useState<"pdf" | "word" | "ats">(
     "pdf"
   );
@@ -67,6 +69,20 @@ export default function CVDetailPage() {
   const handleDelete = () => {
     if (cv) {
       deleteMutation.mutate(cv.id);
+    }
+  };
+
+  const handleRename = async (name: string) => {
+    if (!cv) return;
+    try {
+      await cvApi.updateCv(cv.id, { originalFileName: name });
+      queryClient.invalidateQueries({ queryKey: ["cv", id] });
+      queryClient.invalidateQueries({ queryKey: ["cvs"] });
+      showSuccess(t("cv.renameSuccess"));
+    } catch (error) {
+      console.error("Rename CV failed:", error);
+      showError(t("cv.renameFailed"));
+      throw error;
     }
   };
 
@@ -246,6 +262,7 @@ export default function CVDetailPage() {
                   onShowJobDescription={() => setShowJobDescription(true)}
                   onShowMatchingAnalysis={() => setShowMatchingAnalysis(true)}
                   onShowCoverLetter={() => setShowCoverLetter(true)}
+                  onRename={() => setShowRename(true)}
                   onExport={handleExport}
                 />
 
@@ -334,6 +351,13 @@ export default function CVDetailPage() {
             coverLetter={cv?.coverLetter}
             jobTitle={cv?.jobDescription?.title || "No job title"}
             company={cv?.jobDescription?.company || "No company"}
+          />
+
+          <RenameCvModal
+            isOpen={showRename}
+            currentName={cv?.originalFileName || ""}
+            onClose={() => setShowRename(false)}
+            onSave={handleRename}
           />
         </div>
       </Suspense>

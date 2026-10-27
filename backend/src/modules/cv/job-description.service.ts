@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JobDescription } from './entities/job-description.entity';
@@ -48,7 +48,7 @@ export class JobDescriptionService {
     });
 
     if (!jobDescription) {
-      throw new Error('Job description not found');
+      throw new NotFoundException('Job description not found');
     }
 
     return jobDescription;

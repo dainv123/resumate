@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { cvApi, CV, CompatibilityAnalysis } from "@/lib/cv";
+import {
+  cvApi,
+  CV,
+  CompatibilityAnalysis,
+  JobDescription,
+} from "@/lib/cv";
+import JobDescriptionModal from "@/components/cv/JobDescriptionModal";
 import { useCvsPaginated } from "@/hooks/useCvs";
 import Button from "@/components/ui/Button";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -13,6 +19,10 @@ import ProcessingModal from "@/components/job-tailor/ProcessingModal";
 import CVDisplay from "@/components/cv/CVDisplay";
 import CompatibilityAnalysisModal from "@/components/job-tailor/CompatibilityAnalysisModal";
 import CoverLetterModal from "@/components/job-tailor/CoverLetterModal";
+import JobTailorHistory, {
+  JobTailorHistoryRow,
+  buildJobTailorLink,
+} from "@/components/job-tailor/JobTailorHistory";
 import { Collapse } from "@/components/ui/Collapse";
 import {
   Sparkles,
@@ -42,7 +52,10 @@ export default function JobTailorPage() {
   const { t, language } = useLanguage();
   const { showSuccess, showError } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const appliedCvIdFromUrl = useRef<string | null>(null);
+  const appliedJdIdFromUrl = useRef<string | null>(null);
   const [selectedCv, setSelectedCv] = useState<CV | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [tailoredCv, setTailoredCv] = useState<CV | null>(null);
@@ -60,7 +73,65 @@ export default function JobTailorPage() {
   >("tailor");
   const [currentMutation, setCurrentMutation] = useState<any>(null);
   const [isAutoSelected, setIsAutoSelected] = useState(false);
+  const [trackedJd, setTrackedJd] = useState<JobDescription | null>(null);
+  const [showJdModal, setShowJdModal] = useState(false);
+  const [jdModalAnalysis, setJdModalAnalysis] = useState<
+    CompatibilityAnalysis | undefined
+  >();
+  const [jdModalCoverLetter, setJdModalCoverLetter] = useState<
+    string | undefined
+  >();
   const queryClient = useQueryClient();
+
+  const openTrackedJd = React.useCallback(
+    async (opts: {
+      jobDescriptionId?: string;
+      fallbackDescription?: string;
+      fallbackTitle?: string;
+      fallbackCompany?: string;
+      analysis?: CompatibilityAnalysis;
+      coverLetter?: string;
+      openModal?: boolean;
+      fillForm?: boolean;
+    }) => {
+      const openModal = opts.openModal !== false;
+      try {
+        let jd: JobDescription | null = null;
+        if (opts.jobDescriptionId) {
+          jd = await cvApi.getJobDescription(opts.jobDescriptionId);
+        } else if (opts.fallbackDescription) {
+          jd = {
+            id: "local",
+            userId: "",
+            title: opts.fallbackTitle || "Job Description",
+            description: opts.fallbackDescription,
+            company: opts.fallbackCompany,
+            requirements: {
+              skills: [],
+              education: [],
+              experience: [],
+              certifications: [],
+            },
+            keywords: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        if (!jd) {
+          showError(t("jobTailor.history.jdFromLinkFailed"));
+          return;
+        }
+        if (opts.fillForm) setJobDescription(jd.description);
+        setTrackedJd(jd);
+        setJdModalAnalysis(opts.analysis);
+        setJdModalCoverLetter(opts.coverLetter);
+        if (openModal) setShowJdModal(true);
+      } catch {
+        showError(t("jobTailor.history.jdFromLinkFailed"));
+      }
+    },
+    [showError, t],
+  );
 
   const { data: cvsData, isLoading } = useCvsPaginated({
     limit: 100,
@@ -68,25 +139,64 @@ export default function JobTailorPage() {
     sortOrder: "DESC",
   });
   const cvs = React.useMemo(() => cvsData?.data ?? [], [cvsData]);
+  const tailoredHistoryCvs = React.useMemo(
+    () => cvs.filter((cv) => cv.isTailored),
+    [cvs],
+  );
 
-  // Auto-select CV based on URL parameter
-  useEffect(() => {
-    const cvIdFromUrl = searchParams.get("cvId");
-    if (cvIdFromUrl && cvs.length > 0 && !selectedCv) {
-      const cvToSelect = cvs.find((cv) => cv.id === cvIdFromUrl);
-      if (cvToSelect) {
-        setSelectedCv(cvToSelect);
+  const syncJobTailorQuery = React.useCallback(
+    (patch: { cvId?: string | null; jobDescriptionId?: string | null }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (patch.cvId === null) params.delete("cvId");
+      else if (patch.cvId) params.set("cvId", patch.cvId);
+      if (patch.jobDescriptionId === null) params.delete("jobDescriptionId");
+      else if (patch.jobDescriptionId)
+        params.set("jobDescriptionId", patch.jobDescriptionId);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const selectCv = React.useCallback(
+    (cv: CV, opts?: { fromLink?: boolean }) => {
+      setSelectedCv(cv);
+      appliedCvIdFromUrl.current = cv.id;
+      syncJobTailorQuery({ cvId: cv.id });
+      if (opts?.fromLink) {
         setIsAutoSelected(true);
-        // Show success message
         showSuccess(
-          `CV "${cvToSelect.originalFileName}" đã được chọn tự động từ link`
+          t("jobTailor.history.cvFromLink", {
+            name: cv.originalFileName,
+          }),
         );
-
-        // Hide the auto-selected indicator after 3 seconds
         setTimeout(() => setIsAutoSelected(false), 3000);
       }
-    }
-  }, [cvs, searchParams, selectedCv, showSuccess]);
+    },
+    [showSuccess, syncJobTailorQuery, t],
+  );
+
+  // Deep-link: apply ?cvId= once per distinct URL value (do not fight manual clicks)
+  const cvIdFromUrl = searchParams.get("cvId");
+  useEffect(() => {
+    if (!cvIdFromUrl || cvs.length === 0) return;
+    if (appliedCvIdFromUrl.current === cvIdFromUrl) return;
+    const cvToSelect = cvs.find((cv) => cv.id === cvIdFromUrl);
+    if (!cvToSelect) return;
+    selectCv(cvToSelect, { fromLink: true });
+  }, [cvIdFromUrl, cvs, selectCv]);
+
+  const jobDescriptionIdFromUrl = searchParams.get("jobDescriptionId");
+  useEffect(() => {
+    if (!jobDescriptionIdFromUrl) return;
+    if (appliedJdIdFromUrl.current === jobDescriptionIdFromUrl) return;
+    appliedJdIdFromUrl.current = jobDescriptionIdFromUrl;
+    void openTrackedJd({
+      jobDescriptionId: jobDescriptionIdFromUrl,
+      openModal: true,
+      fillForm: true,
+    });
+  }, [jobDescriptionIdFromUrl, openTrackedJd]);
 
   // Filter and sort CVs
   const filteredAndSortedCvs = React.useMemo(() => {
@@ -134,6 +244,8 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setTailoredCv(data);
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
+      queryClient.invalidateQueries({ queryKey: ["job-tailor-analyses"] });
+      queryClient.invalidateQueries({ queryKey: ["job-tailor-cover-letters"] });
       showSuccess(t("jobTailor.success"));
     },
     onError: (error: Error) => {
@@ -157,6 +269,7 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setCompatibilityAnalysis(data);
       setShowAnalysisModal(true);
+      queryClient.invalidateQueries({ queryKey: ["job-tailor-analyses"] });
 
       // Show success message with reuse info
       if (data.reused) {
@@ -187,6 +300,7 @@ export default function JobTailorPage() {
     onSuccess: (data) => {
       setCoverLetter(data.coverLetter);
       setShowCoverLetterModal(true);
+      queryClient.invalidateQueries({ queryKey: ["job-tailor-cover-letters"] });
 
       // Show success message with reuse info
       if (data.reused) {
@@ -473,7 +587,7 @@ export default function JobTailorPage() {
                               ? "border-main bg-main/5 shadow-lg shadow-main/10"
                               : "border-gray-200 hover:border-main/50 hover:shadow-md"
                           }`}
-                          onClick={() => setSelectedCv(cv)}>
+                          onClick={() => selectCv(cv)}>
                           {/* Selection indicator */}
                           {selectedCv?.id === cv.id && (
                             <div className="absolute -top-2 -right-2 w-6 h-6 bg-main rounded-full flex items-center justify-center">
@@ -1022,6 +1136,86 @@ export default function JobTailorPage() {
             </div>
           </div>
         )}
+
+        <div className="mt-8">
+          <JobTailorHistory
+            cvs={cvs}
+            tailoredCvs={tailoredHistoryCvs}
+            onViewAnalysis={(analysis) => {
+              setCompatibilityAnalysis(analysis);
+              setShowAnalysisModal(true);
+            }}
+            onViewCoverLetter={(content) => {
+              setCoverLetter(content);
+              setShowCoverLetterModal(true);
+            }}
+            onViewJobDescription={(row: JobTailorHistoryRow) => {
+              void openTrackedJd({
+                jobDescriptionId: row.jobDescriptionId,
+                fallbackDescription: row.jobDescription,
+                fallbackTitle: row.jobTitle,
+                fallbackCompany: row.company,
+                analysis: row.analysis,
+                coverLetter: row.coverLetter,
+                openModal: true,
+                fillForm: false,
+              });
+              // Mark URL params as already handled so deep-link effects don't re-toast / re-open
+              if (row.cvId) appliedCvIdFromUrl.current = row.cvId;
+              if (row.jobDescriptionId)
+                appliedJdIdFromUrl.current = row.jobDescriptionId;
+              if (row.jobDescriptionId || row.cvId) {
+                router.replace(buildJobTailorLink(row), { scroll: false });
+              }
+            }}
+            onReuse={(row: JobTailorHistoryRow) => {
+              if (row.cvId) {
+                const cv = cvs.find((c) => c.id === row.cvId);
+                if (cv) selectCv(cv);
+              }
+              if (row.jobDescriptionId) {
+                appliedJdIdFromUrl.current = row.jobDescriptionId;
+                void openTrackedJd({
+                  jobDescriptionId: row.jobDescriptionId,
+                  openModal: false,
+                  fillForm: true,
+                });
+              } else if (row.jobDescription) {
+                setJobDescription(row.jobDescription);
+              }
+              router.replace(buildJobTailorLink(row), { scroll: false });
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onCopyLink={async (row: JobTailorHistoryRow) => {
+              const path = buildJobTailorLink(row);
+              const url = `${window.location.origin}${path}`;
+              try {
+                await navigator.clipboard.writeText(url);
+                showSuccess(t("jobTailor.history.linkCopied"));
+              } catch {
+                showError(t("jobTailor.history.linkCopyFailed"));
+              }
+            }}
+            onOpenTailoredCv={(cvId) => {
+              router.push(`/dashboard/cv/${cvId}`);
+            }}
+          />
+        </div>
+
+        {trackedJd ? (
+          <JobDescriptionModal
+            isOpen={showJdModal}
+            onClose={() => setShowJdModal(false)}
+            jobDescription={trackedJd}
+            matchingAnalysis={jdModalAnalysis}
+            coverLetter={jdModalCoverLetter}
+            useInFormLabel={t("jobTailor.history.useInForm")}
+            onUseInForm={(jd) => {
+              setJobDescription(jd.description);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        ) : null}
 
         {/* Compatibility Analysis Modal */}
         <CompatibilityAnalysisModal

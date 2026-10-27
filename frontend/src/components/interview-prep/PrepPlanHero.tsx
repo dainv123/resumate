@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Calendar, Download, Play, Target } from "lucide-react";
+import Link from "next/link";
+import { Calendar, Download, ExternalLink, Play, Target } from "lucide-react";
 import { PrepJobDescriptionSummary } from "@/lib/interview-prep";
 import { daysUntilInterviewDate } from "@/lib/interview-prep-utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 interface PrepPlanHeroProps {
   jobDescription?: PrepJobDescriptionSummary;
   cvName?: string;
+  cvId?: string;
   interviewDate: string;
   readinessScore: number;
   isReady?: boolean;
@@ -25,6 +27,7 @@ interface PrepPlanHeroProps {
 export default function PrepPlanHero({
   jobDescription,
   cvName,
+  cvId,
   interviewDate,
   readinessScore,
   isReady,
@@ -85,14 +88,34 @@ export default function PrepPlanHero({
           <p className="text-xs uppercase tracking-wide text-main mb-1">
             {t("interviewPrep.hero.preparingFor")}
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold font-inter text-dark truncate">
+          <h1 className="text-xl sm:text-2xl font-bold font-inter text-dark break-words">
             {jobDescription?.title ?? t("interviewPrep.detail.title")}
           </h1>
-          <p className="text-sm text-main mt-1">
-            {[jobDescription?.company, cvName && `CV: ${cvName}`]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+          <div className="text-sm text-main mt-1 flex flex-wrap items-center justify-center lg:justify-start gap-x-2 gap-y-1">
+            {jobDescription?.company ? (
+              <span>{jobDescription.company}</span>
+            ) : null}
+            {jobDescription?.company && cvName ? (
+              <span aria-hidden>·</span>
+            ) : null}
+            {cvName ? (
+              cvId ? (
+                <Link
+                  href={`/dashboard/cv/${cvId}`}
+                  className="inline-flex items-center gap-1 text-blue font-medium hover:underline"
+                  title={cvName}>
+                  <span className="break-all">
+                    {t("interviewPrep.jd.cv").replace("{{name}}", cvName)}
+                  </span>
+                  <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                </Link>
+              ) : (
+                <span className="break-all">
+                  {t("interviewPrep.jd.cv").replace("{{name}}", cvName)}
+                </span>
+              )
+            ) : null}
+          </div>
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mt-3 text-sm">
             <span
               className={cn(

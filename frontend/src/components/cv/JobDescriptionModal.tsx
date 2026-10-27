@@ -26,6 +26,9 @@ interface JobDescriptionModalProps {
     suggestions: string[];
     strengths: string[];
   };
+  /** Fill Job Tailor form with this tracked JD */
+  onUseInForm?: (jobDescription: JobDescription) => void;
+  useInFormLabel?: string;
 }
 
 export default function JobDescriptionModal({
@@ -34,6 +37,8 @@ export default function JobDescriptionModal({
   onClose,
   coverLetter,
   matchingAnalysis,
+  onUseInForm,
+  useInFormLabel = "Use in form",
 }: JobDescriptionModalProps) {
   if (!isOpen) return null;
 
@@ -57,7 +62,17 @@ export default function JobDescriptionModal({
         </div>
       }
       footer={
-        <div className="flex justify-end w-full">
+        <div className="flex justify-end gap-2 w-full">
+          {onUseInForm ? (
+            <Button
+              onClick={() => {
+                onUseInForm(jobDescription);
+                onClose();
+              }}
+            >
+              {useInFormLabel}
+            </Button>
+          ) : null}
           <Button onClick={onClose} variant="outline">
             Close
           </Button>

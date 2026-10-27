@@ -1,19 +1,49 @@
 "use client";
 
 import React, { useState } from "react";
-import { Briefcase, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { Briefcase, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { PrepJobDescriptionSummary } from "@/lib/interview-prep";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PrepJobContextProps {
   jobDescription?: PrepJobDescriptionSummary;
   cvName?: string;
+  cvId?: string;
   compact?: boolean;
+}
+
+function CvLink({
+  cvId,
+  cvName,
+  className,
+}: {
+  cvId?: string;
+  cvName?: string;
+  className?: string;
+}) {
+  const { t } = useLanguage();
+  if (!cvName) return null;
+  const label = t("interviewPrep.jd.cv").replace("{{name}}", cvName);
+  if (!cvId) {
+    return <p className={className}>{label}</p>;
+  }
+  return (
+    <Link
+      href={`/dashboard/cv/${cvId}`}
+      className={`inline-flex items-center gap-1 hover:underline ${className ?? ""}`}
+      title={cvName}
+    >
+      <span className="break-all">{label}</span>
+      <ExternalLink className="h-3 w-3 flex-shrink-0" />
+    </Link>
+  );
 }
 
 export default function PrepJobContext({
   jobDescription,
   cvName,
+  cvId,
   compact = false,
 }: PrepJobContextProps) {
   const { t } = useLanguage();
@@ -28,20 +58,20 @@ export default function PrepJobContext({
   if (compact) {
     return (
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-dark truncate">
+        <p className="text-sm font-semibold text-dark break-words">
           {jobDescription.title}
         </p>
         {(jobDescription.company || cvName) && (
-          <p className="text-xs text-main truncate mt-0.5">
-            {[
-              jobDescription.company,
-              cvName
-                ? t("interviewPrep.jd.cv").replace("{{name}}", cvName)
-                : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+          <div className="text-xs text-main mt-0.5 space-y-0.5">
+            {jobDescription.company ? (
+              <p className="truncate">{jobDescription.company}</p>
+            ) : null}
+            <CvLink
+              cvId={cvId}
+              cvName={cvName}
+              className="text-xs text-blue font-medium"
+            />
+          </div>
         )}
         <p className="text-xs text-main mt-1 line-clamp-2 whitespace-pre-wrap">
           {jobDescription.preview}
@@ -60,17 +90,17 @@ export default function PrepJobContext({
           <p className="text-xs font-medium text-main uppercase tracking-wide">
             {t("interviewPrep.jd.label")}
           </p>
-          <p className="text-base font-semibold text-dark font-inter mt-0.5">
+          <p className="text-base font-semibold text-dark font-inter mt-0.5 break-words">
             {jobDescription.title}
           </p>
           {jobDescription.company && (
             <p className="text-sm text-main mt-0.5">{jobDescription.company}</p>
           )}
-          {cvName && (
-            <p className="text-xs text-main mt-1">
-              {t("interviewPrep.jd.cv").replace("{{name}}", cvName)}
-            </p>
-          )}
+          <CvLink
+            cvId={cvId}
+            cvName={cvName}
+            className="text-sm text-blue font-medium mt-1"
+          />
           <p
             className={`text-sm text-main mt-2 whitespace-pre-wrap ${
               compact && !expanded ? "line-clamp-2" : ""
