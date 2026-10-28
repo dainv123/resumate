@@ -10,6 +10,7 @@ import {
   cvParseSummarizeExtracted,
   cvParseSummarizeResult,
 } from '../../shared/utils/cv-parse-log.util';
+import { normalizeCompatibilityAnalysis } from './normalize-compatibility';
 
 export type CvParseSource = 'google' | 'openrouter' | 'fallback_regex';
 
@@ -212,15 +213,15 @@ export class AiService {
     reused?: boolean;
   }> {
     try {
-      return await this.googleAIService.analyzeCompatibility(
+      const raw = await this.googleAIService.analyzeCompatibility(
         cvData,
         jobDescription,
         language || 'en',
       );
+      return normalizeCompatibilityAnalysis(raw);
     } catch (error) {
       this.logger.error('Error analyzing compatibility:', error);
-      // Return fallback analysis
-      return {
+      return normalizeCompatibilityAnalysis({
         score: 5,
         matchedSkills: [],
         missingSkills: [],
@@ -228,7 +229,7 @@ export class AiService {
         missingRequirements: ['Unable to analyze - please try again'],
         suggestions: ['Resubmit for analysis'],
         strengths: [],
-      };
+      });
     }
   }
 

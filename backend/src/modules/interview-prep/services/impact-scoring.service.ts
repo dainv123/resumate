@@ -27,16 +27,16 @@ export class ImpactScoringService {
     compatibility: CompatibilityInput,
     primaryRound: InterviewRoundType = InterviewRoundType.TECHNICAL,
   ): GapItem[] {
-    const matchedSet = new Set(
-      compatibility.matchedSkills.map((s) => s.toLowerCase()),
-    );
+    const matchedSkills = stringList(compatibility.matchedSkills);
+    const missingSkills = stringList(compatibility.missingSkills);
+    const matchedSet = new Set(matchedSkills.map((s) => s.toLowerCase()));
 
     const gaps: GapItem[] = jdKeywords.map(({ skill, mentions }) => {
       const normalized = skill.toLowerCase();
       const currentLevel = this.resolveCurrentLevel(
         normalized,
         matchedSet,
-        compatibility.missingSkills,
+        missingSkills,
       );
       const impactScore = computeGapImpactScore(
         mentions,
@@ -125,4 +125,9 @@ export class ImpactScoringService {
   getP1Gaps(gaps: GapItem[]): GapItem[] {
     return gaps.filter((g) => g.priority === GapPriority.P1);
   }
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string');
 }

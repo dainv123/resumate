@@ -78,4 +78,14 @@ describe('ImpactScoringService', () => {
     expect(p1.every((g) => g.priority === GapPriority.P1)).toBe(true);
     expect(p1.some((g) => g.skill === 'AWS')).toBe(true);
   });
+
+  it('does not throw when the model omits skill arrays', () => {
+    const gaps = service.scoreGaps([{ skill: 'React', mentions: 2 }], {
+      matchedSkills: null as unknown as string[],
+      missingSkills: undefined as unknown as string[],
+    });
+
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0].currentLevel).toBe('weak');
+  });
 });
