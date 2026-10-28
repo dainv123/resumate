@@ -47,6 +47,7 @@ import { CheatSheetExportService } from './services/cheat-sheet-export.service';
 import { InterviewPrepAnalyticsService } from './services/interview-prep-analytics.service';
 import { InterviewPrepAnalyticsEvent } from './constants/interview-prep-analytics.constants';
 import { JdUrlResolverService } from './services/jd-url-resolver.service';
+import { asStringArray } from '../ai/normalize-compatibility';
 
 @Injectable()
 export class InterviewPrepService {
@@ -163,16 +164,16 @@ export class InterviewPrepService {
     const processMap = this.normalizeProcessMap(processMapRaw);
 
     const jdSkills = this.impactScoringService.extractSkillsFromText(jdText);
+    const matchedSkills = asStringArray(compatibility.matchedSkills);
+    const missingSkills = asStringArray(compatibility.missingSkills);
     const jdKeywords = this.impactScoringService.countJdMentions(
       jdText,
-      jdSkills.length > 0
-        ? jdSkills
-        : [...compatibility.matchedSkills, ...compatibility.missingSkills],
+      jdSkills.length > 0 ? jdSkills : [...matchedSkills, ...missingSkills],
     );
 
     const gaps = this.impactScoringService.scoreGaps(jdKeywords, {
-      matchedSkills: compatibility.matchedSkills,
-      missingSkills: compatibility.missingSkills,
+      matchedSkills,
+      missingSkills,
     });
 
     const questions = await this.questionSelectorService.selectFromBank(

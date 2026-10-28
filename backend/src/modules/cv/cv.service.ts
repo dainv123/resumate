@@ -32,6 +32,7 @@ import {
   TemplateConfig,
 } from '../../shared/interfaces/cv-data.interface';
 import { CVDataUtils } from '../../shared/utils/cv-data.utils';
+import { normalizeCompatibilityAnalysis } from '../ai/normalize-compatibility';
 
 export interface PaginationOptions {
   page: number;
@@ -857,6 +858,7 @@ export class CvService {
     missingRequirements: string[];
     suggestions: string[];
     strengths: string[];
+    reused?: boolean;
   }> {
     const cv = await this.getCvById(cvId, userId);
 
@@ -880,22 +882,18 @@ export class CvService {
         `Reusing existing analysis for CV ${cvId} + JobDescription ${jobDesc.id}`,
       );
       return {
-        score: existingAnalysis.score,
-        matchedSkills: existingAnalysis.matchedSkills,
-        missingSkills: existingAnalysis.missingSkills,
-        matchedExperience: [],
-        missingRequirements: [],
-        suggestions: existingAnalysis.suggestions,
-        strengths: existingAnalysis.strengths,
+        ...normalizeCompatibilityAnalysis(existingAnalysis),
         reused: true,
-      } as any;
+      };
     }
 
     // Use AI to analyze compatibility
-    const analysis = await this.aiService.analyzeCompatibility(
-      cv.parsedData,
-      jobDescription,
-      (language as Language) || 'en',
+    const analysis = normalizeCompatibilityAnalysis(
+      await this.aiService.analyzeCompatibility(
+        cv.parsedData,
+        jobDescription,
+        (language as Language) || 'en',
+      ),
     );
 
     const analysisRecord = this.matchingAnalysisRepository.create({
@@ -910,12 +908,24 @@ export class CvService {
       strengths: analysis.strengths,
       isSnapshot: false,
     });
-    await this.matchingAnalysisRepository.save(analysisRecord);
+    try {
+      await this.matchingAnalysisRepository.save(analysisRecord);
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+      const raced = await this.matchingAnalysisRepository.findOne({
+        where: { cvId, jobDescriptionId: jobDesc.id, userId },
+      });
+      if (!raced) throw error;
+      return {
+        ...normalizeCompatibilityAnalysis(raced),
+        reused: true,
+      };
+    }
 
     return {
       ...analysis,
       reused: false,
-    } as any;
+    };
   }
 
   async generateCoverLetter(
@@ -925,6 +935,7 @@ export class CvService {
     language?: string,
   ): Promise<{
     coverLetter: string;
+    reused?: boolean;
   }> {
     const cv = await this.getCvById(cvId, userId);
 
@@ -950,7 +961,7 @@ export class CvService {
       return {
         coverLetter: existingCoverLetter.content,
         reused: true,
-      } as any;
+      };
     }
 
     // Use AI to generate cover letter
@@ -960,21 +971,41 @@ export class CvService {
       (language as Language) || 'en',
     );
 
+    const content =
+      typeof coverLetter?.coverLetter === 'string'
+        ? coverLetter.coverLetter
+        : '';
+    if (!content.trim()) {
+      throw new BadRequestException('Could not generate cover letter');
+    }
+
     const coverLetterRecord = this.coverLetterRepository.create({
       cvId,
       jobDescriptionId: jobDesc.id,
       userId,
       jobDescriptionSnapshot: this.createJobDescriptionSnapshot(jobDesc),
-      content: coverLetter.coverLetter,
-      wordCount: coverLetter.coverLetter.split(/\s+/).filter(Boolean).length,
+      content,
+      wordCount: content.split(/\s+/).filter(Boolean).length,
       isSnapshot: false,
     });
-    await this.coverLetterRepository.save(coverLetterRecord);
+    try {
+      await this.coverLetterRepository.save(coverLetterRecord);
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+      const raced = await this.coverLetterRepository.findOne({
+        where: { cvId, jobDescriptionId: jobDesc.id, userId },
+      });
+      if (!raced) throw error;
+      return {
+        coverLetter: raced.content,
+        reused: true,
+      };
+    }
 
     return {
-      coverLetter: coverLetter.coverLetter,
+      coverLetter: content,
       reused: false,
-    } as any;
+    };
   }
 
   async quickBuildCv(
@@ -1385,4 +1416,15 @@ export class CvService {
     this.logger.log('Manual cleanup triggered');
     return { message: 'Cleanup completed successfully' };
   }
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as {
+    code?: string;
+    driverError?: { code?: string };
+  };
+  return (
+    candidate.code === '23505' || candidate.driverError?.code === '23505'
+  );
 }
