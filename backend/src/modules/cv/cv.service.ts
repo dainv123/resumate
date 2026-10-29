@@ -275,8 +275,20 @@ export class CvService {
       updatedAt: new Date().toISOString(),
     });
 
-    // Update CV data and increment version
-    Object.assign(cv, updateCvDto);
+    // version and improvementNotes are accepted so the editor payload is
+    // valid, but they are not copied. The server owns the version counter.
+    if (updateCvDto.originalFileName !== undefined) {
+      cv.originalFileName = updateCvDto.originalFileName;
+    }
+    if (updateCvDto.parsedData !== undefined) {
+      cv.parsedData = updateCvDto.parsedData;
+    }
+    if (updateCvDto.isTailored !== undefined) {
+      cv.isTailored = updateCvDto.isTailored;
+    }
+    if (updateCvDto.tailoredForJob !== undefined) {
+      cv.tailoredForJob = updateCvDto.tailoredForJob;
+    }
     cv.version += 1;
 
     return this.cvRepository.save(cv);
