@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsObject,
+  Min,
+} from 'class-validator';
 import type { CVData } from '../../../shared/interfaces/cv-data.interface';
 
 export class CreateCvDto {
@@ -28,6 +35,15 @@ export class UpdateCvDto {
   @IsOptional()
   @IsString()
   tailoredForJob?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  version?: number;
+
+  @IsOptional()
+  @IsObject()
+  improvementNotes?: Record<string, unknown>;
 }
 
 export class TailorCvDto {

@@ -36,8 +36,11 @@ export default function CVEditPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cv", id] });
       queryClient.invalidateQueries({ queryKey: ["cvs"] });
-      showSuccess(t("dashboard.updateCvSuccess"));
+      showSuccess(t("cv.edit.success"));
       setIsEditing(false);
+    },
+    onError: () => {
+      showError(t("cv.edit.error"));
     },
   });
 
@@ -51,14 +54,7 @@ export default function CVEditPage() {
   const handleSave = () => {
     if (!formData) return;
 
-    const updateData: Partial<CV> = {
-      parsedData: formData,
-      version: cv?.version,
-      isTailored: cv?.isTailored,
-      tailoredForJob: cv?.tailoredForJob,
-      improvementNotes: cv?.improvementNotes,
-    };
-    updateMutation.mutate(updateData);
+    updateMutation.mutate({ parsedData: formData });
   };
 
   const handlePreview = () => {
