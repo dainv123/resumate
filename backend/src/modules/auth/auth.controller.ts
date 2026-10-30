@@ -10,7 +10,7 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, GoogleAuthDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -29,8 +29,8 @@ export class AuthController {
   }
 
   @Post('google')
-  async googleAuthPost(@Body() googleAuthDto: GoogleAuthDto) {
-    return this.authService.googleAuth(googleAuthDto);
+  googleAuthPost() {
+    return this.authService.googleAuth();
   }
 
   @UseGuards(JwtAuthGuard)

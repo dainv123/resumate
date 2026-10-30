@@ -37,16 +37,6 @@ export const authApi = {
     return response.data;
   },
 
-  googleAuth: async (data: {
-    googleId: string;
-    email: string;
-    name: string;
-    avatar?: string;
-  }): Promise<AuthResponse> => {
-    const response = await api.post('/auth/google', data);
-    return response.data;
-  },
-
   getProfile: async (): Promise<User> => {
     const response = await api.get('/auth/profile');
     return response.data.user;
