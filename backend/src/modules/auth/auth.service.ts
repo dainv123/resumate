@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User, UserPlan } from '../users/entities/user.entity';
 import { UserUsage } from '../users/entities/user-usage.entity';
-import { RegisterDto, LoginDto, GoogleAuthDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -81,44 +81,15 @@ export class AuthService {
     };
   }
 
-  async googleAuth(googleAuthDto: GoogleAuthDto) {
-    const { googleId, email, name, avatar } = googleAuthDto;
-
-    // Check if user exists
-    let user = await this.userRepository.findOne({
-      where: [{ email }, { googleId }],
-    });
-
-    if (user) {
-      // Update user info if needed
-      if (!user.googleId) {
-        user.googleId = googleId;
-        user.avatar = avatar || '';
-        user = await this.userRepository.save(user);
-      }
-    } else {
-      // Create new user
-      user = this.userRepository.create({
-        googleId,
-        email,
-        name,
-        avatar,
-        plan: UserPlan.FREE,
-      });
-
-      user = await this.userRepository.save(user);
-
-      // Create usage tracking
-      await this.createUserUsage(user.id);
-    }
-
-    // Generate JWT token
-    const token = this.generateToken(user);
-
-    return {
-      user: this.sanitizeUser(user),
-      token,
-    };
+  /**
+   * Client-supplied Google profiles are not proof of identity.
+   * Sign-in goes through the Passport redirect (`GET /auth/google`), which
+   * verifies the account with Google before `googleAuthCallback` issues a token.
+   */
+  googleAuth(): never {
+    throw new UnauthorizedException(
+      'Google sign-in must use the OAuth redirect',
+    );
   }
 
   async validateUser(userId: string): Promise<User> {
