@@ -1201,40 +1201,6 @@ export class CvService {
   }
 
   /**
-   * Save matching analysis to CV
-   */
-  async saveMatchingAnalysis(cvId: string, userId: string, analysis: any) {
-    const cv = await this.cvRepository.findOne({
-      where: { id: cvId, userId },
-    });
-
-    if (!cv) {
-      throw new NotFoundException('CV not found');
-    }
-
-    cv.matchingAnalysis = analysis;
-    await this.cvRepository.save(cv);
-    return cv;
-  }
-
-  /**
-   * Save cover letter to CV
-   */
-  async saveCoverLetter(cvId: string, userId: string, coverLetter: string) {
-    const cv = await this.cvRepository.findOne({
-      where: { id: cvId, userId },
-    });
-
-    if (!cv) {
-      throw new NotFoundException('CV not found');
-    }
-
-    cv.coverLetter = coverLetter;
-    await this.cvRepository.save(cv);
-    return cv;
-  }
-
-  /**
    * Get analysis by JobDescription ID and CV ID
    */
   async getAnalysisByJobDescription(

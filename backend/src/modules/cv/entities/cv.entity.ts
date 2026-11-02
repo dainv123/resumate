@@ -47,11 +47,9 @@ export class Cv {
   @Column('jsonb', { nullable: true })
   jobDescriptionData: any;
 
-  @Column('jsonb', { nullable: true })
-  matchingAnalysis: any;
-
-  @Column('text', { nullable: true })
-  coverLetter: string;
+  // Analyses and cover letters are stored on cv_matching_analyses / cv_cover_letters.
+  // Migration 1734567890003 drops the legacy cvs columns; mapping them makes every
+  // CV query fail once synchronize is off.
 
   @Column('jsonb', { nullable: true })
   improvementNotes: {
