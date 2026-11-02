@@ -19,13 +19,14 @@ export class AddForeignKeysAndCleanup1734567890003
       FOREIGN KEY ("jobDescriptionId") REFERENCES job_descriptions(id)
     `);
 
-    // Remove old columns from CV table
+    // Remove old columns from CV table. IF EXISTS: entity no longer maps them,
+    // so a schema:sync bootstrap may never have created them.
     await queryRunner.query(`
-      ALTER TABLE cvs DROP COLUMN "matchingAnalysis"
+      ALTER TABLE cvs DROP COLUMN IF EXISTS "matchingAnalysis"
     `);
 
     await queryRunner.query(`
-      ALTER TABLE cvs DROP COLUMN "coverLetter"
+      ALTER TABLE cvs DROP COLUMN IF EXISTS "coverLetter"
     `);
 
     // Remove old cvId columns from analysis tables

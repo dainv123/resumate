@@ -6,8 +6,24 @@ export class MigrateDataFromCvToAnalysisTables1734567890002
   name = 'MigrateDataFromCvToAnalysisTables1734567890002';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Step 1: Migrate matchingAnalysis from CV to cv_matching_analyses
-    await queryRunner.query(`
+    const legacyColumns: Array<{ column_name: string }> =
+      await queryRunner.query(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'cvs'
+          AND column_name IN ('matchingAnalysis', 'coverLetter')
+      `);
+    const present = new Set(legacyColumns.map((row) => row.column_name));
+
+    // Schema sync from the current entity no longer creates these columns.
+    if (!present.has('matchingAnalysis') && !present.has('coverLetter')) {
+      return;
+    }
+
+    if (present.has('matchingAnalysis')) {
+      // Step 1: Migrate matchingAnalysis from CV to cv_matching_analyses
+      await queryRunner.query(`
       INSERT INTO cv_matching_analyses (
         id, "userId", "jobDescriptionId", "jobDescriptionSnapshot", 
         score, "matchedSkills", "missingSkills", suggestions, strengths, 
@@ -40,9 +56,11 @@ export class MigrateDataFromCvToAnalysisTables1734567890002
       WHERE c."matchingAnalysis" IS NOT NULL 
         AND c."matchingAnalysis" != '{}'::jsonb
     `);
+    }
 
-    // Step 2: Migrate coverLetter from CV to cv_cover_letters
-    await queryRunner.query(`
+    if (present.has('coverLetter')) {
+      // Step 2: Migrate coverLetter from CV to cv_cover_letters
+      await queryRunner.query(`
       INSERT INTO cv_cover_letters (
         id, "userId", "jobDescriptionId", "jobDescriptionSnapshot",
         content, "personalizedContent", tone, format, "wordCount", 
@@ -76,6 +94,7 @@ export class MigrateDataFromCvToAnalysisTables1734567890002
       WHERE c."coverLetter" IS NOT NULL 
         AND c."coverLetter" != ''
     `);
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
