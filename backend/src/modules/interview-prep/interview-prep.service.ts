@@ -690,16 +690,23 @@ export class InterviewPrepService {
         });
     if (existing) return existing;
 
-    const title = source?.title ?? this.extractTitleFromJd(description);
-    const company = source?.company ?? this.extractCompanyFromJd(description);
+    // title/company/location/sourceUrl are varchar(255). Unclipped values
+    // (URL titles, or a company match that runs through the rest of the JD)
+    // make the insert fail and the plan is never created.
+    const title =
+      this.clipVarchar(source?.title ?? this.extractTitleFromJd(description)) ||
+      'Job Description';
+    const company = this.clipVarchar(
+      source?.company ?? this.extractCompanyFromJd(description),
+    );
 
     const jobDescription = this.jobDescriptionRepository.create({
       userId,
       title,
       description,
       company,
-      location: source?.location,
-      sourceUrl: source?.sourceUrl,
+      location: this.clipVarchar(source?.location),
+      sourceUrl: this.clipVarchar(source?.sourceUrl),
       sourceType: source?.sourceType ?? JobDescriptionSourceType.MANUAL,
       requirements: {
         skills: this.impactScoringService.extractSkillsFromText(description),
@@ -720,8 +727,26 @@ export class InterviewPrepService {
   }
 
   private extractCompanyFromJd(text: string): string | undefined {
-    const match = text.match(/(?:at|@|company:)\s*([A-Z][A-Za-z0-9\s&.]+)/i);
-    return match?.[1]?.trim();
+    // Require a real word boundary and whitespace. The old /at/i + \s*
+    // pattern matched inside "data", "platform", and "location", then the
+    // class (letters, spaces, periods) consumed the rest of the posting.
+    const match = text.match(
+      /(?:^|[\s(])(?:at|@|company:)\s+([A-Z][A-Za-z0-9&'’-]{0,40}(?:\s+[A-Z][A-Za-z0-9&'’-]{0,40}){0,4})/,
+    );
+    const company = match?.[1]?.trim().replace(/[.'’-]+$/g, '');
+    if (!company || company.length < 2) return undefined;
+    return company;
+  }
+
+  /** job_descriptions string columns are varchar(255) (TypeORM string default). */
+  private clipVarchar(
+    value: string | undefined | null,
+    max = 255,
+  ): string | undefined {
+    if (value == null) return undefined;
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    return trimmed.length <= max ? trimmed : trimmed.slice(0, max);
   }
 
   private compatibilityFromBreakdown(
