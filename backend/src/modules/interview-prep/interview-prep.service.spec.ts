@@ -201,7 +201,7 @@ describe('InterviewPrepService', () => {
     const result = await service.createPlan('user-1', {
       jobDescription: 'Senior React Engineer at Acme Corp',
       cvId: 'cv-1',
-      interviewDate: '2026-06-29',
+      interviewDate: '2027-06-29',
       dailyCapacityMinutes: 60,
     });
 
@@ -215,6 +215,33 @@ describe('InterviewPrepService', () => {
     expect(result.limits).toBeDefined();
     expect(planRepo.save).toHaveBeenCalled();
     expect(assignmentRepo.save).toHaveBeenCalled();
+  });
+
+  it('keeps the job description company inside the varchar column', async () => {
+    jest
+      .spyOn(DailySchedulerService.prototype, 'buildRoadmap')
+      .mockReturnValue(mockRoadmap as any);
+
+    const jd = [
+      'Platform Engineer.',
+      'We use data. '.repeat(40),
+      'Join us at Acme Corp.',
+      'We build reliable software for customers worldwide. '.repeat(20),
+    ].join(' ');
+
+    await service.createPlan('user-1', {
+      jobDescription: jd,
+      cvId: 'cv-1',
+      interviewDate: '2027-06-29',
+    });
+
+    const saved = jobDescRepo.create.mock.calls[0][0] as {
+      title: string;
+      company?: string;
+    };
+    expect(saved.title.length).toBeLessThanOrEqual(255);
+    expect(saved.company).toBe('Acme Corp');
+    expect((saved.company ?? '').length).toBeLessThanOrEqual(255);
   });
 
   it('rejects interview date in the past', async () => {
