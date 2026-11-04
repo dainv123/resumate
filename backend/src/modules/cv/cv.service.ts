@@ -64,10 +64,6 @@ export class CvService {
     private matchingAnalysisRepository: Repository<CvMatchingAnalysis>,
     @InjectRepository(CvCoverLetter)
     private coverLetterRepository: Repository<CvCoverLetter>,
-    @InjectRepository(InterviewPrepPlan)
-    private planRepository: Repository<InterviewPrepPlan>,
-    @InjectRepository(InterviewQuestionAssignment)
-    private assignmentRepository: Repository<InterviewQuestionAssignment>,
     private jobDescriptionService: JobDescriptionService,
     private aiService: AiService,
     private usersService: UsersService,
@@ -335,35 +331,74 @@ export class CvService {
     const cv = await this.cvRepository.findOne({ where: { id, userId } });
     if (!cv) return;
 
-    const tailoredChildren = await this.cvRepository.find({
-      where: { originalCvId: id, userId },
+    // Tailoring a tailored resume nests originalCvId (A → B → C).
+    // Only the direct children used to be removed, so the self-FK on the
+    // grandchild blocked the delete. Prep plans for the rows we did find
+    // were already removed, and that write was not rolled back.
+    const cvIds = await this.collectCvSubtreeIds(id, userId);
+
+    await this.cvRepository.manager.transaction(async (manager) => {
+      const plans = await manager.find(InterviewPrepPlan, {
+        where: { userId, cvId: In(cvIds) },
+        select: ['id'],
+      });
+      const planIds = plans.map((plan) => plan.id);
+      if (planIds.length > 0) {
+        await manager.delete(InterviewQuestionAssignment, {
+          planId: In(planIds),
+        });
+        await manager.delete(InterviewPrepPlan, { id: In(planIds) });
+      }
+
+      // Drop self-references inside the subtree first so a cycle or a
+      // deeper tailored copy cannot block the delete.
+      await manager.update(
+        Cv,
+        { id: In(cvIds), userId },
+        { originalCvId: null as unknown as string },
+      );
+      await manager.delete(Cv, { id: In(cvIds), userId });
     });
-    const cvIds = [id, ...tailoredChildren.map((child) => child.id)];
-
-    await this.deleteInterviewPrepForCvs(cvIds, userId);
-
-    // Children first — avoids self-FK on originalCvId
-    if (tailoredChildren.length > 0) {
-      await this.cvRepository.remove(tailoredChildren);
-    }
-    await this.cvRepository.remove(cv);
   }
 
-  private async deleteInterviewPrepForCvs(
-    cvIds: string[],
+  /**
+   * Root plus every tailored copy that points at it, including copies of copies.
+   * Returned order is leaves first.
+   */
+  private async collectCvSubtreeIds(
+    rootId: string,
     userId: string,
-  ): Promise<void> {
-    if (cvIds.length === 0) return;
-
-    const plans = await this.planRepository.find({
-      where: { userId, cvId: In(cvIds) },
-      select: ['id'],
+  ): Promise<string[]> {
+    const rows = await this.cvRepository.find({
+      where: { userId },
+      select: ['id', 'originalCvId'],
     });
-    if (plans.length === 0) return;
 
-    const planIds = plans.map((plan) => plan.id);
-    await this.assignmentRepository.delete({ planId: In(planIds) });
-    await this.planRepository.delete({ id: In(planIds) });
+    const childrenByParent = new Map<string, string[]>();
+    for (const row of rows) {
+      if (!row.originalCvId) continue;
+      const children = childrenByParent.get(row.originalCvId) ?? [];
+      children.push(row.id);
+      childrenByParent.set(row.originalCvId, children);
+    }
+
+    const ordered: string[] = [];
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+
+    const visit = (cvId: string) => {
+      if (visited.has(cvId) || visiting.has(cvId)) return;
+      visiting.add(cvId);
+      for (const childId of childrenByParent.get(cvId) ?? []) {
+        visit(childId);
+      }
+      visiting.delete(cvId);
+      visited.add(cvId);
+      ordered.push(cvId);
+    };
+
+    visit(rootId);
+    return ordered;
   }
 
   async getCvVersions(cvId: string, userId: string): Promise<any[]> {
