@@ -1,20 +1,25 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from './entities/user.entity';
 import { UserUsage } from './entities/user-usage.entity';
 import { UpdateProfileDto, ChangePasswordDto } from './dto/update-user.dto';
 import { Cv } from '../cv/entities/cv.entity';
 import { Project } from '../projects/entities/project.entity';
+import { RedisKey } from '../../shared/redis/redis.constants';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -24,6 +29,8 @@ export class UsersService {
     private cvRepository: Repository<Cv>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    private dataSource: DataSource,
+    private redisService: RedisService,
   ) {}
 
   async findById(id: string): Promise<User> {
@@ -163,15 +170,50 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string): Promise<{ message: string }> {
-    const user = await this.findById(userId);
+    await this.findById(userId);
 
-    // Delete all related data (cascade delete should handle this, but we'll be explicit)
-    await this.cvRepository.delete({ userId });
-    await this.projectRepository.delete({ userId });
-    await this.userUsageRepository.delete({ userId });
+    const portfolios: Array<{ username: string }> = await this.dataSource.query(
+      `SELECT username FROM portfolios WHERE "userId" = $1`,
+      [userId],
+    );
 
-    // Delete user
-    await this.userRepository.remove(user);
+    // These tables reference users with ON DELETE NO ACTION. One transaction
+    // removes them before the user so a rejected user delete cannot keep
+    // the earlier resume deletes.
+    await this.dataSource.transaction(async (manager) => {
+      const statements = [
+        `DELETE FROM interview_question_assignments
+         WHERE "planId" IN (
+           SELECT id FROM interview_prep_plans WHERE "userId" = $1
+         )`,
+        `DELETE FROM interview_prep_plans WHERE "userId" = $1`,
+        `DELETE FROM cv_matching_analyses WHERE "userId" = $1`,
+        `DELETE FROM cv_cover_letters WHERE "userId" = $1`,
+        `DELETE FROM cvs WHERE "userId" = $1`,
+        `DELETE FROM job_descriptions WHERE "userId" = $1`,
+        `DELETE FROM projects WHERE "userId" = $1`,
+        `DELETE FROM portfolios WHERE "userId" = $1`,
+        `DELETE FROM analytics WHERE "userId" = $1`,
+        `DELETE FROM user_usage WHERE "userId" = $1`,
+        `DELETE FROM users WHERE id = $1`,
+      ];
+
+      for (const sql of statements) {
+        await manager.query(sql, [userId]);
+      }
+    });
+
+    await Promise.all(
+      portfolios.map(async (row) => {
+        try {
+          await this.redisService.del(RedisKey.portfolioHtml(row.username));
+        } catch (error) {
+          this.logger.warn(
+            `Portfolio cache clear failed for ${row.username}: ${(error as Error).message}`,
+          );
+        }
+      }),
+    );
 
     return { message: 'Account deleted successfully' };
   }
