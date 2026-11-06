@@ -1,7 +1,9 @@
+import { randomUUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import type { Browser } from 'puppeteer';
 import { PlanStarStory } from '../domain/interview-prep-ai.types';
 import { ProjectDefenseSheet } from '../domain/interview-prep-ai.types';
 import { PrepDay } from '../domain/pass-framework';
@@ -101,34 +103,49 @@ export class CheatSheetExportService {
   async exportToPdf(data: CheatSheetExportData): Promise<Buffer> {
     const htmlContent = this.buildHtml(data);
     const tempDir = os.tmpdir();
-    const tempHtmlFile = path.join(tempDir, `cheat-sheet-${Date.now()}.html`);
+    // Date.now() collides when two exports start in the same millisecond and
+    // the second write replaces the file before the first browser reads it.
+    const tempHtmlFile = path.join(tempDir, `cheat-sheet-${randomUUID()}.html`);
 
     await fs.promises.writeFile(tempHtmlFile, htmlContent, 'utf8');
 
-    const puppeteer = await import('puppeteer');
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
-    const page = await browser.newPage();
-    await page.goto(`file://${tempHtmlFile}`, { waitUntil: 'networkidle0' });
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
-    });
-
-    await browser.close();
-
+    let browser: Browser | undefined;
     try {
-      await fs.promises.unlink(tempHtmlFile);
-    } catch (error) {
-      this.logger.warn('Failed to delete temp HTML file', error);
-    }
+      const puppeteer = await import('puppeteer');
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
 
-    return Buffer.from(pdfBuffer);
+      const page = await browser.newPage();
+      await page.goto(`file://${tempHtmlFile}`, { waitUntil: 'networkidle0' });
+
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '0.5in',
+          right: '0.5in',
+          bottom: '0.5in',
+          left: '0.5in',
+        },
+      });
+
+      return Buffer.from(pdfBuffer);
+    } finally {
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (error) {
+          this.logger.warn('Failed to close cheat sheet browser', error);
+        }
+      }
+      try {
+        await fs.promises.unlink(tempHtmlFile);
+      } catch (error) {
+        this.logger.warn('Failed to delete temp HTML file', error);
+      }
+    }
   }
 }
 
