@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -166,6 +167,7 @@ describe('PortfolioService', () => {
           provide: getRepositoryToken(PortfolioEntity),
           useValue: {
             findOne: jest.fn(),
+            find: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
           },
@@ -494,6 +496,133 @@ describe('PortfolioService', () => {
 
       expect(html).toBeDefined();
       expect(html).toContain('John Doe');
+    });
+  });
+
+  describe('public username', () => {
+    const dto = {
+      template: PortfolioTemplate.BASIC,
+      bio: 'Software Engineer',
+    };
+
+    beforeEach(() => {
+      process.env.BACKEND_URL = 'https://api.example.com';
+      jest
+        .spyOn(portfolioRepository, 'create')
+        .mockImplementation((value) => value as PortfolioEntity);
+      jest
+        .spyOn(portfolioRepository, 'save')
+        .mockImplementation(async (value) => value as PortfolioEntity);
+    });
+
+    it('uses the email local-part when no other account owns it', async () => {
+      jest.spyOn(portfolioRepository, 'findOne').mockResolvedValue(null);
+      jest.spyOn(portfolioRepository, 'find').mockResolvedValue([]);
+
+      const saved = await service.savePortfolio('user-1', dto);
+
+      expect(saved.username).toBe('john');
+      expect(saved.generatedUrl).toBe('https://api.example.com/portfolio/john');
+    });
+
+    it('suffixes the slug when another account shares the email local-part', async () => {
+      jest.spyOn(portfolioRepository, 'findOne').mockResolvedValue(null);
+      jest
+        .spyOn(portfolioRepository, 'find')
+        .mockImplementation(async (options) => {
+          const username = (options?.where as { username?: string } | undefined)
+            ?.username;
+          if (username === 'john') {
+            return [
+              {
+                id: 'other',
+                userId: 'user-2',
+                username: 'john',
+              } as PortfolioEntity,
+            ];
+          }
+          return [];
+        });
+
+      const saved = await service.savePortfolio('user-1', dto);
+
+      expect(saved.username).toBe('john-user1');
+      expect(saved.generatedUrl).toBe(
+        'https://api.example.com/portfolio/john-user1',
+      );
+    });
+
+    it('moves an existing portfolio off a slug owned by another account', async () => {
+      jest.spyOn(portfolioRepository, 'findOne').mockResolvedValue({
+        id: 'p1',
+        userId: 'user-1',
+        username: 'john',
+        isActive: true,
+      } as PortfolioEntity);
+      jest
+        .spyOn(portfolioRepository, 'find')
+        .mockImplementation(async (options) => {
+          const username = (options?.where as { username?: string } | undefined)
+            ?.username;
+          if (username === 'john') {
+            return [
+              {
+                id: 'p1',
+                userId: 'user-1',
+                username: 'john',
+              } as PortfolioEntity,
+              {
+                id: 'p2',
+                userId: 'user-2',
+                username: 'john',
+              } as PortfolioEntity,
+            ];
+          }
+          return [];
+        });
+
+      const saved = await service.savePortfolio('user-1', dto);
+
+      expect(saved.username).toBe('john-user1');
+    });
+
+    it('does not publish one account HTML on a slug shared with another account', async () => {
+      jest.spyOn(portfolioRepository, 'find').mockResolvedValue([
+        {
+          id: 'a',
+          userId: 'user-1',
+          username: 'john',
+          generatedHtml: '<p>alice@gmail.com</p>',
+          isActive: true,
+        } as PortfolioEntity,
+        {
+          id: 'b',
+          userId: 'user-2',
+          username: 'john',
+          generatedHtml: '<p>alice@company.com</p>',
+          isActive: true,
+        } as PortfolioEntity,
+      ]);
+
+      await expect(
+        service.getPublicHtmlByUsername('john'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('serves the saved snapshot when the slug has one owner', async () => {
+      jest.spyOn(portfolioRepository, 'find').mockResolvedValue([
+        {
+          id: 'a',
+          userId: 'user-1',
+          username: 'john',
+          generatedHtml: '<p>only-owner@example.com</p>',
+          isActive: true,
+        } as PortfolioEntity,
+      ]);
+
+      const html = await service.getPublicHtmlByUsername('john');
+
+      expect(html).toContain('only-owner@example.com');
     });
   });
 });

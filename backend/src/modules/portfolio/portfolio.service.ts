@@ -111,12 +111,18 @@ export class PortfolioService {
     createPortfolioDto: CreatePortfolioDto,
   ): Promise<PortfolioEntity> {
     const user = await this.usersService.findById(userId);
-    const username = user.email.split('@')[0].toLowerCase();
 
     // Check if user already has a portfolio
     let portfolio = await this.portfolioRepository.findOne({
       where: { userId, isActive: true },
     });
+
+    const previousUsername = portfolio?.username;
+    const username = await this.allocateUsername(
+      userId,
+      user.email,
+      previousUsername,
+    );
 
     // Generate portfolio data
     const portfolioData = await this.generatePortfolio(
@@ -127,14 +133,12 @@ export class PortfolioService {
     // Generate HTML
     const html = await this.generatePortfolioHTML(portfolioData);
 
-    // Generate URL
-    const url = await this.generatePortfolioUrl(
-      userId,
-      createPortfolioDto.customDomain,
-    );
+    // Generate URL from the username that public lookup will actually resolve
+    const url = this.buildPortfolioUrl(username);
 
     if (portfolio) {
       // Update existing portfolio (override)
+      portfolio.username = username;
       portfolio.template = createPortfolioDto.template;
       portfolio.customDomain = createPortfolioDto.customDomain || '';
       portfolio.bio = createPortfolioDto.bio || '';
@@ -166,6 +170,9 @@ export class PortfolioService {
 
     const saved = await this.portfolioRepository.save(portfolio);
     await this.redisService.del(RedisKey.portfolioHtml(username));
+    if (previousUsername && previousUsername !== username) {
+      await this.redisService.del(RedisKey.portfolioHtml(previousUsername));
+    }
     return saved;
   }
 
@@ -176,23 +183,31 @@ export class PortfolioService {
   }
 
   async findActiveByUsername(username: string): Promise<PortfolioEntity> {
-    const portfolio = await this.portfolioRepository.findOne({
+    const portfolios = await this.portfolioRepository.find({
       where: { username, isActive: true },
       order: { createdAt: 'DESC' },
     });
-    if (!portfolio) {
+    const ownerIds = new Set(portfolios.map((portfolio) => portfolio.userId));
+    // A shared slug (same email local-part on two accounts) must not pick a winner.
+    if (ownerIds.size !== 1) {
       throw new NotFoundException('Portfolio not found');
     }
-    return portfolio;
+    return portfolios[0];
   }
 
   /** Public HTML for username URL — prefer saved snapshot so it matches preview/save. */
   async getPublicHtmlByUsername(username: string): Promise<string> {
-    const cacheKey = RedisKey.portfolioHtml(username);
+    let portfolio: PortfolioEntity;
+    try {
+      portfolio = await this.findActiveByUsername(username);
+    } catch (error) {
+      await this.redisService.del(RedisKey.portfolioHtml(username));
+      throw error;
+    }
+
+    const cacheKey = RedisKey.portfolioHtml(portfolio.username);
     const cached = await this.redisService.get(cacheKey);
     if (cached) return cached;
-
-    const portfolio = await this.findActiveByUsername(username);
     let html = portfolio.generatedHtml;
     if (!html) {
       // Legacy rows without snapshot: regenerate once
@@ -300,11 +315,65 @@ export class PortfolioService {
     customDomain?: string,
   ): Promise<string> {
     const user = await this.usersService.findById(userId);
-    const username = user.email.split('@')[0].toLowerCase();
+    const existing = await this.portfolioRepository.findOne({
+      where: { userId, isActive: true },
+    });
+    const username = await this.allocateUsername(
+      userId,
+      user.email,
+      existing?.username,
+    );
 
     // Always return the backend URL as primary portfolio URL
+    return this.buildPortfolioUrl(username);
+  }
+
+  private buildPortfolioUrl(username: string): string {
     const baseUrl = process.env.BACKEND_URL;
     return `${baseUrl}/portfolio/${username}`;
+  }
+
+  /**
+   * Public slug is the email local-part. Two accounts such as
+   * jane@gmail.com and jane@company.com must not share that slug.
+   * Keep an existing unique slug so published links stay stable.
+   */
+  private async allocateUsername(
+    userId: string,
+    email: string,
+    current?: string,
+  ): Promise<string> {
+    if (current && !(await this.usernameTakenByOther(current, userId))) {
+      return current;
+    }
+
+    const base = this.emailLocalPart(email);
+    if (!(await this.usernameTakenByOther(base, userId))) {
+      return base;
+    }
+
+    const compactUserId = userId.replace(/-/g, '');
+    const shortName = `${base}-${compactUserId.slice(0, 8)}`;
+    if (!(await this.usernameTakenByOther(shortName, userId))) {
+      return shortName;
+    }
+    return `${base}-${compactUserId}`;
+  }
+
+  private emailLocalPart(email: string): string {
+    const local = email.split('@')[0]?.toLowerCase().trim();
+    return local || 'user';
+  }
+
+  private async usernameTakenByOther(
+    username: string,
+    userId: string,
+  ): Promise<boolean> {
+    const rows = await this.portfolioRepository.find({
+      where: { username, isActive: true },
+      select: ['id', 'userId'],
+    });
+    return rows.some((row) => row.userId !== userId);
   }
 
   /**
