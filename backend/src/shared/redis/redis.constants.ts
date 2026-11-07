@@ -21,6 +21,7 @@ export const RedisDefaults = {
 
 export const RedisKey = {
   aiRateLimit: (userId: string) => `rl:ai:${userId}`,
+  // v2: drop cached HTML written when a shared email local-part could serve the wrong account
   portfolioHtml: (username: string) =>
-    `cache:portfolio:html:${username.toLowerCase()}`,
+    `cache:portfolio:html:v2:${username.toLowerCase()}`,
 } as const;
