@@ -14,6 +14,7 @@ import * as os from 'os';
 import React from 'react';
 import { HtmlTemplateService } from './html-template.service';
 import { DynamicTemplateService } from './dynamic-template.service';
+import { cvPdfPrintOptions } from './cv-pdf-print-options';
 
 @Injectable()
 export class ExportService {
@@ -493,23 +494,11 @@ export class ExportService {
   }
 
   /**
-   * Generate PDF from Puppeteer page
+   * Generate PDF from Puppeteer page.
+   * Include every page. A pageRanges limit of "1" silently drops the rest of the resume.
    */
   private async generatePDFFromPage(page: any): Promise<Uint8Array> {
-    return await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: false,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in',
-      },
-      timeout: 30000,
-      displayHeaderFooter: false,
-      pageRanges: '1',
-    });
+    return await page.pdf(cvPdfPrintOptions());
   }
 
   /**
