@@ -94,6 +94,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   /**
    * Fixed-window counter. Returns true if the request is allowed.
    * Fail-open when Redis is down.
+   *
+   * INCR and EXPIRE are separate commands. If the process dies or the
+   * connection drops after INCR creates the key, the key is left with no
+   * TTL. Later calls must repair that, or the counter never resets and the
+   * user stays rate-limited.
    */
   async consumeRateLimit(
     key: string,
@@ -105,6 +110,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     const count = await this.client!.incr(key);
     if (count === 1) {
       await this.client!.expire(key, windowSec);
+    } else {
+      const ttl = await this.client!.ttl(key);
+      // -1: key exists with no expiry. -2: key is already gone.
+      if (ttl < 0) {
+        await this.client!.expire(key, windowSec);
+      }
     }
     return count <= max;
   }
