@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { cvApi, CV } from "@/lib/cv";
+import { buildCvContentUpdate, cvApi, CV } from "@/lib/cv";
 import { CVData } from "@/types/cv.types";
 import Button from "@/components/ui/Button";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -51,14 +51,9 @@ export default function CVEditPage() {
   const handleSave = () => {
     if (!formData) return;
 
-    const updateData: Partial<CV> = {
-      parsedData: formData,
-      version: cv?.version,
-      isTailored: cv?.isTailored,
-      tailoredForJob: cv?.tailoredForJob,
-      improvementNotes: cv?.improvementNotes,
-    };
-    updateMutation.mutate(updateData);
+    // PUT /cv/:id rejects unknown keys. version and improvementNotes are
+    // server-owned; sending them makes every save 400 and drops the edit.
+    updateMutation.mutate(buildCvContentUpdate(formData));
   };
 
   const handlePreview = () => {

@@ -161,6 +161,14 @@ export interface CvCoverLetter {
   cv?: Pick<CV, 'id' | 'originalFileName' | 'parsedData'>;
 }
 
+/**
+ * Body for PUT /cv/:id. The API DTO rejects unknown properties, and version
+ * plus improvement notes are owned by the server (version is incremented there).
+ */
+export function buildCvContentUpdate(parsedData: CVData): { parsedData: CVData } {
+  return { parsedData };
+}
+
 export const cvApi = {
   uploadCv: async (file: File): Promise<CV> => {
     const formData = new FormData();
