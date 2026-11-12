@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -19,19 +19,4 @@ export class LoginDto {
 
   @IsString()
   password: string;
-}
-
-export class GoogleAuthDto {
-  @IsString()
-  googleId: string;
-
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  avatar?: string;
 }
