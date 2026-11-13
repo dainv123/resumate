@@ -1,11 +1,11 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
-import { resolve } from 'path';
+import { loadRuntimeEnvFiles } from './runtime-env';
 
-// Fill gaps only — never override Docker/compose/shell env already set
-dotenv.config({ path: resolve(__dirname, '../../../.env.dev') });
-dotenv.config({ path: resolve(__dirname, '../../../.env') });
+// Fill gaps only — never override Docker/compose/shell env already set.
+// Local .env.dev and backend/.env win over the repo-root RDS .env.
+loadRuntimeEnvFiles(__dirname, (options) => dotenv.config(options));
 
 const configService = new ConfigService();
 

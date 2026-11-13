@@ -18,13 +18,14 @@ import { InterviewPrepModule } from './modules/interview-prep/interview-prep.mod
 import { ActivityTrackingInterceptor } from './common/interceptors/activity-tracking.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { RedisModule } from './shared/redis/redis.module';
+import { shouldSynchronizeSchema } from './config/runtime-env';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // Prefer .env.dev (Docker / laptop) over shared .env (RDS / resumate.click)
-      envFilePath: ['../.env.dev', '.env.dev', '../.env', '.env'],
+      // .env.dev, then backend/.env, then repo-root .env (RDS). First file wins.
+      envFilePath: ['../.env.dev', '.env.dev', '.env', '../.env'],
       validatePredefined: false,
     }),
     ScheduleModule.forRoot(),
@@ -36,11 +37,8 @@ import { RedisModule } from './shared/redis/redis.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      // Docker sets TYPEORM_SYNCHRONIZE=false (entrypoint runs schema:sync + migration:run).
-      synchronize:
-        process.env.TYPEORM_SYNCHRONIZE === 'true' ||
-        (process.env.TYPEORM_SYNCHRONIZE !== 'false' &&
-          process.env.NODE_ENV === 'development'),
+      // Sync drops columns missing from entities (question_bank.embedding).
+      synchronize: shouldSynchronizeSchema(),
       ssl:
         process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
       extra: {

@@ -355,7 +355,8 @@ See [Interview Prep RAG](#interview-prep-rag-pgvector) for how retrieval hooks i
 cd backend
 npm install
 cp env.example .env   # see Configuration
-npm run db:setup      # migrations + CV template seed
+npm run db:bootstrap  # fresh DB: schema once, then migrations
+npm run seed:templates
 npm run start:dev     # http://localhost:5001
 ```
 
@@ -379,7 +380,7 @@ docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
 # Backend boot: (schema:sync if empty DB) → migration:run → Nest
 ```
 
-Use **`.env.dev`** for localhost URLs/DB. Keep root **`.env`** for remote (RDS / resumate.click) — Nest loads `.env.dev` first. Host-only: `cd backend && npm run migration:run` (or `npm run db:bootstrap` on a fresh DB).
+Use **`.env.dev`** for localhost URLs/DB. Keep root **`.env`** for remote (RDS / resumate.click). Nest and the migration CLI load `.env.dev`, then `backend/.env`, and use the root `.env` only for variables those files do not set. They do not override variables already set by Docker or the shell. Nest does not schema-sync on boot. Host-only: `cd backend && npm run migration:run` (or `npm run db:bootstrap` on a fresh DB).
 
 Or: `./deployment/start-dev.sh`
 
