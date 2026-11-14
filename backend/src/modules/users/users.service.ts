@@ -163,15 +163,36 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string): Promise<{ message: string }> {
-    const user = await this.findById(userId);
+    await this.findById(userId);
 
-    // Delete all related data (cascade delete should handle this, but we'll be explicit)
-    await this.cvRepository.delete({ userId });
-    await this.projectRepository.delete({ userId });
-    await this.userUsageRepository.delete({ userId });
+    // Each repository call auto-commits. Deleting CVs first, then failing on
+    // job_descriptions / interview plans / portfolios, wiped resumes while the
+    // account row stayed. One transaction rolls that back. Children first so
+    // the foreign keys created by schema sync do not reject the user delete.
+    await this.userRepository.manager.transaction(async (manager) => {
+      const statements = [
+        `DELETE FROM interview_question_assignments
+         WHERE "planId" IN (
+           SELECT id FROM interview_prep_plans WHERE "userId" = $1
+         )`,
+        `DELETE FROM interview_prep_plans WHERE "userId" = $1`,
+        `DELETE FROM cv_matching_analyses WHERE "userId" = $1`,
+        `DELETE FROM cv_cover_letters WHERE "userId" = $1`,
+        `DELETE FROM portfolios WHERE "userId" = $1`,
+        `DELETE FROM analytics WHERE "userId" = $1`,
+        `DELETE FROM cvs WHERE "userId" = $1 AND "originalCvId" IS NOT NULL`,
+        `DELETE FROM cvs WHERE "userId" = $1`,
+        `DELETE FROM job_descriptions WHERE "userId" = $1`,
+        `DELETE FROM projects WHERE "userId" = $1`,
+        `DELETE FROM user_usage WHERE "userId" = $1`,
+      ];
 
-    // Delete user
-    await this.userRepository.remove(user);
+      for (const sql of statements) {
+        await manager.query(sql, [userId]);
+      }
+
+      await manager.delete(User, { id: userId });
+    });
 
     return { message: 'Account deleted successfully' };
   }

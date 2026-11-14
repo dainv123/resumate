@@ -69,12 +69,6 @@ export class UsersController {
   }
 
   @Delete('account')
-  @TrackActivity(ActivityType.USER_ACCOUNT_DELETED, {
-    getResourceId: (result, context) => context.params?.userId || result?.id,
-    getMetadata: (result) => ({
-      email: result?.email,
-    }),
-  })
   async deleteAccount(@GetUser() user: User) {
     return this.usersService.deleteAccount(user.id);
   }
