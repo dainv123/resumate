@@ -1124,10 +1124,13 @@ export class ExportService {
     endDate?: string,
     current?: boolean,
   ): string {
-    if (current || !endDate) {
-      return `${startDate} - Present`;
-    }
-    return `${startDate} - ${endDate}`;
+    const start = startDate || '';
+    const end = endDate || '';
+    if (!start && !end) return '';
+    if (current) return `${start} - Present`;
+    if (!end) return start;
+    if (!start) return end;
+    return `${start} - ${end}`;
   }
 
   async exportToATS(cvData: CVData): Promise<Buffer> {

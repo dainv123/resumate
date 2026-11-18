@@ -25,18 +25,17 @@ export class CVDataUtils {
       updatedAt: data.updatedAt || new Date().toISOString(),
       lastModified: data.lastModified || new Date().toISOString(),
 
-      contact: this.normalizeContactInfo(
-        data.contact || {
-          name: data.name || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          linkedin: data.linkedin || '',
-          github: data.github || '',
-          website: data.website || '',
-          location: data.location || '',
-        },
-      ),
+      contact: this.normalizeContactInfo({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        linkedin: data.linkedin,
+        github: data.github,
+        website: data.website,
+        location: data.location,
+        ...(data.contact || {}),
+      }),
       summary: data.summary || '',
 
       experience: this.normalizeExperience(data.experience || []),
@@ -78,58 +77,75 @@ export class CVDataUtils {
    * Normalize experience array
    */
   static normalizeExperience(experience: any[]): Experience[] {
-    return experience.map((exp, index) => ({
-      id: exp.id || `exp_${index}`,
-      title: exp.title || '',
-      company: exp.company || '',
-      location: exp.location || '',
-      startDate: exp.startDate || exp.dates || '',
-      endDate: exp.endDate || (exp.current ? '' : ''),
-      current: exp.current || false,
-      description: exp.description || '',
-      responsibilities: exp.responsibilities || [],
-      achievements: exp.achievements || [],
-      technologies: exp.technologies || [],
-      teamSize: exp.teamSize || undefined,
-      companyDescription: exp.companyDescription || '',
-    }));
+    return experience.map((exp, index) => {
+      const period = this.splitPeriod(exp.duration);
+      const current = Boolean(exp.current) || period.current;
+      return {
+        id: exp.id || `exp_${index}`,
+        title: exp.title || '',
+        company: exp.company || '',
+        location: exp.location || '',
+        startDate: exp.startDate || exp.dates || period.start || '',
+        endDate: exp.endDate || (current ? '' : period.end) || '',
+        current,
+        description: exp.description || '',
+        responsibilities: exp.responsibilities || [],
+        achievements: exp.achievements || [],
+        technologies: exp.technologies || [],
+        teamSize: this.parseTeamSize(exp.teamSize),
+        companyDescription: exp.companyDescription || '',
+      };
+    });
   }
 
   /**
    * Normalize education array
    */
   static normalizeEducation(education: any[]): Education[] {
-    return education.map((edu, index) => ({
-      id: edu.id || `edu_${index}`,
-      institution: edu.institution || edu.school || '',
-      degree: edu.degree || '',
-      field: edu.field || '',
-      startDate: edu.startDate || edu.dates || '',
-      endDate: edu.endDate || '',
-      gpa: edu.gpa || '',
-      description: edu.description || '',
-      location: edu.location || '',
-    }));
+    return education.map((edu, index) => {
+      const period = this.splitPeriod(edu.year || edu.dates);
+      return {
+        id: edu.id || `edu_${index}`,
+        institution: edu.institution || edu.school || '',
+        degree: edu.degree || '',
+        field: edu.field || '',
+        startDate: edu.startDate || period.start || '',
+        endDate: edu.endDate || (period.current ? '' : period.end) || '',
+        gpa: edu.gpa || '',
+        description: edu.description || '',
+        location: edu.location || '',
+      };
+    });
   }
 
   /**
    * Normalize projects array
    */
   static normalizeProjects(projects: any[]): Project[] {
-    return projects.map((project, index) => ({
-      id: project.id || `project_${index}`,
-      name: project.name || '',
-      description: project.description || '',
-      startDate: project.startDate || '',
-      endDate: project.endDate || '',
-      technologies: project.technologies || [],
-      role: project.role || '',
-      teamSize: project.teamSize || undefined,
-      results: project.results || [],
-      link: project.link || '',
-      repository: project.repository || '',
-      duration: project.duration || '',
-    }));
+    return projects.map((project, index) => {
+      const period = this.splitPeriod(project.duration);
+      const technologies =
+        Array.isArray(project.technologies) && project.technologies.length > 0
+          ? project.technologies
+          : Array.isArray(project.techStack)
+            ? project.techStack
+            : [];
+      return {
+        id: project.id || `proj_${index}`,
+        name: project.name || '',
+        description: project.description || '',
+        startDate: project.startDate || period.start || '',
+        endDate:
+          project.endDate || (period.current ? '' : period.end) || '',
+        technologies,
+        role: project.role || '',
+        teamSize: project.teamSize || undefined,
+        results: this.normalizeStringList(project.results),
+        link: project.link || '',
+        repository: project.repository || '',
+        duration: project.duration || '',
+      };
+    });
   }
 
   /**
@@ -341,6 +357,54 @@ export class CVDataUtils {
       volunteerCount: data.volunteer?.length || 0,
       completenessScore: this.calculateCompleteness(data),
     };
+  }
+
+  /**
+   * Split parser periods such as "2020 - Present" or "2018-2020".
+   * A value with no range separator is returned as the start text.
+   */
+  private static splitPeriod(value: unknown): {
+    start: string;
+    end: string;
+    current: boolean;
+  } {
+    const text = typeof value === 'string' ? value.trim() : '';
+    if (!text) return { start: '', end: '', current: false };
+
+    const spaced = text.split(/\s+[-–—]\s+/);
+    let start = '';
+    let end = '';
+    if (spaced.length >= 2) {
+      start = spaced[0].trim();
+      end = spaced.slice(1).join(' - ').trim();
+    } else {
+      const tight = text.match(
+        /^(.+?)[-–—]\s*(present|current|now|\d{4}\b.*)$/i,
+      );
+      if (!tight) return { start: text, end: '', current: false };
+      start = tight[1].trim();
+      end = tight[2].trim();
+    }
+
+    const current = /^(present|current|now)$/i.test(end);
+    return { start, end: current ? '' : end, current };
+  }
+
+  private static parseTeamSize(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = parseInt(value, 10);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    }
+    return undefined;
+  }
+
+  private static normalizeStringList(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.filter((item) => item != null).map((item) => String(item));
+    }
+    if (typeof value === 'string' && value.trim()) return [value];
+    return [];
   }
 
   private static countNonEmptySections(data: CVData): number {
