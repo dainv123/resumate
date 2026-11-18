@@ -401,6 +401,18 @@ describe('CVDataUtils', () => {
         duration: '6 months',
       });
     });
+
+    it('should wrap a string results field so export can join it', () => {
+      const result = CVDataUtils.normalizeProjects([
+        {
+          name: 'API',
+          description: 'Service',
+          results: 'Cut latency by 40%',
+        },
+      ]);
+
+      expect(result[0].results).toEqual(['Cut latency by 40%']);
+    });
   });
 
   describe('getDefaultTemplateConfig', () => {
