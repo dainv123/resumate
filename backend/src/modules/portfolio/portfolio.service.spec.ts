@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { PortfolioService } from './portfolio.service';
 import { Portfolio as PortfolioEntity } from './entities/portfolio.entity';
 import { UsersService } from '../users/users.service';
@@ -10,6 +11,7 @@ import { TemplateLoaderService } from './templates/template-loader.service';
 import { PortfolioTemplate } from './dto/portfolio.dto';
 import { RedisService } from '../../shared/redis/redis.service';
 import { ConfigService } from '@nestjs/config';
+import { RedisKey } from '../../shared/redis/redis.constants';
 
 describe('PortfolioService', () => {
   let service: PortfolioService;
@@ -18,6 +20,7 @@ describe('PortfolioService', () => {
   let cvService: CvService;
   let projectsService: ProjectsService;
   let templateLoaderService: TemplateLoaderService;
+  let redisService: RedisService;
 
   const mockUser = {
     id: 'user-1',
@@ -166,6 +169,7 @@ describe('PortfolioService', () => {
           provide: getRepositoryToken(PortfolioEntity),
           useValue: {
             findOne: jest.fn(),
+            find: jest.fn().mockResolvedValue([]),
             create: jest.fn(),
             save: jest.fn(),
           },
@@ -221,6 +225,7 @@ describe('PortfolioService', () => {
     templateLoaderService = module.get<TemplateLoaderService>(
       TemplateLoaderService,
     );
+    redisService = module.get<RedisService>(RedisService);
   });
 
   describe('generatePortfolio', () => {
@@ -494,6 +499,88 @@ describe('PortfolioService', () => {
 
       expect(html).toBeDefined();
       expect(html).toContain('John Doe');
+    });
+  });
+
+  describe('public username', () => {
+    const dto = { template: PortfolioTemplate.BASIC, bio: 'Software Engineer' };
+
+    beforeEach(() => {
+      process.env.BACKEND_URL = 'http://backend.test';
+      jest.spyOn(portfolioRepository, 'create').mockImplementation(
+        (value) => value as PortfolioEntity,
+      );
+      jest
+        .spyOn(portfolioRepository, 'save')
+        .mockImplementation(async (value) => value as PortfolioEntity);
+    });
+
+    it('keeps the email local-part when nobody else publishes it', async () => {
+      jest.spyOn(portfolioRepository, 'findOne').mockResolvedValue(null);
+      jest.spyOn(portfolioRepository, 'find').mockResolvedValue([]);
+
+      const saved = await service.savePortfolio('user-1', dto);
+
+      expect(saved.username).toBe('john');
+      expect(saved.generatedUrl).toBe('http://backend.test/portfolio/john');
+    });
+
+    it('does not reuse a slug another account already published', async () => {
+      jest.spyOn(portfolioRepository, 'findOne').mockResolvedValue(null);
+      jest.spyOn(portfolioRepository, 'find').mockImplementation(async (options) => {
+        const username = (options as { where?: { username?: string } })?.where
+          ?.username;
+        if (username === 'john') {
+          return [
+            {
+              id: 'other-portfolio',
+              userId: 'user-2',
+              username: 'john',
+              isActive: true,
+            },
+          ] as PortfolioEntity[];
+        }
+        return [];
+      });
+
+      const saved = await service.savePortfolio('user-1', dto);
+
+      expect(saved.username).toBe('john-user1');
+      expect(saved.generatedUrl).toBe(
+        'http://backend.test/portfolio/john-user1',
+      );
+      expect(saved.generatedHtml).toContain('John Doe');
+      expect(saved.generatedHtml).not.toContain('Other Person');
+    });
+
+    it('refuses a shared slug instead of serving the other resume', async () => {
+      jest.spyOn(redisService, 'get').mockResolvedValue('<html>other-resume</html>');
+      jest.spyOn(portfolioRepository, 'find').mockResolvedValue([
+        {
+          id: 'older',
+          userId: 'user-1',
+          username: 'john',
+          isActive: true,
+          generatedHtml: '<html>first</html>',
+          createdAt: new Date('2026-01-01'),
+        },
+        {
+          id: 'newer',
+          userId: 'user-2',
+          username: 'john',
+          isActive: true,
+          generatedHtml: '<html>second</html>',
+          createdAt: new Date('2026-02-01'),
+        },
+      ] as PortfolioEntity[]);
+
+      await expect(service.getPublicHtmlByUsername('john')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(redisService.get).not.toHaveBeenCalled();
+      expect(redisService.del).toHaveBeenCalledWith(
+        RedisKey.portfolioHtml('john'),
+      );
     });
   });
 });
