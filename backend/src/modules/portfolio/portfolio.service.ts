@@ -23,6 +23,18 @@ import {
   RedisKey,
 } from '../../shared/redis/redis.constants';
 
+/** Path segments registered on PortfolioController ahead of `:username`. */
+const RESERVED_PORTFOLIO_SLUGS = new Set([
+  'check',
+  'generate',
+  'html',
+  'preview',
+  'save',
+  'templates',
+  'url',
+  'uuid',
+]);
+
 @Injectable()
 export class PortfolioService {
   constructor(
@@ -111,12 +123,19 @@ export class PortfolioService {
     createPortfolioDto: CreatePortfolioDto,
   ): Promise<PortfolioEntity> {
     const user = await this.usersService.findById(userId);
-    const username = user.email.split('@')[0].toLowerCase();
 
     // Check if user already has a portfolio
     let portfolio = await this.portfolioRepository.findOne({
       where: { userId, isActive: true },
     });
+
+    const previousUsername = portfolio?.username;
+    const username = await this.allocatePublicUsername(
+      userId,
+      user.email,
+      previousUsername,
+    );
+    const url = this.portfolioPublicUrl(username);
 
     // Generate portfolio data
     const portfolioData = await this.generatePortfolio(
@@ -127,14 +146,9 @@ export class PortfolioService {
     // Generate HTML
     const html = await this.generatePortfolioHTML(portfolioData);
 
-    // Generate URL
-    const url = await this.generatePortfolioUrl(
-      userId,
-      createPortfolioDto.customDomain,
-    );
-
     if (portfolio) {
       // Update existing portfolio (override)
+      portfolio.username = username;
       portfolio.template = createPortfolioDto.template;
       portfolio.customDomain = createPortfolioDto.customDomain || '';
       portfolio.bio = createPortfolioDto.bio || '';
@@ -166,6 +180,9 @@ export class PortfolioService {
 
     const saved = await this.portfolioRepository.save(portfolio);
     await this.redisService.del(RedisKey.portfolioHtml(username));
+    if (previousUsername && previousUsername !== username) {
+      await this.redisService.del(RedisKey.portfolioHtml(previousUsername));
+    }
     return saved;
   }
 
@@ -176,23 +193,29 @@ export class PortfolioService {
   }
 
   async findActiveByUsername(username: string): Promise<PortfolioEntity> {
-    const portfolio = await this.portfolioRepository.findOne({
+    const portfolios = await this.portfolioRepository.find({
       where: { username, isActive: true },
       order: { createdAt: 'DESC' },
     });
-    if (!portfolio) {
+    if (portfolios.length === 0) {
       throw new NotFoundException('Portfolio not found');
     }
-    return portfolio;
+
+    const ownerId = portfolios[0].userId;
+    if (portfolios.some((row) => row.userId !== ownerId)) {
+      await this.redisService.del(RedisKey.portfolioHtml(username));
+      throw new NotFoundException('Portfolio not found');
+    }
+
+    return portfolios[0];
   }
 
   /** Public HTML for username URL — prefer saved snapshot so it matches preview/save. */
   async getPublicHtmlByUsername(username: string): Promise<string> {
+    const portfolio = await this.findActiveByUsername(username);
     const cacheKey = RedisKey.portfolioHtml(username);
     const cached = await this.redisService.get(cacheKey);
     if (cached) return cached;
-
-    const portfolio = await this.findActiveByUsername(username);
     let html = portfolio.generatedHtml;
     if (!html) {
       // Legacy rows without snapshot: regenerate once
@@ -299,10 +322,92 @@ export class PortfolioService {
     userId: string,
     customDomain?: string,
   ): Promise<string> {
+    void customDomain;
     const user = await this.usersService.findById(userId);
-    const username = user.email.split('@')[0].toLowerCase();
+    const existing = await this.portfolioRepository.findOne({
+      where: { userId, isActive: true },
+    });
+    const username = await this.allocatePublicUsername(
+      userId,
+      user.email,
+      existing?.username,
+    );
+    return this.portfolioPublicUrl(username);
+  }
 
-    // Always return the backend URL as primary portfolio URL
+  /**
+   * Public slug is the email local-part. That collides across domains
+   * (ada@gmail.com and ada@work.com) and also shadows static /portfolio routes.
+   * Keep an existing unique slug; otherwise take the first free candidate.
+   */
+  private async allocatePublicUsername(
+    userId: string,
+    email: string,
+    currentUsername?: string,
+  ): Promise<string> {
+    if (
+      currentUsername &&
+      this.isUsableSlug(currentUsername) &&
+      !(await this.usernameTakenByOther(currentUsername, userId))
+    ) {
+      return currentUsername;
+    }
+
+    const base = this.emailLocalSlug(email);
+    const compactUserId = userId.replace(/-/g, '');
+    const suffix = compactUserId.slice(0, 8);
+    const candidates = [
+      base,
+      `${base}-${suffix}`,
+      `${base}-${compactUserId}`,
+    ];
+
+    for (const candidate of candidates) {
+      if (!this.isUsableSlug(candidate)) continue;
+      if (!(await this.usernameTakenByOther(candidate, userId))) {
+        return candidate;
+      }
+    }
+
+    return `${base}-${compactUserId}`;
+  }
+
+  private emailLocalSlug(email: string): string {
+    const raw = (email.split('@')[0] ?? '').toLowerCase();
+    if (
+      /^[a-z0-9][a-z0-9._-]{0,62}$/.test(raw) &&
+      !raw.endsWith('.') &&
+      !raw.includes('..')
+    ) {
+      return raw;
+    }
+
+    const slug = raw
+      .replace(/[^a-z0-9._-]+/g, '-')
+      .replace(/^[-._]+|[-._]+$/g, '')
+      .slice(0, 48);
+    return slug || 'portfolio';
+  }
+
+  private isUsableSlug(slug: string): boolean {
+    return (
+      /^[a-z0-9][a-z0-9._-]{0,80}$/.test(slug) &&
+      !RESERVED_PORTFOLIO_SLUGS.has(slug)
+    );
+  }
+
+  private async usernameTakenByOther(
+    username: string,
+    userId: string,
+  ): Promise<boolean> {
+    const rows = await this.portfolioRepository.find({
+      where: { username, isActive: true },
+      select: ['id', 'userId'],
+    });
+    return rows.some((row) => row.userId !== userId);
+  }
+
+  private portfolioPublicUrl(username: string): string {
     const baseUrl = process.env.BACKEND_URL;
     return `${baseUrl}/portfolio/${username}`;
   }
