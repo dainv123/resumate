@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { Cv } from './entities/cv.entity';
 import { JobDescription } from './entities/job-description.entity';
 import { CvMatchingAnalysis } from './entities/cv-matching-analysis.entity';
@@ -64,10 +64,6 @@ export class CvService {
     private matchingAnalysisRepository: Repository<CvMatchingAnalysis>,
     @InjectRepository(CvCoverLetter)
     private coverLetterRepository: Repository<CvCoverLetter>,
-    @InjectRepository(InterviewPrepPlan)
-    private planRepository: Repository<InterviewPrepPlan>,
-    @InjectRepository(InterviewQuestionAssignment)
-    private assignmentRepository: Repository<InterviewQuestionAssignment>,
     private jobDescriptionService: JobDescriptionService,
     private aiService: AiService,
     private usersService: UsersService,
@@ -335,35 +331,37 @@ export class CvService {
     const cv = await this.cvRepository.findOne({ where: { id, userId } });
     if (!cv) return;
 
-    const tailoredChildren = await this.cvRepository.find({
-      where: { originalCvId: id, userId },
+    await this.cvRepository.manager.transaction(async (manager) => {
+      await this.deleteInterviewPrepForCvs([id], userId, manager);
+      // Tailored copies are separate resumes. Drop the self-FK so this
+      // delete can succeed without removing those rows.
+      await manager.update(
+        Cv,
+        { originalCvId: id, userId },
+        { originalCvId: null as unknown as string },
+      );
+      await manager.delete(Cv, { id, userId });
     });
-    const cvIds = [id, ...tailoredChildren.map((child) => child.id)];
-
-    await this.deleteInterviewPrepForCvs(cvIds, userId);
-
-    // Children first — avoids self-FK on originalCvId
-    if (tailoredChildren.length > 0) {
-      await this.cvRepository.remove(tailoredChildren);
-    }
-    await this.cvRepository.remove(cv);
   }
 
   private async deleteInterviewPrepForCvs(
     cvIds: string[],
     userId: string,
+    manager: EntityManager,
   ): Promise<void> {
     if (cvIds.length === 0) return;
 
-    const plans = await this.planRepository.find({
+    const plans = await manager.find(InterviewPrepPlan, {
       where: { userId, cvId: In(cvIds) },
       select: ['id'],
     });
     if (plans.length === 0) return;
 
     const planIds = plans.map((plan) => plan.id);
-    await this.assignmentRepository.delete({ planId: In(planIds) });
-    await this.planRepository.delete({ id: In(planIds) });
+    await manager.delete(InterviewQuestionAssignment, {
+      planId: In(planIds),
+    });
+    await manager.delete(InterviewPrepPlan, { id: In(planIds) });
   }
 
   async getCvVersions(cvId: string, userId: string): Promise<any[]> {
