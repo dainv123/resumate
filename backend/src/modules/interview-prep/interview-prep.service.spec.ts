@@ -80,8 +80,18 @@ describe('InterviewPrepService', () => {
   const planRepo = {
     create: jest.fn((data) => ({ id: 'plan-1', ...data })),
     save: jest.fn((data) => Promise.resolve(data)),
+    update: jest.fn(() => Promise.resolve({ affected: 1 })),
     find: jest.fn(),
     findOne: jest.fn(),
+    manager: {
+      transaction: jest.fn(async (work: (manager: unknown) => Promise<unknown>) =>
+        work({
+          findOne: (...args: unknown[]) => planRepo.findOne(...args),
+          getRepository: (entity: unknown) =>
+            entity === InterviewQuestionAssignment ? assignmentRepo : planRepo,
+        }),
+      ),
+    },
   };
 
   const assignmentRepo = {
@@ -201,7 +211,7 @@ describe('InterviewPrepService', () => {
     const result = await service.createPlan('user-1', {
       jobDescription: 'Senior React Engineer at Acme Corp',
       cvId: 'cv-1',
-      interviewDate: '2026-06-29',
+      interviewDate: '2027-06-01',
       dailyCapacityMinutes: 60,
     });
 
@@ -258,5 +268,135 @@ describe('InterviewPrepService', () => {
 
     expect(result.roadmap[0].tasks[0].done).toBe(true);
     expect(planRepo.save).toHaveBeenCalled();
+    expect(planRepo.manager.transaction).toHaveBeenCalled();
+  });
+
+  it('does not rewrite the plan when a read recalculates the same score', async () => {
+    const plan = {
+      id: 'plan-1',
+      userId: 'user-1',
+      cvId: 'cv-1',
+      jobDescriptionId: 'jd-1',
+      roadmap: [
+        {
+          ...mockRoadmap[0],
+          tasks: mockRoadmap[0].tasks.map((task) => ({ ...task, done: false })),
+        },
+      ],
+      starStories: [],
+      readinessBreakdown: {
+        compatibility: 70,
+        questionCoverage: 0,
+        starReadiness: 0,
+        companyResearch: 0,
+        mockPerformance: 0,
+      },
+      // Postgres numeric is a string. It must compare equal to the calculated 21.
+      readinessScore: '21.00',
+      updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+      status: PrepPlanStatus.ACTIVE,
+    };
+    planRepo.findOne.mockResolvedValue(plan);
+    planRepo.save.mockClear();
+    planRepo.update.mockClear();
+
+    const result = await service.getPlan('user-1', 'plan-1');
+
+    expect(result.readinessScore).toBe('21.00');
+    expect(planRepo.save).not.toHaveBeenCalled();
+    expect(planRepo.update).not.toHaveBeenCalled();
+  });
+
+  it('updates only readiness columns when the stored score is stale', async () => {
+    const updatedAt = new Date('2026-06-01T00:00:00.000Z');
+    const plan = {
+      id: 'plan-1',
+      userId: 'user-1',
+      cvId: 'cv-1',
+      jobDescriptionId: 'jd-1',
+      roadmap: [
+        {
+          ...mockRoadmap[0],
+          tasks: mockRoadmap[0].tasks.map((task) => ({ ...task, done: false })),
+        },
+      ],
+      starStories: [],
+      readinessBreakdown: {
+        compatibility: 70,
+        questionCoverage: 0,
+        starReadiness: 0,
+        companyResearch: 0,
+        mockPerformance: 0,
+      },
+      readinessScore: 0,
+      updatedAt,
+      status: PrepPlanStatus.ACTIVE,
+    };
+    planRepo.findOne.mockResolvedValue(plan);
+    planRepo.save.mockClear();
+    planRepo.update.mockClear();
+
+    await service.getPlan('user-1', 'plan-1');
+
+    expect(planRepo.save).not.toHaveBeenCalled();
+    expect(planRepo.update).toHaveBeenCalledWith(
+      { id: 'plan-1', updatedAt },
+      expect.objectContaining({ readinessScore: 21 }),
+    );
+  });
+
+  it('keeps both task completions when two tasks are updated in sequence', async () => {
+    const plan = {
+      id: 'plan-1',
+      userId: 'user-1',
+      cvId: 'cv-1',
+      jobDescriptionId: 'jd-1',
+      roadmap: [
+        {
+          dayIndex: 0,
+          daysUntilInterview: 7,
+          date: '2026-06-22',
+          theme: 'Research',
+          tasks: [
+            {
+              id: 'research-0',
+              type: 'company_research',
+              title: 'Research company',
+              durationMinutes: 45,
+              priority: 'P1' as const,
+              impactScore: 2.5,
+              done: false,
+            },
+            {
+              id: 'process-1',
+              type: 'process_map',
+              title: 'Map rounds',
+              durationMinutes: 30,
+              priority: 'P1' as const,
+              impactScore: 3,
+              done: false,
+            },
+          ],
+        },
+      ],
+      starStories: [],
+      readinessBreakdown: {
+        compatibility: 70,
+        questionCoverage: 0,
+        starReadiness: 0,
+        companyResearch: 0,
+        mockPerformance: 0,
+      },
+      readinessScore: 21,
+      status: PrepPlanStatus.ACTIVE,
+    };
+    planRepo.findOne.mockImplementation(async () => plan);
+
+    await service.updateTaskStatus('user-1', 'plan-1', 0, 'research-0', true);
+    await service.updateTaskStatus('user-1', 'plan-1', 0, 'process-1', true);
+
+    const tasks = plan.roadmap[0].tasks;
+    expect(tasks.find((task) => task.id === 'research-0')?.done).toBe(true);
+    expect(tasks.find((task) => task.id === 'process-1')?.done).toBe(true);
   });
 });

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { EntityManager, Repository, In } from 'typeorm';
 import { AiService } from '../ai/ai.service';
 import { CvService } from '../cv/cv.service';
 import { JobDescription } from '../cv/entities/job-description.entity';
@@ -285,10 +285,22 @@ export class InterviewPrepService {
       plan.starStories ?? [],
     );
 
-    if (plan.readinessScore !== readiness.score) {
+    // Postgres numeric comes back as a string, so "21.00" !== 21 was true on every
+    // read and save() wrote the whole row — including a roadmap loaded before a
+    // task toggle committed. Update the score columns only, and skip the write
+    // if a mutation bumped updatedAt while this read was in flight.
+    const storedScore =
+      plan.readinessScore == null ? null : Number(plan.readinessScore);
+    if (storedScore !== readiness.score) {
+      await this.planRepository.update(
+        { id: plan.id, updatedAt: plan.updatedAt },
+        {
+          readinessScore: readiness.score,
+          readinessBreakdown: readiness.breakdown,
+        },
+      );
       plan.readinessScore = readiness.score;
       plan.readinessBreakdown = readiness.breakdown;
-      await this.planRepository.save(plan);
     }
 
     const user = await this.usersService.findById(userId);
@@ -312,32 +324,37 @@ export class InterviewPrepService {
     taskId: string,
     done: boolean,
   ): Promise<Record<string, unknown>> {
-    const plan = await this.getPlanEntity(userId, planId);
-    const roadmap = plan.roadmap as unknown as PrepDay[];
+    let taskType: string | undefined;
+    await this.withLockedPlan(userId, planId, async (plan) => {
+      const roadmap = plan.roadmap as unknown as PrepDay[];
 
-    const day = roadmap.find((d) => d.dayIndex === dayIndex);
-    if (!day) {
-      throw new NotFoundException(`Day index ${dayIndex} not found in roadmap`);
-    }
+      const day = roadmap.find((d) => d.dayIndex === dayIndex);
+      if (!day) {
+        throw new NotFoundException(
+          `Day index ${dayIndex} not found in roadmap`,
+        );
+      }
 
-    const task = day.tasks.find((t) => t.id === taskId);
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
+      const task = day.tasks.find((t) => t.id === taskId);
+      if (!task) {
+        throw new NotFoundException(`Task ${taskId} not found`);
+      }
 
-    task.done = done;
-    plan.roadmap = roadmap as unknown as Record<string, unknown>[];
+      task.done = done;
+      taskType = task.type;
+      plan.roadmap = roadmap as unknown as Record<string, unknown>[];
+    });
 
-    if (done) {
+    if (done && taskType) {
       this.analyticsService.track(
         userId,
         InterviewPrepAnalyticsEvent.TASK_COMPLETED,
         planId,
-        { dayIndex, taskId, taskType: task.type },
+        { dayIndex, taskId, taskType },
       );
     }
 
-    return this.saveAndFormat(plan, userId);
+    return this.getPlan(userId, planId);
   }
 
   async updateStarStory(
@@ -346,20 +363,21 @@ export class InterviewPrepService {
     storyIndex: number,
     dto: UpdateStarStoryDto,
   ): Promise<Record<string, unknown>> {
-    const plan = await this.getPlanEntity(userId, planId);
-    const stories = plan.starStories ?? [];
+    await this.withLockedPlan(userId, planId, (plan) => {
+      const stories = plan.starStories ?? [];
 
-    if (storyIndex < 0 || storyIndex >= stories.length) {
-      throw new NotFoundException(`STAR story index ${storyIndex} not found`);
-    }
+      if (storyIndex < 0 || storyIndex >= stories.length) {
+        throw new NotFoundException(`STAR story index ${storyIndex} not found`);
+      }
 
-    stories[storyIndex] = {
-      ...stories[storyIndex],
-      ...dto,
-    };
-    plan.starStories = stories;
+      stories[storyIndex] = {
+        ...stories[storyIndex],
+        ...dto,
+      };
+      plan.starStories = stories;
+    });
 
-    return this.saveAndFormat(plan, userId);
+    return this.getPlan(userId, planId);
   }
 
   async regenerateStarStory(
@@ -367,16 +385,15 @@ export class InterviewPrepService {
     planId: string,
     storyIndex: number,
   ): Promise<Record<string, unknown>> {
-    const plan = await this.getPlanEntity(userId, planId);
-    const stories = plan.starStories ?? [];
-
+    const preview = await this.getPlanEntity(userId, planId);
+    const stories = preview.starStories ?? [];
     if (storyIndex < 0 || storyIndex >= stories.length) {
       throw new NotFoundException(`STAR story index ${storyIndex} not found`);
     }
 
-    const cv = await this.cvService.getCvById(plan.cvId, userId);
+    const cv = await this.cvService.getCvById(preview.cvId, userId);
     const jobDesc = await this.jobDescriptionRepository.findOne({
-      where: { id: plan.jobDescriptionId },
+      where: { id: preview.jobDescriptionId },
     });
     const jdText = jobDesc?.description ?? '';
 
@@ -386,16 +403,22 @@ export class InterviewPrepService {
     );
     const normalized = this.normalizeStarStories(generated);
 
-    if (normalized[0]) {
-      stories[storyIndex] = {
-        ...normalized[0],
-        id: stories[storyIndex].id,
-        ready: false,
-      };
-      plan.starStories = stories;
-    }
+    await this.withLockedPlan(userId, planId, (plan) => {
+      const lockedStories = plan.starStories ?? [];
+      if (storyIndex < 0 || storyIndex >= lockedStories.length) {
+        throw new NotFoundException(`STAR story index ${storyIndex} not found`);
+      }
+      if (normalized[0]) {
+        lockedStories[storyIndex] = {
+          ...normalized[0],
+          id: lockedStories[storyIndex].id,
+          ready: false,
+        };
+        plan.starStories = lockedStories;
+      }
+    });
 
-    return this.saveAndFormat(plan, userId);
+    return this.getPlan(userId, planId);
   }
 
   async submitMockAnswer(
@@ -435,41 +458,50 @@ export class InterviewPrepService {
       },
     );
 
-    assignment.userAnswer = dto.answer;
-    assignment.mockScores = [
-      ...(assignment.mockScores ?? []),
-      {
-        score: evaluation.score,
-        feedback: evaluation.feedback,
-        matchedCriteria: evaluation.matchedCriteria,
-        missingCriteria: evaluation.missingCriteria,
-        improvedAnswerOutline: evaluation.improvedAnswerOutline,
-        followUpQuestion: evaluation.followUpQuestion,
-        attemptedAt: new Date().toISOString(),
-      },
-    ];
-    assignment.status =
-      evaluation.score >= 7
-        ? AssignmentStatus.MASTERED
-        : AssignmentStatus.PRACTICED;
+    await this.withLockedPlan(userId, planId, async (locked, manager) => {
+      const assignments = manager.getRepository(InterviewQuestionAssignment);
+      const lockedAssignment = await assignments.findOne({
+        where: { id: dto.assignmentId, planId },
+      });
+      if (!lockedAssignment) {
+        throw new NotFoundException('Question assignment not found');
+      }
 
-    await this.assignmentRepository.save(assignment);
+      lockedAssignment.userAnswer = dto.answer;
+      lockedAssignment.mockScores = [
+        ...(lockedAssignment.mockScores ?? []),
+        {
+          score: evaluation.score,
+          feedback: evaluation.feedback,
+          matchedCriteria: evaluation.matchedCriteria,
+          missingCriteria: evaluation.missingCriteria,
+          improvedAnswerOutline: evaluation.improvedAnswerOutline,
+          followUpQuestion: evaluation.followUpQuestion,
+          attemptedAt: new Date().toISOString(),
+        },
+      ];
+      lockedAssignment.status =
+        evaluation.score >= 7
+          ? AssignmentStatus.MASTERED
+          : AssignmentStatus.PRACTICED;
+      await assignments.save(lockedAssignment);
+
+      if (evaluation.score < 7) {
+        const roadmap = locked.roadmap as unknown as PrepDay[];
+        locked.roadmap = this.spacedRepetitionService.injectWeakQuestionRetries(
+          roadmap,
+          [
+            {
+              questionId: lockedAssignment.questionId,
+              title: question.question,
+              prepTimeMinutes: question.prepTimeMinutes,
+            },
+          ],
+        ) as unknown as Record<string, unknown>[];
+      }
+    });
+
     await this.usersService.incrementUsage(userId, 'mockDrills');
-
-    if (evaluation.score < 7) {
-      const roadmap = plan.roadmap as unknown as PrepDay[];
-      plan.roadmap = this.spacedRepetitionService.injectWeakQuestionRetries(
-        roadmap,
-        [
-          {
-            questionId: assignment.questionId,
-            title: question.question,
-            prepTimeMinutes: question.prepTimeMinutes,
-          },
-        ],
-      ) as unknown as Record<string, unknown>[];
-      await this.planRepository.save(plan);
-    }
 
     this.analyticsService.track(
       userId,
@@ -478,9 +510,11 @@ export class InterviewPrepService {
       { assignmentId: dto.assignmentId, score: evaluation.score },
     );
 
-    return this.saveAndFormat(plan, userId, {
+    const response = await this.getPlan(userId, planId);
+    return {
+      ...response,
       mockEvaluation: evaluation,
-    });
+    };
   }
 
   async updateCompanyResearchSection(
@@ -489,26 +523,26 @@ export class InterviewPrepService {
     sectionId: string,
     checked: boolean,
   ): Promise<Record<string, unknown>> {
-    const plan = await this.getPlanEntity(userId, planId);
-    const brief = plan.companyResearch as {
-      sections?: Array<{ id: string; checked?: boolean }>;
-      generatedAt?: string;
-    } | null;
+    await this.withLockedPlan(userId, planId, (plan) => {
+      const brief = plan.companyResearch as {
+        sections?: Array<{ id: string; checked?: boolean }>;
+        generatedAt?: string;
+      } | null;
 
-    if (!brief?.sections?.length) {
-      throw new NotFoundException('Company research not found on this plan');
-    }
+      if (!brief?.sections?.length) {
+        throw new NotFoundException('Company research not found on this plan');
+      }
 
-    const section = brief.sections.find((s) => s.id === sectionId);
-    if (!section) {
-      throw new NotFoundException('Company research section not found');
-    }
+      const section = brief.sections.find((s) => s.id === sectionId);
+      if (!section) {
+        throw new NotFoundException('Company research section not found');
+      }
 
-    section.checked = checked;
-    plan.companyResearch = brief as Record<string, unknown>;
-    await this.planRepository.save(plan);
+      section.checked = checked;
+      plan.companyResearch = brief as Record<string, unknown>;
+    });
 
-    return this.saveAndFormat(plan, userId);
+    return this.getPlan(userId, planId);
   }
 
   async submitPostInterviewSurvey(
@@ -516,15 +550,14 @@ export class InterviewPrepService {
     planId: string,
     dto: SubmitPostInterviewSurveyDto,
   ): Promise<Record<string, unknown>> {
-    const plan = await this.getPlanEntity(userId, planId);
-
-    plan.postInterviewSurvey = {
-      outcome: dto.outcome,
-      difficulty: dto.difficulty,
-      notes: dto.notes,
-      submittedAt: new Date().toISOString(),
-    };
-    await this.planRepository.save(plan);
+    await this.withLockedPlan(userId, planId, (plan) => {
+      plan.postInterviewSurvey = {
+        outcome: dto.outcome,
+        difficulty: dto.difficulty,
+        notes: dto.notes,
+        submittedAt: new Date().toISOString(),
+      };
+    });
 
     this.analyticsService.track(
       userId,
@@ -533,7 +566,7 @@ export class InterviewPrepService {
       { outcome: dto.outcome, difficulty: dto.difficulty },
     );
 
-    return this.saveAndFormat(plan, userId);
+    return this.getPlan(userId, planId);
   }
 
   async exportCheatSheetPdf(userId: string, planId: string): Promise<Buffer> {
@@ -579,45 +612,6 @@ export class InterviewPrepService {
     return pdf;
   }
 
-  private async saveAndFormat(
-    plan: InterviewPrepPlan,
-    userId: string,
-    extra: Record<string, unknown> = {},
-  ): Promise<Record<string, unknown>> {
-    const assignments = await this.assignmentRepository.find({
-      where: { planId: plan.id },
-      order: { impactScore: 'DESC' },
-    });
-
-    const roadmap = plan.roadmap as unknown as PrepDay[];
-    const readiness = this.readinessService.calculate(
-      roadmap,
-      assignments,
-      this.compatibilityFromBreakdown(plan.readinessBreakdown),
-      plan.starStories ?? [],
-    );
-
-    plan.readinessScore = readiness.score;
-    plan.readinessBreakdown = readiness.breakdown;
-    await this.planRepository.save(plan);
-
-    const user = await this.usersService.findById(userId);
-    return {
-      ...(await this.formatPlanResponse(
-        plan,
-        assignments,
-        [],
-        null,
-        readiness,
-        user.plan,
-        userId,
-        plan.jobDescription,
-        plan.cv,
-      )),
-      ...extra,
-    };
-  }
-
   private normalizeProcessMap(raw: {
     rounds?: Array<{
       type: string;
@@ -660,6 +654,52 @@ export class InterviewPrepService {
       projectRef: story.projectRef,
       ready: story.ready ?? false,
     }));
+  }
+
+  /**
+   * Serialize read-modify-write of the plan JSON. Two checkbox toggles otherwise
+   * each save the roadmap they loaded and the slower one drops the other task.
+   */
+  private async withLockedPlan(
+    userId: string,
+    planId: string,
+    mutate: (
+      plan: InterviewPrepPlan,
+      manager: EntityManager,
+    ) => Promise<void> | void,
+  ): Promise<void> {
+    await this.planRepository.manager.transaction(async (manager) => {
+      const plan = await manager.findOne(InterviewPrepPlan, {
+        where: { id: planId, userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!plan) {
+        throw new NotFoundException('Interview prep plan not found');
+      }
+      await mutate(plan, manager);
+      await this.persistReadiness(plan, manager);
+    });
+  }
+
+  private async persistReadiness(
+    plan: InterviewPrepPlan,
+    manager: EntityManager,
+  ): Promise<void> {
+    const assignments = await manager
+      .getRepository(InterviewQuestionAssignment)
+      .find({
+        where: { planId: plan.id },
+        order: { impactScore: 'DESC' },
+      });
+    const readiness = this.readinessService.calculate(
+      plan.roadmap as unknown as PrepDay[],
+      assignments,
+      this.compatibilityFromBreakdown(plan.readinessBreakdown),
+      plan.starStories ?? [],
+    );
+    plan.readinessScore = readiness.score;
+    plan.readinessBreakdown = readiness.breakdown;
+    await manager.getRepository(InterviewPrepPlan).save(plan);
   }
 
   private async getPlanEntity(
