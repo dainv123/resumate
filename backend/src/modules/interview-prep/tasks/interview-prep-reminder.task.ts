@@ -48,8 +48,9 @@ export class InterviewPrepReminderTask {
         Number(plan.readinessScore ?? 0),
       );
 
-      plan.lastReminderDate = today;
-      await this.planRepository.save(plan);
+      // The plan was loaded before the email send. save() would write that
+      // snapshot back, including a roadmap the user may have updated since.
+      await this.planRepository.update(plan.id, { lastReminderDate: today });
 
       this.analyticsService.track(
         plan.userId,
